@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<!-- IV Hub — account setup. Invite and password-reset links land here; the
+     Hub itself (index.html) is only ever for signing in. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set up your account — IV Hub</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{--dp:#020B18;--ds:#071628;--ds2:#0D2040;--dt:#E8F4FD;--dm:#7AAECB;
+  --db:rgba(79,195,247,.18);--blue:#1565C0;--blue2:#1976D2;--blue-lt:#4FC3F7;
+  --navy:#0C2461;--green:#4ADE80;--red:#F87171;--gold:#FCD34D;--r:10px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-family:'Archivo',sans-serif;background:var(--dp);color:var(--dt);min-height:100vh;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  background-image:radial-gradient(ellipse at 20% 40%,rgba(21,101,192,.18) 0%,transparent 60%),
+                   radial-gradient(ellipse at 80% 70%,rgba(124,58,237,.10) 0%,transparent 55%);}
+.card{background:var(--ds);border:1px solid var(--db);border-radius:16px;padding:40px 38px;
+  width:440px;max-width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:up .45s ease;}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.brand{text-align:center;margin-bottom:26px;}
+.brand img{width:74px;height:74px;border-radius:50%;background:#fff;display:block;margin:0 auto 12px;}
+.brand .mark{display:none;width:74px;height:74px;border-radius:50%;margin:0 auto 12px;
+  background:linear-gradient(135deg,var(--navy),var(--blue2));color:#fff;
+  font-size:24px;font-weight:900;align-items:center;justify-content:center;letter-spacing:.5px;}
+.brand.nologo img{display:none;} .brand.nologo .mark{display:flex;}
+.brand h1{font-size:22px;font-weight:900;color:var(--blue-lt);text-transform:uppercase;letter-spacing:0.05em;}
+.brand p{font-size:13px;color:var(--dm);margin-top:4px;}
+h2{font-size:19px;font-weight:800;margin-bottom:8px;}
+.lede{font-size:14px;line-height:1.65;color:var(--dm);margin-bottom:22px;}
+.fg{margin-bottom:15px;}
+.fg label{display:block;font-size:12px;font-weight:800;color:var(--dm);text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:6px;}
+.fg input{width:100%;background:var(--ds2);border:1px solid var(--db);border-radius:var(--r);
+  padding:12px 14px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:15px;outline:none;
+  transition:border-color .18s,box-shadow .18s;}
+.fg input:focus{border-color:var(--blue-lt);box-shadow:0 0 0 3px rgba(79,195,247,.12);}
+.fg input:disabled{opacity:.62;cursor:not-allowed;}
+.btn{width:100%;background:linear-gradient(135deg,var(--navy),var(--blue2));color:#fff;border:none;
+  border-radius:var(--r);padding:13px;font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;
+  cursor:pointer;margin-top:8px;transition:box-shadow .18s,transform .12s;}
+.btn:hover:not(:disabled){box-shadow:0 6px 20px rgba(21,101,192,.45);}
+.btn:active:not(:disabled){transform:scale(.985);}
+.btn:disabled{opacity:.6;cursor:not-allowed;}
+.btn.ghost{background:transparent;border:1px solid var(--db);color:var(--dm);margin-top:10px;}
+.msg{min-height:20px;font-size:14px;line-height:1.55;text-align:center;margin-top:14px;}
+.msg.err{color:var(--red);} .msg.ok{color:var(--green);} .msg.warn{color:var(--gold);}
+.pw{position:relative;}
+.pw input{padding-right:46px;}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:32px;
+  border:none;background:transparent;color:var(--dm);font-size:15px;cursor:pointer;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;opacity:.75;}
+.eye:hover{background:var(--ds2);opacity:1;}
+.eye.on{color:var(--blue-lt);opacity:1;}
+.rules{font-size:12px;color:#5A7FA6;line-height:1.6;margin:-4px 0 16px;}
+.foot{text-align:center;margin-top:20px;padding-top:18px;border-top:1px solid var(--db);
+  font-size:13px;color:var(--dm);}
+.foot a{color:var(--blue-lt);text-decoration:none;font-weight:700;}
+.hide{display:none!important;}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.35);
+  border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px;}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:480px){.card{padding:30px 22px;}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important;}}
+input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;font-stretch:inherit;} /*_iv_form_inherit*/
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="brand" id="brand">
+    <img src="logo.png" alt="Ismaili Volunteers" onerror="document.getElementById('brand').classList.add('nologo')">
+    <div class="mark">IV</div>
+    <h1>IV Hub</h1>
+    <p>Auckland Jamatkhana · Ismaili Volunteers</p>
+  </div>
+
+  <!-- Checking the link -->
+  <div id="stepLoading">
+    <h2>Checking your invitation…</h2>
+    <p class="lede">One moment.</p>
+  </div>
+
+  <!-- Valid link → set a password -->
+  <div id="stepSet" class="hide">
+    <h2 id="setTitle">Create your password</h2>
+    <p class="lede" id="setLede">Your invitation is confirmed. Choose a password and you're ready to sign in.</p>
+    <!--
+      The address is deliberately NOT displayed. Showing it would answer
+      the question the field below is asking, and would leak the address
+      to anyone who got hold of the link.
+    -->
+    <div class="fg">
+      <label>Your email address</label>
+      <input type="email" id="emailConfirm" placeholder="The address this invitation was sent to" autocomplete="username">
+    </div>
+    <div class="fg">
+      <label>Choose a password</label>
+      <div class="pw"><input type="password" id="pw1" placeholder="At least 8 characters" autocomplete="new-password">
+        <button type="button" class="eye" data-for="pw1" aria-label="Show password" title="Show password">&#128065;</button></div>
+    </div>
+    <div class="fg">
+      <label>Confirm password</label>
+      <div class="pw"><input type="password" id="pw2" placeholder="Type it again" autocomplete="new-password">
+        <button type="button" class="eye" data-for="pw2" aria-label="Show password" title="Show password">&#128065;</button></div>
+    </div>
+    <div class="rules">Use at least 8 characters. Pick something you don't use elsewhere.</div>
+    <button class="btn" id="saveBtn">Create account</button>
+    <div class="msg" id="setMsg"></div>
+  </div>
+
+  <!-- No link, or an expired one. A fresh link is sent BY a leader, never
+       requested here: this page is reachable by anyone, so a self-serve
+       form would have handed the whole "resets are admin-sent" rule
+       straight back — anybody could have triggered a reset email to any
+       member's address just by typing it in. -->
+  <div id="stepRequest" class="hide">
+    <h2 id="reqTitle">Open your invitation link</h2>
+    <p class="lede" id="reqLede">
+      This page sets up your account from the link in your invitation email. Open that email and
+      press <b>Set your password</b>.
+    </p>
+    <p class="lede" id="reqAsk">
+      If the link has expired or you can't find it, ask a <b>Director</b> or <b>Facilitator</b> to
+      send you a new one. They can do it from Login Management on the Hub, and it takes a moment.
+    </p>
+    <div class="msg" id="reqMsg"></div>
+  </div>
+
+  <!-- Done -->
+  <div id="stepDone" class="hide">
+    <h2 id="doneTitle">You're all set</h2>
+    <p class="lede" id="doneLede">Your password has been saved. Taking you to the sign-in page…</p>
+    <!--
+      The password is held in memory only, purely so this button works. It
+      is never written to storage and is gone the moment the tab closes, so
+      the copy is a do-it-now step rather than something to come back to.
+      Deliberately not displayed: this screen may be open in front of
+      other people.
+    -->
+    <div id="copyWrap" class="hide">
+      <div class="fg">
+        <label>Your new password</label>
+        <div class="pw"><input type="password" id="pwCopy" readonly value="" autocomplete="off">
+          <button type="button" class="eye" data-for="pwCopy" aria-label="Show password" title="Show password">&#128065;</button></div>
+      </div>
+      <button class="btn ghost" id="copyBtn" style="margin-top:0;">Copy password</button>
+      <div class="rules" style="margin-top:10px;">Copy it now if you want it saved somewhere &mdash; it is not stored, and closing this page loses it.</div>
+    </div>
+    <a class="btn" href="index.html" style="display:block;text-align:center;text-decoration:none;line-height:1.4;">Go to the Hub</a>
+  </div>
+
+  <div class="foot">
+    Already have an account? <a href="index.html">Sign in</a>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════
+   ACCOUNT SETUP
+
+   Invite and password-reset emails send people here. The link carries a
+   one-time token which Supabase turns into a short-lived session — that
+   token is the proof of invitation, and it is the only thing that lets a
+   password be set.
+
+   The email box on this page is a confirmation, not the key: it must
+   match the address the link was issued to. Setting a password from an
+   address alone would let anyone take over anyone's account by typing
+   their email, so it is deliberately not possible.
+═══════════════════════════════════════════════════════════════════ */
+
+const SB_URL = 'https://ysmkqvceezrjcrlixlii.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzbWtxdmNlZXpyamNybGl4bGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjk4NzcsImV4cCI6MjA5Mzg0NTg3N30.YHx-q-nR8qfFvk2dZnEg5knK6eDK-zCbPlyxPDknK4w';
+
+const $ = id => document.getElementById(id);
+const show = id => { ['stepLoading','stepSet','stepRequest','stepDone'].forEach(s=>$(s).classList.add('hide')); $(id).classList.remove('hide'); };
+const say  = (el, text, kind) => { const m=$(el); m.textContent=text; m.className='msg'+(kind?' '+kind:''); };
+
+/* Read the link type before the client consumes the URL fragment. */
+const LINK_KIND = (function(){
+  try{
+    const h = location.hash || '';
+    if(!/access_token=/.test(h)) return null;
+    const m = /[#&]type=([a-z]+)/.exec(h);
+    return m ? m[1] : 'invite';
+  }catch(e){ return null; }
+})();
+
+let sb = null, ACCOUNT_EMAIL = '';
+
+function initClient(){
+  const lib = window.supabase || window.Supabase;
+  if(lib && lib.createClient){ sb = lib.createClient(SB_URL, SB_KEY); return true; }
+  return false;
+}
+function waitForLib(){
+  return new Promise(res=>{
+    if(initClient()) return res(true);
+    let waited = 0;
+    const t = setInterval(()=>{
+      waited += 100;
+      if(initClient()){ clearInterval(t); res(true); }
+      else if(waited >= 4000){ clearInterval(t); res(false); }
+    }, 100);
+  });
+}
+
+async function start(){
+  const ok = await waitForLib();
+  if(!ok){
+    show('stepRequest');
+    say('reqMsg','Could not reach the server. Check your connection and reload.','err');
+    return;
+  }
+  // Supabase has already exchanged the token in the URL for a session.
+  const { data } = await sb.auth.getSession();
+  const session = data && data.session;
+
+  if(!session || !session.user){
+    show('stepRequest');
+    if(LINK_KIND){
+      $('reqTitle').textContent = 'That link has expired';
+      $('reqLede').innerHTML = 'Invitation links can only be used once, and they time out.';
+    }
+    return;
+  }
+
+  // Held in memory only, to check what they type. Never rendered.
+  ACCOUNT_EMAIL = (session.user.email || '').toLowerCase();
+  if(LINK_KIND === 'recovery'){
+    $('setTitle').textContent = 'Forgotten password';
+    $('setLede').textContent  = 'Your reset link is confirmed. Choose a new password to finish — you have been signed out everywhere.';
+    $('saveBtn').textContent  = 'Save new password';
+    $('emailConfirm').placeholder = 'The address this reset was sent to';
+    document.title = 'Reset your password — IV Hub';
+  }
+  // Keep the token out of the address bar and out of browser history.
+  try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  show('stepSet');
+  setTimeout(()=>$('emailConfirm').focus(), 80);
+}
+
+async function savePassword(){
+  const typed = ($('emailConfirm').value||'').trim().toLowerCase();
+  const a = $('pw1').value||'', b = $('pw2').value||'';
+
+  if(!typed)                 return say('setMsg','Confirm the email address this was sent to.','err');
+  if(typed !== ACCOUNT_EMAIL) return say('setMsg','That does not match the address this invitation was sent to.','err');
+  if(a.length < 8)           return say('setMsg','Use at least 8 characters.','err');
+  if(a !== b)                return say('setMsg','The two passwords do not match.','err');
+
+  const btn = $('saveBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Saving…';
+  say('setMsg','');
+  try{
+    const { error } = await sb.auth.updateUser({ password: a });
+    if(error){
+      if(/expired|invalid|session|not authenticated/i.test(error.message||'')){
+        show('stepRequest');
+        $('reqTitle').textContent = 'That link has expired';
+        say('reqMsg','Ask a Director or Facilitator to send you a new one.','warn');
+        return;
+      }
+      if(/should be different|same as/i.test(error.message||'')){
+        return say('setMsg','Choose a password different from your current one.','err');
+      }
+      return say('setMsg', error.message || 'Could not save your password.','err');
+    }
+    // Sign out so they arrive at the Hub and sign in properly with the
+    // password they just chose — that also proves it works.
+    try{ await sb.auth.signOut(); }catch(e){}
+    // Hand the password to the copy step, then let them leave in their own
+    // time. The old two-second redirect would have carried them off the
+    // page before they could copy anything.
+    $('pwCopy').value = a;
+    $('copyWrap').classList.remove('hide');
+    if(LINK_KIND === 'recovery'){
+      $('doneTitle').textContent = 'Your password has been reset';
+      $('doneLede').textContent  = 'Sign in with your new password. You were signed out everywhere, so you will need it on each device.';
+    }else{
+      $('doneLede').textContent  = 'Sign in with your new password.';
+    }
+    show('stepDone');
+  }catch(e){
+    say('setMsg','Could not save your password: ' + (e.message||e), 'err');
+  }finally{
+    btn.disabled = false; btn.textContent = (LINK_KIND==='recovery') ? 'Save new password' : 'Create account';
+  }
+}
+
+/* requestLink() removed. Password resets are sent by a Director or
+   Facilitator from Login Management — never requested by the person
+   locked out. Leaving a send-me-a-link form on a page anyone can open
+   would have made that rule decorative. */
+
+$('saveBtn').addEventListener('click', savePassword);
+
+/* Reveal toggles. The field stays a password input until asked, so a
+   shoulder-surfer sees dots by default, and the person typing can still
+   check what they entered before committing to it. */
+document.addEventListener('click', function(ev){
+  const b = ev.target.closest('.eye'); if(!b) return;
+  const f = document.getElementById(b.getAttribute('data-for')); if(!f) return;
+  const showing = f.type === 'text';
+  f.type = showing ? 'password' : 'text';
+  b.classList.toggle('on', !showing);
+  b.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  b.setAttribute('title', showing ? 'Show password' : 'Hide password');
+});
+
+/* Copy without revealing. The value is only ever in this input and in the
+   variable behind it — nothing is written to storage, and a refresh loses
+   it, which is why the wording tells them to do it now. */
+$('copyBtn').addEventListener('click', async function(){
+  const f = $('pwCopy'); if(!f.value) return;
+  let ok = false;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(f.value); ok = true;
+    }else{
+      // Clipboard API needs a secure context; this path covers the rest.
+      const t = f.type; f.type = 'text'; f.select(); f.setSelectionRange(0, 999);
+      ok = document.execCommand('copy'); f.type = t;
+      window.getSelection().removeAllRanges();
+    }
+  }catch(e){ ok = false; }
+  this.textContent = ok ? 'Copied \u2713' : 'Press Ctrl+C to copy';
+  if(!ok){ const t=f.type; f.type='text'; f.select(); }
+  setTimeout(()=>{ this.textContent = 'Copy password'; }, 2600);
+});
+['emailConfirm','pw1','pw2'].forEach(id=>$(id).addEventListener('keydown', e=>{ if(e.key==='Enter') savePassword(); }));
+
+start();
+</script>
+</body>
+</html>
