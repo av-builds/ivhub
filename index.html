@@ -254,6 +254,8 @@ html{scroll-behavior:smooth;}
 }
 .toolbar input[type=search],.toolbar input[type=text]{flex:1;min-width:160px;background:var(--ds2);border:1px solid var(--db);border-radius:var(--r);padding:8px 12px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:13px;outline:none;transition:border .2s;}
 .toolbar input:focus{border-color:var(--blue-lt);}
+.toolbar select{background:var(--ds2);border:1px solid var(--db);border-radius:var(--r);padding:8px 12px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:13px;outline:none;transition:border .2s;}
+.toolbar select:focus{border-color:var(--blue-lt);}
 .tbl-wrap{overflow-x:auto;}
 table.mtab{width:100%;border-collapse:collapse;font-size:13px;}
 .mtab th{padding:7px 9px;text-align:left;color:var(--dm);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
@@ -759,13 +761,29 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <!-- ═══ PAGE: AUDIT LOGS ═══ -->
     <div class="page" id="page-audit">
       <div class="ph">
-        <div><h1>Audit Logs</h1><p>Latest 250 entries across the hub.</p></div>
+        <div><h1>Audit Logs</h1><p>What people changed, and what they opened.</p></div>
         <div class="ha">
           <button class="btn btn-bl" id="auRefreshBtn">↻ Refresh</button>
           <button class="btn btn-red" id="auClearBtn" style="display:none;">Clear all</button>
         </div>
       </div>
       <section class="panel">
+        <div class="toolbar">
+          <select id="auKind">
+            <option value="">Everything</option>
+            <option value="change">Changes only</option>
+            <option value="view">Page visits only</option>
+          </select>
+          <select id="auTeam">
+            <option value="">All teams</option>
+            <option value="Hub">Hub</option>
+            <option value="A">Team A</option>
+            <option value="B">Team B</option>
+            <option value="AV">AV Team</option>
+          </select>
+          <input type="search" id="auSearch" placeholder="Search name, action or detail…" autocomplete="off">
+          <span id="auCount" style="color:var(--dm);font-size:12px;"></span>
+        </div>
         <div class="tbl-wrap" id="auList" style="font-size:13px;"></div>
       </section>
     </div>
@@ -1129,29 +1147,69 @@ function isMissingColumn(e){
   return (e && e.code === '42703') || /column .* does not exist|could not find .* column|schema cache/i.test(m);
 }
 
-/* ─── Audit log (best-effort) ─── */
+/* ─── Audit log (best-effort) ───
+   Two tables, one list. audit_logs holds what somebody altered and is
+   kept for good; view_logs holds which section somebody opened and is
+   pruned after three months. They are read separately because the
+   database applies a different rule to each, and then merged by time so
+   the reader sees one story rather than two half-stories. Both are
+   filtered by RLS, so this page shows exactly the teams the person
+   signed in is entitled to see — no filtering is done here. */
+let AUDIT_ROWS = [];
 async function loadAuditList(){
   const box = $('auList');
   box.innerHTML = '<div style="padding:24px;text-align:center;color:var(--dm);">Loading…</div>';
   try{
     if(!sb) throw new Error('Database not connected');
-    const {data,error} = await sb.from('audit_logs').select('*').order('id',{ascending:false}).limit(250);
-    if(error) throw error;
-    if(!data || !data.length){ box.innerHTML = '<div style="padding:24px;text-align:center;color:var(--dm);">No audit entries yet.</div>'; return; }
-    box.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
-      + '<tr style="color:var(--dm);text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;">'
-      + '<th style="padding:6px 8px;">Time</th><th style="padding:6px 8px;">Who</th><th style="padding:6px 8px;">Action</th><th style="padding:6px 8px;">Category</th><th style="padding:6px 8px;">Detail</th></tr>'
-      + data.map(r=>{
-          const t = r.ts ? new Date(r.ts).toLocaleString('en-NZ',{timeZone:'Pacific/Auckland',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
-          return '<tr style="border-top:1px solid var(--db);">'
-            + '<td style="padding:6px 8px;white-space:nowrap;color:var(--dm);font-variant-numeric:tabular-nums;">'+esc(t)+'</td>'
-            + '<td style="padding:6px 8px;white-space:nowrap;">'+esc(r.user_display||r.username||'')
-              + (r.user_email ? '<small style="display:block;color:var(--dm);font-weight:600;">'+esc(r.user_email)+'</small>' : '')+'</td>'
-            + '<td style="padding:6px 8px;">'+esc(r.action||'')+'</td>'
-            + '<td style="padding:6px 8px;color:var(--blue-lt);">'+esc(r.category||'')+'</td>'
-            + '<td style="padding:6px 8px;color:var(--dm);">'+esc(r.detail||'')+'</td></tr>';
-        }).join('') + '</table>';
+    const [chg, vw] = await Promise.all([
+      sb.from('audit_logs').select('*').order('id',{ascending:false}).limit(250),
+      sb.from('view_logs').select('*').order('id',{ascending:false}).limit(250)
+    ]);
+    if(chg.error) throw chg.error;
+    // A missing view_logs table is not a reason to hide the changes.
+    const views = vw.error ? [] : (vw.data || []);
+    AUDIT_ROWS = (chg.data||[]).map(r=>({
+      kind:'change', ts:r.ts, team:r.team||'', who:r.user_display||r.username||'',
+      email:r.user_email||'', action:r.action||'', category:r.category||'', detail:r.detail||''
+    })).concat(views.map(r=>({
+      kind:'view', ts:r.ts, team:r.team||'', who:r.user_display||r.username||'',
+      email:r.user_email||'', action:'Opened ' + (r.section||'a page'), category:'viewed', detail:''
+    }))).sort((a,b)=> String(b.ts||'').localeCompare(String(a.ts||'')));
+    if(vw.error) console.warn('view_logs skipped:', vw.error.message);
+    renderAuditList();
   }catch(e){ box.innerHTML = '<div style="padding:24px;text-align:center;color:var(--dm);">Could not load logs: '+esc(e.message||String(e))+'</div>'; }
+}
+function renderAuditList(){
+  const box = $('auList');
+  const kind = ($('auKind')||{}).value || '';
+  const team = ($('auTeam')||{}).value || '';
+  const q    = (($('auSearch')||{}).value || '').toLowerCase().trim();
+  const rows = AUDIT_ROWS.filter(r=>{
+    if(kind && r.kind !== kind) return false;
+    if(team && r.team !== team) return false;
+    if(q && !((r.who+' '+r.email+' '+r.action+' '+r.detail+' '+r.category).toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const cnt = $('auCount');
+  if(cnt) cnt.textContent = rows.length + (rows.length===1?' entry':' entries');
+  if(!rows.length){ box.innerHTML = '<div style="padding:24px;text-align:center;color:var(--dm);">No entries match.</div>'; return; }
+  const TEAM_TAG = {Hub:'Hub', A:'Team A', B:'Team B', AV:'AV Team'};
+  box.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
+    + '<tr style="color:var(--dm);text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;">'
+    + '<th style="padding:6px 8px;">Time</th><th style="padding:6px 8px;">Who</th><th style="padding:6px 8px;">Where</th>'
+    + '<th style="padding:6px 8px;">Action</th><th style="padding:6px 8px;">Category</th><th style="padding:6px 8px;">Detail</th></tr>'
+    + rows.map(r=>{
+        const t = r.ts ? new Date(r.ts).toLocaleString('en-NZ',{timeZone:'Pacific/Auckland',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+        const dim = r.kind === 'view' ? 'opacity:.72;' : '';
+        return '<tr style="border-top:1px solid var(--db);'+dim+'">'
+          + '<td style="padding:6px 8px;white-space:nowrap;color:var(--dm);font-variant-numeric:tabular-nums;">'+esc(t)+'</td>'
+          + '<td style="padding:6px 8px;white-space:nowrap;">'+esc(r.who)
+            + (r.email ? '<small style="display:block;color:var(--dm);font-weight:600;">'+esc(r.email)+'</small>' : '')+'</td>'
+          + '<td style="padding:6px 8px;white-space:nowrap;color:var(--dm);">'+esc(TEAM_TAG[r.team]||r.team||'—')+'</td>'
+          + '<td style="padding:6px 8px;">'+esc(r.action)+'</td>'
+          + '<td style="padding:6px 8px;color:'+(r.kind==='view'?'var(--dm)':'var(--blue-lt)')+';">'+esc(r.category)+'</td>'
+          + '<td style="padding:6px 8px;color:var(--dm);">'+esc(r.detail)+'</td></tr>';
+      }).join('') + '</table>';
 }
 function renderAuditPage(){
   $('auClearBtn').style.display = hasPerm('owner') ? 'inline-flex' : 'none';   // Owner only, not the Owner tier
@@ -1159,12 +1217,16 @@ function renderAuditPage(){
 }
 async function clearAuditLogs(){
   if(!hasPerm('owner')) return;
-  const typed = prompt('This permanently deletes ALL audit log entries.\nType DELETE to confirm:');
+  const typed = prompt('This permanently deletes ALL audit log entries — both changes and page visits, for every team.\nType DELETE to confirm:');
   if(typed !== 'DELETE'){ if(typed !== null) toast('Confirmation text did not match — nothing deleted.', 'err'); return; }
   if(!sb){ toast('No database connection.', 'err'); return; }
   try{
     const {error} = await sb.from('audit_logs').delete().gte('id', 0);
     if(error) throw error;
+    // The visit log is a separate table; leaving it behind would make
+    // "clear all" a half-truth on a page that shows both.
+    const v = await sb.from('view_logs').delete().gte('id', 0);
+    if(v.error) console.warn('view_logs clear skipped:', v.error.message);
     toast('Audit logs cleared.');
     await auditLog('Cleared audit logs', 'admin', 'All entries deleted by owner');
     loadAuditList();
@@ -1182,6 +1244,7 @@ async function auditLog(action, category, detail){
       /* Two volunteers will share a name across three hundred accounts,
          and a log that cannot tell them apart fails at its only job. */
       user_email: CU.email || '',
+      team: 'Hub',
       action: action || '', category: category || 'home', detail: detail || ''
     });
     if(error) console.warn('audit_logs skipped:', error.message);
@@ -1403,6 +1466,32 @@ async function doLogout(){
   $('loginErr').textContent = '';
 }
 
+/* ── WHAT PEOPLE OPEN ────────────────────────────────────────────────
+   One entry when somebody opens a section that holds other people's
+   information. Not the calendar, not announcements, not every click —
+   those are noise, and three hundred volunteers browsing would bury the
+   entries that matter.
+
+   Kept in its own table with a three-month life. What somebody altered is
+   a permanent record; where somebody browsed is not. */
+const LOGGED_SECTIONS = {
+  members: 'User Management', logins: 'Login Management', stats: 'Duty Stats',
+  admin: 'Admin Panel', audit: 'Audit Logs',
+  submit: 'Invite My Team', approve: 'Invitations'
+};
+let _lastView = null;
+async function logView(section){
+  if(!sb || !CU.uid || !section) return;
+  if(_lastView === section) return;      // re-renders are not new visits
+  _lastView = section;
+  try{
+    await sb.from('view_logs').insert({
+      username: CU.user || '', user_display: CU.display || '', user_email: CU.email || '',
+      team: 'Hub', section: section
+    });
+  }catch(e){ /* best-effort: never let recording a visit break the visit */ }
+}
+
 /* ═══ APP SHELL / NAVIGATION ═══ */
 let clockTimer = null;
 function tickClock(){
@@ -1445,6 +1534,7 @@ function nav(id){
   else if(id === 'myduties') openMyDuties();
   else if(id === 'submit') loadSubmitPage();
   else if(id === 'approve') loadApprovePage();
+  if(LOGGED_SECTIONS[id]) logView(LOGGED_SECTIONS[id]);
 }
 function pageActive(id){ const p = $('page-' + id); return !!(p && p.classList.contains('active')); }
 function toggleSidebar(){ $('sidebar').classList.toggle('open'); $('sideOverlay').classList.toggle('show', $('sidebar').classList.contains('open')); }
@@ -2571,19 +2661,26 @@ async function loadSubmitPage(){
        has one. profiles is readable to rank 5 and above only, so a Team
        Lead legitimately gets nothing back — signupState falls through to
        the batch state, which they can see. */
-    const [mres, pres, bres] = await Promise.all([
+    const [mres, pres, bres, ires] = await Promise.all([
       sb.from('iv_members').select('*').order('name'),
       sb.from('profiles').select('id,member_id,last_seen,email,display'),
-      sb.from('iv_invite_batches').select('*, iv_invite_items(*)').order('created_at', {ascending:false})
+      /* Each batch drags its items with it, so reading them all would
+         grow with every invitation ever sent. This list is a lead's
+         recent submissions, not an archive. */
+      sb.from('iv_invite_batches').select('*, iv_invite_items(*)').order('created_at', {ascending:false}).limit(60),
+      /* Who is already waiting is asked separately and without a cap,
+         because a capped history would eventually stop covering an old
+         still-pending request — and a member who is waiting would be
+         offered for submission again. Unbounded is safe here: these
+         drain to sent or rejected, so the set stays small. */
+      sb.from('iv_invite_items').select('member_id,status').in('status', ['pending','approved'])
     ]);
     if(mres.error) throw mres.error;
     mRows = mres.data || [];
     if(!pres.error && Array.isArray(pres.data)) PROFILES = pres.data;
     sbBatches = bres.error ? [] : (bres.data || []);
     sbPending = {};
-    sbBatches.forEach(b=>(b.iv_invite_items||[]).forEach(it=>{
-      if(it.member_id && (it.status === 'pending' || it.status === 'approved')) sbPending[it.member_id] = {batch:b, item:it};
-    }));
+    (ires.error ? [] : (ires.data || [])).forEach(it=>{ if(it.member_id) sbPending[it.member_id] = it; });
     renderSubmit();
     renderMySubmissions();
   }catch(e){
@@ -2773,13 +2870,20 @@ async function loadApprovePage(){
   $('apvList').innerHTML = '<div class="skel"></div><div class="skel"></div>';
   if(!sb){ $('apvList').innerHTML = '<div class="sb-empty">No database connection.</div>'; return; }
   try{
-    const [bres, mres] = await Promise.all([
-      sb.from('iv_invite_batches').select('*, iv_invite_items(*)').order('created_at', {ascending:false}).limit(40),
+    /* Waiting submissions are asked for on their own and without a cap.
+       They used to arrive inside a capped history, which meant that once
+       there were more than forty batches an old submission nobody had
+       got to would drop off the end — invisible here, uncounted in the
+       nav badge, and waiting forever. The cap now applies only to
+       already-decided batches, which are there for context. */
+    const [pres, hres, mres] = await Promise.all([
+      sb.from('iv_invite_batches').select('*, iv_invite_items(*)').eq('status','pending').order('created_at', {ascending:false}),
+      sb.from('iv_invite_batches').select('*, iv_invite_items(*)').neq('status','pending').order('created_at', {ascending:false}).limit(40),
       (mRows && mRows.length) ? Promise.resolve({data:mRows}) : sb.from('iv_members').select('*')
     ]);
-    if(bres.error) throw bres.error;
+    if(pres.error) throw pres.error;
     if(mres && !mres.error && mres.data) mRows = mres.data;
-    apvBatches = bres.data || [];
+    apvBatches = (pres.data || []).concat(hres.error ? [] : (hres.data || []));
     renderApprove();
     refreshApproveCount();
   }catch(e){
@@ -3230,6 +3334,9 @@ function bindUI(){
   $('apvRefresh').addEventListener('click', loadApprovePage);
   /* audit */
   $('auRefreshBtn').addEventListener('click', loadAuditList);
+  $('auKind').addEventListener('change', renderAuditList);
+  $('auTeam').addEventListener('change', renderAuditList);
+  $('auSearch').addEventListener('input', renderAuditList);
   $('auClearBtn').addEventListener('click', clearAuditLogs);
 }
 window.addEventListener('DOMContentLoaded', async ()=>{

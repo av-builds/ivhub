@@ -1439,7 +1439,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <!-- AUDIT LOGS -->
     <div class="page admin-page" id="page-audit">
       <div class="ph">
-        <div><h1>Audit Logs</h1><p>Track all changes made by users</p></div>
+        <div><h1>Audit Logs</h1><p>AV Team activity — what people changed, and what they opened</p></div>
         <div class="ha">
           <button class="btn btn-ol btn-sm" onclick="clearAuditDisplay()">Clear View</button>
         </div>
@@ -1453,6 +1453,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <option value="training">Training</option>
           <option value="roster">Roster</option>
           <option value="login">Login</option>
+          <option value="viewed">Page Visits</option>
         </select>
       </div>
       <div class="tw">
@@ -1780,6 +1781,12 @@ const PERM_KEYS = ['owner','developer','director','deputy_director','phmu_lead',
 const IV_TOP = ['owner','developer','director','deputy_director','phmu_lead','iv_admin'];
 // Admin over the AV panel: AV Lead, AV Assistant Lead, AV Co-ordinator, and IV leadership.
 const AV_ADMIN_KEYS = IV_TOP.concat(['av_admin','av_atl','av_coord']);
+// Who may read the activity log. IV leadership sees every team's; the AV
+// Lead and Assistant Lead see AV's own. The database enforces the same
+// list, so anyone outside it would be shown an empty page rather than a
+// restricted one — better to not offer it. A Co-ordinator runs the
+// roster but does not oversee the team, so is not on it.
+const LOG_READ_KEYS = IV_TOP.concat(['av_admin','av_atl']);
 // Legacy values from older builds / hand-edited rows → current keys
 const PERM_LEGACY = { admin:'av_admin', avadmin:'av_admin', ivadmin:'iv_admin', volunteer:'av_team', team:'av_team', member:'av_team' };
 /* Parses whatever shape a perms value arrives in — a real array, a JSON
@@ -2631,12 +2638,13 @@ function applySession(){
   document.querySelectorAll('.nav-iv-admin').forEach(el => {
     el.style.display = isIvAdmin ? (el.classList.contains('nav-item') ? 'flex' : 'block') : 'none';
   });
-  // nav-any-admin (Audit Logs): account managers only. The log covers every
-  // team, not just AV, so it follows account management. The database now
-  // enforces the same rule, so showing it to an AV admin would render an
-  // empty page rather than a restricted one — hide it instead.
+  // nav-any-admin (Audit Logs): IV leadership plus the AV Lead and
+  // Assistant Lead, who see their own team's activity and nobody else's.
+  // The database applies the same rule row by row, so what appears here
+  // is already narrowed to what the reader is entitled to.
+  const canReadLog = LOG_READ_KEYS.some(k => perms.includes(k));
   document.querySelectorAll('.nav-any-admin').forEach(el => {
-    el.style.display = isIvAdmin ? (el.classList.contains('nav-item') ? 'flex' : 'block') : 'none';
+    el.style.display = canReadLog ? (el.classList.contains('nav-item') ? 'flex' : 'block') : 'none';
   });
   // nav-owner: Owner only
   document.querySelectorAll('.nav-owner').forEach(el => {
@@ -4443,6 +4451,7 @@ function auditLog(action, category, detail){
     user_display: window.CU ? CU.display : 'System',
     username: window.CU ? CU.user     : 'system',
     user_email: window.CU ? (CU.email || '') : '',
+    team:     'AV',
     action:   action   || '',
     category: category || '',
     detail:   detail   || '',
@@ -4465,6 +4474,10 @@ async function dbSaveAuditLog(entry){
       // reading the wrong one saved every AV log line with a blank name.
       user_display: entry.user_display || entry.username || '',
       user_email:   entry.user_email   || '',
+      // Tags the row as AV's. The database reads this to decide who may
+      // see it: without it the entry falls back to leadership-only and
+      // the AV Leads cannot read their own team's record.
+      team:         'AV',
       action:       entry.action       || '',
       category:     entry.category     || '',
       detail:       entry.detail       || '',
@@ -4480,20 +4493,57 @@ async function dbSaveAuditLog(entry){
     console.error('Audit DB exception:', e.message);
   }
 }
+/* ── WHAT PEOPLE OPEN ──────────────────────────────────────────────
+   One entry per section that holds other people's information, so the
+   AV Leads can see who looked as well as who changed. Not the calendar
+   and not the dashboard — those are what everybody uses all day, and
+   recording them would bury the entries that matter. Kept in its own
+   table with a three-month life. */
+const LOGGED_SECTIONS = {
+  volunteers:'User Management', events:'Add-ons', stats:'Duty Stats',
+  override:'Manual Override', audit:'Audit Logs', adminpanel:'Admin Panel'
+};
+let _lastView = null;
+async function logView(section){
+  if(!sb || !section || !window.CU) return;
+  if(_lastView === section) return;         // re-renders are not new visits
+  _lastView = section;
+  try{
+    await sb.from('view_logs').insert({
+      username: CU.user || '', user_display: CU.display || CU.user || '',
+      user_email: CU.email || '', team: 'AV', section: section
+    });
+  }catch(e){ /* best-effort: never let recording a visit break the visit */ }
+}
 async function loadAuditLogs(){
   if(!sb){ renderAuditLogs(); return; }
   try{
-    const {data, error} = await sb.from('audit_logs').select('*').order('ts', {ascending: false}).limit(500);
+    const [chg, vw] = await Promise.all([
+      sb.from('audit_logs').select('*').order('ts', {ascending: false}).limit(500),
+      sb.from('view_logs').select('*').order('ts', {ascending: false}).limit(500)
+    ]);
+    const {data, error} = chg;
     if(error) throw error;
+    // A missing or unreadable view log is no reason to hide the changes.
+    if(vw.error) console.warn('view_logs skipped:', vw.error.message);
     // Merge DB logs with any in-memory logs from this session
     const dbLogs = (data||[]).map(r => ({
       ts:       r.ts       || '',
       user_display: r.user_display || '',
       username: r.username || '',
+      team:     r.team     || '',
       action:   r.action   || '',
       category: r.category || '',
       detail:   r.detail   || '',
-    }));
+    })).concat((vw.error ? [] : (vw.data||[])).map(r => ({
+      ts:       r.ts       || '',
+      user_display: r.user_display || '',
+      username: r.username || '',
+      team:     r.team     || '',
+      action:   'Opened ' + (r.section || 'a page'),
+      category: 'viewed',
+      detail:   '',
+    })));
     // Merge: keep in-memory entries that aren't in DB yet, plus all DB entries
     const inMemoryNew = auditLogs.filter(l =>
       !dbLogs.some(d => d.ts === l.ts && d.username === l.username && d.action === l.action)
@@ -4516,6 +4566,11 @@ function renderAuditLogs(){
   const search = (document.getElementById('auditSearch')?.value||'').toLowerCase();
   const filter = document.getElementById('auditFilter')?.value||'';
   let logs = auditLogs.filter(l => {
+    // This page is the AV Team's own record. Entries from the Hub and the
+    // team pages belong to the Hub's log, not here — even for leadership,
+    // who can read all four. Untagged rows predate the team column and
+    // were written from this page, so they stay.
+    if(l.team && l.team !== 'AV') return false;
     if(filter && l.category !== filter) return false;
     if(search && !(
       (l.user_display||l.username||'').toLowerCase().includes(search) ||
@@ -4541,20 +4596,26 @@ function renderAuditLogs(){
     training:  {bg:'rgba(245,158,11,0.12)',  color:'#FCD34D', border:'rgba(245,158,11,0.3)',  icon:'🎓'},
     roster:    {bg:'rgba(16,185,129,0.12)',  color:'#6EE7B7', border:'rgba(16,185,129,0.3)',  icon:'📅'},
     audit:     {bg:'rgba(239,68,68,0.12)',   color:'#FCA5A5', border:'rgba(239,68,68,0.3)',   icon:'🛡️'},
+    viewed:    {bg:'rgba(100,116,139,0.10)', color:'#7B8FA5', border:'rgba(100,116,139,0.22)',icon:'👁️'},
   };
   const DEF = {bg:'rgba(100,116,139,0.12)',color:'#94A3B8',border:'rgba(100,116,139,0.3)',icon:'📋'};
   // Group logs by date
   const groups = {};
+  // A row with no usable timestamp would otherwise head its own
+  // "Invalid Date" section, which reads like a fault in the log itself.
+  const when = l => { const d = new Date(l.ts); return isNaN(d) ? null : d; };
   logs.forEach(l => {
-    const day = new Date(l.ts).toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const d = when(l);
+    const day = d ? d.toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+                  : 'Undated';
     if(!groups[day]) groups[day] = [];
     groups[day].push(l);
   });
   list.innerHTML = Object.entries(groups).map(([day, dayLogs]) => {
     const rows = dayLogs.map(l => {
       const s = CAT_STYLE[l.category] || DEF;
-      const dt = new Date(l.ts);
-      const timeStr = dt.toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+      const dt = when(l);
+      const timeStr = dt ? dt.toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : '—';
       const initials = (l.user_display||l.username||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
       // Avatar colour based on username hash
       const hue = [...(l.username||'x')].reduce((acc,c)=>acc+c.charCodeAt(0),0) % 360;
@@ -4605,13 +4666,16 @@ function confirmClearAllLogs(){
     toast('Only the Owner can clear audit logs.','err');
     return;
   }
-  if(!confirm('Clear ALL audit logs permanently? This cannot be undone.')) return;
+  if(!confirm('Clear ALL audit logs permanently — changes and page visits, every team? This cannot be undone.')) return;
   auditLogs = [];
   // Record the purge AFTER it happens. Logging first meant the entry saying
   // the log had been cleared was itself inside the range being deleted, so
   // the one line that mattered was the one guaranteed to disappear.
   const done = ()=>{ auditLog('Cleared all audit logs','audit','All logs purged'); renderAuditLogs(); toast('Audit logs cleared.'); };
-  if(sb) sb.from('audit_logs').delete().gte('ts','1970-01-01T00:00:00Z').then(done, done);
+  // Page visits live in their own table; leaving them behind would make
+  // "clear all" a half-truth on a page that now shows both.
+  const clearViews = ()=> sb ? sb.from('view_logs').delete().gte('ts','1970-01-01T00:00:00Z').then(done, done) : done();
+  if(sb) sb.from('audit_logs').delete().gte('ts','1970-01-01T00:00:00Z').then(clearViews, clearViews);
   else done();
 }
 /* ═══════════════════════════════════
@@ -4863,12 +4927,13 @@ function nav(el){
   const _isAvTeam  = _has('av_team') || _isAvAdmin;
   const _isIvTeam  = _has('iv_team') || _isIvAdmin;
   const _isAnyAdmin = _isAvAdmin || _isIvAdmin;
+  const _canReadLog = LOG_READ_KEYS.some(k=>_has(k));
   // Enforce page access per section (AV-only build)
   const pg = el.dataset.page;
   const _avTeamPages  = ['calendar','myduties'];              // volunteers: roster + own duties
   const _avAdminPages = ['override','volunteers','events','stats'];
   if(pg === 'adminpanel' && !_isOwner) return;
-  if(pg === 'audit' && !_isAnyAdmin) return;
+  if(pg === 'audit' && !_canReadLog) return;
   if(_avAdminPages.includes(pg) && !_isAvAdmin) return;
   if(_avTeamPages.includes(pg) && !_isAvTeam) return;
   document.querySelectorAll('.page').forEach(p=>{ p.classList.remove('active'); p.classList.remove('ep-visible'); });
@@ -4879,6 +4944,7 @@ function nav(el){
   // ep-only pages need ep-visible to override the CSS lock
   if(_pg.classList.contains('ep-only')) _pg.classList.add('ep-visible');
   el.classList.add('active');
+  if(LOGGED_SECTIONS[pg]) logView(LOGGED_SECTIONS[pg]);
   if(el.dataset.page === 'audit') renderAuditLogs();
   if(el.dataset.page === 'myduties') mdInit();
   if(el.dataset.page === 'stats') renderStats();
@@ -5206,9 +5272,10 @@ function handleUserChange(payload){
           const isIvAdmin = isOwner || perms.includes('iv_admin');
           const isAvTeam = isAvAdmin || perms.includes('av_team');
           const isAnyAdmin = isAvAdmin || isIvAdmin;
+          const canReadLog = LOG_READ_KEYS.some(k => perms.includes(k));
           const ok = pg==='dashboard'
             || (pg==='adminpanel' && isOwner)
-            || (pg==='audit' && isAnyAdmin)
+            || (pg==='audit' && canReadLog)
             || (['override','volunteers','events','stats'].includes(pg) && isAvAdmin)
             || (['calendar','myduties'].includes(pg) && isAvTeam);
           if(!ok) nav(document.querySelector('[data-page=dashboard]'));
@@ -5331,6 +5398,7 @@ function handleAuditChange(payload){
     ts:       row.ts||'',
     user_display: row.user_display||'',
     username: row.username||'',
+    team:     row.team||'',
     action:   row.action||'',
     category: row.category||'',
     detail:   row.detail||'',

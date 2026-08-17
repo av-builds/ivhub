@@ -90,16 +90,34 @@ a{color:var(--blue-lt);text-decoration:none;}
 .nav-item.active::before{transform:scaleY(1);}
 .nav-item .ni{width:18px;text-align:center;font-size:15px;flex-shrink:0;}
 .nav-item .nbadge{margin-left:auto;font-size:11px;font-weight:900;background:rgba(239,68,68,.16);color:var(--red-lt);border:1px solid rgba(239,68,68,.3);border-radius:11px;padding:1px 7px;}
-/* The bell. Lit means there is something to do; unlit it is not shown at
-   all, so it never becomes furniture people stop noticing. */
-.bell-item.lit .ni{animation:bellRing 2.4s ease-in-out 1;}
-.bell-item.lit .nbadge{background:var(--gold-bg);color:var(--gold-lt);border-color:var(--gold-bd);}
+/* The bell. Shown only when there is something to do, so it never becomes
+   furniture people stop noticing. Parked in the bottom-right corner, one
+   toast-height up so a message can slide in underneath without covering
+   it. The corner is the one spot that is free at every width: the left is
+   the sidebar below 1101px and the menu button below 900px, and the top
+   is the nav bar. */
+.bell-fab{position:fixed;right:18px;bottom:76px;z-index:340;display:flex;align-items:center;gap:9px;
+  background:var(--ds);border:1px solid var(--gold-bd);color:var(--dt);border-radius:24px;
+  padding:10px 16px 10px 14px;font-family:'Archivo',sans-serif;font-size:13px;font-weight:800;
+  cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:transform .15s,box-shadow .2s;}
+.bell-fab:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(0,0,0,.55);}
+.bell-fab .ni{font-size:16px;line-height:1;}
+.bell-fab .nbadge{margin-left:2px;background:var(--gold-bg);color:var(--gold-lt);border:1px solid var(--gold-bd);
+  border-radius:11px;padding:1px 8px;font-size:11.5px;font-weight:900;}
+.bell-fab.lit .ni{animation:bellRing 2.4s ease-in-out 1;}
+/* On a phone the label is dropped and it becomes a plain round button
+   with the count clipped to its edge, so it takes up almost no screen. */
+@media(max-width:640px){
+  .bell-fab-t{display:none;}
+  .bell-fab{position:fixed;padding:0;gap:0;width:50px;height:50px;border-radius:50%;justify-content:center;}
+  .bell-fab .ni{font-size:19px;}
+  .bell-fab .nbadge{position:absolute;top:-5px;right:-5px;margin:0;min-width:21px;text-align:center;
+    background:var(--gold);color:#1A1206;border-color:var(--gold);}
+}
 @keyframes bellRing{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-11deg)}80%{transform:rotate(9deg)}90%{transform:rotate(-5deg)}}
-@media (prefers-reduced-motion: reduce){ .bell-item.lit .ni{animation:none;} }
-/* Fixed to the viewport, not tucked inside the sidebar. Above 1101px the
-   sidebar is display:none and the nav is mirrored into the top bar, so a
-   panel living inside it would open where nobody can see it. Positioned
-   against whichever bell was actually clicked. */
+@media (prefers-reduced-motion: reduce){ .bell-fab.lit .ni{animation:none;} }
+/* Opens upwards from the button, right-aligned with it, so a long list
+   grows into the empty page instead of off the bottom of the screen. */
 .bell-pop{display:none;position:fixed;z-index:500;width:320px;max-width:calc(100vw - 24px);
   background:var(--ds2);border:1px solid var(--db);border-radius:9px;overflow:hidden;
   box-shadow:0 18px 44px rgba(0,0,0,.55);}
@@ -111,7 +129,6 @@ a{color:var(--blue-lt);text-decoration:none;}
 .bell-row b{display:block;font-size:12.5px;font-weight:800;}
 .bell-row small{display:block;color:var(--dm);font-size:11.5px;margin-top:1px;}
 .bell-row .tag{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-lt);}
-body.sb-min .bell-pop{display:none;}
 .sb-nav .nav-item:nth-of-type(1){animation-delay:.02s}.sb-nav .nav-item:nth-of-type(2){animation-delay:.05s}
 .sb-nav .nav-item:nth-of-type(3){animation-delay:.08s}.sb-nav .nav-item:nth-of-type(4){animation-delay:.11s}
 .sb-nav .nav-item:nth-of-type(5){animation-delay:.14s}.sb-nav .nav-item:nth-of-type(6){animation-delay:.17s}
@@ -577,12 +594,6 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     </div>
     <nav class="sb-nav" id="sbNav">
       <a class="hub-link" href="index.html"><span>←</span><span class="hl-t">Back to Hub</span></a>
-      <!-- Needs attention. Only ever holds things a lead can act on: a
-           bell that cries wolf stops being read within a fortnight. -->
-      <div class="nav-item bell-item nav-mgmt" id="bellItem" onclick="toggleBell(event)" style="display:none">
-        <span class="ni">🔔</span><span class="nt">Needs attention</span><span class="nbadge" id="bellCount">0</span>
-      </div>
-      <div class="bell-pop" id="bellPop"></div>
       <!-- General is the volunteer view. The brand at the top of the bar is
            the way back to the dashboard, so there is no Dashboard item. -->
       <div class="nav-sec">General</div>
@@ -616,6 +627,12 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <div class="page" id="page-announce"><div id="body-announce"></div></div>
   </main>
 </div>
+
+<button class="bell-fab" id="bellItem" onclick="toggleBell(event)" style="display:none"
+        title="Things that need your attention" aria-label="Things that need your attention">
+  <span class="ni">🔔</span><span class="bell-fab-t">Needs attention</span><span class="nbadge" id="bellCount">0</span>
+</button>
+<div class="bell-pop" id="bellPop"></div>
 
 <div id="mo" class="mo"><div id="mbox" class="mbox"></div></div>
 <div id="dlg" class="dlg"><div id="dcard" class="dcard"></div></div>
@@ -786,6 +803,7 @@ async function auditLog(action,category,detail){
     const u=CU||{};
     await sb.from('audit_logs').insert({user_display:u.display||u.user||'',username:u.user||'',
       user_email:u.email||'',   // two people share a name; the address does not
+      team:PAGE_TEAM,
       action:action,category:category,detail:detail||''});
   }catch(e){ /* best-effort */ }
 }
@@ -1110,18 +1128,41 @@ function eventsInCycle(k){ return EVENTS.filter(e=>inCycleK(e.date,k)).sort((a,b
 function isAway(m,date){ return Array.isArray(m.away)&&m.away.indexOf(date)>=0; }
 function normMember(m){ if(!Array.isArray(m.away)) m.away=[]; if(!m.prefs||typeof m.prefs!=='object'||Array.isArray(m.prefs)) m.prefs={}; if(!Array.isArray(m.prefs.prefer)) m.prefs.prefer=[]; if(!Array.isArray(m.prefs.avoid)) m.prefs.avoid=[]; if(!m.rank) m.rank='Member'; return m; }
 
-/* ── DATA LOAD ── */
+/* ── DATA LOAD ──────────────────────────────────────────────────────
+   Nothing is asked for that this page will not show. That used not to be
+   true: iv_roster and iv_attendance were fetched whole, so every visit
+   downloaded both teams' entire history. A roster row carries the whole
+   assignment for an event as one JSON blob and attendance is one row per
+   person per event, so those two were by far the largest thing the page
+   did — and half of what arrived belonged to the other team.
+
+   Events come back first so the two big tables can be asked for exactly
+   the events this team owns. It costs one extra round trip and saves a
+   payload that grows with every event either team ever runs. */
 function tableMissing(err){ return err&&/does not exist|42P01|relation|schema cache/i.test((err.message||'')+(err.code||'')); }
+/* PostgREST puts an .in() list in the query string, so a team with years
+   of events behind it would eventually build a URL too long to send.
+   Ask in batches and stitch the answers back together. */
+const IN_CHUNK=200;
+async function byEventId(table, ids){
+  if(!ids.length) return {data:[]};
+  const out=[];
+  for(let i=0;i<ids.length;i+=IN_CHUNK){
+    const {data,error}=await sb.from(table).select('*').in('event_id',ids.slice(i,i+IN_CHUNK));
+    if(error) return {error:error};
+    out.push.apply(out,data||[]);
+  }
+  return {data:out};
+}
+const ANN_LIMIT=200;      // a feed, not an archive
 async function loadAll(){
   if(!sb) return;
   const q=async(fn)=>{ try{ return await fn(); }catch(e){ return {error:e}; } };
-  const [st,me,ev,ro,an,at,rec]=await Promise.all([
-    q(()=>sb.from('iv_settings').select('*')),
-    q(()=>sb.from('iv_members').select('*')),                 // fetch all, filter team in JS (hub-driven membership)
+  const [st,me,ev,an,rec]=await Promise.all([
+    q(()=>sb.from('iv_settings').select('*').eq('key','chandraat_overrides')),
+    q(()=>sb.from('iv_members').select('*').eq('team',PAGE_TEAM)),
     q(()=>sb.from('iv_events').select('*').eq('team',PAGE_TEAM).order('date')),
-    q(()=>sb.from('iv_roster').select('*')),
-    q(()=>sb.from('announcements').select('*').eq('team',PAGE_TEAM).order('created_at',{ascending:false})),
-    q(()=>sb.from('iv_attendance').select('*')),
+    q(()=>sb.from('announcements').select('*').eq('team',PAGE_TEAM).order('created_at',{ascending:false}).limit(ANN_LIMIT)),
     q(()=>sb.from('app_settings').select('*').eq('key','rec_dates')),
   ]);
   if(st.error){ console.warn('iv_settings:',st.error.message||st.error); if(tableMissing(st.error))DB_MISSING=true; }
@@ -1129,9 +1170,14 @@ async function loadAll(){
     if(r.key==='chandraat_overrides'&&r.value&&typeof r.value==='object'){ OVERRIDES=r.value; clearCycleCache(); }
   });
   if(me.error){ console.warn('iv_members:',me.error.message||me.error); if(tableMissing(me.error))DB_MISSING=true; MEMBERS=[]; }
-  else MEMBERS=(me.data||[]).filter(m=>m.team===PAGE_TEAM).map(normMember).sort((a,b)=>a.name.localeCompare(b.name));
+  else MEMBERS=(me.data||[]).map(normMember).sort((a,b)=>a.name.localeCompare(b.name));
   if(ev.error){ console.warn('iv_events:',ev.error.message||ev.error); if(tableMissing(ev.error))DB_MISSING=true; EVENTS=[]; }
   else EVENTS=ev.data||[];
+  const evIds=EVENTS.map(e=>e.id);
+  const [ro,at]=await Promise.all([
+    q(()=>byEventId('iv_roster',evIds)),
+    q(()=>byEventId('iv_attendance',evIds)),
+  ]);
   ROSTERS={};
   if(ro.error){ console.warn('iv_roster:',ro.error.message||ro.error); if(tableMissing(ro.error))DB_MISSING=true; }
   else (ro.data||[]).forEach(r=>{ ROSTERS[r.event_id]=r.data||{assign:{},manual:{}}; });
@@ -1449,6 +1495,20 @@ async function markAttendance(eventId,memberId,status){
 /* ════════════════════════════════════════════
    SHELL / NAV / BOOT
 ════════════════════════════════════════════ */
+/* One entry when somebody opens a section holding other people's
+   information. The calendar and announcements are not logged: they are
+   the volunteer view, and three hundred people reading them would bury
+   the entries that matter. */
+const LOGGED_SECTIONS={roster:'Rostering',attendance:'Attendance',reports:'Analytics',members:'Member Management'};
+let _lastView=null;
+async function logView(section){
+  if(!sb||DB_MISSING||!CU||!CU.uid||!section) return;
+  if(_lastView===section) return;        // a re-render is not a new visit
+  _lastView=section;
+  try{ await sb.from('view_logs').insert({username:CU.user||'',user_display:CU.display||CU.user||'',
+    user_email:CU.email||'',team:PAGE_TEAM,section:section}); }
+  catch(e){ /* never let recording a visit break the visit */ }
+}
 function nav(page){
   if(!IS_EDIT && VOLUNTEER_PAGES.indexOf(page)<0) page='dashboard';   // volunteers stay in scope
   curPage=page;
@@ -1456,6 +1516,7 @@ function nav(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
   closeSidebar();
   renderCurrent();
+  if(LOGGED_SECTIONS[page]) logView(LOGGED_SECTIONS[page]);
 }
 function renderCurrent(){
   renderDbHint();
@@ -2311,39 +2372,26 @@ function refreshBell(){
     item.style.display = 'none';
     item.classList.remove('lit');
     const pop = document.getElementById('bellPop'); if(pop) pop.classList.remove('open');
-    syncBellMirror(0);
     return;
   }
   item.style.display = '';
   item.classList.add('lit');
   document.getElementById('bellCount').textContent = BELL.length;
-  syncBellMirror(BELL.length);
-}
-/* The desktop bar is built by copying the sidebar's markup once, and it
-   is rebuilt only when an element's class or style changes. Editing the
-   count is a text change, which does not trigger that — so the mirrored
-   badge would sit on whatever number it was born with. Update it here
-   rather than making the observer watch every character on the page. */
-function syncBellMirror(n){
-  const m = document.querySelector('.tn-b.bell-mirror');
-  if(!m) return;
-  const badge = m.querySelector('.nbadge');
-  if(badge){ badge.textContent = n; badge.style.display = n ? '' : 'none'; }
 }
 function toggleBell(ev){
   if(ev) ev.stopPropagation();
   const pop = document.getElementById('bellPop');
   if(!pop) return;
   if(pop.classList.contains('open')){ pop.classList.remove('open'); return; }
-  /* Anchor to whichever bell was clicked — the sidebar one on a phone,
-     the mirrored one in the top bar on a desktop. */
-  const anchor = (ev && ev.currentTarget && ev.currentTarget.getBoundingClientRect)
-    ? ev.currentTarget
-    : (document.querySelector('.tn-b.bell-mirror') || document.getElementById('bellItem'));
+  const anchor = document.getElementById('bellItem');
   if(document.body !== pop.parentNode) document.body.appendChild(pop);
-  const r = anchor ? anchor.getBoundingClientRect() : {left:12, bottom:56};
-  pop.style.left = Math.max(12, Math.min(r.left, window.innerWidth - 332)) + 'px';
-  pop.style.top  = (r.bottom + 6) + 'px';
+  /* Anchored by its bottom edge rather than its top, so the list grows
+     upward from the button and never runs off the bottom of the screen. */
+  const r = anchor ? anchor.getBoundingClientRect()
+                   : {right: window.innerWidth - 18, top: window.innerHeight - 76};
+  pop.style.top    = 'auto';
+  pop.style.left   = Math.max(12, Math.min(r.right - 320, window.innerWidth - 332)) + 'px';
+  pop.style.bottom = Math.max(12, window.innerHeight - r.top + 8) + 'px';
   pop.innerHTML = BELL.map((b,i)=>
     '<button class="bell-row" onclick="bellGo(' + i + ')">' +
       '<span class="tag">' + (b.kind === 'away' ? 'Away clash' : b.kind === 'gap' ? 'Unfilled' : 'Cover') + '</span>' +
@@ -2394,10 +2442,12 @@ async function loadCovering(){
     const mine=(evs||[]).filter(e=>e.team!==PAGE_TEAM||!IS_EDIT);
     if(!mine.length) return;
     const ids=mine.map(e=>e.id);
+    // Only the teams actually being covered — usually one.
+    const teams=[...new Set(mine.map(e=>e.team).filter(Boolean))];
     const [{data:ro},{data:at},{data:me}] = await Promise.all([
       sb.from('iv_roster').select('*').in('event_id',ids),
       sb.from('iv_attendance').select('*').in('event_id',ids),
-      sb.from('iv_members').select('*'),
+      sb.from('iv_members').select('*').in('team',teams),
     ]);
     const rosters={}; (ro||[]).forEach(r=>rosters[r.event_id]=r.data);
     const att={}; (at||[]).forEach(a=>{ (att[a.event_id]=att[a.event_id]||{})[a.member_id]={status:a.status}; });
@@ -2994,14 +3044,10 @@ async function fontsSettled(ms){
   function mk(tag,cls,html){ var e=document.createElement(tag); e.className=cls; if(html!=null) e.innerHTML=html; return e; }
 
   function entry(src){
-    var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':'')
-             +(src.id==='bellItem'?' bell-mirror':''),src.innerHTML);
+    var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':''),src.innerHTML);
     if(src.classList.contains('active')) b.classList.add('on');
     b.addEventListener('click',function(ev){
       ev.stopPropagation(); closeAll();
-      // The bell's panel is positioned against whatever was clicked, so it
-      // has to be told about this button rather than the hidden original.
-      if(src.id==='bellItem'){ if(window.toggleBell) toggleBell({stopPropagation:function(){},currentTarget:b}); return; }
       // Fire the real sidebar element so its own handler runs.
       if(src.tagName==='A'&&src.getAttribute('href')) location.href=src.getAttribute('href');
       else src.click();
