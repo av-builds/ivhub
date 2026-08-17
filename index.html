@@ -615,6 +615,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
             <span class="chip" data-mf="B">Team B</span>
             <span class="chip" data-mf="spec">Specialized</span>
             <span class="chip" data-mf="lead">Leadership</span>
+            <span class="chip" data-mf="noacct">Not signed in</span>
           </div>
           <input type="search" id="mSearch" placeholder="Search members…" autocomplete="off">
         </div>
@@ -1106,12 +1107,13 @@ async function loadAuditList(){
     if(!data || !data.length){ box.innerHTML = '<div style="padding:24px;text-align:center;color:var(--dm);">No audit entries yet.</div>'; return; }
     box.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
       + '<tr style="color:var(--dm);text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;">'
-      + '<th style="padding:6px 8px;">Time</th><th style="padding:6px 8px;">User</th><th style="padding:6px 8px;">Action</th><th style="padding:6px 8px;">Category</th><th style="padding:6px 8px;">Detail</th></tr>'
+      + '<th style="padding:6px 8px;">Time</th><th style="padding:6px 8px;">Who</th><th style="padding:6px 8px;">Action</th><th style="padding:6px 8px;">Category</th><th style="padding:6px 8px;">Detail</th></tr>'
       + data.map(r=>{
           const t = r.ts ? new Date(r.ts).toLocaleString('en-NZ',{timeZone:'Pacific/Auckland',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
           return '<tr style="border-top:1px solid var(--db);">'
             + '<td style="padding:6px 8px;white-space:nowrap;color:var(--dm);font-variant-numeric:tabular-nums;">'+esc(t)+'</td>'
-            + '<td style="padding:6px 8px;white-space:nowrap;">'+esc(r.user_display||r.username||'')+'</td>'
+            + '<td style="padding:6px 8px;white-space:nowrap;">'+esc(r.user_display||r.username||'')
+              + (r.user_email ? '<small style="display:block;color:var(--dm);font-weight:600;">'+esc(r.user_email)+'</small>' : '')+'</td>'
             + '<td style="padding:6px 8px;">'+esc(r.action||'')+'</td>'
             + '<td style="padding:6px 8px;color:var(--blue-lt);">'+esc(r.category||'')+'</td>'
             + '<td style="padding:6px 8px;color:var(--dm);">'+esc(r.detail||'')+'</td></tr>';
@@ -1144,6 +1146,9 @@ async function auditLog(action, category, detail){
   try{
     const {error} = await sb.from('audit_logs').insert({
       user_display: CU.display || '', username: CU.user || '',
+      /* Two volunteers will share a name across three hundred accounts,
+         and a log that cannot tell them apart fails at its only job. */
+      user_email: CU.email || '',
       action: action || '', category: category || 'home', detail: detail || ''
     });
     if(error) console.warn('audit_logs skipped:', error.message);
@@ -1747,8 +1752,8 @@ async function loadMembers(){
     try{ await loadUsersEarly(); }catch(_e){ /* accounts refresh is best-effort */ }
     mProfiles = [];
     try{
-      const p = await sb.from('profiles').select('username,display,role,perms');
-      if(!p.error) mProfiles = p.data || [];
+      const p = await sb.from('profiles').select('*');
+      if(!p.error){ mProfiles = p.data || []; PROFILES = p.data || []; }
     }catch(_e){ /* profiles table optional */ }
     renderMembers();
   }catch(e){
@@ -1820,6 +1825,7 @@ function visibleMembers(){
     if(mFilter === 'A' || mFilter === 'B'){ if(r.team !== mFilter) return false; }
     else if(mFilter === 'spec'){ if(!memberSpec(r).length) return false; }
     else if(mFilter === 'lead'){ if(!rankIsLeadership(memberRank(r))) return false; }
+    else if(mFilter === 'noacct'){ if(signupState(r).k === 'active') return false; }
     if(q && !String(r.name || '').toLowerCase().includes(q)) return false;
     return true;
   });
@@ -1835,9 +1841,14 @@ function memberChipsHTML(r){
   if(linked) chips.push(`<span class="badge badge-link">@${esc(linked)}</span>`);
   else if(mHasLink && linkMatchFor(r)) chips.push(`<span class="badge badge-linkavail" data-linkchip="${r.id}" title="A matching login account was found — click to link">🔗 Link available</span>`);
   if((r.status || 'active') !== 'active') chips.push('<span class="badge badge-off">Inactive</span>');
+  /* Where this person is in the rollout. Derived every render, so it can
+     never be out of date with what actually happened. */
+  const su = signupState(r);
+  chips.push('<span class="stat ' + su.cls + '" title="' + esc(su.label) + '">' + su.icon + ' ' + esc(su.label) + '</span>');
   return chips.join('');
 }
 function editPanelHTML(r){
+  const hasAccount = (PROFILES||[]).some(p=>String(p.member_id) === String(r.id) && permsOf(p).length);
   const rank = memberRank(r);
   const lead = rankIsLeadership(rank);
   const rankList = RANKS.includes(rank) ? RANKS : [rank, ...RANKS];
@@ -1882,6 +1893,7 @@ function editPanelHTML(r){
     ${linkbox}
     <div class="um-form-acts">
       <button class="btn btn-red" data-act="del">Delete Member</button>
+      ${hasAccount ? '<button class="btn btn-ol" style="color:#F59E0B;border-color:rgba(245,158,11,.5)" data-act="revoke">They have left &mdash; revoke access</button>' : ''}
       <button class="btn btn-ol" data-act="close">Close</button>
       <button class="btn btn-bl" data-act="save">Save Changes</button>
     </div>
@@ -1954,6 +1966,7 @@ function bindMemberRowEvents(box){
   const on = (sel, fn)=>{ const el = panel.querySelector(sel); if(el) el.addEventListener('click', fn); };
   on('[data-act="close"]', ()=>{ mOpenId = null; renderMembers(); });
   on('[data-act="del"]', ()=>deleteMember(row));
+  on('[data-act="revoke"]', ()=>revokeMemberAccess(row));
   on('[data-act="link"]', ()=>promptLink(row));
   on('[data-act="unlink"]', ()=>unlinkMember(row));
   on('[data-act="save"]', ()=>saveMemberEdit(row, panel));
@@ -1997,10 +2010,16 @@ async function updateMember(id, patch, desc, action){
     // Team is optional for all other ranks — no enforcement of a main team.
   }
   try{
+    const before = row ? {team: row.team, name: row.name} : null;
     const {error} = await sb.from('iv_members').update(patch).eq('id', id);
     if(error) throw error;
     if(row) Object.assign(row, patch);
     auditLog(action || 'Updated member', 'members', desc);
+    /* A move between teams has to carry the person's access with it, or
+       access and reality drift apart within weeks and nobody notices
+       until somebody cannot see their own roster. */
+    if(before && patch.team !== undefined && patch.team !== before.team) await carryTeamAccess(id, before.team, patch.team);
+    if(before && patch.name  !== undefined && patch.name  !== before.name) await carryDisplayName(id, patch.name);
     toast('Saved.');
     return true;
   }catch(e){
@@ -2015,6 +2034,74 @@ async function updateMember(id, patch, desc, action){
     return false;
   }
 }
+/* ── MOVING BETWEEN TEAMS ────────────────────────────────────────────
+   The member record and the login account are separate things, and a
+   transfer used to change only the first. Swapping the team-scoped
+   permission keys keeps them together.
+
+   Only the keys that name a team are touched — team_a, tl_a, ytl_a and
+   their Team B twins. Everything else on the account is left exactly as
+   it was, so moving a volunteer who also holds an AV role does not
+   disturb the AV half. Somebody with no team-scoped key at all — a
+   Director, say — is not affected either, because there is nothing to
+   swap. Member Management is rank 5 and above, which is also who may
+   write to profiles, so the actor can always make this change. */
+const TEAM_SWAP = {A:{team_b:'team_a', tl_b:'tl_a', ytl_b:'ytl_a'},
+                   B:{team_a:'team_b', tl_a:'tl_b', ytl_a:'ytl_b'}};
+async function carryTeamAccess(memberId, fromTeam, toTeam){
+  if(!sb || !toTeam || (toTeam !== 'A' && toTeam !== 'B')) return;
+  const map = TEAM_SWAP[toTeam];
+  try{
+    const {data, error} = await sb.from('profiles').select('id,email,display,perms').eq('member_id', memberId).maybeSingle();
+    if(error || !data) return;                       // no account, nothing to carry
+    const was = permsOf(data);
+    const now = was.map(p=>map[p] || p);
+    if(now.join('|') === was.join('|')) return;      // nothing team-scoped to move
+    const {error:ue} = await sb.from('profiles').update({perms: now}).eq('id', data.id);
+    if(ue){
+      showMWarn('Moved to Team ' + esc(toTeam) + ', but their login still points at Team ' +
+                esc(fromTeam || '—') + ' (' + esc(ue.message) + '). Fix it in Login Management.');
+      return;
+    }
+    auditLog('Moved team', 'members',
+      (data.email || data.display || ('#'+memberId)) + ' — Team ' + (fromTeam||'none') + ' → Team ' + toTeam +
+      ' · access ' + (was.join(', ')||'none') + ' → ' + (now.join(', ')||'none'));
+    toast('Moved to Team ' + toTeam + ' — their access moved too.');
+  }catch(e){ console.warn('carryTeamAccess:', e.message || e); }
+}
+/* Names are set on the member record and copied to the account, so the
+   two cannot disagree — which matters now that the audit log records the
+   name and nobody can change their own. */
+async function carryDisplayName(memberId, name){
+  if(!sb || !name) return;
+  try{ await sb.from('profiles').update({display: name}).eq('member_id', memberId); }
+  catch(e){ console.warn('carryDisplayName:', e.message || e); }
+}
+
+/* ── SOMEBODY LEAVES ─────────────────────────────────────────────────
+   Access goes, everything they did stays. Their attendance, duty counts
+   and past rosters keep the analytics meaning what they say, and coming
+   back is one tick rather than a fresh invitation. */
+async function revokeMemberAccess(row){
+  const prof = (PROFILES||[]).find(p=>String(p.member_id) === String(row.id));
+  if(!prof){ toast('No account is linked to ' + row.name + '.', 'err'); return; }
+  if(CU && CU.uid === prof.id){ toast('You cannot revoke your own access.', 'err'); return; }
+  if(!canManageProfile(permsOf(prof))){ toast('That account is at or above your level.', 'err'); return; }
+  if(!confirm(`Revoke Hub access for ${row.name}?\n\n` +
+    `They can no longer sign in. Their attendance, duties and history are all kept, ` +
+    `and they stay in the member directory.\n\nGranting it again later is one tick.`)) return;
+  try{
+    const was = permsOf(prof);
+    const {error} = await sb.from('profiles').update({perms: []}).eq('id', prof.id);
+    if(error) throw error;
+    prof.perms = [];
+    auditLog('Revoked access', 'members',
+      (prof.email || row.name) + ' — left the team · was ' + (was.join(', ')||'no access') + ' · history kept');
+    toast('Access revoked for ' + row.name + '. Their history is kept.');
+    renderMembers();
+  }catch(e){ toast('Could not revoke: ' + (e.message||e), 'err'); }
+}
+
 async function deleteMember(row){
   if(!confirm(`Delete member "${row.name}" (${memberTeamLabel(row)})? This cannot be undone.`)) return;
   if(!sb){ toast('No database connection — cannot delete.', 'err'); return; }

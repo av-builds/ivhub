@@ -4442,6 +4442,7 @@ function auditLog(action, category, detail){
     ts:       new Date().toISOString(),
     user_display: window.CU ? CU.display : 'System',
     username: window.CU ? CU.user     : 'system',
+    user_email: window.CU ? (CU.email || '') : '',
     action:   action   || '',
     category: category || '',
     detail:   detail   || '',
@@ -4463,6 +4464,7 @@ async function dbSaveAuditLog(entry){
       // entry.user has never existed — the field is user_display, and
       // reading the wrong one saved every AV log line with a blank name.
       user_display: entry.user_display || entry.username || '',
+      user_email:   entry.user_email   || '',
       action:       entry.action       || '',
       category:     entry.category     || '',
       detail:       entry.detail       || '',

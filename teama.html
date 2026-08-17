@@ -756,7 +756,9 @@ async function auditLog(action,category,detail){
     // CU is null until verifyAuth() has run, and reading through it threw
     // silently — so anything logged early recorded nothing.
     const u=CU||{};
-    await sb.from('audit_logs').insert({user_display:u.display||u.user||'',username:u.user||'',action:action,category:category,detail:detail||''});
+    await sb.from('audit_logs').insert({user_display:u.display||u.user||'',username:u.user||'',
+      user_email:u.email||'',   // two people share a name; the address does not
+      action:action,category:category,detail:detail||''});
   }catch(e){ /* best-effort */ }
 }
 function stableHash(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h; }
