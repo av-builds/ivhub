@@ -90,6 +90,28 @@ a{color:var(--blue-lt);text-decoration:none;}
 .nav-item.active::before{transform:scaleY(1);}
 .nav-item .ni{width:18px;text-align:center;font-size:15px;flex-shrink:0;}
 .nav-item .nbadge{margin-left:auto;font-size:11px;font-weight:900;background:rgba(239,68,68,.16);color:var(--red-lt);border:1px solid rgba(239,68,68,.3);border-radius:11px;padding:1px 7px;}
+/* The bell. Lit means there is something to do; unlit it is not shown at
+   all, so it never becomes furniture people stop noticing. */
+.bell-item.lit .ni{animation:bellRing 2.4s ease-in-out 1;}
+.bell-item.lit .nbadge{background:var(--gold-bg);color:var(--gold-lt);border-color:var(--gold-bd);}
+@keyframes bellRing{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-11deg)}80%{transform:rotate(9deg)}90%{transform:rotate(-5deg)}}
+@media (prefers-reduced-motion: reduce){ .bell-item.lit .ni{animation:none;} }
+/* Fixed to the viewport, not tucked inside the sidebar. Above 1101px the
+   sidebar is display:none and the nav is mirrored into the top bar, so a
+   panel living inside it would open where nobody can see it. Positioned
+   against whichever bell was actually clicked. */
+.bell-pop{display:none;position:fixed;z-index:500;width:320px;max-width:calc(100vw - 24px);
+  background:var(--ds2);border:1px solid var(--db);border-radius:9px;overflow:hidden;
+  box-shadow:0 18px 44px rgba(0,0,0,.55);}
+.bell-pop.open{display:block;}
+.bell-row{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--db);
+  padding:9px 12px;cursor:pointer;font-family:'Archivo',sans-serif;color:var(--dt);font-size:12.5px;line-height:1.45;}
+.bell-row:last-child{border-bottom:none;}
+.bell-row:hover{background:var(--ds);}
+.bell-row b{display:block;font-size:12.5px;font-weight:800;}
+.bell-row small{display:block;color:var(--dm);font-size:11.5px;margin-top:1px;}
+.bell-row .tag{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-lt);}
+body.sb-min .bell-pop{display:none;}
 .sb-nav .nav-item:nth-of-type(1){animation-delay:.02s}.sb-nav .nav-item:nth-of-type(2){animation-delay:.05s}
 .sb-nav .nav-item:nth-of-type(3){animation-delay:.08s}.sb-nav .nav-item:nth-of-type(4){animation-delay:.11s}
 .sb-nav .nav-item:nth-of-type(5){animation-delay:.14s}.sb-nav .nav-item:nth-of-type(6){animation-delay:.17s}
@@ -555,6 +577,12 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     </div>
     <nav class="sb-nav" id="sbNav">
       <a class="hub-link" href="index.html"><span>←</span><span class="hl-t">Back to Hub</span></a>
+      <!-- Needs attention. Only ever holds things a lead can act on: a
+           bell that cries wolf stops being read within a fortnight. -->
+      <div class="nav-item bell-item nav-mgmt" id="bellItem" onclick="toggleBell(event)" style="display:none">
+        <span class="ni">🔔</span><span class="nt">Needs attention</span><span class="nbadge" id="bellCount">0</span>
+      </div>
+      <div class="bell-pop" id="bellPop"></div>
       <!-- General is the volunteer view. The brand at the top of the bar is
            the way back to the dashboard, so there is no Dashboard item. -->
       <div class="nav-sec">General</div>
@@ -1439,6 +1467,7 @@ function renderCurrent(){
   else if(curPage==='reports') renderReports();
   else if(curPage==='announce') renderAnnouncements();
   refreshBadges();
+  refreshBell();
 }
 function renderDbHint(){
   const el=document.getElementById('dbHint');
@@ -2211,6 +2240,127 @@ const ATT_OPTS=[
    would fail can_edit_roster(). The database grants them write access to
    exactly the rows of the event they are covering — see the *_cover
    policies in SETUP.sql — so this is not enforced in the browser alone. */
+/* ════════════════════════════════════════════
+   THE BELL — what needs a lead's attention
+   Three things, and only three. Everything in here is something a lead
+   can act on, and clicking it goes straight to the thing it is about.
+   No sound, no pop-up, no email: it lights with a count and clears when
+   the thing behind it is handled.
+════════════════════════════════════════════ */
+const BELL_HORIZON_DAYS = 14;   // unfilled slots inside a fortnight. Sooner
+                                // and it is lit permanently, which is the
+                                // same as being switched off.
+function addDaysLocal(iso, n){
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() + n);
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+function bellItems(){
+  const out = [];
+  if(!IS_EDIT) return out;
+  const today = nzTodayISO();
+  const horizon = addDaysLocal(today, BELL_HORIZON_DAYS);
+
+  /* 1. Somebody marked themselves away for a duty they hold. This is why
+        the bell exists — nothing takes a person off a confirmed roster,
+        so a human has to see it and decide. */
+  EVENTS.filter(e=>e.date >= today && e.confirmed).forEach(ev=>{
+    const data = (ROSTERS[ev.id] || {assign:{}}).assign || {};
+    const seen = {};
+    for(const key in data){
+      for(const q of people(data[key])){
+        if(q.id == null || seen[q.id]) continue;
+        const m = memById(q.id);
+        if(m && isAway(m, ev.date)){
+          seen[q.id] = true;
+          out.push({kind:'away', sort:ev.date,
+            title: m.name + ' is away on ' + fmtShort(ev.date),
+            sub: 'Rostered for ' + (ev.name||'this event') + ' · ' + recName(legacyLabel(key)),
+            go: ()=>{ selEventId = ev.id; nav('roster'); }});
+        }
+      }
+    }
+  });
+
+  /* 2. Gaps on something coming up. */
+  EVENTS.filter(e=>e.date >= today && e.date <= horizon).forEach(ev=>{
+    const n = slotCounts(ev).missing;
+    if(n > 0) out.push({kind:'gap', sort:ev.date,
+      title: n + ' unfilled ' + (n === 1 ? 'slot' : 'slots') + ' on ' + fmtShort(ev.date),
+      sub: ev.name || 'IV Event',
+      go: ()=>{ selEventId = ev.id; nav('roster'); }});
+  });
+
+  /* 3. A day on the other team handed to you. Until now this was only
+        discoverable by happening to open your dashboard. */
+  COVERING.forEach((c, i)=>out.push({kind:'cover', sort:c.ev.date,
+    title: 'You are covering ' + fmtShort(c.ev.date),
+    sub: 'Team ' + c.ev.team + ' · ' + (c.ev.name || 'IV Event'),
+    go: ()=>{ nav('dashboard'); setTimeout(()=>{
+      const p = document.querySelector('.cover-pnl'); if(p) p.scrollIntoView({block:'center'}); }, 120); }}));
+
+  out.sort((a,b)=>a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0);
+  return out;
+}
+let BELL = [];
+function refreshBell(){
+  const item = document.getElementById('bellItem');
+  if(!item) return;
+  BELL = bellItems();
+  if(!BELL.length){
+    item.style.display = 'none';
+    item.classList.remove('lit');
+    const pop = document.getElementById('bellPop'); if(pop) pop.classList.remove('open');
+    syncBellMirror(0);
+    return;
+  }
+  item.style.display = '';
+  item.classList.add('lit');
+  document.getElementById('bellCount').textContent = BELL.length;
+  syncBellMirror(BELL.length);
+}
+/* The desktop bar is built by copying the sidebar's markup once, and it
+   is rebuilt only when an element's class or style changes. Editing the
+   count is a text change, which does not trigger that — so the mirrored
+   badge would sit on whatever number it was born with. Update it here
+   rather than making the observer watch every character on the page. */
+function syncBellMirror(n){
+  const m = document.querySelector('.tn-b.bell-mirror');
+  if(!m) return;
+  const badge = m.querySelector('.nbadge');
+  if(badge){ badge.textContent = n; badge.style.display = n ? '' : 'none'; }
+}
+function toggleBell(ev){
+  if(ev) ev.stopPropagation();
+  const pop = document.getElementById('bellPop');
+  if(!pop) return;
+  if(pop.classList.contains('open')){ pop.classList.remove('open'); return; }
+  /* Anchor to whichever bell was clicked — the sidebar one on a phone,
+     the mirrored one in the top bar on a desktop. */
+  const anchor = (ev && ev.currentTarget && ev.currentTarget.getBoundingClientRect)
+    ? ev.currentTarget
+    : (document.querySelector('.tn-b.bell-mirror') || document.getElementById('bellItem'));
+  if(document.body !== pop.parentNode) document.body.appendChild(pop);
+  const r = anchor ? anchor.getBoundingClientRect() : {left:12, bottom:56};
+  pop.style.left = Math.max(12, Math.min(r.left, window.innerWidth - 332)) + 'px';
+  pop.style.top  = (r.bottom + 6) + 'px';
+  pop.innerHTML = BELL.map((b,i)=>
+    '<button class="bell-row" onclick="bellGo(' + i + ')">' +
+      '<span class="tag">' + (b.kind === 'away' ? 'Away clash' : b.kind === 'gap' ? 'Unfilled' : 'Cover') + '</span>' +
+      '<b>' + esc(b.title) + '</b><small>' + esc(b.sub) + '</small></button>').join('');
+  pop.classList.add('open');
+}
+function bellGo(i){
+  const b = BELL[i]; if(!b) return;
+  document.getElementById('bellPop').classList.remove('open');
+  closeSidebar();
+  b.go();
+}
+document.addEventListener('click', function(e){
+  const pop = document.getElementById('bellPop');
+  if(pop && pop.classList.contains('open') && !e.target.closest('#bellPop') && !e.target.closest('#bellItem')) pop.classList.remove('open');
+});
+
 /* Who has opened the Hub since this event was confirmed. Team Leads
    cannot read the accounts table at all — profiles is rank 5 and above —
    so this comes from roster_seen(), which answers that one question and
@@ -2844,10 +2994,14 @@ async function fontsSettled(ms){
   function mk(tag,cls,html){ var e=document.createElement(tag); e.className=cls; if(html!=null) e.innerHTML=html; return e; }
 
   function entry(src){
-    var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':''),src.innerHTML);
+    var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':'')
+             +(src.id==='bellItem'?' bell-mirror':''),src.innerHTML);
     if(src.classList.contains('active')) b.classList.add('on');
     b.addEventListener('click',function(ev){
       ev.stopPropagation(); closeAll();
+      // The bell's panel is positioned against whatever was clicked, so it
+      // has to be told about this button rather than the hidden original.
+      if(src.id==='bellItem'){ if(window.toggleBell) toggleBell({stopPropagation:function(){},currentTarget:b}); return; }
       // Fire the real sidebar element so its own handler runs.
       if(src.tagName==='A'&&src.getAttribute('href')) location.href=src.getAttribute('href');
       else src.click();
