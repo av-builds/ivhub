@@ -190,6 +190,58 @@ html{scroll-behavior:smooth;}
 .chip:hover{color:var(--dt);border-color:rgba(79,195,247,.4);}
 .chip.active{background:rgba(21,101,192,.2);color:var(--blue-lt);border-color:rgba(79,195,247,.45);}
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+
+/* ─── INVITATIONS: SUBMISSION AND APPROVAL ─── */
+.hint-banner{display:flex;gap:9px;align-items:flex-start;background:var(--gold-bg);border:1px solid var(--gold-bd);
+  border-radius:var(--r);padding:11px 14px;margin-bottom:14px;font-size:13px;line-height:1.55;color:var(--gold-lt);}
+.nbadge{margin-left:auto;background:var(--blue2);color:#fff;font-size:11px;font-weight:800;
+  border-radius:10px;padding:1px 7px;min-width:19px;text-align:center;}
+/* One row per person: state, name, address, include. Grid rather than a
+   table so it can fold on a phone, which is where leads will use it. */
+.sb-row{display:grid;grid-template-columns:26px 1fr 250px 92px;gap:12px;align-items:center;
+  padding:9px 4px;border-bottom:1px solid var(--db);}
+.sb-row:last-child{border-bottom:none;}
+.sb-row .st{font-size:15px;text-align:center;cursor:default;}
+.sb-nm{font-size:14px;font-weight:800;color:var(--dt);min-width:0;}
+.sb-nm small{display:block;font-size:11.5px;font-weight:600;color:var(--dm);letter-spacing:.03em;text-transform:uppercase;margin-top:1px;}
+.sb-row input[type=email]{width:100%;background:var(--ds2);border:1px solid var(--db);border-radius:7px;
+  padding:7px 10px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:13px;outline:none;transition:border .15s;}
+.sb-row input[type=email]:focus{border-color:var(--blue-lt);}
+.sb-row input[type=email]:disabled{opacity:.45;cursor:not-allowed;}
+.sb-row input[type=email].bad{border-color:rgba(192,57,43,.65);}
+.sb-inc{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--dm);cursor:pointer;}
+.sb-inc input{accent-color:var(--blue2);width:16px;height:16px;cursor:pointer;}
+.sb-inc.off{opacity:.35;cursor:not-allowed;}
+.sb-inc.off input{cursor:not-allowed;}
+.sb-empty{padding:22px 4px;text-align:center;color:var(--dm);font-size:13.5px;}
+/* Batches in the approval queue */
+.bt{background:var(--ds2);border:1px solid var(--db);border-radius:var(--r);margin-bottom:14px;overflow:hidden;}
+.bt-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:13px 16px;border-bottom:1px solid var(--db);}
+.bt-h b{font-size:14.5px;color:var(--dt);}
+.bt-h .meta{font-size:12.5px;color:var(--dm);}
+.bt-b{padding:8px 16px 14px;}
+.bt-acts{display:flex;gap:7px;margin-left:auto;flex-wrap:wrap;}
+.bt-row{display:grid;grid-template-columns:1fr 210px 150px 92px;gap:12px;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--db);}
+.bt-row:last-child{border-bottom:none;}
+.bt-row .em{font-size:12.5px;color:var(--dm);overflow:hidden;text-overflow:ellipsis;}
+.bt-row select{width:100%;background:var(--ds);border:1px solid var(--db);border-radius:7px;padding:6px 8px;
+  color:var(--dt);font-family:'Archivo',sans-serif;font-size:12.5px;outline:none;}
+.bt-note{font-size:12.5px;color:var(--gold-lt);padding:2px 0 0;}
+.stat{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:20px;
+  border:1px solid var(--db);color:var(--dm);white-space:nowrap;}
+.stat.ok{color:#8FE3AC;border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.1);}
+.stat.no{color:#F8B4AD;border-color:rgba(192,57,43,.4);background:rgba(192,57,43,.1);}
+.stat.wait{color:var(--gold-lt);border-color:var(--gold-bd);background:var(--gold-bg);}
+/* Sending progress */
+.prog{height:7px;border-radius:5px;background:var(--ds2);overflow:hidden;margin:9px 0;}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-lt));transition:width .3s;}
+@media(max-width:820px){
+  .sb-row{grid-template-columns:24px 1fr;grid-template-areas:'st nm' '. em' '. inc';row-gap:7px;}
+  .sb-row .st{grid-area:st;} .sb-nm{grid-area:nm;}
+  .sb-row .emwrap{grid-area:em;} .sb-inc{grid-area:inc;}
+  .bt-row{grid-template-columns:1fr;row-gap:5px;}
+}
 .toolbar input[type=search],.toolbar input[type=text]{flex:1;min-width:160px;background:var(--ds2);border:1px solid var(--db);border-radius:var(--r);padding:8px 12px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:13px;outline:none;transition:border .2s;}
 .toolbar input:focus{border-color:var(--blue-lt);}
 .tbl-wrap{overflow-x:auto;}
@@ -416,7 +468,10 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     </div>
     <button class="lbtn" id="loginBtn">Sign In</button>
     <div id="loginErr"></div>
-    <div class="lhint" style="line-height:1.6;">Forgotten your password? Ask a Director or Facilitator to send you a reset &mdash; passwords cannot be reset from this page.</div>
+    <div class="lhint" style="line-height:1.6;">
+      Forgotten your password? <a href="#" id="lnkReset" style="color:var(--blue-lt);font-weight:800;text-decoration:none;">Send me a reset link</a><br>
+      <span style="opacity:.85;">Team Leads and above: ask a Director or Facilitator to send yours.</span>
+    </div>
     <div class="lhint">No account? Ask a Director or Facilitator to invite you.</div>
   </div>
 </div>
@@ -477,6 +532,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <a class="nav-item" id="navAV" href="av.html"><span class="ni">🎛️</span> AV Team</a>
 
       <div class="nav-sec" id="secMgmt">Management</div>
+      <div class="nav-item" id="navSubmit" data-page="submit"><span class="ni">✉️</span> Invite My Team</div>
+      <div class="nav-item" id="navApprove" data-page="approve"><span class="ni">✅</span> Invitations<span class="nbadge" id="navApproveCount" style="display:none;"></span></div>
       <div class="nav-item" id="navMembers" data-page="members"><span class="ni">👥</span> User Management</div>
       <div class="nav-item" id="navLogins" data-page="logins"><span class="ni">🔑</span> Login Management</div>
       <div class="nav-item" id="navStats" data-page="stats"><span class="ni">📊</span> Duty Stats</div>
@@ -679,6 +736,46 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       </section>
     </div>
 
+    <!-- ═══ PAGE: INVITE MY TEAM (Team Leads and Assistant Leads) ═══ -->
+    <div class="page" id="page-submit">
+      <div class="ph">
+        <div><h1>Invite My Team</h1><p id="sbLede">Enter each person's own email address, tick who to invite, and send it for approval.</p></div>
+        <div class="ha">
+          <select id="sbTeamPick" style="display:none;"></select>
+          <button class="btn btn-ol" id="sbRefresh">↻ Refresh</button>
+          <button class="btn btn-bl" id="sbSubmit">Submit for approval</button>
+        </div>
+      </div>
+      <div class="hint-banner" id="sbWarn" style="display:none;"></div>
+      <section class="panel">
+        <div class="ap-note" id="sbCounts"></div>
+        <div class="chips" id="sbChips">
+          <div class="chip active" data-sf="todo">Needs an email</div>
+          <div class="chip" data-sf="ready">Ready to invite</div>
+          <div class="chip" data-sf="waiting">Waiting</div>
+          <div class="chip" data-sf="done">Has an account</div>
+          <div class="chip" data-sf="all">Everyone</div>
+        </div>
+        <div id="sbList"></div>
+      </section>
+      <section class="panel" id="sbMinePanel">
+        <h2>My submissions</h2>
+        <div class="ap-note">What happened to the batches you have sent.</div>
+        <div id="sbMine"></div>
+      </section>
+    </div>
+
+    <!-- ═══ PAGE: INVITATIONS (approvers) ═══ -->
+    <div class="page" id="page-approve">
+      <div class="ph">
+        <div><h1>Invitations</h1><p id="apvLede">Submissions waiting for a decision. Untick anyone you are not happy with, check the role, then send.</p></div>
+        <div class="ha"><button class="btn btn-ol" id="apvRefresh">↻ Refresh</button></div>
+      </div>
+      <div class="hint-banner" id="apvWarn" style="display:none;"></div>
+      <div id="apvSending" style="display:none;"></div>
+      <div id="apvList"></div>
+    </div>
+
   </main>
 </div>
 
@@ -801,6 +898,46 @@ const STATS_VIEW = ()=>hasPerm(...IV_TOP,'facilitator','tl_a','ytl_a','tl_b','yt
 // admin anyway — better to hide the page than show them an empty one.
 const AUDIT_VIEW = ()=>USERS_ADMIN();
 const IV_ANY     = ()=>VIEW_A() || VIEW_B();
+
+/* ── WHO MAY PREPARE AND APPROVE INVITATIONS ────────────────────────
+   Mirrors my_prepare_teams() and my_approve_teams() in the database,
+   which are the versions that actually decide anything — these two only
+   choose what to show. Keep the pairs in step.
+
+   Preparing is entering addresses and submitting a batch: a Team Lead or
+   Assistant Lead, for their own team. Approving is deciding it goes:
+   Facilitator and above for the IV teams, and PHMU and above for AV,
+   because a Facilitator never sees AV at all and approving an AV account
+   would be that rule with a hole in it. */
+function prepareTeams(){
+  const t = [];
+  if(myRank() <= 5 || hasPerm('tl_a','ytl_a'))      t.push('A');
+  if(myRank() <= 5 || hasPerm('tl_b','ytl_b'))      t.push('B');
+  if(myRank() <= 4 || hasPerm('av_admin','av_atl')) t.push('AV');
+  return t;
+}
+function approveTeams(){
+  const t = [];
+  if(myRank() <= 5) t.push('A', 'B');
+  if(myRank() <= 4) t.push('AV');
+  return t;
+}
+const CAN_SUBMIT  = ()=>prepareTeams().length > 0;
+const CAN_APPROVE = ()=>approveTeams().length > 0;
+const TEAM_LABEL  = {A:'Team A', B:'Team B', AV:'AV Team'};
+/* Which team a member counts as, for invitation purposes. Mirrors
+   member_invite_team() in the database. A main team wins; otherwise AV,
+   if they are in it; otherwise they belong to no team and cannot be
+   invited from a team page at all. */
+function memberInviteTeam(m){
+  if(m.team === 'A' || m.team === 'B') return m.team;
+  const spec = Array.isArray(m.spec) ? m.spec : [];
+  if(spec.some(s=>String(s).toUpperCase() === 'AV')) return 'AV';
+  return null;
+}
+/* The role an invitation should grant, read from the member record so it
+   is right by construction. An approver can still override it. */
+const TEAM_ROLE = {A:'team_a', B:'team_b', AV:'av_team'};
 
 const ROLE_LABELS = {
   owner:'Owner', developer:'Developer',
@@ -1147,14 +1284,29 @@ function setupUrl(){
   const path = location.pathname.replace(/[^/]*$/, '') + 'setup.html';
   return location.origin + path;
 }
-/* Kept for Login Management. The sign-in page no longer offers this —
-   resets are sent by an admin, never requested by the person locked out. */
+/* A volunteer's own way back in. Deliberately NOT the browser's
+   resetPasswordForEmail, which would send to anybody who typed an
+   address — including a Director. This asks the server, which knows the
+   rank and only sends to volunteers.
+
+   The reply is one fixed sentence whatever happens, so the page cannot
+   be used to find out who has an account or who holds authority. That
+   also means it cannot tell a Team Lead their request was ignored: the
+   line beneath it says so instead. */
 async function sendReset(){
   const email = ($('lu').value||'').trim().toLowerCase();
-  if(!email || email.indexOf('@')<0){ $('loginErr').textContent = 'Enter your email address first.'; return; }
-  if(!sb){ $('loginErr').textContent = 'No connection.'; return; }
-  const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: setupUrl()});
-  $('loginErr').textContent = error ? ('Could not send reset: '+error.message) : 'Password reset sent — check your email.';
+  const err = $('loginErr');
+  if(!email || email.indexOf('@') < 0){ err.textContent = 'Enter your email address first, then press the link.'; return; }
+  if(!sb){ err.textContent = 'No connection — try again shortly.'; return; }
+  const said = 'If that address belongs to a volunteer, a reset link is on its way. Check your spam folder too.';
+  try{
+    await sb.functions.invoke('invite-user', {
+      body: { action:'request-reset', email: email, redirectTo: setupUrl() }
+    });
+  }catch(e){ /* the answer does not depend on this succeeding */ }
+  err.style.color = '#8FE3AC';
+  err.textContent = said;
+  setTimeout(()=>{ err.style.color = ''; }, 8000);
 }
 
 /* ═══ AUTH ═══ */
@@ -1235,6 +1387,8 @@ const PAGES = {
   stats:     ()=>STATS_VIEW(),
   admin:     ()=>hasPerm('owner','developer'),
   audit:     ()=>AUDIT_VIEW(),
+  submit:    ()=>CAN_SUBMIT(),
+  approve:   ()=>CAN_APPROVE(),
 };
 function nav(id){
   if(!PAGES[id] || !PAGES[id]()){
@@ -1251,6 +1405,8 @@ function nav(id){
   else if(id === 'audit') renderAuditPage();
   else if(id === 'dashboard') loadDashStats();
   else if(id === 'myduties') openMyDuties();
+  else if(id === 'submit') loadSubmitPage();
+  else if(id === 'approve') loadApprovePage();
 }
 function pageActive(id){ const p = $('page-' + id); return !!(p && p.classList.contains('active')); }
 function toggleSidebar(){ $('sidebar').classList.toggle('open'); $('sideOverlay').classList.toggle('show', $('sidebar').classList.contains('open')); }
@@ -1265,13 +1421,16 @@ function applyNavVisibility(){
   sec('secSpec', AV_VIEW());
   item('navAV', AV_VIEW());
   const mm = USERS_ADMIN(), st = STATS_VIEW(), ow = hasPerm('owner','developer'), au = AUDIT_VIEW();
-  sec('secMgmt', mm || st || ow || au);
+  const sub = CAN_SUBMIT(), apv = CAN_APPROVE();
+  sec('secMgmt', mm || st || ow || au || sub || apv);
+  item('navSubmit', sub);
+  item('navApprove', apv);
   item('navMembers', mm);
   item('navLogins', mm);
   item('navStats', st);
   item('navAdmin', ow);
   item('navAudit', au);
-  const nothing = !(IV_ANY() || AV_VIEW() || mm || st || au);
+  const nothing = !(IV_ANY() || AV_VIEW() || mm || st || au || sub || apv);
   $('dashEmpty').style.display = nothing ? 'block' : 'none';
 }
 function showApp(){
@@ -1290,6 +1449,19 @@ function showApp(){
   dutyCache = null;
   nav('dashboard');         // → loadDashStats → loadMyDutiesDash (auto-resolves identity)
   subscribeRealtime();
+  touchLastSeen();
+  if(CAN_APPROVE()) loadApprovePage().catch(()=>{});   // fills the badge in the menu
+}
+
+/* Records that this account was used, for two questions that would
+   otherwise have no answer: has an invited person ever actually signed
+   in, and have they opened the Hub since a roster was confirmed.
+   A function rather than a table write, so noting a visit can never
+   widen into editing your own row. */
+async function touchLastSeen(){
+  if(!sb || !CU.uid) return;
+  try{ await sb.rpc('touch_last_seen'); }
+  catch(e){ /* older database, or offline — nothing here is worth failing over */ }
 }
 
 /* ═══ DASHBOARD STAT CARDS (cheap queries only) ═══ */
@@ -2136,6 +2308,435 @@ async function saveProfile(id){
   toast('Saved');
   await refreshUserRows();
 }
+/* ═══════════════════════════════════════════════════════════════
+   INVITATIONS — SUBMITTING
+   A Team Lead types their people's addresses, ticks who to invite and
+   sends it for approval. Their own team only; the database enforces
+   that, this only decides what to draw.
+═══════════════════════════════════════════════════════════════ */
+let sbTeam = null;          // team currently being worked on
+let sbFilter = 'todo';
+let sbEmails = {};          // member id -> address typed but not yet saved
+let sbPicked = {};          // member id -> included in this batch
+let sbBatches = [];         // this person's own submissions
+let sbPending = {};         // member id -> the batch item already waiting for them
+
+/* The four states, derived rather than stored, so they can never go
+   stale: no address yet, address but never invited, invited and waiting,
+   or actually signed in. */
+function signupState(m){
+  const prof = (PROFILES||[]).find(p=>String(p.member_id) === String(m.id));
+  if(prof && prof.last_seen)      return {k:'active',  icon:'✓', label:'Signed in',        cls:'ok'};
+  if(prof)                        return {k:'invited', icon:'⏳', label:'Invited, waiting', cls:'wait'};
+  if(sbPending[m.id])             return {k:'waiting', icon:'⏳', label:'Awaiting approval',cls:'wait'};
+  if((m.email||'').trim())        return {k:'ready',   icon:'✉', label:'Ready to invite',  cls:''};
+  return                                 {k:'todo',    icon:'—', label:'No email yet',     cls:''};
+}
+const EMAIL_RE = /^[^@\s]+@[^@\s.]+\.[^@\s]+$/;
+
+async function loadSubmitPage(){
+  if(!CAN_SUBMIT()) return;
+  const teams = prepareTeams();
+  if(!sbTeam || teams.indexOf(sbTeam) < 0) sbTeam = teams[0];
+  const pick = $('sbTeamPick');
+  if(teams.length > 1){
+    pick.style.display = '';
+    pick.innerHTML = teams.map(t=>`<option value="${t}"${t===sbTeam?' selected':''}>${esc(TEAM_LABEL[t])}</option>`).join('');
+  }else{ pick.style.display = 'none'; }
+  $('sbWarn').style.display = 'none';
+  $('sbList').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+  if(!sb){ $('sbList').innerHTML = '<div class="sb-empty">No database connection.</div>'; return; }
+  try{
+    /* Members and accounts both, because a lead needs to see who already
+       has one. profiles is readable to rank 5 and above only, so a Team
+       Lead legitimately gets nothing back — signupState falls through to
+       the batch state, which they can see. */
+    const [mres, pres, bres] = await Promise.all([
+      sb.from('iv_members').select('*').order('name'),
+      sb.from('profiles').select('id,member_id,last_seen,email,display'),
+      sb.from('iv_invite_batches').select('*, iv_invite_items(*)').order('created_at', {ascending:false})
+    ]);
+    if(mres.error) throw mres.error;
+    mRows = mres.data || [];
+    if(!pres.error && Array.isArray(pres.data)) PROFILES = pres.data;
+    sbBatches = bres.error ? [] : (bres.data || []);
+    sbPending = {};
+    sbBatches.forEach(b=>(b.iv_invite_items||[]).forEach(it=>{
+      if(it.member_id && (it.status === 'pending' || it.status === 'approved')) sbPending[it.member_id] = {batch:b, item:it};
+    }));
+    renderSubmit();
+    renderMySubmissions();
+  }catch(e){
+    $('sbList').innerHTML = '<div class="sb-empty">Could not load your team: ' + esc(e.message||String(e)) +
+      (isMissingTable(e) ? '<br>Run SETUP-ACCOUNTS.sql on the Supabase project.' : '') + '</div>';
+  }
+}
+function sbMembers(){
+  return (mRows||[]).filter(m=>memberInviteTeam(m) === sbTeam && (m.status||'active') === 'active');
+}
+function renderSubmit(){
+  const all = sbMembers();
+  const counts = {todo:0, ready:0, waiting:0, done:0};
+  all.forEach(m=>{
+    const s = signupState(m);
+    if(s.k === 'todo') counts.todo++;
+    else if(s.k === 'ready') counts.ready++;
+    else if(s.k === 'waiting') counts.waiting++;
+    else counts.done++;
+  });
+  $('sbCounts').innerHTML =
+    `<b>${all.length}</b> active in ${esc(TEAM_LABEL[sbTeam]||'')} · ` +
+    `<b>${counts.done}</b> with an account · <b>${counts.waiting}</b> awaiting approval · ` +
+    `<b>${counts.ready}</b> ready to invite · <b>${counts.todo}</b> still need an address`;
+  $('sbChips').querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.getAttribute('data-sf') === sbFilter));
+
+  const rows = all.filter(m=>{
+    if(sbFilter === 'all') return true;
+    const k = signupState(m).k;
+    if(sbFilter === 'done') return k === 'active' || k === 'invited';
+    return k === sbFilter;
+  });
+  if(!rows.length){
+    $('sbList').innerHTML = '<div class="sb-empty">Nobody in this view. Try “Everyone”.</div>';
+    return;
+  }
+  $('sbList').innerHTML = rows.map(m=>{
+    const s = signupState(m);
+    const typed = sbEmails[m.id] !== undefined ? sbEmails[m.id] : (m.email || '');
+    const settled = (s.k === 'active' || s.k === 'invited' || s.k === 'waiting');
+    const canPick = !settled && EMAIL_RE.test(String(typed).trim());
+    const checked = canPick && sbPicked[m.id];
+    return `<div class="sb-row">
+      <div class="st" title="${esc(s.label)}">${s.icon}</div>
+      <div class="sb-nm">${esc(m.name)}<small>${esc(s.label)}</small></div>
+      <div class="emwrap"><input type="email" data-em="${m.id}" value="${esc(typed)}"
+        placeholder="their own email address" autocomplete="off"${settled?' disabled':''}></div>
+      <label class="sb-inc${canPick?'':' off'}"><input type="checkbox" data-inc="${m.id}"${checked?' checked':''}${canPick?'':' disabled'}> Invite</label>
+    </div>`;
+  }).join('');
+  bindSubmitRows();
+}
+function bindSubmitRows(){
+  $('sbList').querySelectorAll('input[data-em]').forEach(i=>{
+    i.addEventListener('input', ()=>{
+      const id = Number(i.getAttribute('data-em'));
+      sbEmails[id] = i.value;
+      const ok = !i.value.trim() || EMAIL_RE.test(i.value.trim());
+      i.classList.toggle('bad', !ok);
+      const box = $('sbList').querySelector('input[data-inc="'+id+'"]');
+      if(box){
+        const usable = EMAIL_RE.test(i.value.trim());
+        box.disabled = !usable;
+        box.closest('.sb-inc').classList.toggle('off', !usable);
+        if(!usable){ box.checked = false; delete sbPicked[id]; }
+      }
+    });
+    i.addEventListener('change', ()=>saveMemberEmail(Number(i.getAttribute('data-em')), i.value));
+  });
+  $('sbList').querySelectorAll('input[data-inc]').forEach(b=>b.addEventListener('change', ()=>{
+    const id = Number(b.getAttribute('data-inc'));
+    if(b.checked) sbPicked[id] = true; else delete sbPicked[id];
+  }));
+}
+/* Saved as the lead moves off the field, so a long session of typing is
+   never lost to a closed tab. */
+async function saveMemberEmail(id, value){
+  const v = String(value||'').trim();
+  const row = (mRows||[]).find(m=>m.id === id);
+  if(!row || (row.email||'') === v) return;
+  if(v && !EMAIL_RE.test(v)) return;               // wait until it is a real address
+  try{
+    const {error} = await sb.from('iv_members').update({email: v || null}).eq('id', id);
+    if(error) throw error;
+    row.email = v || null;
+    delete sbEmails[id];
+  }catch(e){
+    showSbWarn('Could not save ' + esc(row.name) + '’s address: ' + esc(e.message||e));
+  }
+}
+function showSbWarn(html){ const w = $('sbWarn'); w.innerHTML = '<span>⚠️</span><span>' + html + '</span>'; w.style.display = 'flex'; }
+
+async function submitBatch(){
+  const picked = Object.keys(sbPicked).map(Number).filter(id=>sbPicked[id]);
+  if(!picked.length){ toast('Tick at least one person to invite.', 'err'); return; }
+  const people = picked.map(id=>{
+    const m = (mRows||[]).find(x=>x.id === id) || {};
+    const email = String(sbEmails[id] !== undefined ? sbEmails[id] : (m.email||'')).trim().toLowerCase();
+    return {member_id:id, name:m.name || '', email:email, role: TEAM_ROLE[sbTeam] || null};
+  }).filter(p=>EMAIL_RE.test(p.email));
+  if(!people.length){ toast('None of the ticked people have a valid address yet.', 'err'); return; }
+
+  /* Two addresses the same inside one batch is a mistake worth catching
+     here, where it can be pointed at, rather than as a database error
+     halfway through saving. */
+  const seen = {}; const dupes = [];
+  people.forEach(p=>{ if(seen[p.email]) dupes.push(p.email); seen[p.email] = true; });
+  if(dupes.length){
+    showSbWarn('The same address is used twice: <b>' + esc(dupes[0]) + '</b>. Every person needs their own — an invitation can only ever reach one inbox.');
+    return;
+  }
+  if(!confirm(`Send ${people.length} ${people.length===1?'person':'people'} for approval?\n\n` +
+              `A Facilitator checks each one before any invitation goes out.`)) return;
+
+  const btn = $('sbSubmit'); btn.disabled = true; const lbl = btn.textContent; btn.textContent = 'Submitting…';
+  try{
+    const {data:batch, error:be} = await sb.from('iv_invite_batches').insert({
+      team: sbTeam, submitted_by: CU.uid, submitted_name: CU.display || CU.user || ''
+    }).select().single();
+    if(be) throw be;
+    const {error:ie} = await sb.from('iv_invite_items')
+      .insert(people.map(p=>Object.assign({batch_id: batch.id}, p)));
+    if(ie){
+      // Leave nothing half-submitted behind.
+      try{ await sb.from('iv_invite_batches').delete().eq('id', batch.id); }catch(_e){}
+      throw ie;
+    }
+    auditLog('Submitted invitations', 'login', TEAM_LABEL[sbTeam] + ' — ' + people.length + ' for approval');
+    sbPicked = {};
+    toast(people.length + ' sent for approval.');
+    await loadSubmitPage();
+    if(CAN_APPROVE()) refreshApproveCount();
+  }catch(e){
+    const m = (e.message||String(e));
+    showSbWarn(/duplicate key/i.test(m)
+      ? 'Somebody in this batch is already waiting to be approved, or their address is already claimed by another person. Refresh and check the state against each name.'
+      : 'Could not submit: ' + esc(m));
+  }finally{ btn.disabled = false; btn.textContent = lbl; }
+}
+
+function renderMySubmissions(){
+  const mine = sbBatches.filter(b=>String(b.submitted_by) === String(CU.uid));
+  if(!mine.length){ $('sbMine').innerHTML = '<div class="sb-empty">You have not submitted anything yet.</div>'; return; }
+  $('sbMine').innerHTML = mine.map(b=>{
+    const items = b.iv_invite_items || [];
+    const n = k=>items.filter(i=>i.status === k).length;
+    const when = b.created_at ? new Date(b.created_at).toLocaleString('en-NZ',{timeZone:'Pacific/Auckland',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    const cls = b.status === 'sent' ? 'ok' : b.status === 'rejected' ? 'no' : 'wait';
+    const label = b.status === 'sent' ? 'Sent' : b.status === 'rejected' ? 'Rejected' : b.status === 'approved' ? 'Approved' : 'Waiting for approval';
+    const refused = items.filter(i=>i.status === 'rejected');
+    return `<div class="bt"><div class="bt-h">
+        <b>${items.length} ${items.length===1?'person':'people'}</b>
+        <span class="meta">${esc(TEAM_LABEL[b.team]||b.team)} · ${esc(when)}</span>
+        <span class="stat ${cls}">${label}</span>
+        ${b.status==='sent' ? `<span class="meta">${n('sent')} invited${n('failed')?', '+n('failed')+' failed':''}</span>` : ''}
+        ${b.status==='pending' ? `<span class="bt-acts"><button class="btn btn-ol btn-sm" onclick="withdrawBatch(${b.id})">Withdraw</button></span>` : ''}
+      </div>${(b.note || refused.length) ? `<div class="bt-b">
+        ${b.note ? `<div class="bt-note">Note: ${esc(b.note)}</div>` : ''}
+        ${refused.map(i=>`<div class="bt-note">${esc(i.name)} — not approved${i.note?': '+esc(i.note):''}</div>`).join('')}
+        ${items.filter(i=>i.status==='failed').map(i=>`<div class="bt-note">${esc(i.name)} — invitation failed${i.note?': '+esc(i.note):''}</div>`).join('')}
+      </div>` : ''}</div>`;
+  }).join('');
+}
+async function withdrawBatch(id){
+  if(!confirm('Withdraw this submission? Nobody in it will be invited.')) return;
+  try{
+    const {error} = await sb.from('iv_invite_batches').delete().eq('id', id);
+    if(error) throw error;
+    auditLog('Withdrew invitations', 'login', 'Batch #' + id);
+    toast('Withdrawn.');
+    await loadSubmitPage();
+  }catch(e){ toast('Could not withdraw: ' + (e.message||e), 'err'); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INVITATIONS — APPROVING AND SENDING
+   A Facilitator checks each person, then the batch goes out. Sending is
+   paced: Supabase caps invitation emails per hour, so a hundred people
+   is a long job whether or not anyone is watching it.
+═══════════════════════════════════════════════════════════════ */
+let apvBatches = [];
+let apvBusy = false;
+
+async function loadApprovePage(){
+  if(!CAN_APPROVE()) return;
+  $('apvWarn').style.display = 'none';
+  $('apvList').innerHTML = '<div class="skel"></div><div class="skel"></div>';
+  if(!sb){ $('apvList').innerHTML = '<div class="sb-empty">No database connection.</div>'; return; }
+  try{
+    const [bres, mres] = await Promise.all([
+      sb.from('iv_invite_batches').select('*, iv_invite_items(*)').order('created_at', {ascending:false}).limit(40),
+      (mRows && mRows.length) ? Promise.resolve({data:mRows}) : sb.from('iv_members').select('*')
+    ]);
+    if(bres.error) throw bres.error;
+    if(mres && !mres.error && mres.data) mRows = mres.data;
+    apvBatches = bres.data || [];
+    renderApprove();
+    refreshApproveCount();
+  }catch(e){
+    $('apvList').innerHTML = '<div class="sb-empty">Could not load submissions: ' + esc(e.message||String(e)) +
+      (isMissingTable(e) ? '<br>Run SETUP-ACCOUNTS.sql on the Supabase project.' : '') + '</div>';
+  }
+}
+function refreshApproveCount(){
+  const n = apvBatches.filter(b=>b.status === 'pending').length;
+  const el = $('navApproveCount');
+  if(el){ el.textContent = n; el.style.display = n ? '' : 'none'; }
+}
+function renderApprove(){
+  if(!apvBatches.length){
+    $('apvList').innerHTML = '<div class="panel"><div class="sb-empty">Nothing waiting. Submissions from Team Leads appear here.</div></div>';
+    return;
+  }
+  const grantable = grantablePerms();
+  $('apvList').innerHTML = apvBatches.map(b=>{
+    const items = (b.iv_invite_items||[]).slice().sort((x,y)=>String(x.name||'').localeCompare(String(y.name||'')));
+    const when = b.created_at ? new Date(b.created_at).toLocaleString('en-NZ',{timeZone:'Pacific/Auckland',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    const pending = b.status === 'pending';
+    const cls = b.status === 'sent' ? 'ok' : b.status === 'rejected' ? 'no' : 'wait';
+    const label = b.status === 'sent' ? 'Sent' : b.status === 'rejected' ? 'Rejected' : b.status === 'approved' ? 'Approved' : 'Waiting';
+    /* Roles offered are the ones this approver may actually grant. The
+       Edge Function and the database both re-check, so this is only
+       there to stop somebody choosing something that would be refused. */
+    const roleOpts = (sel)=>ROLE_DEFS.filter(r=>grantable.indexOf(r.id) >= 0)
+      .map(r=>`<option value="${r.id}"${r.id===sel?' selected':''}>${esc(r.label)}</option>`).join('');
+    return `<div class="bt" data-batch="${b.id}">
+      <div class="bt-h">
+        <b>${esc(b.submitted_name || 'A lead')}</b>
+        <span class="meta">${esc(TEAM_LABEL[b.team]||b.team)} · ${items.length} ${items.length===1?'person':'people'} · ${esc(when)}</span>
+        <span class="stat ${cls}">${label}</span>
+        ${pending ? `<span class="bt-acts">
+          <button class="btn btn-ol btn-sm" onclick="apvSetAll(${b.id},true)">Tick all</button>
+          <button class="btn btn-ol btn-sm" onclick="apvSetAll(${b.id},false)">Untick all</button>
+          <button class="btn btn-red btn-sm" onclick="rejectBatch(${b.id})">Reject all</button>
+          <button class="btn btn-bl btn-sm" onclick="approveBatch(${b.id})">Approve &amp; send</button>
+        </span>` : ''}
+      </div>
+      <div class="bt-b">
+        ${items.map(it=>{
+          const st = it.status;
+          const done = st === 'sent' || st === 'failed' || st === 'rejected';
+          const sc = st === 'sent' ? 'ok' : (st === 'failed' || st === 'rejected') ? 'no' : 'wait';
+          const sl = st === 'sent' ? 'Invited' : st === 'failed' ? 'Failed' : st === 'rejected' ? 'Not approved' : 'Waiting';
+          return `<div class="bt-row">
+            <div class="sb-nm">${esc(it.name || '—')}${it.note?`<small style="text-transform:none;letter-spacing:0;color:var(--gold-lt)">${esc(it.note)}</small>`:''}</div>
+            <div class="em">${esc(it.email||'')}</div>
+            <div>${pending ? `<select data-role="${it.id}">${roleOpts(it.role)}</select>` : `<span class="stat ${sc}">${sl}</span>`}</div>
+            ${pending ? `<label class="sb-inc"><input type="checkbox" data-ok="${it.id}" checked> Approve</label>` : '<div></div>'}
+          </div>`;
+        }).join('')}
+      </div></div>`;
+  }).join('');
+}
+function apvSetAll(batchId, on){
+  document.querySelectorAll(`[data-batch="${batchId}"] input[data-ok]`).forEach(b=>{ b.checked = on; });
+}
+async function rejectBatch(batchId){
+  const note = prompt('Why is this being rejected? The lead who submitted it will see this.');
+  if(note === null) return;
+  try{
+    const {error:e1} = await sb.from('iv_invite_items').update({status:'rejected'}).eq('batch_id', batchId);
+    if(e1) throw e1;
+    const {error:e2} = await sb.from('iv_invite_batches').update({
+      status:'rejected', note: note || null, decided_by: CU.uid,
+      decided_name: CU.display || CU.user || '', decided_at: new Date().toISOString()
+    }).eq('id', batchId);
+    if(e2) throw e2;
+    auditLog('Rejected invitations', 'login', 'Batch #' + batchId + (note ? ' — ' + note : ''));
+    toast('Rejected.');
+    await loadApprovePage();
+  }catch(e){ toast('Could not reject: ' + (e.message||e), 'err'); }
+}
+
+/* Approve, then send. The two are separate steps in the data even though
+   they are one button, so a batch that fails partway through is not lost
+   — the approved rows stay approved and can be sent again. */
+async function approveBatch(batchId){
+  if(apvBusy){ toast('Already sending — let it finish.', 'err'); return; }
+  const box = document.querySelector(`[data-batch="${batchId}"]`);
+  const batch = apvBatches.find(b=>String(b.id) === String(batchId));
+  if(!box || !batch) return;
+
+  const chosen = [], refused = [];
+  (batch.iv_invite_items||[]).forEach(it=>{
+    const tick = box.querySelector(`input[data-ok="${it.id}"]`);
+    const role = box.querySelector(`select[data-role="${it.id}"]`);
+    if(tick && tick.checked) chosen.push(Object.assign({}, it, {role: role ? role.value : it.role}));
+    else refused.push(it);
+  });
+  if(!chosen.length){ toast('Nobody is ticked.', 'err'); return; }
+  if(!confirm(`Invite ${chosen.length} ${chosen.length===1?'person':'people'}?` +
+              (refused.length ? `\n\n${refused.length} will be marked not approved.` : '') +
+              `\n\nEmails are paced to stay inside the sending limit, so this can take a while. You can leave the page — approved people can be sent again.`)) return;
+
+  apvBusy = true;
+  const prog = $('apvSending');
+  prog.style.display = 'block';
+  const draw = (done, total, note)=>{
+    prog.innerHTML = `<div class="panel"><h2>Sending invitations</h2>
+      <div class="ap-note">${done} of ${total} done${note?' · '+esc(note):''}</div>
+      <div class="prog"><i style="width:${total?Math.round(done/total*100):0}%"></i></div>
+      <div class="ap-note" style="opacity:.8">Leave this page open if you can. Anything not sent stays approved and can be sent again.</div></div>`;
+  };
+  draw(0, chosen.length, 'starting');
+
+  try{
+    if(refused.length){
+      await sb.from('iv_invite_items').update({status:'rejected'})
+        .in('id', refused.map(r=>r.id));
+    }
+    for(const it of chosen){
+      await sb.from('iv_invite_items').update({status:'approved', role: it.role}).eq('id', it.id);
+    }
+    await sb.from('iv_invite_batches').update({
+      status:'approved', decided_by: CU.uid,
+      decided_name: CU.display || CU.user || '', decided_at: new Date().toISOString()
+    }).eq('id', batchId);
+
+    let sent = 0, failed = 0;
+    for(let i = 0; i < chosen.length; i++){
+      const it = chosen[i];
+      draw(i, chosen.length, it.name);
+      const r = await inviteOne(it);
+      if(r.ok){ sent++; await sb.from('iv_invite_items').update({status:'sent', note:null}).eq('id', it.id); }
+      else{ failed++; await sb.from('iv_invite_items').update({status:'failed', note: r.error.slice(0,300)}).eq('id', it.id); }
+      draw(i + 1, chosen.length, it.name);
+      /* Paced. Supabase's own limit is what actually throttles this; the
+         gap keeps us under it rather than collecting rate-limit errors
+         and calling them failures. */
+      if(i < chosen.length - 1) await new Promise(r2=>setTimeout(r2, INVITE_GAP_MS));
+    }
+    await sb.from('iv_invite_batches').update({status:'sent'}).eq('id', batchId);
+    auditLog('Approved invitations', 'login',
+      TEAM_LABEL[batch.team] + ' — ' + sent + ' invited' + (failed ? ', ' + failed + ' failed' : '') +
+      (refused.length ? ', ' + refused.length + ' not approved' : ''));
+    toast(sent + ' invited' + (failed ? ', ' + failed + ' failed' : '') + '.');
+  }catch(e){
+    $('apvWarn').innerHTML = '<span>⚠️</span><span>Sending stopped: ' + esc(e.message||String(e)) +
+      '. Anyone still approved can be sent again from this page.</span>';
+    $('apvWarn').style.display = 'flex';
+  }finally{
+    apvBusy = false;
+    prog.style.display = 'none';
+    await loadApprovePage();
+  }
+}
+/* Roughly two minutes between sends, which sits inside a 30-an-hour
+   limit with room to spare. Raise the limit in Supabase for a rollout
+   and drop this to match; the two want to move together. */
+let INVITE_GAP_MS = 2000;
+
+async function inviteOne(it){
+  try{
+    const {data, error} = await sb.functions.invoke('invite-user', {
+      body: {
+        email: it.email,
+        display: it.name || undefined,
+        perms: it.role ? [it.role] : [],
+        member_id: it.member_id || undefined,
+        redirectTo: setupUrl()
+      }
+    });
+    if(error){
+      let msg = '';
+      try{ const b = await error.context?.json?.(); msg = b && b.error ? b.error : ''; }catch(e2){}
+      return {ok:false, error: msg || error.message || 'unknown error'};
+    }
+    if(data && data.error)   return {ok:false, error: data.error};
+    if(data && data.warning) return {ok:true,  error: data.warning};
+    return {ok:true, error:''};
+  }catch(e){ return {ok:false, error: e.message || String(e)}; }
+}
+
 /* ═══ DUTY STATS (read-only, cross-team) ═══ */
 let stFilter = 'all';
 let stData = null;
@@ -2392,6 +2993,18 @@ function bindUI(){
   /* admin panel */
   $('apAnchorSave').addEventListener('click', saveAnchor);
   $('apOvSave').addEventListener('click', saveOverrides);
+  /* forgotten password — volunteers only, enforced on the server */
+  const lr = $('lnkReset');
+  if(lr) lr.addEventListener('click', e=>{ e.preventDefault(); sendReset(); });
+  /* invitations — submitting */
+  $('sbRefresh').addEventListener('click', loadSubmitPage);
+  $('sbSubmit').addEventListener('click', submitBatch);
+  $('sbTeamPick').addEventListener('change', e=>{ sbTeam = e.target.value; sbPicked = {}; sbEmails = {}; loadSubmitPage(); });
+  $('sbChips').querySelectorAll('.chip').forEach(c=>c.addEventListener('click', ()=>{
+    sbFilter = c.getAttribute('data-sf'); renderSubmit();
+  }));
+  /* invitations — approving */
+  $('apvRefresh').addEventListener('click', loadApprovePage);
   /* audit */
   $('auRefreshBtn').addEventListener('click', loadAuditList);
   $('auClearBtn').addEventListener('click', clearAuditLogs);
