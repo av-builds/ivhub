@@ -2211,6 +2211,20 @@ const ATT_OPTS=[
    would fail can_edit_roster(). The database grants them write access to
    exactly the rows of the event they are covering — see the *_cover
    policies in SETUP.sql — so this is not enforced in the browser alone. */
+/* Who has opened the Hub since this event was confirmed. Team Leads
+   cannot read the accounts table at all — profiles is rank 5 and above —
+   so this comes from roster_seen(), which answers that one question and
+   returns member ids only: no addresses, no timestamps, and nothing
+   about anybody who is not on this roster. */
+let SEEN={};              // event id -> Set(member id)
+async function loadSeen(eventId){
+  if(!sb||DB_MISSING||eventId==null||SEEN[eventId]) return;
+  try{
+    const {data,error}=await sb.rpc('roster_seen',{p_event_id:eventId});
+    if(!error) SEEN[eventId]=new Set(Array.isArray(data)?data:[]);
+  }catch(e){ /* older database — the line simply does not appear */ }
+}
+
 let COVERING=[];          // events elsewhere that I have been asked to cover
 const CAN_ASSIGN_COVER=()=>hasPerm(...MOVE_PERMS);   // Facilitator and above
 
@@ -2374,6 +2388,7 @@ function renderAttendance(){
   if(!ev){ h+='<div class="empty-note">No events to record attendance for.</div>'; el.innerHTML=h; return; }
 
   const roll=attendanceRoll(ev);
+  if(ev.confirmed && !SEEN[ev.id]) loadSeen(ev.id).then(()=>{ if(curPage==='attendance') renderAttendance(); });
   const rec=ATTEND[ev.id]||{};
   if(!roll.length){
     h+='<div class="empty-note">Nobody is rostered for this event yet \u2014 generate the roster first.</div>';
@@ -2399,6 +2414,18 @@ function renderAttendance(){
   h+='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:12.5px;font-weight:800">'+
     ATT_OPTS.map(o=>'<span class="att-key '+o.k+'">'+o.code+' \u00b7 '+o.label+': '+tally[o.k]+'</span>').join('')+'</div>';
 
+  /* Deliberately worded as "opened the Hub", never "confirmed". It
+     measures presence, not attention: somebody can open the Hub without
+     ever looking at Friday. A lead should not act on a number that
+     quietly means something weaker than it appears to. */
+  if(ev.confirmed && SEEN[ev.id]){
+    const seen=roll.filter(r=>SEEN[ev.id].has(r.m.id));
+    const unseen=roll.filter(r=>!SEEN[ev.id].has(r.m.id));
+    h+='<div class="ib" style="margin-bottom:12px">'+
+       '<b>'+seen.length+' of '+roll.length+'</b> have opened the Hub since this roster was confirmed'+
+       (unseen.length?' \u00b7 not yet: '+unseen.map(r=>esc(r.m.name)).join(', '):' \u2014 everyone has')+
+       '</div>';
+  }
   h+='<div class="tw"><div class="pnl-h">\u{1F465} On duty tonight <span class="ct">'+roll.length+'</span></div>';
   roll.forEach(r=>{
     const m=r.m, st=rec[m.id]&&rec[m.id].status;

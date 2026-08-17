@@ -190,6 +190,16 @@ html{scroll-behavior:smooth;}
 .chip:hover{color:var(--dt);border-color:rgba(79,195,247,.4);}
 .chip.active{background:rgba(21,101,192,.2);color:var(--blue-lt);border-color:rgba(79,195,247,.45);}
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.welcome{border-left:3px solid var(--blue-lt);}
+.wl-list{margin:12px 0 0;padding-left:18px;color:var(--dm);font-size:14px;line-height:1.75;}
+.wl-list b{color:var(--dt);}
+.away-chip{display:inline-flex;align-items:center;gap:7px;background:var(--ds2);border:1px solid var(--db);
+  border-radius:20px;padding:5px 8px 5px 13px;margin:0 7px 7px 0;font-size:13px;font-weight:800;color:var(--dt);}
+.away-chip button{background:none;border:none;color:var(--dm);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;border-radius:50%;}
+.away-chip button:hover{color:#F87171;background:rgba(192,57,43,.15);}
+.away-chip.clash{border-color:var(--gold-bd);background:var(--gold-bg);color:var(--gold-lt);}
+#awayPick{background:var(--ds2);border:1px solid var(--db);border-radius:var(--r);padding:7px 11px;
+  color:var(--dt);font-family:'Archivo',sans-serif;font-size:13px;outline:none;}
 
 /* ─── INVITATIONS: SUBMISSION AND APPROVAL ─── */
 .hint-banner{display:flex;gap:9px;align-items:flex-start;background:var(--gold-bg);border:1px solid var(--gold-bd);
@@ -569,7 +579,30 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 
       <div class="empty-note" id="dashEmpty" style="display:none;">Your account doesn't have access to any sections yet.<br>Contact your team leader to have your access updated.</div>
 
+      <!-- Shown once, the first time somebody signs in. -->
+      <section class="panel welcome" id="dashWelcome" style="display:none;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+          <h2 style="margin:0;">Welcome to IV Hub</h2>
+          <button class="btn btn-ol btn-sm" id="wlDismiss">Got it</button>
+        </div>
+        <ul class="wl-list">
+          <li><b>Your duties</b> are below, and under My Duties &mdash; the next 90 days across every team you are on.</li>
+          <li><b>Away on a date?</b> Add it under I&rsquo;m Away and the roster will not pick you for that day.</li>
+          <li><b>Something wrong?</b> Your Team Lead can fix it. Nothing here is set in stone.</li>
+        </ul>
+      </section>
+
       <div class="sg" id="dashStats" style="display:none;"></div>
+
+      <!-- A volunteer's own away dates. The person who knows is them. -->
+      <section class="panel" id="awayPanel" style="display:none;animation-delay:.04s;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div><h2 style="margin:0;">I&rsquo;m Away</h2><div class="sub" style="margin-top:2px;">Dates you cannot make. The roster will not pick you for these days.</div></div>
+          <div class="ha"><input type="date" id="awayPick"><button class="btn btn-bl" id="awayAdd">Add date</button></div>
+        </div>
+        <div id="awayWarn" class="hint-banner" style="display:none;"></div>
+        <div id="awayList" style="margin-top:12px;"></div>
+      </section>
 
       <section class="panel" style="animation-delay:.05s;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
@@ -1472,6 +1505,8 @@ async function touchLastSeen(){
 /* ═══ DASHBOARD STAT CARDS (cheap queries only) ═══ */
 async function loadDashStats(){
   loadMyDutiesDash();
+  loadAway();
+  maybeWelcome();
   const el = $('dashStats');
   if(!IV_ANY() || !sb){ el.style.display = 'none'; return; }
   try{
@@ -2396,6 +2431,104 @@ async function saveProfile(id){
   await refreshUserRows();
 }
 /* ═══════════════════════════════════════════════════════════════
+   MY AWAY DATES
+   Set by the volunteer, because they are the person who knows. Written
+   through set_my_away(), which touches the away list of the one member
+   this account is linked to and no other field of it — so this is not a
+   matter of hiding buttons.
+═══════════════════════════════════════════════════════════════ */
+let MY_MEMBER = null;        // the member row this account is linked to
+let MY_AWAY = [];
+
+async function loadAway(){
+  const panel = $('awayPanel');
+  if(!sb || !CU.uid){ panel.style.display = 'none'; return; }
+  try{
+    const {data, error} = await sb.rpc('my_member');
+    if(error || !data){ panel.style.display = 'none'; return; }
+    MY_MEMBER = Array.isArray(data) ? data[0] : data;
+    if(!MY_MEMBER){ panel.style.display = 'none'; return; }
+    MY_AWAY = Array.isArray(MY_MEMBER.away) ? MY_MEMBER.away.slice() : [];
+    panel.style.display = 'block';
+    renderAway();
+  }catch(e){ panel.style.display = 'none'; }   // older database, or no link yet
+}
+/* A date they are already rostered on is flagged rather than refused.
+   The lead decides whether to move them; nothing is taken off a
+   confirmed roster behind anyone's back. */
+function awayClashes(){
+  const cache = dutyCache && dutyCache.entries ? dutyCache.entries : [];
+  const mine = MY_MEMBER ? String(MY_MEMBER.name||'').trim().toLowerCase() : '';
+  const days = {};
+  cache.forEach(e=>{ if(String(e.person||'').trim().toLowerCase() === mine) days[e.date] = e; });
+  return days;
+}
+function renderAway(){
+  const clash = awayClashes();
+  const today = todayNZ();
+  const list = MY_AWAY.filter(d=>d > today).sort();
+  $('awayList').innerHTML = list.length
+    ? list.map(d=>`<span class="away-chip${clash[d]?' clash':''}" title="${clash[d]?'You are rostered this day — your Team Lead has been told':''}">${esc(fmtLong(d))}${clash[d]?' ⚠':''}<button onclick="removeAway('${esc(d)}')" title="Remove" aria-label="Remove ${esc(fmtLong(d))}">✕</button></span>`).join('')
+    : '<div class="md-empty" style="padding:14px;">No away dates. You are available for every event.</div>';
+  const clashing = list.filter(d=>clash[d]);
+  const w = $('awayWarn');
+  if(clashing.length){
+    w.innerHTML = '<span>⚠️</span><span>You are already rostered on ' +
+      clashing.map(d=>esc(fmtLong(d))).join(' and ') +
+      '. Your Team Lead has been told &mdash; they will decide whether to move you. Nothing has changed on the roster.</span>';
+    w.style.display = 'flex';
+  }else{ w.style.display = 'none'; }
+}
+async function addAway(){
+  const d = ($('awayPick').value || '').trim();
+  if(!d){ toast('Pick a date first.', 'err'); return; }
+  if(d <= todayNZ()){ toast('Pick a date in the future.', 'err'); return; }
+  if(MY_AWAY.indexOf(d) >= 0){ toast('That date is already on your list.'); return; }
+  await saveAway(MY_AWAY.concat([d]), 'Added away date', d);
+  $('awayPick').value = '';
+}
+async function removeAway(d){
+  await saveAway(MY_AWAY.filter(x=>x !== d), 'Removed away date', d);
+}
+async function saveAway(next, what, which){
+  try{
+    const {data, error} = await sb.rpc('set_my_away', {dates: next});
+    if(error) throw error;
+    MY_AWAY = Array.isArray(data) ? data : next;
+    if(!dutyCache) await fetchDutyData();
+    renderAway();
+    const clash = awayClashes()[which];
+    auditLog(what, 'members', (MY_MEMBER ? MY_MEMBER.name : CU.display) + ' — ' + which +
+      (clash && what[0] === 'A' ? ' (already rostered that day)' : ''));
+    toast(what === 'Added away date'
+      ? (clash ? 'Saved — but you are rostered that day, so your Team Lead has been told.' : 'Saved. You will not be picked for that day.')
+      : 'Removed.');
+  }catch(e){
+    toast(/not linked/i.test(e.message||'') ? 'Your account is not linked to a member yet — ask your Team Lead.'
+                                            : 'Could not save: ' + (e.message||e), 'err');
+  }
+}
+
+/* ── A WELCOME, ONCE ────────────────────────────────────────────────
+   Three lines the first time somebody signs in, then gone. The
+   difference between three hundred people using the Hub and three
+   hundred people signing in once. Remembered on the device rather than
+   the account: it is a nicety, not a record, and not worth a column. */
+function maybeWelcome(){
+  const KEY = 'ivhub_welcomed';
+  let seen = false;
+  try{ seen = localStorage.getItem(KEY) === '1'; }catch(e){}
+  if(seen) return;
+  const el = $('dashWelcome'); if(!el) return;
+  el.style.display = 'block';
+  const btn = $('wlDismiss');
+  if(btn) btn.addEventListener('click', ()=>{
+    el.style.display = 'none';
+    try{ localStorage.setItem(KEY, '1'); }catch(e){}
+  }, {once:true});
+}
+
+/* ═══════════════════════════════════════════════════════════════
    INVITATIONS — SUBMITTING
    A Team Lead types their people's addresses, ticks who to invite and
    sends it for approval. Their own team only; the database enforces
@@ -3034,6 +3167,9 @@ function bindUI(){
   $('mdName').addEventListener('keydown', e=>{ if(e.key === 'Enter') runDutySearch(); });
   $('mdName').addEventListener('change', ()=>localStorage.setItem('ivhub_myname', $('mdName').value || ''));
   $('mdGoBtn').addEventListener('click', ()=>nav('myduties'));
+  /* away dates */
+  $('awayAdd').addEventListener('click', addAway);
+  $('awayPick').addEventListener('keydown', e=>{ if(e.key === 'Enter') addAway(); });
   /* members (people directory) */
   $('maRank').innerHTML = RANKS.map(r=>`<option>${esc(r)}</option>`).join('');
   $('maSpecRow').innerHTML = SPEC_TEAMS.map(s=>`<button type="button" class="spec-chip" data-spec="${esc(s.id)}">${esc(s.label)}</button>`).join('');
