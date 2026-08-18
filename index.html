@@ -282,8 +282,6 @@ table.mtab{width:100%;border-collapse:collapse;font-size:13px;}
 .badge-rank{background:rgba(122,174,203,.12);color:var(--dt);border:1px solid var(--db);}
 .badge-none{background:transparent;color:var(--dm);border:1px dashed var(--db);}
 .badge-link{background:rgba(0,200,83,.1);color:#7fe0a8;border:1px solid rgba(0,200,83,.4);}
-.badge-linkavail{background:transparent;color:var(--blue-lt);border:1px dashed rgba(79,195,247,.5);cursor:pointer;transition:all .15s;}
-.badge-linkavail:hover{background:rgba(21,101,192,.16);}
 .badge-off{background:rgba(122,174,203,.06);color:var(--dm);border:1px solid var(--db);}
 .mem-edit{border-top:1px solid var(--db);padding:15px;background:rgba(0,0,0,.14);}
 .mem-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin-bottom:12px;}
@@ -301,6 +299,21 @@ table.mtab{width:100%;border-collapse:collapse;font-size:13px;}
 .mem-hint{font-size:12px;color:var(--dm);margin-top:6px;font-style:italic;}
 .mem-linkbox{border:1px dashed var(--db);border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--dm);display:flex;gap:10px;align-items:center;flex-wrap:wrap;line-height:1.55;}
 .mem-linkbox b{color:var(--dt);}
+.mem-linkbox-col{flex-direction:column;align-items:stretch;gap:9px;}
+.link-sugg{display:flex;gap:8px;flex-wrap:wrap;}
+.link-sugg .btn{flex-direction:column;align-items:flex-start;gap:1px;line-height:1.3;padding:7px 12px;}
+.link-sugg .btn small{font-weight:600;opacity:.72;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;}
+.link-pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.link-pick select{flex:1;min-width:200px;background:var(--ds);border:1px solid var(--db);border-radius:var(--r);padding:8px 11px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:13px;outline:none;}
+.link-pick select:focus{border-color:var(--blue-lt);}
+.lk-row{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--db);flex-wrap:wrap;}
+.lk-row:last-child{border-bottom:none;}
+.lk-who{min-width:200px;flex:1;}
+.lk-who b{display:block;font-size:14px;}
+.lk-who small{display:block;color:var(--dm);font-size:11.5px;margin-top:2px;}
+.lk-act{display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+.lk-who small.lk-taken{color:var(--gold-lt);margin-top:5px;line-height:1.5;}
+.lk-who small.lk-taken b{color:var(--gold-lt);}
 
 /* ─── DUTY STATS BARS ─── */
 .st-row{display:flex;align-items:center;gap:12px;padding:8px 4px;border-top:1px solid var(--db);}
@@ -548,6 +561,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="nav-item" id="navApprove" data-page="approve"><span class="ni">✅</span> Invitations<span class="nbadge" id="navApproveCount" style="display:none;"></span></div>
       <div class="nav-item" id="navMembers" data-page="members"><span class="ni">👥</span> User Management</div>
       <div class="nav-item" id="navLogins" data-page="logins"><span class="ni">🔑</span> Login Management</div>
+      <div class="nav-item" id="navLinking" data-page="linking"><span class="ni">🔗</span> Account Linking<span class="nbadge" id="navLinkingCount" style="display:none;">0</span></div>
       <div class="nav-item" id="navStats" data-page="stats"><span class="ni">📊</span> Duty Stats</div>
       <div class="nav-item" id="navAdmin" data-page="admin"><span class="ni">⚙️</span> Admin Panel</div>
       <div class="nav-item" id="navAudit" data-page="audit"><span class="ni">🔍</span> Audit Logs</div>
@@ -596,12 +610,22 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 
       <div class="sg" id="dashStats" style="display:none;"></div>
 
+      <!-- Where the rollout has got to. Facilitator and above, because it
+           is a fact about accounts and that is who may read those. -->
+      <section class="panel" id="signupPanel" style="display:none;animation-delay:.03s;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div><h2 style="margin:0;">Accounts</h2><div class="sub" style="margin-top:2px;" id="signupSub">&nbsp;</div></div>
+        </div>
+        <div class="sg" id="signupStats" style="margin-top:12px;"></div>
+      </section>
+
       <!-- A volunteer's own away dates. The person who knows is them. -->
       <section class="panel" id="awayPanel" style="display:none;animation-delay:.04s;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div><h2 style="margin:0;">I&rsquo;m Away</h2><div class="sub" style="margin-top:2px;">Dates you cannot make. The roster will not pick you for these days.</div></div>
-          <div class="ha"><input type="date" id="awayPick"><button class="btn btn-bl" id="awayAdd">Add date</button></div>
+          <div class="ha" id="awayCtl"><input type="date" id="awayPick"><button class="btn btn-bl" id="awayAdd">Add date</button></div>
         </div>
+        <div id="awayReadOnly" class="hint-banner" style="display:none;"></div>
         <div id="awayWarn" class="hint-banner" style="display:none;"></div>
         <div id="awayList" style="margin-top:12px;"></div>
       </section>
@@ -755,6 +779,35 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <section class="panel">
         <h2>Shared Viewer Accounts</h2>
         <div class="ap-note">The shared logins <b>team.a</b>, <b>team.b</b> and <b>av.team</b> have been retired. Everyone signs in with their own email address now, so the Hub can tell who did what — a password four hundred people know identifies nobody, and cannot be taken away from one person who leaves.<br><br>To give someone access, use <b>Login Management</b> → <b>Invite someone</b>.</div>
+      </section>
+    </div>
+
+    <!-- ═══ PAGE: ACCOUNT LINKING ═══
+         Who is who. Two lists side by side: login accounts nobody has
+         claimed, and people in the directory with no account. Being
+         unlinked is a normal state, so neither list is a to-do — they
+         report what is true, and let you act where you want to. -->
+    <div class="page" id="page-linking">
+      <div class="ph">
+        <div><h1>Account Linking</h1><p>Which login belongs to which person. Nothing is linked automatically — you choose.</p></div>
+        <div class="ha"><button class="btn btn-bl" id="lkRefreshBtn">↻ Refresh</button></div>
+      </div>
+      <div class="hint-banner" id="lkNote" style="display:none;"></div>
+      <section class="panel" style="margin-bottom:16px;">
+        <div class="toolbar">
+          <h3 style="margin:0;font-size:15px;">Login accounts with nobody attached</h3>
+          <span id="lkAccCount" style="color:var(--dm);font-size:12px;"></span>
+          <input type="search" id="lkAccSearch" placeholder="Search accounts…" autocomplete="off">
+        </div>
+        <div id="lkAccounts"></div>
+      </section>
+      <section class="panel">
+        <div class="toolbar">
+          <h3 style="margin:0;font-size:15px;">People with no login account</h3>
+          <span id="lkMemCount" style="color:var(--dm);font-size:12px;"></span>
+          <input type="search" id="lkMemSearch" placeholder="Search people…" autocomplete="off">
+        </div>
+        <div id="lkMembers"></div>
       </section>
     </div>
 
@@ -1476,7 +1529,7 @@ async function doLogout(){
    a permanent record; where somebody browsed is not. */
 const LOGGED_SECTIONS = {
   members: 'User Management', logins: 'Login Management', stats: 'Duty Stats',
-  admin: 'Admin Panel', audit: 'Audit Logs',
+  admin: 'Admin Panel', audit: 'Audit Logs', linking: 'Account Linking',
   submit: 'Invite My Team', approve: 'Invitations'
 };
 let _lastView = null;
@@ -1514,6 +1567,7 @@ const PAGES = {
   stats:     ()=>STATS_VIEW(),
   admin:     ()=>hasPerm('owner','developer'),
   audit:     ()=>AUDIT_VIEW(),
+  linking:   ()=>USERS_ADMIN(),
   submit:    ()=>CAN_SUBMIT(),
   approve:   ()=>CAN_APPROVE(),
 };
@@ -1530,6 +1584,7 @@ function nav(id){
   else if(id === 'stats') loadStats();
   else if(id === 'admin') loadAdminPanel();
   else if(id === 'audit') renderAuditPage();
+  else if(id === 'linking') loadLinkingPage();
   else if(id === 'dashboard') loadDashStats();
   else if(id === 'myduties') openMyDuties();
   else if(id === 'submit') loadSubmitPage();
@@ -1555,6 +1610,7 @@ function applyNavVisibility(){
   item('navApprove', apv);
   item('navMembers', mm);
   item('navLogins', mm);
+  item('navLinking', mm);
   item('navStats', st);
   item('navAdmin', ow);
   item('navAudit', au);
@@ -1593,9 +1649,47 @@ async function touchLastSeen(){
 }
 
 /* ═══ DASHBOARD STAT CARDS (cheap queries only) ═══ */
+/* Where the rollout has got to, in four numbers.
+
+   "Signed in, no link" is a normal state and is presented as one — those
+   accounts work, their owner simply asks a Lead to set their away dates.
+   It is not styled as a problem and there is no prompt to fix it. */
+async function loadSignupStats(){
+  const panel = $('signupPanel');
+  if(!panel) return;
+  if(!USERS_ADMIN() || !sb){ panel.style.display = 'none'; return; }
+  try{
+    const [mres, pres] = await Promise.all([
+      sb.from('iv_members').select('id,status'),
+      sb.from('profiles').select('member_id,last_seen')
+    ]);
+    if(mres.error || pres.error) throw (mres.error || pres.error);
+    const active = (mres.data||[]).filter(m=>(m.status||'active') === 'active');
+    const profs  = pres.data || [];
+    const linked = new Set(profs.filter(p=>p.member_id).map(p=>String(p.member_id)));
+    const seenBy = {};
+    profs.forEach(p=>{ if(p.member_id) seenBy[String(p.member_id)] = !!p.last_seen; });
+
+    const usingIt   = active.filter(m=>linked.has(String(m.id)) && seenBy[String(m.id)]).length;
+    const invited   = active.filter(m=>linked.has(String(m.id)) && !seenBy[String(m.id)]).length;
+    const noAccount = active.filter(m=>!linked.has(String(m.id))).length;
+    const unlinked  = profs.filter(p=>!p.member_id).length;
+
+    $('signupSub').textContent = active.length + ' active ' + (active.length === 1 ? 'person' : 'people') + ' in the directory';
+    $('signupStats').innerHTML =
+        '<div class="scard a"><div class="l">Signed in</div><div class="k tnum">' + usingIt + '</div></div>'
+      + '<div class="scard"><div class="l">Invited, not yet used</div><div class="k tnum">' + invited + '</div></div>'
+      + '<div class="scard"><div class="l">No account linked</div><div class="k tnum">' + noAccount + '</div>'
+        + '<div class="s">A Lead sets their away dates</div></div>'
+      + '<div class="scard"><div class="l">Accounts with nobody attached</div><div class="k tnum">' + unlinked + '</div>'
+        + '<div class="s">' + (unlinked ? 'See Account Linking' : 'All accounts attached') + '</div></div>';
+    panel.style.display = 'block';
+  }catch(e){ console.warn('signup stats unavailable:', e.message || e); panel.style.display = 'none'; }
+}
 async function loadDashStats(){
   loadMyDutiesDash();
   loadAway();
+  loadSignupStats();
   maybeWelcome();
   const el = $('dashStats');
   if(!IV_ANY() || !sb){ el.style.display = 'none'; return; }
@@ -1749,20 +1843,26 @@ async function resolveMyName(){
   let note = '';
   try{
     if(sb && CU){
-      const {data, error} = await sb.from('iv_members').select('name,linked_username,team,spec,status');
-      if(!error && Array.isArray(data)){
-        const uname = String(CU.user || '').trim().toLowerCase();
+      /* The linked person if there is one, otherwise the person whose
+         email matches — the same answer the away panel uses, from the
+         same function, so the two can never disagree about who you are. */
+      const {data:mv} = await sb.rpc('my_member_view');
+      let m = mv && mv.member ? mv.member : null;
+      if(!m){
+        // No link and no email match: fall back to the display name, which
+        // is a guess, but a better one than showing nobody's duties.
+        const {data, error} = await sb.from('iv_members').select('name,team,spec,status');
         const dname = String(CU.display || '').trim().toLowerCase();
-        let m = data.find(r=>r.linked_username && String(r.linked_username).trim().toLowerCase() === uname);
-        if(!m && dname) m = data.find(r=>String(r.name||'').trim().toLowerCase() === dname);
-        if(m){
-          name = m.name;
-          const teams = [];
-          if(m.team === 'A' || m.team === 'B') teams.push('Team ' + m.team);
-          let spec = m.spec; if(typeof spec === 'string'){ try{ spec = JSON.parse(spec); }catch(e){ spec = []; } }
-          (Array.isArray(spec) ? spec : []).forEach(s=>teams.push(s === 'AV' ? 'AV Team' : s));
-          note = teams.length ? `Showing duties for <b>${esc(name)}</b> · ${esc(teams.join(' · '))}` : `Showing duties for <b>${esc(name)}</b>`;
-        }
+        if(!error && Array.isArray(data) && dname)
+          m = data.find(r=>String(r.name||'').trim().toLowerCase() === dname) || null;
+      }
+      if(m){
+        name = m.name;
+        const teams = [];
+        if(m.team === 'A' || m.team === 'B') teams.push('Team ' + m.team);
+        let spec = m.spec; if(typeof spec === 'string'){ try{ spec = JSON.parse(spec); }catch(e){ spec = []; } }
+        (Array.isArray(spec) ? spec : []).forEach(s=>teams.push(s === 'AV' ? 'AV Team' : s));
+        note = teams.length ? `Showing duties for <b>${esc(name)}</b> · ${esc(teams.join(' · '))}` : `Showing duties for <b>${esc(name)}</b>`;
       }
     }
   }catch(e){ console.warn('resolveMyName failed:', e.message || e); }
@@ -1840,14 +1940,12 @@ const AGE_OPTS = [ ['child','Child <12'], ['youth','Youth 12–17'], ['adult','A
 let mRows = [];
 let mFilter = 'all';
 let mOpenId = null;      // member id whose edit panel is expanded
-let mHasRank = true, mHasSpec = true, mHasLink = true; // column presence (older SETUP.sql runs)
+let mHasRank = true, mHasSpec = true;   // column presence (older SETUP.sql runs)
 let mProfiles = [];      // optional email-login profiles rows (for link matching)
-let mAccounts = [];      // cached login accounts for link matching (rebuilt each render)
 
 function rankIsLeadership(rank){ return LEADERSHIP_RANKS.includes(rank); }
 function memberRank(r){ return (typeof r.rank === 'string' && r.rank) ? r.rank : 'Member'; }
 function memberSpec(r){ return Array.isArray(r.spec) ? r.spec : []; }
-function memberLink(r){ const v = r.linked_username; return (typeof v === 'string' && v.trim()) ? v.trim() : null; }
 function memberTeamLabel(r){ return (r.team === 'A' || r.team === 'B') ? 'Team ' + r.team : 'no team'; }
 function showMWarn(msg){ const w = $('mWarn'); w.textContent = msg; w.style.display = 'block'; }
 function isNullViolation(e){
@@ -1870,9 +1968,8 @@ async function loadMembers(){
     const r0 = mRows[0] || null;
     mHasRank = r0 ? ('rank' in r0) : true;
     mHasSpec = r0 ? ('spec' in r0) : true;
-    mHasLink = r0 ? ('linked_username' in r0) : true;
-    if(r0 && (!mHasRank || !mHasSpec || !mHasLink)){
-      showMWarn('Some iv_members columns are missing (rank / spec / linked_username) — re-run SETUP.sql on the Supabase project to enable ranks, specialized teams and account linking. Showing defaults meanwhile.');
+    if(r0 && (!mHasRank || !mHasSpec)){
+      showMWarn('Some iv_members columns are missing (rank / spec) — re-run SETUP.sql on the Supabase project to enable ranks and specialized teams. Showing defaults meanwhile.');
     }
     try{ await loadUsersEarly(); }catch(_e){ /* accounts refresh is best-effort */ }
     mProfiles = [];
@@ -1889,58 +1986,235 @@ async function loadMembers(){
   }
 }
 
-/* ── Account linking: member ↔ login account (strict name + role match) ── */
-function collectLinkAccounts(){
-  const rows = (PROFILES||[]).map(r=>({
-    username: String(r.username || r.email || '').trim().toLowerCase(),
-    display: r.display || r.username || r.email, role: (permsOf(r)[0]||''),
-    perms: permsOf(r)
-  }));
-  const seen = new Set(rows.map(r=>r.username));
-  mProfiles.forEach(p=>{
-    if(!p || !p.username) return;
-    const u = String(p.username).trim().toLowerCase();
-    if(!u || seen.has(u)) return;
-    seen.add(u);
-    rows.push({ username:u, display:p.display || p.username, role:p.role, perms:Array.isArray(p.perms) ? p.perms : [] });
+/* ── ACCOUNT LINKING ─────────────────────────────────────────────────
+   A link says one thing: this login belongs to this person. It is not a
+   statement about what they are allowed to do — permissions already
+   answer that, and conflating the two is what broke this before. The old
+   matcher would only link an account whose display name matched the
+   directory exactly AND which held one specific permission derived from
+   the person's rank and team. A Team Lead recorded as "Sana Lead" whose
+   account said "S. Lead" could not be linked at all, and there was no
+   manual override to fall back on. Both requirements are gone.
+
+   The link itself lives in profiles.member_id and nowhere else. It used
+   to be recorded a second time in iv_members.linked_username, written by
+   this screen and read by nothing that mattered, so the two disagreed
+   constantly. SETUP-ACCOUNTS.sql migrates the old column across; nothing
+   reads or writes it now.
+
+   Being unlinked is a normal state, not a fault: an unlinked account
+   signs in and reads everything. What the link buys is setting your own
+   away dates and being counted in a roster's read receipts. So nothing
+   here nags — it reports, and offers a way to act. */
+function profileFor(memberId){
+  return (PROFILES||[]).find(p=>String(p.member_id) === String(memberId)) || null;
+}
+/* Every account not already attached to somebody, so a link can always
+   be made by hand however badly the suggestions do. */
+function accountOptions(sel){
+  const free = (PROFILES||[])
+    .filter(p=>!p.member_id || String(p.id) === String(sel))
+    .sort((a,b)=>accountLabel(a).localeCompare(accountLabel(b)));
+  return '<option value="">— choose a login account —</option>' + free.map(p=>
+    '<option value="' + esc(p.id) + '"' + (String(sel) === String(p.id) ? ' selected' : '') + '>'
+    + esc(accountLabel(p)) + (p.email ? ' · ' + esc(p.email) : '') + '</option>').join('');
+}
+function accountLabel(p){
+  if(!p) return '';
+  return p.display || p.username || p.email || ('account ' + String(p.id).slice(0, 8));
+}
+/* Normalised for comparison: case, punctuation and doubled spaces gone,
+   so "O'Brien" and "Obrien" are the same person to a suggestion. */
+function nameKey(s){
+  return String(s||'').toLowerCase().replace(/[^a-z0-9 ]+/g, '').replace(/\s+/g, ' ').trim();
+}
+function nameTokens(s){ return nameKey(s).split(' ').filter(Boolean); }
+/* 0 = nothing in common, 1 = the same name. Token overlap rather than
+   substring, so "Kotadia, Aly" still finds "Aly Kotadia". */
+function nameScore(a, b){
+  const x = nameTokens(a), y = nameTokens(b);
+  if(!x.length || !y.length) return 0;
+  if(x.join(' ') === y.join(' ')) return 1;
+  const shared = x.filter(t=>y.some(u=>u === t || (t.length > 2 && u.startsWith(t)) || (u.length > 2 && t.startsWith(u))));
+  return shared.length / Math.max(x.length, y.length);
+}
+/* Candidate accounts for one member, best first. An identical email is
+   the strongest signal there is and is always offered first — but it is
+   a suggestion, never a link. Nothing here writes anything. */
+function linkSuggestions(member){
+  const email = String(member && member.email || '').trim().toLowerCase();
+  const out = [];
+  (PROFILES||[]).forEach(p=>{
+    if(p.member_id) return;                                  // already someone else's
+    const pe = String(p.email || '').trim().toLowerCase();
+    if(email && pe && pe === email){ out.push({p, why:'same email address', score:2}); return; }
+    const s = nameScore(member && member.name, accountLabel(p));
+    if(s >= 0.5) out.push({p, why: s === 1 ? 'same name' : 'similar name', score:s});
   });
-  return rows;
+  return out.sort((a,b)=>b.score - a.score).slice(0, 5);
 }
-/* The rank names here must be the ones RANKS actually offers. 'Youth Team
-   Leader' was checked for and no such rank exists, while 'Assistant Team
-   Lead' — which does — was missing altogether, so an Assistant Team Lead
-   could never be linked to their login account at all. */
-function requiredPermFor(rank, team){
-  const t = (team === 'A' || team === 'B') ? team : null;
-  if(rank === 'Team Leader' || rank === 'Team Lead') return t ? (t === 'A' ? 'tl_a' : 'tl_b') : null;
-  if(rank === 'Assistant Team Lead') return t ? (t === 'A' ? 'ytl_a' : 'ytl_b') : null;
-  if(rank === 'Facilitator') return 'facilitator';
-  if(rank === 'PHMU' || rank === 'Deputy Director' || rank === 'Director') return 'iv_admin';
-  if(rank === 'Member') return t ? (t === 'A' ? 'team_a' : 'team_b') : null;
-  return null; // unknown rank — no mapping, not linkable
+/* The one write. Setting member_id to null unlinks. */
+async function setAccountLink(profileId, memberId){
+  if(!sb) { toast('No database connection.', 'err'); return false; }
+  try{
+    const {error} = await sb.from('profiles').update({member_id: memberId}).eq('id', profileId);
+    if(error) throw error;
+    const p = (PROFILES||[]).find(x=>String(x.id) === String(profileId));
+    if(p) p.member_id = memberId;
+    const m = memberId ? (mRows||[]).find(x=>String(x.id) === String(memberId)) : null;
+    await auditLog(memberId ? 'Linked account' : 'Unlinked account', 'accounts',
+      accountLabel(p) + (memberId ? (' → ' + (m ? m.name : '#' + memberId)) : ' unlinked'));
+    toast(memberId ? 'Linked.' : 'Unlinked.');
+    return true;
+  }catch(e){
+    /* One account per person is enforced in the database, so this is the
+       likely failure and deserves a sentence rather than a code. */
+    const msg = /duplicate key|unique/i.test(e.message || '')
+      ? 'That person already has an account linked. Unlink the other one first.'
+      : 'Could not save the link: ' + (e.message || e);
+    toast(msg, 'err');
+    return false;
+  }
 }
-function linkMatchFor(r){
-  const perm = requiredPermFor(memberRank(r), r.team);
-  if(!perm) return null;
-  const nm = String(r.name || '').trim().toLowerCase();
-  if(!nm) return null;
-  return mAccounts.find(a=>String(a.display || '').trim().toLowerCase() === nm && a.perms.includes(perm)) || null;
+async function linkMemberTo(memberId, profileId){
+  const ok = await setAccountLink(profileId, Number(memberId));
+  if(ok){ renderMembers(); if(pageActive('linking')) renderLinking(); }
 }
-function promptLink(row){
-  const match = linkMatchFor(row);
-  if(!match){ toast('No matching login account found.', 'err'); return; }
-  const label = ROLE_LABELS[match.role] || match.role || 'account';
-  const teamTxt = (row.team === 'A' || row.team === 'B') ? ', Team ' + row.team : '';
-  if(!confirm(`Link ${row.name} (${memberRank(row)}${teamTxt}) to login account @${match.username} (${label})?\n\nOK = Link · Cancel = Not now`)) return;
-  updateMember(row.id, {linked_username: match.username}, `${row.name} → @${match.username} (${label})`, 'Linked member')
-    .then(ok=>{ if(ok) renderMembers(); });
+
+/* ── The Account Linking page ─────────────────────────────────────── */
+async function loadLinkingPage(){
+  if(!USERS_ADMIN()) return;
+  $('lkAccounts').innerHTML = '<div class="skel"></div><div class="skel"></div>';
+  $('lkMembers').innerHTML  = '<div class="skel"></div>';
+  if(!sb){ $('lkAccounts').innerHTML = '<div class="sb-empty">No database connection.</div>'; return; }
+  try{
+    const [mres, pres] = await Promise.all([
+      sb.from('iv_members').select('*').order('name'),
+      sb.from('profiles').select('*').order('display')
+    ]);
+    if(mres.error) throw mres.error;
+    if(pres.error) throw pres.error;
+    mRows = mres.data || [];
+    PROFILES = pres.data || [];
+    renderLinking();
+  }catch(e){
+    $('lkAccounts').innerHTML = '<div class="sb-empty">Could not load: ' + esc(e.message || String(e)) + '</div>';
+    $('lkMembers').innerHTML = '';
+  }
 }
-function unlinkMember(row){
-  const linked = memberLink(row);
-  if(!linked) return;
-  if(!confirm(`Unlink ${row.name} from login account @${linked}?`)) return;
-  updateMember(row.id, {linked_username: null}, `${row.name} unlinked from @${linked}`, 'Unlinked member')
-    .then(ok=>{ if(ok) renderMembers(); });
+/* Members ranked as candidates for one unclaimed account — the mirror of
+   linkSuggestions, looking the other way. */
+function memberSuggestions(prof){
+  const email = String(prof && prof.email || '').trim().toLowerCase();
+  const taken = new Set((PROFILES||[]).filter(p=>p.member_id).map(p=>String(p.member_id)));
+  const out = [];
+  (mRows||[]).forEach(m=>{
+    if(taken.has(String(m.id))) return;
+    const me = String(m.email || '').trim().toLowerCase();
+    if(email && me && me === email){ out.push({m, why:'same email address', score:2}); return; }
+    const s = nameScore(accountLabel(prof), m.name);
+    if(s >= 0.5) out.push({m, why: s === 1 ? 'same name' : 'similar name', score:s});
+  });
+  return out.sort((a,b)=>b.score - a.score).slice(0, 5);
+}
+/* An account whose email belongs to somebody who is already linked to a
+   different account. Not offered as a suggestion — that person is taken
+   — but worth saying out loud, because it is how a second account for
+   one person shows itself. */
+function takenMatchFor(prof){
+  const email = String(prof && prof.email || '').trim().toLowerCase();
+  if(!email) return null;
+  const m = (mRows||[]).find(x=>String(x.email||'').trim().toLowerCase() === email);
+  if(!m) return null;
+  const holder = (PROFILES||[]).find(p=>String(p.member_id) === String(m.id));
+  return holder ? {m, holder} : null;
+}
+function memberOptionsFree(sel){
+  const taken = new Set((PROFILES||[]).filter(p=>p.member_id).map(p=>String(p.member_id)));
+  const free = (mRows||[]).filter(m=>!taken.has(String(m.id)))
+    .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+  return '<option value="">— choose a person —</option>' + free.map(m=>
+    '<option value="' + m.id + '"' + (String(sel) === String(m.id) ? ' selected' : '') + '>'
+    + esc(m.name || ('#' + m.id)) + (m.team ? ' · Team ' + esc(m.team) : '') + '</option>').join('');
+}
+function renderLinking(){
+  const aq = ($('lkAccSearch').value || '').trim().toLowerCase();
+  const mq = ($('lkMemSearch').value || '').trim().toLowerCase();
+
+  /* One account per person is enforced in the database, but only if no
+     duplicates already existed when SETUP-ACCOUNTS.sql ran — it warns
+     rather than failing. Say so here rather than leaving it silent. */
+  const byMember = {};
+  (PROFILES||[]).forEach(p=>{ if(p.member_id) (byMember[p.member_id] = byMember[p.member_id] || []).push(p); });
+  const dupes = Object.keys(byMember).filter(k=>byMember[k].length > 1);
+  const note = $('lkNote');
+  if(dupes.length){
+    note.style.display = 'block';
+    note.innerHTML = '<span>⚠️</span><span>' + dupes.length + ' ' + (dupes.length === 1 ? 'person has' : 'people have')
+      + ' more than one account linked: ' + dupes.map(k=>{
+          const m = (mRows||[]).find(x=>String(x.id) === String(k));
+          return '<b>' + esc(m ? m.name : '#' + k) + '</b>';
+        }).join(', ') + '. Unlink the spare ones — audit logs cannot tell two accounts for the same person apart.</span>';
+  }else{ note.style.display = 'none'; }
+
+  const free = (PROFILES||[]).filter(p=>!p.member_id);
+  const shown = free.filter(p=>!aq || (accountLabel(p) + ' ' + (p.email||'')).toLowerCase().includes(aq));
+  $('lkAccCount').textContent = free.length + (free.length === 1 ? ' account' : ' accounts');
+  const badge = $('navLinkingCount');
+  if(badge){ badge.textContent = free.length; badge.style.display = free.length ? '' : 'none'; }
+  $('lkAccounts').innerHTML = !free.length
+    ? '<div class="sb-empty">Every login account is attached to someone.</div>'
+    : (!shown.length ? '<div class="sb-empty">No accounts match.</div>' : shown.map(p=>{
+        const sugg = memberSuggestions(p);
+        const taken = sugg.length ? null : takenMatchFor(p);
+        return '<div class="lk-row">'
+          + '<div class="lk-who"><b>' + esc(accountLabel(p)) + '</b>'
+            + (p.email ? '<small>' + esc(p.email) + '</small>' : '')
+            + '<small>' + (permsOf(p).length ? permsOf(p).map(x=>esc(ROLE_LABELS[x] || x)).join(' · ') : 'no access')
+            + (p.last_seen ? ' · last seen ' + esc(new Date(p.last_seen).toLocaleDateString('en-NZ',{timeZone:'Pacific/Auckland',day:'2-digit',month:'short',year:'numeric'})) : ' · never signed in')
+            + '</small>'
+            + (taken ? '<small class="lk-taken">⚠ This address belongs to <b>' + esc(taken.m.name)
+                       + '</b>, who is already linked to <b>' + esc(accountLabel(taken.holder))
+                       + '</b> — so one of these two accounts is probably a duplicate.</small>' : '')
+            + '</div>'
+          + '<div class="lk-act">'
+            + (sugg.length ? '<div class="link-sugg">' + sugg.map(s=>
+                '<button class="btn btn-bl btn-sm" data-lka="' + esc(p.id) + '" data-lkm="' + s.m.id + '">Link '
+                + esc(s.m.name) + '<small>' + esc(s.why) + '</small></button>').join('') + '</div>' : '')
+            + '<div class="link-pick"><select data-lkpick="' + esc(p.id) + '">' + memberOptionsFree('') + '</select>'
+            + '<button class="btn btn-ol btn-sm" data-lkgo="' + esc(p.id) + '">Link</button></div>'
+          + '</div></div>';
+      }).join(''));
+
+  const linkedIds = new Set((PROFILES||[]).filter(p=>p.member_id).map(p=>String(p.member_id)));
+  const noAcct = (mRows||[]).filter(m=>(m.status||'active') === 'active' && !linkedIds.has(String(m.id)));
+  const mShown = noAcct.filter(m=>!mq || String(m.name||'').toLowerCase().includes(mq));
+  $('lkMemCount').textContent = noAcct.length + (noAcct.length === 1 ? ' person' : ' people');
+  $('lkMembers').innerHTML = !noAcct.length
+    ? '<div class="sb-empty">Everyone active has an account linked.</div>'
+    : (!mShown.length ? '<div class="sb-empty">Nobody matches.</div>' : mShown.map(m=>{
+        const su = signupState(m);
+        return '<div class="lk-row"><div class="lk-who"><b>' + esc(m.name) + '</b>'
+          + '<small>' + esc(memberTeamLabel(m)) + ' · ' + esc(memberRank(m))
+          + (m.email ? ' · ' + esc(m.email) : ' · no email on file') + '</small></div>'
+          + '<div class="lk-act"><span class="stat ' + su.cls + '">' + su.icon + ' ' + esc(su.label) + '</span></div></div>';
+      }).join(''));
+
+  $('lkAccounts').querySelectorAll('[data-lka]').forEach(b=>b.addEventListener('click',
+    ()=>linkMemberTo(b.getAttribute('data-lkm'), b.getAttribute('data-lka'))));
+  $('lkAccounts').querySelectorAll('[data-lkgo]').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.getAttribute('data-lkgo');
+    const sel = $('lkAccounts').querySelector('[data-lkpick="' + id + '"]');
+    if(!sel || !sel.value){ toast('Choose a person first.', 'err'); return; }
+    linkMemberTo(sel.value, id);
+  }));
+}
+async function unlinkMember(row){
+  const p = profileFor(row.id);
+  if(!p) return;
+  if(!confirm('Unlink ' + row.name + ' from ' + accountLabel(p) + '?\n\nThe account keeps working — they just won\'t be able to set their own away dates.')) return;
+  const ok = await setAccountLink(p.id, null);
+  if(ok){ renderMembers(); if(pageActive('linking')) renderLinking(); }
 }
 
 /* ── Filtering + rendering ── */
@@ -1962,9 +2236,8 @@ function memberChipsHTML(r){
   memberSpec(r).forEach(s=>chips.push(`<span class="badge badge-av">${esc(s)}</span>`));
   const rk = memberRank(r);
   if(rk !== 'Member') chips.push(`<span class="badge badge-rank">${esc(rk)}</span>`);
-  const linked = memberLink(r);
-  if(linked) chips.push(`<span class="badge badge-link">@${esc(linked)}</span>`);
-  else if(mHasLink && linkMatchFor(r)) chips.push(`<span class="badge badge-linkavail" data-linkchip="${r.id}" title="A matching login account was found — click to link">🔗 Link available</span>`);
+  const lp = profileFor(r.id);
+  if(lp) chips.push(`<span class="badge badge-link" title="Linked login account">${esc(accountLabel(lp))}</span>`);
   if((r.status || 'active') !== 'active') chips.push('<span class="badge badge-off">Inactive</span>');
   /* Where this person is in the rollout. Derived every render, so it can
      never be out of date with what actually happened. */
@@ -1983,17 +2256,25 @@ function editPanelHTML(r){
   const active = (r.status || 'active') === 'active';
   const rankDis = mHasRank ? '' : ' disabled title="Column missing — re-run SETUP.sql"';
   const specDis = mHasSpec ? '' : ' disabled title="Column missing — re-run SETUP.sql"';
-  const linked = memberLink(r);
-  const match = linked ? null : linkMatchFor(r);
-  let linkbox = '';
-  if(mHasLink){
-    if(linked){
-      linkbox = `<div class="mem-linkbox">Linked to login account <b>@${esc(linked)}</b><button class="btn btn-ol" data-act="unlink">Unlink</button></div>`;
-    }else if(match){
-      linkbox = `<div class="mem-linkbox">🔗 Link available — login <b>@${esc(match.username)}</b> (${esc(ROLE_LABELS[match.role] || match.role || 'account')}) matches this member.<button class="btn btn-bl" data-act="link">Link account</button></div>`;
-    }else{
-      linkbox = `<div class="mem-linkbox">Not linked — a login account can be linked here once its display name matches “${esc(r.name)}” and its role matches ${esc(rank)}${(r.team === 'A' || r.team === 'B') ? ' / Team ' + r.team : ''}.</div>`;
-    }
+  /* A link can always be made by hand. Suggestions sit above the full
+     list, and neither does anything until it is clicked. */
+  const lp = profileFor(r.id);
+  let linkbox;
+  if(lp){
+    linkbox = `<div class="mem-linkbox">Linked to <b>${esc(accountLabel(lp))}</b>`
+      + (lp.email ? ` <span style="color:var(--dm)">${esc(lp.email)}</span>` : '')
+      + `<button class="btn btn-ol" data-act="unlink">Unlink</button></div>`;
+  }else{
+    const sugg = linkSuggestions(r);
+    linkbox = `<div class="mem-linkbox mem-linkbox-col">`
+      + `<div>Not linked to a login account. They can sign in and read everything, but a Lead has to set their away dates for them.</div>`
+      + (sugg.length
+          ? `<div class="link-sugg">` + sugg.map(s=>
+              `<button class="btn btn-bl btn-sm" data-linkto="${esc(s.p.id)}">Link ${esc(accountLabel(s.p))}`
+              + `<small>${esc(s.why)}</small></button>`).join('') + `</div>`
+          : '')
+      + `<div class="link-pick"><select data-linkpick>${accountOptions('')}</select>`
+      + `<button class="btn btn-ol btn-sm" data-act="linkpick">Link this account</button></div></div>`;
   }
   return `<div class="mem-edit" data-panel="${r.id}">
     <div class="mem-grid">
@@ -2026,7 +2307,6 @@ function editPanelHTML(r){
 }
 function renderMembers(){
   const box = $('mList');
-  mAccounts = collectLinkAccounts();
   const rows = visibleMembers();
   if(!rows.length){
     box.innerHTML = '<div class="md-empty"><div class="big">👥</div>No members match. Add a member or adjust the filter.</div>';
@@ -2064,11 +2344,6 @@ function bindMemberRowEvents(box){
     mOpenId = (mOpenId === id) ? null : id;
     renderMembers();
   }));
-  box.querySelectorAll('[data-linkchip]').forEach(c=>c.addEventListener('click', e=>{
-    e.stopPropagation();
-    const row = mRows.find(r=>r.id === Number(c.getAttribute('data-linkchip')));
-    if(row) promptLink(row);
-  }));
   const panel = box.querySelector('.mem-edit');
   if(!panel) return;
   const row = mRows.find(r=>r.id === Number(panel.getAttribute('data-panel')));
@@ -2092,8 +2367,14 @@ function bindMemberRowEvents(box){
   on('[data-act="close"]', ()=>{ mOpenId = null; renderMembers(); });
   on('[data-act="del"]', ()=>deleteMember(row));
   on('[data-act="revoke"]', ()=>revokeMemberAccess(row));
-  on('[data-act="link"]', ()=>promptLink(row));
   on('[data-act="unlink"]', ()=>unlinkMember(row));
+  on('[data-act="linkpick"]', ()=>{
+    const sel = panel.querySelector('[data-linkpick]');
+    if(!sel || !sel.value){ toast('Choose an account first.', 'err'); return; }
+    linkMemberTo(row.id, sel.value);
+  });
+  panel.querySelectorAll('[data-linkto]').forEach(btn=>btn.addEventListener('click',
+    ()=>linkMemberTo(row.id, btn.getAttribute('data-linkto'))));
   on('[data-act="save"]', ()=>saveMemberEdit(row, panel));
 }
 async function saveMemberEdit(row, panel){
@@ -2150,7 +2431,7 @@ async function updateMember(id, patch, desc, action){
   }catch(e){
     console.warn('updateMember failed:', e.message || e);
     if(isMissingColumn(e) || isNullViolation(e)){
-      showMWarn('Save failed — iv_members is missing the latest columns/constraints (rank, spec, linked_username, optional team). Re-run SETUP.sql on the Supabase project.');
+      showMWarn('Save failed — iv_members is missing the latest columns/constraints (rank, spec, optional team). Re-run SETUP.sql on the Supabase project.');
       toast('Save failed — re-run SETUP.sql on the Supabase project.', 'err');
     }else{
       toast(isMissingTable(e) ? 'iv_members table is missing — run SETUP.sql first.' : 'Save failed: ' + (e.message || e), 'err');
@@ -2530,13 +2811,32 @@ async function saveProfile(id){
 let MY_MEMBER = null;        // the member row this account is linked to
 let MY_AWAY = [];
 
+/* Three states, because being unlinked is normal rather than broken:
+
+     linked            set your own dates, as before
+     not linked, but   see the dates a Lead has set for you, read-only.
+       email matches     You could not see them at all before this.
+     neither           the panel stays hidden
+
+   The read-only case identifies you by an exact email match, done in the
+   database and only when exactly one active person has that address. It
+   is not a link and grants nothing: set_my_away still writes only
+   through profiles.member_id, so an address can never change anything. */
+let MY_LINKED = false;
 async function loadAway(){
   const panel = $('awayPanel');
   if(!sb || !CU.uid){ panel.style.display = 'none'; return; }
   try{
-    const {data, error} = await sb.rpc('my_member');
-    if(error || !data){ panel.style.display = 'none'; return; }
-    MY_MEMBER = Array.isArray(data) ? data[0] : data;
+    const {data, error} = await sb.rpc('my_member_view');
+    let view = error ? null : data;
+    if(!view){
+      // Older database without my_member_view — fall back to the link only.
+      const r = await sb.rpc('my_member');
+      const m = Array.isArray(r.data) ? r.data[0] : r.data;
+      view = m ? {member:m, linked:true} : null;
+    }
+    MY_MEMBER = view && view.member ? view.member : null;
+    MY_LINKED = !!(view && view.linked);
     if(!MY_MEMBER){ panel.style.display = 'none'; return; }
     MY_AWAY = Array.isArray(MY_MEMBER.away) ? MY_MEMBER.away.slice() : [];
     panel.style.display = 'block';
@@ -2557,8 +2857,18 @@ function renderAway(){
   const clash = awayClashes();
   const today = todayNZ();
   const list = MY_AWAY.filter(d=>d > today).sort();
+  /* Read-only when we know who you are but nobody has linked your
+     account. Hide the controls rather than letting them fail on save. */
+  const ctl = $('awayCtl'), ro = $('awayReadOnly');
+  if(ctl) ctl.style.display = MY_LINKED ? '' : 'none';
+  if(ro){
+    ro.style.display = MY_LINKED ? 'none' : 'block';
+    ro.innerHTML = '<span>ℹ️</span><span>These are the away dates your Team Lead has set for you. '
+      + 'Your login is not linked to your record in the directory, so you cannot change them here &mdash; '
+      + 'ask a Team Lead or Facilitator and they will do it for you.</span>';
+  }
   $('awayList').innerHTML = list.length
-    ? list.map(d=>`<span class="away-chip${clash[d]?' clash':''}" title="${clash[d]?'You are rostered this day — your Team Lead has been told':''}">${esc(fmtLong(d))}${clash[d]?' ⚠':''}<button onclick="removeAway('${esc(d)}')" title="Remove" aria-label="Remove ${esc(fmtLong(d))}">✕</button></span>`).join('')
+    ? list.map(d=>`<span class="away-chip${clash[d]?' clash':''}" title="${clash[d]?'You are rostered this day — your Team Lead has been told':''}">${esc(fmtLong(d))}${clash[d]?' ⚠':''}${MY_LINKED?`<button onclick="removeAway('${esc(d)}')" title="Remove" aria-label="Remove ${esc(fmtLong(d))}">✕</button>`:''}</span>`).join('')
     : '<div class="md-empty" style="padding:14px;">No away dates. You are available for every event.</div>';
   const clashing = list.filter(d=>clash[d]);
   const w = $('awayWarn');
@@ -3333,6 +3643,9 @@ function bindUI(){
   /* invitations — approving */
   $('apvRefresh').addEventListener('click', loadApprovePage);
   /* audit */
+  $('lkRefreshBtn').addEventListener('click', loadLinkingPage);
+  $('lkAccSearch').addEventListener('input', renderLinking);
+  $('lkMemSearch').addEventListener('input', renderLinking);
   $('auRefreshBtn').addEventListener('click', loadAuditList);
   $('auKind').addEventListener('change', renderAuditList);
   $('auTeam').addEventListener('change', renderAuditList);

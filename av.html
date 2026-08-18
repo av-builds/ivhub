@@ -2153,12 +2153,37 @@ async function dbSaveRosterDay(date, data){
     setSyncStatus('ok');
   }catch(e){ console.error('dbSaveRosterDay error:',e); setSyncStatus('error'); }
 }
+/* The dates the calendar is showing, padding days from the neighbouring
+   months included — the same range autoRoster fills, and the only range
+   it ever touches. */
+function visibleGridDates(){
+  const dim      = new Date(calYr, calMo+1, 0).getDate();
+  const firstCol = (new Date(calYr, calMo, 1).getDay()+6)%7;
+  const trail    = (7 - ((firstCol+dim)%7)) % 7;
+  const out = [];
+  const t   = new Date(calYr, calMo, 1-firstCol);
+  const end = new Date(calYr, calMo+1, trail);
+  while(t <= end){ out.push(localDS(t)); t.setDate(t.getDate()+1); }
+  return out;
+}
 async function dbSaveRoster(){
   if(!sb) return;
   setSyncStatus('saving');
   try{
-    const rows = Object.entries(roster).map(([date,data])=>({date,data}));
+    /* Only the month on screen. This is called after a re-roster, and
+       autoRoster fills exactly the visible grid and nothing outside it —
+       so writing back every day ever recorded, which is what this used
+       to do, rewrote thousands of untouched rows to save a few dozen
+       changed ones. Removing one volunteer meant re-uploading the whole
+       history of the roster.
+
+       Days the re-roster emptied are left alone rather than deleted, so
+       this stays a pure saving with no change in what ends up stored. */
+    const grid = visibleGridDates();
+    const rows = [];
+    grid.forEach(ds=>{ const r = roster[ds]; if(r) rows.push({date:ds, data:r}); });
     if(!rows.length){ setSyncStatus('ok'); return; }
+    pauseRealtime(4000);
     // Upsert in small batches to avoid payload limits
     for(let i=0;i<rows.length;i+=50){
       const batch=rows.slice(i,i+50);

@@ -187,6 +187,9 @@ body.sb-min .main{margin-left:70px;}
 .pnl-h .ct{margin-left:auto;font-size:12px;font-weight:700;color:var(--dm);text-transform:none;letter-spacing:0;}
 .pnl-b{padding:16px 18px;}
 .ib{background:rgba(21,101,192,.07);border:1px solid rgba(21,101,192,.24);border-radius:var(--r);padding:11px 15px;font-size:13px;color:var(--dm);line-height:1.6;margin-bottom:14px;}
+/* Not styled like a hint. Work that is not stored is not a suggestion. */
+.ib-warn{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.45);color:#FCA5A5;}
+.ib-warn b{color:#FECACA;}
 .ib b,.ib a{color:var(--dt);}.ib a{color:var(--blue-lt);font-weight:800;}
 .hint-banner{background:var(--gold-bg);border:1px solid var(--gold-bd);color:var(--gold-lt);border-radius:var(--r);padding:10px 15px;font-size:13px;font-weight:700;margin-bottom:14px;display:flex;gap:8px;align-items:center;}
 .tw{background:var(--ds);background-image:var(--surface-grad);border:var(--hairline);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-1);}
@@ -618,6 +621,10 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 
   <main class="main">
     <div id="dbHint"></div>
+    <!-- Shown only when something on screen is not in the database.
+         Sits above every page, because losing a roster matters wherever
+         you happen to be looking. -->
+    <div id="saveWarn" class="ib ib-warn" style="display:none;align-items:center;gap:10px;margin-bottom:14px;"></div>
     <div class="page active" id="page-dashboard"><div id="body-dashboard"></div></div>
     <div class="page" id="page-roster"><div id="body-roster"></div></div>
     <div class="page" id="page-calendar"><div id="body-calendar"></div></div>
@@ -1113,6 +1120,10 @@ function prefScore(m,dutyName){
 
 /* ── STATE ── */
 let MEMBERS=[],EVENTS=[],ROSTERS={},ANNS=[],ATTEND={};
+/* member id -> lifetime attendance totals, counted by the database.
+   ATTEND holds the raw register for the cycles on screen; this holds the
+   whole history as four numbers per person. */
+let ATT_TOTALS={};
 let CYCLES=[],selEventId=null,DB_MISSING=false,LOADED=false,curPage='dashboard';
 let expandedCycles=new Set();
 let CAL={y:2026,m:0};
@@ -1174,10 +1185,33 @@ async function loadAll(){
   if(ev.error){ console.warn('iv_events:',ev.error.message||ev.error); if(tableMissing(ev.error))DB_MISSING=true; EVENTS=[]; }
   else EVENTS=ev.data||[];
   const evIds=EVENTS.map(e=>e.id);
-  const [ro,at]=await Promise.all([
+  /* The cycles this page will actually show — four back, the current
+     one, four forward. Built here rather than after, because it decides
+     how far back the attendance register needs to be fetched. Valid at
+     this point: the settings that move a chandraat have just arrived and
+     the cycle cache was cleared with them. */
+  CYCLES=buildCycles();
+  const floor=CYCLES.length ? CYCLES[0].start : '0000-01-01';
+  /* Rosters for every event: the member cards show an all-time duty
+     count and the leaderboard is explicitly lifetime, so clipping these
+     would quietly change numbers people act on. They are one row per
+     event, which stays manageable.
+
+     Attendance is different. It is one row per person per event — at
+     three hundred volunteers, tens of thousands of rows — and the only
+     thing that needed all of it was a reliability percentage. That now
+     comes back already counted, so the raw register is fetched only for
+     the cycles on screen, which is all the attendance page and the
+     per-cycle reports ever look at. */
+  const windowIds=EVENTS.filter(e=>String(e.date||'')>=floor).map(e=>e.id);
+  const [ro,at,tot]=await Promise.all([
     q(()=>byEventId('iv_roster',evIds)),
-    q(()=>byEventId('iv_attendance',evIds)),
+    q(()=>byEventId('iv_attendance',windowIds)),
+    q(()=>sb.rpc('member_attendance_totals',{p_team:PAGE_TEAM})),
   ]);
+  ATT_TOTALS={};
+  if(tot.error) console.warn('member_attendance_totals:',tot.error.message||tot.error);
+  else (tot.data||[]).forEach(r=>{ ATT_TOTALS[r.member_id]=r; });
   ROSTERS={};
   if(ro.error){ console.warn('iv_roster:',ro.error.message||ro.error); if(tableMissing(ro.error))DB_MISSING=true; }
   else (ro.data||[]).forEach(r=>{ ROSTERS[r.event_id]=r.data||{assign:{},manual:{}}; });
@@ -1240,7 +1274,14 @@ function subscribeRT(){
   }catch(e){ console.warn('realtime unavailable',e); }
 }
 let _rtT=null;
-function rtReload(){ if(_rtT)clearTimeout(_rtT); _rtT=setTimeout(async()=>{ await loadAll(); await loadCovering(); CYCLES=buildCycles(); renderCurrent(); },350); }
+/* A reload replaces everything held here with what the database has.
+   That is right for somebody else's change and wrong for our own work
+   that never stored — which is how a failed save came to look like a
+   deletion. Anything unsaved is put back afterwards and stays flagged. */
+function rtReload(){ if(_rtT)clearTimeout(_rtT); _rtT=setTimeout(async()=>{
+  await loadAll(); await loadCovering(); CYCLES=buildCycles();
+  Object.keys(ROSTER_UNSAVED).forEach(id=>{ ROSTERS[id]=ROSTER_UNSAVED[id]; });
+  renderSaveWarning(); renderCurrent(); },350); }
 
 /* ── COUNTS / FAIRNESS ── */
 function computeCounts(k,excludeEventId){
@@ -1421,9 +1462,99 @@ function generateEventData(ev){
   for(const key in (prev.assign||{})){ if(!assign[key]&&!duties.some(d=>d.key===key)&&people(prev.assign[key]).length) assign[key]=prev.assign[key]; }
   return {assign:assign,manual:manual,gen_at:new Date().toISOString(),warn:warn};
 }
-async function saveRoster(eventId){
-  try{ if(sb&&!DB_MISSING){ pauseRT(1500); const {error}=await sb.from('iv_roster').upsert({event_id:eventId,data:ROSTERS[eventId]}); if(error) console.warn('saveRoster:',error.message||error); } }
-  catch(e){ console.warn('saveRoster failed',e); }
+/* ── SAVING A ROSTER ─────────────────────────────────────────────────
+   This used to swallow every failure into a console warning. The
+   generated roster stayed on screen, the database kept nothing, and the
+   next reload replaced what was on screen with what was stored — so a
+   save that failed looked exactly like a roster that had been deleted,
+   with nothing anywhere saying why.
+
+   Three things now stop that. The error is shown rather than logged.
+   The write is read back, because a rejected write is not the only way
+   to lose one — a duplicate row for the same event would take the
+   update and still leave the page reading the stale copy. And anything
+   that did not store is remembered, so a reload cannot quietly replace
+   work that only exists in this browser. */
+/* Nearly every write on this page ended in catch(e){ console.warn(e) }.
+   That is how a roster could fail to save and a confirmation could fail
+   to publish while the screen showed success for both. This does the
+   write, says out loud what went wrong when it does, and tells the
+   caller so the screen can stop claiming otherwise. */
+async function dbWrite(what, run){
+  if(!sb || DB_MISSING){ toast(what + ' failed — no database connection', 'err'); return false; }
+  try{
+    const {error} = await run();
+    if(error){ console.error(what, error); toast(what + ' failed — ' + (error.message || error), 'err'); return false; }
+    return true;
+  }catch(e){ console.error(what, e); toast(what + ' failed — ' + (e.message || e), 'err'); return false; }
+}
+let ROSTER_UNSAVED = {};        // event id -> the roster that is not safely stored
+function unsavedCount(){ return Object.keys(ROSTER_UNSAVED).length; }
+async function saveRoster(eventId, opts){
+  const quiet = opts && opts.quiet;
+  if(!sb || DB_MISSING){ ROSTER_UNSAVED[eventId] = ROSTERS[eventId]; return false; }
+  const body = ROSTERS[eventId];
+  if(!body){ console.warn('saveRoster: nothing to save for event', eventId); return false; }
+  /* Long enough to cover the write and the read-back. The old 1.5s could
+     lapse mid-save, letting our own change bounce back as a reload. */
+  pauseRT(6000);
+  let err = null;
+  for(let attempt = 0; attempt < 2; attempt++){
+    try{
+      const {error} = await sb.from('iv_roster').upsert({event_id:eventId, data:body});
+      if(!error){ err = null; break; }
+      err = error;
+    }catch(e){ err = e; }
+    if(attempt === 0) await new Promise(r=>setTimeout(r, 500));   // one retry for a blip
+  }
+  if(!err){
+    // Read it back. Sent and stored are not the same claim.
+    try{
+      const {data, error} = await sb.from('iv_roster').select('event_id,data').eq('event_id', eventId);
+      if(error) err = error;
+      else if(!data || !data.length) err = {message:'the row was accepted but is not there when read back'};
+      else if(data.length > 1) err = {message:'there are ' + data.length + ' roster rows for this event — the unique index on iv_roster(event_id) is missing, so saves cannot replace cleanly. Re-run SETUP.sql.'};
+      else if(JSON.stringify(data[0].data) !== JSON.stringify(body)) err = {message:'what came back does not match what was sent'};
+    }catch(e){ err = e; }
+  }
+  if(err){
+    ROSTER_UNSAVED[eventId] = body;
+    const why = err.message || String(err);
+    console.error('saveRoster failed for event', eventId, err);
+    if(!quiet) toast('Roster NOT saved — ' + why, 'err');
+    renderSaveWarning();
+    return false;
+  }
+  delete ROSTER_UNSAVED[eventId];
+  renderSaveWarning();
+  return true;
+}
+/* Retries everything still unstored. Offered rather than done silently,
+   because if the first attempt failed for a reason that has not changed
+   the second will too, and a button says so honestly. */
+async function retryUnsaved(){
+  const ids = Object.keys(ROSTER_UNSAVED);
+  if(!ids.length) return;
+  let ok = 0;
+  for(const id of ids){
+    ROSTERS[id] = ROSTER_UNSAVED[id];
+    if(await saveRoster(Number(id), {quiet:true})) ok++;
+  }
+  toast(ok === ids.length ? 'Saved — everything is stored now'
+                          : ok + ' of ' + ids.length + ' saved. The rest are still not stored.',
+        ok === ids.length ? 'ok' : 'err');
+  renderCurrent();
+}
+function renderSaveWarning(){
+  const el = document.getElementById('saveWarn');
+  if(!el) return;
+  const n = unsavedCount();
+  if(!n){ el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.innerHTML = '<span>⚠️</span><span><b>' + n + ' roster' + (n===1?'' : 's') + ' not saved.</b> '
+    + 'What you can see is in this browser only, and will be gone when the page reloads. '
+    + 'The database refused the write — the reason was shown when it happened and is in the browser console.</span>'
+    + '<button class="btn btn-bl btn-sm" onclick="retryUnsaved()" style="margin-left:auto">Try again</button>';
 }
 /* Summarises what a regenerate changed: how many duties gained, lost or
    swapped people. Names are compared rather than ids so a renamed member
@@ -1450,29 +1581,45 @@ async function generateEvent(id,silent){
   // different events to read about afterwards.
   const _before=ROSTERS[id];
   ROSTERS[id]=generateEventData(ev);
-  await saveRoster(id);
+  const stored=await saveRoster(id);
   if(!silent){
     auditLog('generate','roster',ev.name+' '+ev.date+' \u2014 '+rosterDelta(_before,ROSTERS[id]));
-    renderRoster(); refreshBadges(); toast('Roster generated');
+    renderRoster(); refreshBadges();
+    // Only say it is generated if it is actually stored. saveRoster has
+    // already said what went wrong when it has not.
+    /* Says what still has to happen. "Generated" on its own reads as
+       done, and a roster nobody publishes is a roster nobody sees. */
+    if(stored) toast(ev.confirmed ? 'Roster generated and saved'
+                                  : 'Generated and saved — now Confirm & Publish so everyone can see it');
   }
+  return stored;
 }
 async function generateCycle(){
   const ev=selEvent(); if(!ev) return;
   const k=cycleForDate(ev.date);
   const evs=eventsInCycle(k).filter(e=>!e.confirmed&&!isHistoricEvent(e));
   if(!evs.length) return toast('No generatable events in this cycle','err');
-  for(const e of evs){ ROSTERS[e.id]=generateEventData(e); await saveRoster(e.id); }
-  auditLog('generate-all','roster',cycleLabel(k)+' — '+evs.length+' events');
+  let stored=0;
+  for(const e of evs){ ROSTERS[e.id]=generateEventData(e); if(await saveRoster(e.id,{quiet:true})) stored++; }
+  auditLog('generate-all','roster',cycleLabel(k)+' — '+evs.length+' events, '+stored+' saved');
   renderRoster(); refreshBadges();
-  toast('Generated '+evs.length+' events in this cycle');
+  /* Counted rather than assumed. Reporting the number generated when
+     only some of them stored is how this went unnoticed for so long. */
+  if(stored===evs.length) toast('Generated and saved '+evs.length+' events — publish each one to put it on the calendar');
+  else toast('Generated '+evs.length+', but only '+stored+' saved — see the warning above', 'err');
 }
 
 /* ── ATTENDANCE HELPERS ── */
 function attStatus(eventId,memberId){ const r=ATTEND[eventId]; return r&&r[memberId]?r[memberId].status:null; }
+/* Lifetime, across every event this team has ever run — which is why it
+   is counted in the database rather than here. Reading it off ATTEND
+   would now silently mean "reliability over the last few cycles", since
+   that is all the raw register still holds. */
 function memberReliability(memberId){
-  let present=0,late=0,absent=0,excused=0,total=0;
-  for(const eid in ATTEND){ const rec=ATTEND[eid][memberId]; if(!rec)continue; total++;
-    if(rec.status==='present')present++; else if(rec.status==='late')late++; else if(rec.status==='absent')absent++; else if(rec.status==='excused')excused++; }
+  const t=ATT_TOTALS[memberId];
+  const present=t?Number(t.present)||0:0, late=t?Number(t.late)||0:0,
+        absent=t?Number(t.absent)||0:0, excused=t?Number(t.excused)||0:0;
+  const total=present+late+absent+excused;
   const denom=present+late+absent;
   return {present,late,absent,excused,total,rate:denom?Math.round((present+late)/denom*100):null};
 }
@@ -1488,8 +1635,19 @@ async function markAttendance(eventId,memberId,status){
       if(error){ console.warn('attendance:',error.message||error); toast(tableMissing(error)?'Run SETUP.sql to enable attendance':'Could not save attendance','err'); } } }
     catch(e){ console.warn(e); }
   }
+  /* Keep the lifetime total in step. It is counted by the database on
+     load, so without this the reliability figure on the member card
+     would sit on whatever it was when the page opened — visibly wrong to
+     the person who just marked the register. */
+  bumpTotals(memberId, cur, cur===status ? null : status);
   auditLog('attendance','attendance',(memById(memberId)||{}).name+' → '+(cur===status?'cleared':status));
   renderAttendance();
+}
+function bumpTotals(memberId, from, to){
+  const t=ATT_TOTALS[memberId]=ATT_TOTALS[memberId]||{member_id:memberId,present:0,late:0,excused:0,absent:0,marked:0};
+  const step=(k,n)=>{ if(k && t[k]!=null) t[k]=Math.max(0,(Number(t[k])||0)+n); };
+  if(from){ step(from,-1); t.marked=Math.max(0,(Number(t.marked)||0)-1); }
+  if(to){   step(to,  +1); t.marked=(Number(t.marked)||0)+1; }
 }
 
 /* ════════════════════════════════════════════
@@ -1743,6 +1901,14 @@ function renderEventView(ev){
   h+='</div>';
   if(hist) h+='<div class="ro-note">🔒 Historical — read only</div>';
   else if(ev.confirmed) h+='<div class="ro-note">🔒 Confirmed'+(IS_EDIT?' — unconfirm to edit':'')+'</div>';
+  /* Said plainly, because a generated roster that nobody publishes is
+     invisible to every volunteer and looks from here exactly like a
+     published one. The Hub's calendar and My Duties both show confirmed
+     events only. */
+  else if(IS_EDIT && hasRoster) h+='<div class="ib ib-warn" style="display:flex;align-items:center;gap:10px;">'+
+    '<span>👁️</span><span><b>This roster is a draft — nobody else can see it.</b> '+
+    'It is not on the calendar and will not appear in anyone\u2019s My Duties until you publish it.</span>'+
+    '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">Confirm &amp; Publish</button></div>';
   if(!IS_EDIT&&!ev.confirmed) return h+'<div class="empty-gen"><div class="zap">⏳</div><h3>Roster not yet published</h3><p>The '+esc(TEAM_NAME)+' leaders are still drafting this event. It appears once confirmed.</p></div>';
   if(!hasRoster){
     if(!IS_EDIT||hist) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster</h3><p>No duty assignments were recorded.</p></div>';
@@ -1873,16 +2039,33 @@ async function removeSlot(dutyKey,arrName,idx){
 async function toggleYouth(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
   ev.youth=!ev.youth;
-  try{ if(sb&&!DB_MISSING){ pauseRT(1500); await sb.from('iv_events').update({youth:ev.youth}).eq('id',ev.id); } }catch(e){ console.warn(e); }
+  pauseRT(4000);
+  if(!await dbWrite('Changing the Youth setting', ()=>sb.from('iv_events').update({youth:ev.youth}).eq('id',ev.id))){
+    ev.youth=!ev.youth;      // put it back; the database did not take it
+  }
   auditLog('youth-toggle','events',ev.name+' '+ev.date+' → '+(ev.youth?'ON':'OFF'));
   renderRoster();
 }
+/* Publishing is the step that puts a roster in front of everybody: the
+   Hub's calendar and My Duties both read confirmed events only. It used
+   to set the flag locally and then write, ignoring the answer — so a
+   refused write left the screen saying "Confirmed" over a database that
+   still held a draft, and nobody outside the leads ever saw the roster.
+   The flag is now set only once the database has taken it. */
 async function toggleConfirm(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
-  ev.confirmed=!ev.confirmed;
-  try{ if(sb&&!DB_MISSING){ pauseRT(1500); await sb.from('iv_events').update({confirmed:ev.confirmed}).eq('id',ev.id); } }catch(e){ console.warn(e); }
-  auditLog(ev.confirmed?'confirm':'unconfirm','events',ev.name+' '+ev.date);
-  renderRoster(); toast(ev.confirmed?'Event confirmed & published':'Event unconfirmed');
+  const want=!ev.confirmed;
+  if(want && unsavedCount()){
+    toast('Save the roster first — it is not stored yet, so there is nothing to publish.','err'); return;
+  }
+  pauseRT(4000);
+  const ok=await dbWrite(want?'Publishing':'Unpublishing', ()=>
+    sb.from('iv_events').update({confirmed:want}).eq('id',ev.id));
+  if(!ok){ renderRoster(); return; }
+  ev.confirmed=want;
+  auditLog(want?'confirm':'unconfirm','events',ev.name+' '+ev.date);
+  renderRoster();
+  toast(want?'Published — it is on the calendar for everyone now':'Unpublished — hidden from the calendar again');
 }
 
 /* ── ADD / DELETE / RESET EVENTS ── */
@@ -1931,7 +2114,8 @@ function confirmDeleteEvent(){
 async function deleteEvent(){
   cM(); const ev=selEvent(); if(!ev) return;
   EVENTS=EVENTS.filter(e=>e.id!==ev.id); delete ROSTERS[ev.id];
-  try{ if(sb&&!DB_MISSING){ pauseRT(1500); await sb.from('iv_events').delete().eq('id',ev.id); } }catch(e){ console.warn(e); }
+  pauseRT(4000);
+  await dbWrite('Deleting the event', ()=>sb.from('iv_events').delete().eq('id',ev.id));
   auditLog('delete','events',ev.name+' '+ev.date);
   selEventId=null; const today=nzTodayISO();
   const next=EVENTS.filter(e=>e.date>=today)[0]||EVENTS[EVENTS.length-1]; if(next) selEventId=next.id;
@@ -1973,7 +2157,8 @@ async function saveCycleSettings(){
   const box=document.getElementById('dcard'); const newOv={};
   (box?box.querySelectorAll('#ovRows .ov-in'):[]).forEach(inp=>{ const raw=inp.getAttribute('data-raw'),v=(inp.value||'').trim(); if(v&&v!==raw) newOv[raw]=v; });
   OVERRIDES=newOv; clearCycleCache();
-  try{ if(sb&&!DB_MISSING){ pauseRT(2000); await sb.from('iv_settings').upsert({key:'chandraat_overrides',value:OVERRIDES}); } }catch(e){ console.warn(e); }
+  pauseRT(4000);
+  await dbWrite('Saving the cycle settings', ()=>sb.from('iv_settings').upsert({key:'chandraat_overrides',value:OVERRIDES}));
   auditLog('cycle-settings-save','settings',Object.keys(newOv).length+' chandraat overrides');
   cM(); CYCLES=buildCycles(); await autoCreateEvents(); renderCurrent(); toast('Cycle settings saved');
 }
