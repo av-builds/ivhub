@@ -1693,6 +1693,121 @@ function renderDbHint(){
   el.innerHTML=(DB_MISSING&&IS_EDIT)?
     '<div class="hint-banner"><span>⚠️</span><span>Database not initialised — run <b>&nbsp;SETUP.sql&nbsp;</b> on the Supabase project to create the IV tables.</span></div>':'';
 }
+/* ── THE FOUR CARDS ───────────────────────────────────────────────────
+   A lead and a volunteer open this page for different reasons, and used
+   to be shown the same four numbers — of which a volunteer could act on
+   none. "Unfilled slots" and "Cycle owner" tell somebody who cannot edit
+   the roster nothing they can do anything about, and the second of those
+   repeated the sentence in the banner directly above it.
+
+   Leads get what still has to be done. Volunteers get what affects them.
+   Nothing here fetches anything: it is all read off what the page has
+   already loaded, so the cards cost nothing to draw. */
+let MY_MEM = null;              // this viewer's row in iv_members, if known
+async function loadMyMember(){
+  if(!sb || DB_MISSING || !CU || !CU.uid) return;
+  try{
+    const {data} = await sb.rpc('my_member_view');
+    MY_MEM = data && data.member ? data.member : null;
+  }catch(e){ MY_MEM = null; }   // older database — the volunteer cards fall back
+}
+/* Past events whose register was never finished. It is what every
+   attendance figure is built on, and until now nothing said it was
+   outstanding — you had to go looking event by event. */
+function unmarkedEvents(){
+  const today = nzTodayISO();
+  return EVENTS.filter(ev=>{
+    if(ev.date >= today) return false;
+    if(!CYCLES.some(c=>inCycleK(ev.date,c.k))) return false;   // outside what is loaded
+    const r = ROSTERS[ev.id]; if(!r || !r.assign) return false;
+    const marks = ATTEND[ev.id] || {};
+    return rosterPeople(r).some(id=>!marks[id]);
+  });
+}
+function rosterPeople(r){
+  const ids = [];
+  for(const k in (r.assign||{})) people(r.assign[k]).forEach(p=>{ if(p.id!=null && ids.indexOf(p.id)<0) ids.push(p.id); });
+  return ids;
+}
+/* Generated but never confirmed — so nobody outside the leads can see
+   it. The card exists because that state is invisible from anywhere
+   except the one event's own page. */
+function draftedRosters(){
+  const today = nzTodayISO();
+  return EVENTS.filter(ev=>{
+    if(ev.confirmed || ev.date < today) return false;
+    const r = ROSTERS[ev.id];
+    return !!(r && r.assign && (r.gen_at || rosterPeople(r).length));
+  });
+}
+function card(cls, label, value, sub, onclick, vstyle){
+  return '<button class="sc' + (cls?' '+cls:'') + '"' + (onclick?' onclick="'+onclick+'"':'') + '>'
+    + '<div class="sc-l">' + esc(label) + '</div>'
+    + '<div class="sc-v num"' + (vstyle?' style="'+vstyle+'"':'') + '>' + value + '</div>'
+    + '<div class="sc-s">' + sub + '</div></button>';
+}
+function leadCards(nextEv,nextFill,unfilled){
+  const unmarked = unmarkedEvents();
+  const drafts   = draftedRosters();
+  return card(unfilled>0?'alert':'', 'Unfilled slots', unfilled,
+              'UNASSIGNED across upcoming events', 'nav(\'roster\')')
+    + card(unmarked.length?'alert':'', 'Attendance to mark', unmarked.length,
+           unmarked.length ? esc(fmtShort(unmarked[0].date)) + ' and ' + (unmarked.length-1) + ' other' + (unmarked.length===2?'':'s')
+                           : 'every past event is done',
+           'nav(\'attendance\')')
+    + card('', 'Next event', nextEv?esc(fmtShort(nextEv.date)):'—',
+           nextEv ? esc(nextEv.name) + (nextFill ? ' · ' + (nextFill.generated ? (nextFill.missing ? nextFill.missing+' gaps' : 'fully filled') : 'not generated') : '')
+                  : 'no upcoming events',
+           'nav(\'roster\')', 'font-size:20px;line-height:1.2')
+    + card(drafts.length?'alert':'ok-green', 'Not published', drafts.length,
+           drafts.length ? 'drafted — nobody else can see ' + (drafts.length===1?'it':'them')
+                         : 'every roster is published',
+           drafts.length ? 'selectEvent('+drafts[0].id+');nav(\'roster\')' : 'nav(\'roster\')');
+}
+function volunteerCards(){
+  const today = nzTodayISO();
+  const me = MY_MEM;
+  /* Their next duty, from the rosters already loaded. Only confirmed
+     events count: a draft can still change, and telling somebody to turn
+     up to something that might move is worse than telling them nothing. */
+  let nextDuty = null;
+  if(me){
+    EVENTS.filter(e=>e.date>=today && e.confirmed)
+      .sort((a,b)=>a.date<b.date?-1:1)
+      .some(ev=>{
+        const r = ROSTERS[ev.id]; if(!r || !r.assign) return false;
+        for(const k in r.assign){
+          if(people(r.assign[k]).some(p=>p.id===me.id)){
+            nextDuty = {ev, duty:recName(legacyLabel(k))}; return true;
+          }
+        }
+        return false;
+      });
+  }
+  const away = me && Array.isArray(me.away) ? me.away.filter(d=>d>today).sort() : [];
+  const rel  = me ? memberReliability(me.id) : null;
+  /* Who to ask. The leads of this team, by name — a volunteer who needs
+     to swap or report a problem should not have to work out who that is. */
+  const leads = MEMBERS.filter(m=>m.status==='active' && isTeamLeadMember(m)).map(m=>m.name);
+
+  return card(nextDuty?'ok-green':'', 'My next duty',
+              nextDuty ? esc(fmtShort(nextDuty.ev.date)) : '—',
+              nextDuty ? esc(nextDuty.duty) + ' · ' + esc(nextDuty.ev.uniform||'Casual')
+                       : (me ? 'nothing rostered yet' : 'your account is not linked to your name'),
+              'nav(\'calendar\')', 'font-size:20px;line-height:1.2')
+    + card(away.length?'':'ok-green', 'My away dates', away.length,
+           away.length ? 'next: ' + esc(fmtShort(away[0])) : 'available for every event',
+           'location.href=\'index.html\'')
+    + card('', 'My attendance', rel && rel.rate!=null ? rel.rate+'%' : '—',
+           rel && rel.total ? rel.total + ' duties marked' : 'nothing marked yet')
+    + card('', 'Who to ask', leads.length ? esc(leads[0].split(' ')[0]) : '—',
+           leads.length ? esc(leads.join(' · ')) + ' · your ' + esc(TEAM_NAME) + ' lead' + (leads.length>1?'s':'')
+                        : 'no lead listed for ' + esc(TEAM_NAME),
+           'nav(\'members\')', 'font-size:20px;line-height:1.2');
+}
+function dashCards(nextEv,nextFill,unfilled,active,owner,kNow){
+  return IS_EDIT ? leadCards(nextEv,nextFill,unfilled) : volunteerCards();
+}
 function slotCounts(ev){
   const data=ROSTERS[ev.id]; if(!data||!data.assign) return {assigned:0,missing:0,generated:false};
   let assigned=0,missing=0;
@@ -1736,6 +1851,7 @@ async function boot(){
   setSyncStatus(sb?'ok':'off');
   await loadAll();
   await loadCovering();   // events elsewhere I have been asked to stand in for
+  await loadMyMember();   // which of these members the viewer is, for their own cards
   CYCLES=buildCycles();
   await autoCreateEvents();
   const today=nzTodayISO();
@@ -1783,12 +1899,8 @@ function renderDashboard(){
       (owner===PAGE_TEAM?' (yours)':' · '+esc(TEAM_NAME)+' is off-cycle')+'</div></div>'+
     '<div class="dash-clock-wrap"><img class="dash-hero-logo" src="logo.png" alt="" onerror="this.onerror=null;this.src=window.IV_LOGO">'+
     '<div><div class="dash-clock" id="dashClock">—</div><div class="dash-clock-lbl">Auckland · Live</div></div></div></div>';
-  // stat cards
-  h+='<div class="sg">'+
-    '<button class="sc'+(unfilled>0?' alert':'')+'" onclick="nav(\'roster\')"><div class="sc-l">Unfilled slots</div><div class="sc-v num">'+unfilled+'</div><div class="sc-s">UNASSIGNED across upcoming events</div></button>'+
-    '<button class="sc" onclick="nav(\'roster\')"><div class="sc-l">Next event</div><div class="sc-v num" style="font-size:20px;line-height:1.2">'+(nextEv?esc(fmtShort(nextEv.date)):'—')+'</div><div class="sc-s">'+(nextEv?esc(nextEv.name)+(nextFill?' · '+(nextFill.generated?(nextFill.missing?nextFill.missing+' gaps':'fully filled'):'not generated'):''):'no upcoming events')+'</div></button>'+
-    '<button class="sc ok-green" onclick="nav(\'members\')"><div class="sc-l">Active members</div><div class="sc-v num">'+active+'</div><div class="sc-s">in the '+esc(TEAM_NAME)+' pool</div></button>'+
-    '<button class="sc" onclick="nav(\'calendar\')"><div class="sc-l">Cycle owner</div><div class="sc-v" style="font-size:26px">Team '+esc(owner)+'</div><div class="sc-s">'+esc(cycleLabel(kNow))+'</div></button></div>';
+  // stat cards — see dashCards(); a lead and a volunteer get different ones
+  h+='<div class="sg">'+dashCards(nextEv,nextFill,unfilled,active,owner,kNow)+'</div>';
   // two-col: upcoming events + announcements
   h+=renderCoverPanels();
   /* Volunteers no longer have the Rostering page, so the duties they came

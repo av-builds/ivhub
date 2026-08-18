@@ -1686,36 +1686,115 @@ async function loadSignupStats(){
     panel.style.display = 'block';
   }catch(e){ console.warn('signup stats unavailable:', e.message || e); panel.style.display = 'none'; }
 }
+/* ── THE FOUR BLOCKS ──────────────────────────────────────────────────
+   This row used to be two facts repeated for each team — active members
+   and next confirmed, for A and again for B. Somebody on both teams saw
+   four cards saying two things; somebody on one team saw half a row. And
+   every one of them was a fact about a team rather than about the person
+   reading it.
+
+   It is now one row about the whole IV for anyone who runs it, and a
+   personal row for everybody else. Unfilled slots are deliberately not
+   here: what counts as unfilled depends on each duty's requirements,
+   which the team pages own, and the Hub guessing at it would put a
+   number on screen that disagreed with the page you would go to fix it.
+*/
+function hubCard(label, value, sub, cls, onclick){
+  return '<div class="scard' + (cls?' '+cls:'') + '"' + (onclick?' style="cursor:pointer" onclick="'+onclick+'"':'') + '>'
+    + '<div class="l">' + esc(label) + '</div>'
+    + '<div class="k' + (String(value).length > 6 ? ' sm' : '') + ' tnum">' + value + '</div>'
+    + (sub ? '<div class="s">' + sub + '</div>' : '') + '</div>';
+}
+async function loadHubLeadCards(){
+  const el = $('dashStats');
+  const [mres, eres, ires] = await Promise.all([
+    sb.from('iv_members').select('team,status'),
+    sb.from('iv_events').select('team,date,name').eq('confirmed', true).gte('date', todayNZ()).order('date', {ascending:true}).limit(60),
+    sb.from('profiles').select('member_id,last_seen')
+  ]);
+  const mems = (mres.data || []).filter(m=>(m.status||'active') === 'active');
+  const evs  = eres.data || [];
+  const next = evs[0] || null;
+  const profs = ires.error ? [] : (ires.data || []);
+  const usingIt = profs.filter(p=>p.member_id && p.last_seen).length;
+  const waiting = CAN_APPROVE() ? (apvBatches||[]).filter(b=>b.status === 'pending').length : null;
+
+  let html = hubCard('Next event', next ? esc(fmtLong(next.date)) : 'None scheduled',
+                     next ? esc(next.name || 'IV Event') + ' · Team ' + esc(next.team) : 'nothing confirmed ahead',
+                     next ? (next.team === 'B' ? 'b' : 'a') : '', next ? "nav('myduties')" : '')
+    + hubCard('Active volunteers', mems.length, 'across Team A and Team B', '', USERS_ADMIN() ? "nav('members')" : '')
+    + hubCard('Signed in', usingIt, 'of ' + mems.length + ' have used their account', '',
+              USERS_ADMIN() ? "nav('linking')" : '');
+  html += waiting === null
+    ? hubCard('Teams', new Set(mems.map(m=>m.team).filter(Boolean)).size, 'rostered from this hub', '')
+    : hubCard('Awaiting approval', waiting,
+              waiting ? 'invitation batch' + (waiting===1?'':'es') + ' to review' : 'nothing waiting',
+              waiting ? 'alert' : '', "nav('approve')");
+  el.innerHTML = html;
+  el.style.display = 'grid';
+}
+/* The same four a volunteer sees on their team page, so the answer does
+   not change depending on which door they came in by. */
+async function loadHubVolunteerCards(){
+  const el = $('dashStats');
+  let totals = null;
+  try{ const r = await sb.rpc('my_attendance_totals'); totals = r.error ? null : r.data; }catch(e){ totals = null; }
+  const present = totals ? Number(totals.present)||0 : 0, late = totals ? Number(totals.late)||0 : 0,
+        absent  = totals ? Number(totals.absent)||0  : 0, excused = totals ? Number(totals.excused)||0 : 0;
+  const denom = present + late + absent;
+  const rate  = denom ? Math.round((present+late)/denom*100) : null;
+  const marked = present + late + absent + excused;
+
+  const today = todayNZ();
+  /* Filtered to this person by name, the same way My Duties does it —
+     taking the first entry outright would show somebody else's duty. And
+     the data is fetched rather than read off the cache, which is not
+     warm yet the first time the dashboard draws. */
+  const who = await resolveMyName();
+  let nextDuty = null;
+  if(who.name){
+    const {entries} = await fetchDutyData();
+    nextDuty = (entries||[]).filter(e=>e.date >= today && fuzzyMatch(who.name, e.person))
+                            .sort((a,b)=>a.date < b.date ? -1 : 1)[0] || null;
+  }
+  const away = (MY_AWAY||[]).filter(d=>d > today).sort();
+
+  // Who to ask: the leads of the team they are actually on.
+  let leads = [];
+  if(MY_MEMBER && MY_MEMBER.team){
+    try{
+      const {data} = await sb.from('iv_members').select('name,rank,team,status,spec')
+        .eq('team', MY_MEMBER.team).in('rank', ['Team Leader','Team Lead','Assistant Team Lead']);
+      /* AV-specialised leads run AV, not this team — the team pages
+         exclude them from lead duties and this has to agree, or a
+         volunteer is pointed at somebody who cannot help them. */
+      const isAv = m => Array.isArray(m.spec) && m.spec.some(x=>String(x).toUpperCase()==='AV');
+      leads = (data||[]).filter(m=>(m.status||'active')==='active' && !isAv(m)).map(m=>m.name);
+    }catch(e){ leads = []; }
+  }
+
+  el.innerHTML =
+      hubCard('My next duty', nextDuty ? esc(fmtLong(nextDuty.date)) : '—',
+              nextDuty ? esc(nextDuty.duty || 'IV duty') : (MY_MEMBER ? 'nothing rostered yet' : 'your account is not linked to your name'),
+              nextDuty ? 'a' : '', "nav('myduties')")
+    + hubCard('My away dates', away.length,
+              away.length ? 'next: ' + esc(fmtLong(away[0])) : 'available for every event', '')
+    + hubCard('My attendance', rate === null ? '—' : rate + '%',
+              marked ? marked + ' duties marked' : 'nothing marked yet', '')
+    + hubCard('Who to ask', leads.length ? esc(leads[0].split(' ')[0]) : '—',
+              leads.length ? esc(leads.join(' · ')) : 'no lead listed for your team', '');
+  el.style.display = 'grid';
+}
 async function loadDashStats(){
   loadMyDutiesDash();
-  loadAway();
+  await loadAway();               // MY_MEMBER and MY_AWAY, which the cards read
   loadSignupStats();
   maybeWelcome();
   const el = $('dashStats');
-  if(!IV_ANY() || !sb){ el.style.display = 'none'; return; }
+  if(!sb){ el.style.display = 'none'; return; }
   try{
-    const [mres, eres] = await Promise.all([
-      sb.from('iv_members').select('team,status'),
-      sb.from('iv_events').select('team,date,name').eq('confirmed', true).gte('date', todayNZ()).order('date', {ascending:true}).limit(60)
-    ]);
-    const mems = mres.data || [];
-    const evs = eres.data || [];
-    const cnt = t=>mems.filter(m=>m.team === t && m.status === 'active').length;
-    const next = t=>evs.find(e=>e.team === t) || null;
-    let html = '';
-    const teamCard = (t, cls)=>{
-      const n = next(t);
-      html += `<div class="scard ${cls}"><div class="l">Team ${t} · Active Members</div><div class="k tnum">${mres.error ? '—' : cnt(t)}</div></div>`;
-      html += `<div class="scard ${cls}"><div class="l">Team ${t} · Next Confirmed</div>`
-        + (n ? `<div class="k sm tnum">${esc(fmtLong(n.date))}</div><div class="s">${esc(n.name || 'IV Event')}</div>`
-             : `<div class="k sm" style="color:var(--dm);">${eres.error ? '—' : 'None scheduled'}</div>`)
-        + `</div>`;
-    };
-    if(VIEW_A()) teamCard('A', 'a');
-    if(VIEW_B()) teamCard('B', 'b');
-    if(!html){ el.style.display = 'none'; return; }
-    el.innerHTML = html;
-    el.style.display = 'grid';
+    if(USERS_ADMIN() || CAN_APPROVE() || IV_ANY() && hasPerm('tl_a','tl_b','ytl_a','ytl_b')) await loadHubLeadCards();
+    else await loadHubVolunteerCards();
   }catch(e){ console.warn('dash stats unavailable:', e.message || e); el.style.display = 'none'; }
 }
 

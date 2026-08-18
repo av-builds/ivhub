@@ -1144,12 +1144,15 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <div class="dash-clock" id="dashClock"></div>
         </div>
       </div>
-      <div class="sg">
+      <!-- Admins keep the four they had. An AV volunteer gets their own
+           four instead: the admin numbers are about work they cannot do. -->
+      <div class="sg" id="sgAdmin">
         <div class="sc"><div class="sc-l">Active Volunteers</div><div class="sc-v" id="sV">0</div><div class="sc-s">In the rotation pool</div></div>
         <div class="sc"><div class="sc-l">Majalis This Month</div><div class="sc-v" id="sJK">0</div><div class="sc-s">On the roster month</div></div>
         <div class="sc"><div class="sc-l">Unassigned Days</div><div class="sc-v" id="sMPH" style="color:#4FC3F7;">0</div><div class="sc-s">Gaps in the roster month</div></div>
         <div class="sc"><div class="sc-l">Roster Issues</div><div class="sc-v" id="sBusy">0</div><div class="sc-s">Needing admin attention</div></div>
       </div>
+      <div class="sg" id="sgMine" style="display:none;"></div>
       <!-- This week's duties -->
       <div class="tw" style="margin-bottom:16px;">
         <div style="padding:12px 16px;border-bottom:1px solid var(--db);display:flex;align-items:center;justify-content:space-between;">
@@ -2774,7 +2777,67 @@ function renderAll(){updateStats();renderCal();renderVolCards();renderMajalisCar
 /* ═══════════════════════════════════
    STATS
 ═══════════════════════════════════ */
+/* ── AN AV VOLUNTEER'S OWN FOUR ───────────────────────────────────────
+   The four cards on this dashboard are all about running the roster:
+   unassigned days, roster issues, majalis this month. An AV volunteer
+   can act on none of them. They get the same four the Hub and the team
+   pages give them instead, read off AV's own roster and busy dates, so
+   the answer does not change depending on which page they opened.
+
+   Admins are untouched — their four are exactly as they were. */
+function myAvName(){
+  return String((window.CU && (CU.display || CU.user)) || '').trim();
+}
+function renderMyAvCards(){
+  const admin = document.getElementById('sgAdmin');
+  const mine  = document.getElementById('sgMine');
+  if(!admin || !mine) return;
+  if(isAvAdminUser()){ admin.style.display=''; mine.style.display='none'; return; }
+  admin.style.display='none'; mine.style.display='grid';
+
+  const me = myAvName().toLowerCase();
+  const vol = vols.find(v=>String(v.name||'').trim().toLowerCase() === me) || null;
+  const today = todayDS();
+
+  // Next day this person is on, from the roster already in memory.
+  let next = null;
+  Object.keys(roster).sort().some(ds=>{
+    if(ds < today) return false;
+    const r = roster[ds]; if(!r) return false;
+    const roles = [];
+    if(r._primary === (vol && vol.name)) roles.push('Jamatkhana');
+    if(r._sup === (vol && vol.name)) roles.push('Support');
+    if(!r._mph_removed && (r._mph_primary === (vol && vol.name) || r._mph_primary2 === (vol && vol.name))) roles.push('MPH');
+    if(!roles.length) return false;
+    next = {ds, roles:roles.join(' · ')}; return true;
+  });
+
+  const busy = vol ? String(vol.bds||'').split(',').map(x=>x.trim()).filter(Boolean).filter(d=>d>=today).sort() : [];
+  // How many days they have been on, all time — the same question the
+  // admin stats answer for everybody, asked about one person.
+  let done = 0;
+  Object.keys(roster).forEach(ds=>{
+    const r = roster[ds]; if(!r || !vol) return;
+    if(r._primary===vol.name || r._sup===vol.name) done++;
+    else if(!r._mph_removed && (r._mph_primary===vol.name || r._mph_primary2===vol.name)) done++;
+  });
+  const leads = vols.filter(v=>v.status==='active' && (v.roles||[]).some(x=>/lead/i.test(x))).map(v=>v.name);
+
+  const card=(l,v,sub,style)=>`<div class="sc"><div class="sc-l">${esc(l)}</div>`+
+    `<div class="sc-v"${style?' style="'+style+'"':''}>${v}</div><div class="sc-s">${sub}</div></div>`;
+  mine.innerHTML =
+      card('My next duty', next ? esc(fd(next.ds)) : '—',
+           next ? esc(next.roles) : (vol ? 'nothing rostered yet' : 'your name is not in the AV list'),
+           'font-size:20px;line-height:1.25')
+    + card('My busy dates', busy.length,
+           busy.length ? 'next: ' + esc(fd(busy[0])) : 'available for every day')
+    + card('Days done', done, done ? 'across the saved roster' : 'none recorded yet')
+    + card('Who to ask', leads.length ? esc(String(leads[0]).split(' ')[0]) : '—',
+           leads.length ? esc(leads.join(' · ')) : 'no AV lead listed',
+           'font-size:20px;line-height:1.25');
+}
 function updateStats(){
+  renderMyAvCards();
   const inRosterMonth = ds => { const d=new Date(ds+'T12:00'); return d.getMonth()===calMo && d.getFullYear()===calYr; };
   const dim = new Date(calYr, calMo+1, 0).getDate();
   let unassigned = 0;
