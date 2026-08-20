@@ -786,9 +786,27 @@ function escJs(s){
     return '\\x' + c.charCodeAt(0).toString(16).padStart(2,'0');
   });
 }
-let _toastTimer=null;
+let _toastTimer=null, _toastErrAt=0;
+/* A success message that lands on top of a failure is worse than no
+   message at all: the screen ends up asserting the opposite of what
+   happened, and the person walks away believing it. deleteEvent did
+   exactly this — dbWrite raised the error toast, then the next line
+   replaced it with "Event deleted" before the first could paint.
+
+   The call sites are fixed. This is the backstop for the ones nobody has
+   found yet: for a second and a half after a failure, a cheerful message
+   does not get to take the toast away from it. Nothing is lost — the
+   suppressed message still goes to the console — and no real person
+   completes a second action inside that window, so it never eats a
+   message they were waiting for. */
+const TOAST_ERR_HOLD=1500;
 function toast(msg,type){
   type=type||'ok';
+  const now=Date.now();
+  if(type!=='err' && _toastErrAt && now-_toastErrAt<TOAST_ERR_HOLD){
+    console.warn('toast held back behind an error:', msg); return;
+  }
+  _toastErrAt = type==='err' ? now : 0;
   const t=document.getElementById('toast');
   t.textContent=msg||''; t.className='toast '+(type==='err'?'err':'ok');
   void t.offsetWidth; t.classList.add('show');
@@ -803,16 +821,40 @@ function oM(h){ document.getElementById('dcard').innerHTML=h; document.getElemen
 function cM(){ document.getElementById('dlg').classList.remove('show'); }
 let _pauseRT=false,_prtT=null;
 function pauseRT(ms){ ms=ms||800; _pauseRT=true; if(_prtT)clearTimeout(_prtT); _prtT=setTimeout(()=>{_pauseRT=false;},ms); }
+/* The audit log recorded nothing at all for months and nobody knew,
+   because the only handling was an empty catch. A failure here must not
+   block the action the person was taking — the action itself succeeded —
+   but it cannot be silent either, or the record quietly stops existing
+   again. So it is said once per session, and every failure goes to the
+   console. */
+let _auditBroken=false;
 async function auditLog(action,category,detail){
-  try{ if(!sb) return;
-    // CU is null until verifyAuth() has run, and reading through it threw
-    // silently — so anything logged early recorded nothing.
-    const u=CU||{};
-    await sb.from('audit_logs').insert({user_display:u.display||u.user||'',username:u.user||'',
-      user_email:u.email||'',   // two people share a name; the address does not
-      team:PAGE_TEAM,
-      action:action,category:category,detail:detail||''});
-  }catch(e){ /* best-effort */ }
+  if(!sb) return false;
+  // CU is null until verifyAuth() has run, and reading through it threw
+  // silently — so anything logged early recorded nothing.
+  const u=CU||{};
+  /* No .select() here, and that is deliberate — see dbWrite. Anyone signed
+     in may write to audit_logs; only rank 5 and above may read it. An
+     INSERT ... RETURNING against a row the SELECT policy hides does not
+     return nothing, it raises and rolls the insert back. Asking for the
+     row would have stopped every Team Lead's actions being logged at all.
+     Checking `error` is enough for an insert: a refused one raises. */
+  const {error}=await sb.from('audit_logs').insert({user_display:u.display||u.user||'',username:u.user||'',
+    user_email:u.email||'',   // two people share a name; the address does not
+    team:PAGE_TEAM,
+    action:action,category:category,detail:detail||''});
+  if(error){
+    console.error('audit log not written:', action, category, error);
+    /* Said late and on purpose. auditLog runs alongside the action it is
+       recording, so warning immediately would snatch the toast away from
+       "Published" or "Saved" — messages about a write that did work. The
+       audit log being broken is a standing condition, not this action's
+       result, so it waits its turn and is said once. */
+    if(!_auditBroken){ _auditBroken=true; setTimeout(()=>
+      toast('Your changes are being saved, but they are not being recorded in the audit log.','err'), 2500); }
+    return false;
+  }
+  return true;
 }
 function stableHash(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h; }
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sideOverlay').classList.toggle('show'); }
@@ -1133,7 +1175,19 @@ const AGE_LABELS={adult:'Adult (18+)',youth:'Youth (12–17)',child:'Child (<12)
 function memById(id){ return MEMBERS.find(m=>m.id===id)||null; }
 function selEvent(){ return EVENTS.find(e=>e.id===selEventId)||null; }
 function isHistoricEvent(ev){ return cyStart(cycleForDate(ev.date)+1)<=nzTodayISO(); }
-function evLocked(ev){ return !IS_EDIT||!!ev.confirmed||isHistoricEvent(ev); }
+/* Being on the calendar is not the same as being finished.
+
+   `confirmed` used to mean both — visible to everyone, AND frozen against
+   further editing. That pairing only worked while publishing was a
+   deliberate last step. Now that generating a roster puts it straight on
+   the calendar, treating confirmed as a lock would freeze every roster the
+   instant it was made: no regenerate, no swapping a name, nothing.
+
+   So confirmed now means one thing only: three hundred people can see it.
+   A roster stays editable for as long as its cycle is current, which is
+   how leads actually work — somebody drops out on the Thursday and the
+   duty has to move. */
+function evLocked(ev){ return !IS_EDIT||isHistoricEvent(ev); }
 function people(a){ return [].concat(a&&a.m||[],a&&a.f||[],a&&a.x||[]); }
 function eventsInCycle(k){ return EVENTS.filter(e=>inCycleK(e.date,k)).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0); }
 function isAway(m,date){ return Array.isArray(m.away)&&m.away.indexOf(date)>=0; }
@@ -1253,12 +1307,16 @@ async function autoCreateEvents(){
   }
   const missing=want.filter(w=>!EVENTS.some(e=>e.date===w.date&&e.name===w.name));
   if(!missing.length) return;
-  try{
-    pauseRT(2000);
-    const {data,error}=await sb.from('iv_events').insert(missing).select();
-    if(error){ console.warn('auto-create:',error.message||error); return; }
-    if(data&&data.length){ EVENTS=EVENTS.concat(data).sort((a,b)=>a.date<b.date?-1:1); auditLog('auto-create','events','Created '+data.length+' events for '+TEAM_NAME); }
-  }catch(e){ console.warn('auto-create failed',e); }
+  pauseRT(2000);
+  /* This runs on load without anybody asking for it, so it stays quiet
+     when it has nothing to add — but a refusal is not nothing. A lead
+     whose policy no longer lets them create events would find the Fridays
+     simply missing, with the page saying it had made them. */
+  const rows=await dbWriteRows('Creating this cycle’s automatic events',
+    ()=>sb.from('iv_events').insert(missing));
+  if(!rows) return;
+  EVENTS=EVENTS.concat(rows).sort((a,b)=>a.date<b.date?-1:1);
+  auditLog('auto-create','events','Created '+rows.length+' events for '+TEAM_NAME);
 }
 
 /* ── REALTIME (best-effort) ── */
@@ -1479,14 +1537,104 @@ function generateEventData(ev){
    That is how a roster could fail to save and a confirmation could fail
    to publish while the screen showed success for both. This does the
    write, says out loud what went wrong when it does, and tells the
-   caller so the screen can stop claiming otherwise. */
-async function dbWrite(what, run){
+   caller so the screen can stop claiming otherwise.
+
+   Checking `error` is not enough, and this is the part that was wrong for
+   months. Row Level Security does not reject an UPDATE or a DELETE whose
+   rows it has filtered out. It runs the statement against no rows and
+   reports UPDATE 0 — success. PostgREST returns 200 with an empty body and
+   supabase-js hands back {data:[], error:null}, which is indistinguishable
+   from a write that worked unless you count the rows. Verified against a
+   real Postgres, not assumed.
+
+   So the write asks for its rows back and fails when none arrive. .select()
+   is what turns "return=minimal" into "return=representation"; without it
+   the database never says which rows it touched and there is nothing to
+   check.
+
+   Zero rows is ambiguous on its own: the policy may have filtered the row
+   out, or there may honestly have been nothing to change. opts.verify is a
+   read that settles it — run only in that case, so it costs nothing on the
+   normal path. Anything still there means the write was refused.
+
+   opts.rows === false is the blunt version, for writes where nothing coming
+   back is always fine and there is nothing worth reading back — or for an
+   RPC, which has no rows to return at all. Those still report a real error.
+   Say why at the call site whenever you use it.
+
+   One rule this cannot infer on its own: do not send an INSERT through
+   here into a table the writer may not read. Verified against a real
+   Postgres — for UPDATE and DELETE the SELECT policy already decides
+   which rows the statement may touch, so asking for them back costs
+   nothing. For INSERT it does not: RETURNING a row the SELECT policy
+   hides raises "new row violates row-level security policy" and rolls the
+   insert back. audit_logs is exactly that shape, so its insert is written
+   out by hand rather than sent through here — and loses nothing, because
+   an INSERT that RLS refuses raises anyway. Silence is only possible for
+   UPDATE and DELETE.
+ */
+async function dbWrite(what, run, opts){
+  const o = opts || {};
   if(!sb || DB_MISSING){ toast(what + ' failed — no database connection', 'err'); return false; }
+  let res, counted = false;
   try{
-    const {error} = await run();
-    if(error){ console.error(what, error); toast(what + ' failed — ' + (error.message || error), 'err'); return false; }
-    return true;
-  }catch(e){ console.error(what, e); toast(what + ' failed — ' + (e.message || e), 'err'); return false; }
+    const q = run();
+    counted = o.rows !== false && !!q && typeof q.select === 'function';
+    res = await (counted ? q.select() : q);
+  }catch(e){
+    /* supabase-js resolves rather than rejecting — a dropped connection
+       still comes back as {data,error}. So this catches a builder that
+       threw while being assembled, nothing more. It is not the network
+       path, and a try/catch is not a substitute for reading the result. */
+    console.error(what, e); toast(what + ' failed — ' + (e.message || e), 'err'); return false;
+  }
+  const error = res && res.error;
+  if(error){
+    console.error(what, error);
+    /* A table or column that is not there is not a bug in the page, it is
+       a script that has not been run — and saying so saves the user
+       working out what "column does not exist" means. */
+    const msg = error.message || String(error);
+    const schema = tableMissing(error) || /column/i.test(msg);
+    const dupe = /duplicate key|unique constraint|23505/i.test(msg + (error.code||''));
+    // A call site that knows what its own failure means says so itself;
+    // "duplicate key value violates..." is true and useless.
+    const hint = o.hint && o.hint(error);
+    toast(hint ? hint
+        : what + ' failed — ' + (schema ? 'run the latest SETUP.sql to enable this'
+                              : dupe   ? 'it already exists'
+                                       : msg), 'err');
+    return false;
+  }
+  if(!counted) return true;      // nothing was asked for, so nothing can be judged
+  const data = res && res.data;
+  const n = data == null ? 0 : (Array.isArray(data) ? data.length : 1);
+  if(n && o.bag) o.bag.rows = Array.isArray(data) ? data : [data];
+  if(!n){
+    if(o.verify){
+      const chk = await o.verify();
+      // A verify that cannot be read is not a verify. Only an empty,
+      // error-free answer proves there was nothing there to change.
+      if(chk && !chk.error){
+        const left = chk.data;
+        const still = left == null ? 0 : (Array.isArray(left) ? left.length : 1);
+        if(!still) return true;          // there was honestly nothing to change
+      }
+    }
+    console.error(what, '— the database accepted the request and changed nothing', res);
+    toast(what + ' failed — the database refused it. You may not have permission to change this.', 'err');
+    return false;
+  }
+  return true;
+}
+/* The same checks, but handing back what the database stored. For the
+   writes that need its id and its timestamps: a row invented locally so
+   the screen has something to draw gets an id no other browser has ever
+   heard of, and every button pointed at it addresses nothing. */
+async function dbWriteRows(what, run, opts){
+  const bag = {};
+  const ok = await dbWrite(what, run, Object.assign({}, opts||{}, {bag:bag}));
+  return ok ? (bag.rows || []) : null;
 }
 let ROSTER_UNSAVED = {};        // event id -> the roster that is not safely stored
 function unsavedCount(){ return Object.keys(ROSTER_UNSAVED).length; }
@@ -1582,30 +1730,53 @@ async function generateEvent(id,silent){
   const _before=ROSTERS[id];
   ROSTERS[id]=generateEventData(ev);
   const stored=await saveRoster(id);
+  /* Generating publishes. A roster that is stored but not on the calendar
+     is invisible to every volunteer, and from the lead's own screen it
+     looks exactly like one everybody can see — which is how a roster built
+     on the Wednesday turned out on the Friday to be a roster nobody had
+     seen. Making it two steps put the whole thing behind a button people
+     forgot to press, so it is one step now.
+
+     The order matters: stored first, calendar second. Publishing an event
+     whose roster never reached the database would put an empty night in
+     front of three hundred people. */
+  let live=!!ev.confirmed;
+  if(stored && !ev.confirmed) live=await setOnCalendar(ev, true);
   if(!silent){
     auditLog('generate','roster',ev.name+' '+ev.date+' \u2014 '+rosterDelta(_before,ROSTERS[id]));
     renderRoster(); refreshBadges();
-    // Only say it is generated if it is actually stored. saveRoster has
-    // already said what went wrong when it has not.
-    /* Says what still has to happen. "Generated" on its own reads as
-       done, and a roster nobody publishes is a roster nobody sees. */
-    if(stored) toast(ev.confirmed ? 'Roster generated and saved'
-                                  : 'Generated and saved — now Confirm & Publish so everyone can see it');
+    // Only claim what actually happened. saveRoster and setOnCalendar have
+    // each already said what went wrong when they did.
+    if(stored && live) toast('Generated, saved, and on the calendar');
+    else if(stored) toast('Generated and saved, but it is not on the calendar yet — use the “Put on the calendar” button','err');
   }
   return stored;
 }
 async function generateCycle(){
   const ev=selEvent(); if(!ev) return;
   const k=cycleForDate(ev.date);
-  const evs=eventsInCycle(k).filter(e=>!e.confirmed&&!isHistoricEvent(e));
-  if(!evs.length) return toast('No generatable events in this cycle','err');
-  let stored=0;
-  for(const e of evs){ ROSTERS[e.id]=generateEventData(e); if(await saveRoster(e.id,{quiet:true})) stored++; }
-  auditLog('generate-all','roster',cycleLabel(k)+' — '+evs.length+' events, '+stored+' saved');
+  /* Events that have no roster yet. This used to be "everything not yet
+     published", which meant everything — nothing was published until
+     somebody pressed the button. Now that generating publishes, that
+     filter would re-roll rosters a lead had already tuned by hand, so it
+     fills the gaps and leaves the rest alone. Regenerate does one event
+     on purpose. */
+  const evs=eventsInCycle(k).filter(e=>!isHistoricEvent(e)&&!ROSTERS[e.id]);
+  if(!evs.length) return toast('Every event in this cycle already has a roster','err');
+  let stored=0, live=0;
+  for(const e of evs){
+    ROSTERS[e.id]=generateEventData(e);
+    if(await saveRoster(e.id,{quiet:true})){
+      stored++;
+      if(e.confirmed || await setOnCalendar(e, true)) live++;
+    }
+  }
+  auditLog('generate-all','roster',cycleLabel(k)+' — '+evs.length+' events, '+stored+' saved, '+live+' on the calendar');
   renderRoster(); refreshBadges();
-  /* Counted rather than assumed. Reporting the number generated when
-     only some of them stored is how this went unnoticed for so long. */
-  if(stored===evs.length) toast('Generated and saved '+evs.length+' events — publish each one to put it on the calendar');
+  /* Counted rather than assumed. Reporting the number generated when only
+     some of them stored is how this went unnoticed for so long. */
+  if(live===evs.length) toast('Generated '+evs.length+' events — all saved and on the calendar');
+  else if(stored===evs.length) toast('Generated and saved '+evs.length+', but only '+live+' reached the calendar', 'err');
   else toast('Generated '+evs.length+', but only '+stored+' saved — see the warning above', 'err');
 }
 
@@ -1623,17 +1794,41 @@ function memberReliability(memberId){
   const denom=present+late+absent;
   return {present,late,absent,excused,total,rate:denom?Math.round((present+late)/denom*100):null};
 }
+/* Marking the register writes first and changes the screen after.
+
+   Clearing a mark used to be a bare await wrapped in
+   catch(e){console.warn(e)}, while the branch immediately below it — the
+   one that sets a mark — was checked. So a delete that Row Level Security
+   refused took the tick off the screen, said nothing, and put it back on
+   the next reload. Whoever marked the register saw it work twice and had
+   no way to know it had not. */
 async function markAttendance(eventId,memberId,status){
   if(!IS_EDIT) return;
   const cur=attStatus(eventId,memberId);
   const rec=ATTEND[eventId]=ATTEND[eventId]||{};
-  if(cur===status){ delete rec[memberId]; // toggle off
-    try{ if(sb&&!DB_MISSING){ pauseRT(1200); await sb.from('iv_attendance').delete().eq('event_id',eventId).eq('member_id',memberId); } }catch(e){ console.warn(e); }
+  if(cur===status){                                   // tapping the same mark clears it
+    if(sb&&!DB_MISSING){
+      pauseRT(1200);
+      const ok=await dbWrite('Clearing the mark', ()=>
+        sb.from('iv_attendance').delete().eq('event_id',eventId).eq('member_id',memberId),
+        /* A mark can legitimately be missing from the database — an
+           earlier save may have failed. Reading it back tells a refusal
+           apart from a row that was never there, so neither one gets
+           reported as the other. */
+        {verify: ()=>sb.from('iv_attendance').select('event_id')
+                       .eq('event_id',eventId).eq('member_id',memberId)});
+      if(!ok){ renderAttendance(); return; }
+    }
+    delete rec[memberId];
   } else {
+    if(sb&&!DB_MISSING){
+      pauseRT(1200);
+      const ok=await dbWrite('Saving attendance', ()=>
+        sb.from('iv_attendance').upsert({event_id:eventId,member_id:memberId,status:status,
+          marked_by:CU.user,marked_at:new Date().toISOString()}));
+      if(!ok){ renderAttendance(); return; }
+    }
     rec[memberId]={status:status,marked_by:CU.user,marked_at:new Date().toISOString()};
-    try{ if(sb&&!DB_MISSING){ pauseRT(1200); const {error}=await sb.from('iv_attendance').upsert({event_id:eventId,member_id:memberId,status:status,marked_by:CU.user,marked_at:new Date().toISOString()});
-      if(error){ console.warn('attendance:',error.message||error); toast(tableMissing(error)?'Run SETUP.sql to enable attendance':'Could not save attendance','err'); } } }
-    catch(e){ console.warn(e); }
   }
   /* Keep the lifetime total in step. It is counted by the database on
      load, so without this the reliability figure on the member card
@@ -1663,9 +1858,13 @@ async function logView(section){
   if(!sb||DB_MISSING||!CU||!CU.uid||!section) return;
   if(_lastView===section) return;        // a re-render is not a new visit
   _lastView=section;
-  try{ await sb.from('view_logs').insert({username:CU.user||'',user_display:CU.display||CU.user||'',
-    user_email:CU.email||'',team:PAGE_TEAM,section:section}); }
-  catch(e){ /* never let recording a visit break the visit */ }
+  /* Recording a visit must never break the visit, so this one really is
+     best-effort — but "best-effort" means the console hears about it, not
+     that nothing does. A page whose visit log stops filling looks
+     identical to a page nobody visits. */
+  const {error}=await sb.from('view_logs').insert({username:CU.user||'',user_display:CU.display||CU.user||'',
+    user_email:CU.email||'',team:PAGE_TEAM,section:section});
+  if(error) console.warn('view log not written:', section, error.message||error);
 }
 function nav(page){
   if(!IS_EDIT && VOLUNTEER_PAGES.indexOf(page)<0) page='dashboard';   // volunteers stay in scope
@@ -1729,9 +1928,10 @@ function rosterPeople(r){
   for(const k in (r.assign||{})) people(r.assign[k]).forEach(p=>{ if(p.id!=null && ids.indexOf(p.id)<0) ids.push(p.id); });
   return ids;
 }
-/* Generated but never confirmed — so nobody outside the leads can see
-   it. The card exists because that state is invisible from anywhere
-   except the one event's own page. */
+/* Has a roster, but is not on the calendar — so nobody outside the leads
+   can see it. Generating publishes now, so this normally counts nothing;
+   it catches the two cases that matter, a roster taken off the calendar
+   on purpose and one whose publish was refused after the save worked. */
 function draftedRosters(){
   const today = nzTodayISO();
   return EVENTS.filter(ev=>{
@@ -1759,17 +1959,17 @@ function leadCards(nextEv,nextFill,unfilled){
            nextEv ? esc(nextEv.name) + (nextFill ? ' · ' + (nextFill.generated ? (nextFill.missing ? nextFill.missing+' gaps' : 'fully filled') : 'not generated') : '')
                   : 'no upcoming events',
            'nav(\'roster\')', 'font-size:20px;line-height:1.2')
-    + card(drafts.length?'alert':'ok-green', 'Not published', drafts.length,
-           drafts.length ? 'drafted — nobody else can see ' + (drafts.length===1?'it':'them')
-                         : 'every roster is published',
+    + card(drafts.length?'alert':'ok-green', 'Not on the calendar', drafts.length,
+           drafts.length ? 'nobody else can see ' + (drafts.length===1?'it':'them')
+                         : 'every roster is on the calendar',
            drafts.length ? 'selectEvent('+drafts[0].id+');nav(\'roster\')' : 'nav(\'roster\')');
 }
 function volunteerCards(){
   const today = nzTodayISO();
   const me = MY_MEM;
-  /* Their next duty, from the rosters already loaded. Only confirmed
-     events count: a draft can still change, and telling somebody to turn
-     up to something that might move is worse than telling them nothing. */
+  /* Their next duty, from the rosters already loaded. Only events that are
+     on the calendar count — the same set the Hub shows them, so the two
+     never disagree about what they have been asked to do. */
   let nextDuty = null;
   if(me){
     EVENTS.filter(e=>e.date>=today && e.confirmed)
@@ -1989,7 +2189,7 @@ function renderRoster(){
   } else {
     main=renderEventView(ev);
   }
-  el.innerHTML='<div class="ph"><div><h1>Roster</h1><p>Duty assignments — historic cycles are read-only · 🔒 marks locked slots &amp; confirmed events</p></div></div>'+
+  el.innerHTML='<div class="ph"><div><h1>Roster</h1><p>Duty assignments — historic cycles are read-only · 🔒 marks locked slots</p></div></div>'+
     '<div class="roster-layout"><aside class="rl-side">'+side+'</aside><div class="rl-main">'+main+'</div></div>';
 }
 function renderEventView(ev){
@@ -2003,8 +2203,11 @@ function renderEventView(ev){
   if(ev.type==='friday'&&IS_EDIT&&!hist) h+='<button class="pill '+(ev.youth?'on':'')+'" onclick="toggleYouth()">Youth Congregation: '+(ev.youth?'ON':'OFF')+'</button>';
   else if(ev.type==='friday') h+='<span class="pill '+(ev.youth?'on':'')+'" style="cursor:default">Youth Congregation: '+(ev.youth?'ON':'OFF')+'</span>';
   if(IS_EDIT&&!hist){
-    h+='<button class="btn btn-ol" onclick="generateEvent('+ev.id+')" '+(ev.confirmed?'disabled':'')+'>↻ Regenerate</button>';
-    h+='<button class="btn btn-gd'+(ev.confirmed?' on':'')+'" onclick="toggleConfirm()">'+(ev.confirmed?'Confirmed ✓ (Unconfirm)':'Confirm &amp; Publish')+'</button>';
+    /* Still available on a live roster. Somebody drops out on the
+       Thursday and the duty has to move; freezing the roster the moment
+       it went on the calendar would mean unpublishing it to fix it. */
+    h+='<button class="btn btn-ol" onclick="generateEvent('+ev.id+')">↻ Regenerate</button>';
+    h+='<button class="btn btn-gd'+(ev.confirmed?' on':'')+'" onclick="toggleConfirm()">'+(ev.confirmed?'On the calendar ✓ (Hide)':'Put on the calendar')+'</button>';
   }
   h+='<button class="btn btn-ol" onclick="exportPNG()">📷 Export PNG</button>'+(CAN_ASSIGN_COVER()&&ev?'<button class="btn btn-ol btn-sm" onclick="openCoverDialog('+ev.id+')" title="Hand this event to someone else">\u{1F91D} '+(ev.cover_name?('Cover: '+esc(ev.cover_name)):'Assign cover')+'</button>':'')+'';
   h+='<button class="btn btn-ol" onclick="copyRoster()">⧉ Copy (WhatsApp)</button>';
@@ -2012,16 +2215,16 @@ function renderEventView(ev){
   if(IS_EDIT&&!hist) h+='<button class="btn btn-da btn-sm" title="Delete event" onclick="confirmDeleteEvent()">🗑</button>';
   h+='</div>';
   if(hist) h+='<div class="ro-note">🔒 Historical — read only</div>';
-  else if(ev.confirmed) h+='<div class="ro-note">🔒 Confirmed'+(IS_EDIT?' — unconfirm to edit':'')+'</div>';
-  /* Said plainly, because a generated roster that nobody publishes is
-     invisible to every volunteer and looks from here exactly like a
-     published one. The Hub's calendar and My Duties both show confirmed
-     events only. */
+  else if(ev.confirmed) h+='<div class="ro-note">📅 On the calendar — everyone can see this roster'+(IS_EDIT?'. Changes you make here go live straight away.':'')+'</div>';
+  /* Generating puts a roster on the calendar, so reaching this state now
+     means somebody took it off on purpose — or the publish half of a
+     generate failed. Either way it is worth saying, because a hidden
+     roster looks from here exactly like a visible one. */
   else if(IS_EDIT && hasRoster) h+='<div class="ib ib-warn" style="display:flex;align-items:center;gap:10px;">'+
-    '<span>👁️</span><span><b>This roster is a draft — nobody else can see it.</b> '+
-    'It is not on the calendar and will not appear in anyone\u2019s My Duties until you publish it.</span>'+
-    '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">Confirm &amp; Publish</button></div>';
-  if(!IS_EDIT&&!ev.confirmed) return h+'<div class="empty-gen"><div class="zap">⏳</div><h3>Roster not yet published</h3><p>The '+esc(TEAM_NAME)+' leaders are still drafting this event. It appears once confirmed.</p></div>';
+    '<span>👁️</span><span><b>This roster is not on the calendar — nobody else can see it.</b> '+
+    'It will not appear in anyone\u2019s My Duties until you put it there.</span>'+
+    '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">Put on the calendar</button></div>';
+  if(!IS_EDIT&&!ev.confirmed) return h+'<div class="empty-gen"><div class="zap">⏳</div><h3>Roster not published yet</h3><p>The '+esc(TEAM_NAME)+' leaders have not put this one on the calendar. It appears here as soon as they do.</p></div>';
   if(!hasRoster){
     if(!IS_EDIT||hist) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster</h3><p>No duty assignments were recorded.</p></div>';
     return h+'<div class="empty-gen"><div class="zap">⚡</div><h3>Ready to Generate</h3><p>Automatically assign all duties for this event.</p>'+
@@ -2158,26 +2361,36 @@ async function toggleYouth(){
   auditLog('youth-toggle','events',ev.name+' '+ev.date+' → '+(ev.youth?'ON':'OFF'));
   renderRoster();
 }
-/* Publishing is the step that puts a roster in front of everybody: the
-   Hub's calendar and My Duties both read confirmed events only. It used
-   to set the flag locally and then write, ignoring the answer — so a
-   refused write left the screen saying "Confirmed" over a database that
-   still held a draft, and nobody outside the leads ever saw the roster.
-   The flag is now set only once the database has taken it. */
+/* Putting a roster on the calendar, or taking it back off.
+
+   The Hub's calendar and My Duties both read confirmed events only, so
+   this flag is the difference between a roster three hundred people can
+   see and one only the leads can. It used to be set locally and then
+   written, ignoring the answer — so a refused write left the screen
+   saying "Confirmed" over a database that still held a draft. The flag
+   moves only once the database has taken it.
+
+   Shared by generateEvent, which does this automatically, and by the
+   button, which is now only needed to hide a roster deliberately. */
+async function setOnCalendar(ev, want){
+  if(want && unsavedCount()){
+    toast('The roster is not stored yet, so there is nothing to put on the calendar.','err'); return false;
+  }
+  pauseRT(4000);
+  const ok=await dbWrite(want?'Putting the roster on the calendar':'Taking the roster off the calendar',
+    ()=>sb.from('iv_events').update({confirmed:want}).eq('id',ev.id));
+  if(!ok) return false;
+  ev.confirmed=want;
+  auditLog(want?'confirm':'unconfirm','events',ev.name+' '+ev.date);
+  return true;
+}
 async function toggleConfirm(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
   const want=!ev.confirmed;
-  if(want && unsavedCount()){
-    toast('Save the roster first — it is not stored yet, so there is nothing to publish.','err'); return;
-  }
-  pauseRT(4000);
-  const ok=await dbWrite(want?'Publishing':'Unpublishing', ()=>
-    sb.from('iv_events').update({confirmed:want}).eq('id',ev.id));
-  if(!ok){ renderRoster(); return; }
-  ev.confirmed=want;
-  auditLog(want?'confirm':'unconfirm','events',ev.name+' '+ev.date);
+  const ok=await setOnCalendar(ev, want);
   renderRoster();
-  toast(want?'Published — it is on the calendar for everyone now':'Unpublished — hidden from the calendar again');
+  if(ok) toast(want?'On the calendar — everyone can see it now'
+                   :'Taken off the calendar — only the leads can see it now');
 }
 
 /* ── ADD / DELETE / RESET EVENTS ── */
@@ -2210,24 +2423,34 @@ async function submitAddEvent(){
   if(cyStart(k+1)<=nzTodayISO()) return toast('That cycle is historic — events cannot be added','err');
   if(EVENTS.some(e=>e.date===date&&e.name===name)) return toast('That event already exists','err');
   const row={team:PAGE_TEAM,date:date,name:name,type:type,uniform:uniform,youth:youth,confirmed:false};
-  try{
-    let saved=null;
-    if(sb&&!DB_MISSING){ pauseRT(1500); const {data,error}=await sb.from('iv_events').insert(row).select(); if(error) throw error; saved=(data&&data[0])||null; }
-    const ev=saved||Object.assign({id:-Date.now()},row);
-    EVENTS.push(ev); EVENTS.sort((a,b)=>a.date<b.date?-1:1);
-    cM(); auditLog('add','events',name+' '+date); selectEvent(ev.id); toast('Event added');
-  }catch(e){ console.warn(e); toast(/duplicate|unique/i.test(e.message||'')?'That event already exists':'Could not add event','err'); }
+  if(!sb||DB_MISSING){ toast('Could not add event — no database connection','err'); return; }
+  pauseRT(1500);
+  /* The event goes on screen only with the id the database gave it.
+     Falling back to a locally invented id used to leave a row that could
+     be rostered and published but never actually saved anywhere. */
+  const rows=await dbWriteRows('Adding the event', ()=>sb.from('iv_events').insert(row));
+  if(!rows) return;
+  const ev=rows[0];
+  EVENTS.push(ev); EVENTS.sort((a,b)=>a.date<b.date?-1:1);
+  cM(); auditLog('add','events',name+' '+date); selectEvent(ev.id); toast('Event added');
 }
 function confirmDeleteEvent(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
   oM('<h3>Delete event</h3><p style="font-size:14px;color:var(--dm)">Delete <b style="color:var(--dt)">'+esc(ev.name)+' — '+esc(fmtNice(ev.date))+'</b> and its roster? This cannot be undone.</p>'+
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-da" onclick="deleteEvent()">Delete event</button></div>');
 }
+/* The database first, and nothing local until it has answered.
+
+   This used to take the event out of EVENTS, fire the delete, throw the
+   answer away and toast "Event deleted" whatever happened — and because
+   auditLog was not awaited, even the error toast dbWrite did raise was
+   overwritten before it could paint. A refused delete emptied the screen
+   while the event stayed on the calendar for three hundred people. */
 async function deleteEvent(){
   cM(); const ev=selEvent(); if(!ev) return;
-  EVENTS=EVENTS.filter(e=>e.id!==ev.id); delete ROSTERS[ev.id];
   pauseRT(4000);
-  await dbWrite('Deleting the event', ()=>sb.from('iv_events').delete().eq('id',ev.id));
+  if(!await dbWrite('Deleting the event', ()=>sb.from('iv_events').delete().eq('id',ev.id))) return;
+  EVENTS=EVENTS.filter(e=>e.id!==ev.id); delete ROSTERS[ev.id];
   auditLog('delete','events',ev.name+' '+ev.date);
   selEventId=null; const today=nzTodayISO();
   const next=EVENTS.filter(e=>e.date>=today)[0]||EVENTS[EVENTS.length-1]; if(next) selEventId=next.id;
@@ -2246,8 +2469,25 @@ async function doResetCycle(k){
   const box=document.getElementById('dcard'); const typed=((box.querySelector('#rcType')||{}).value||'').trim();
   if(typed!=='RESET') return toast('Type RESET to confirm','err');
   cM(); const start=cyStart(k),end=cyStart(k+1);
+  /* Delete, confirm, and only then re-create.
+
+     This was the worst of the silent writes. The delete lived in a
+     catch(e){console.warn(e)}, so a refusal changed nothing and said
+     nothing — and the very next line calls autoCreateEvents(), which puts
+     the automatic Friday Majlis and Paanch Baar Saal events back.
+     iv_events has no unique constraint on (team, date), so Postgres
+     happily accepted a second copy of each. Resetting a cycle you were
+     not allowed to reset doubled it instead. */
+  if(sb&&!DB_MISSING){
+    pauseRT(2500);
+    const ok=await dbWrite('Resetting the cycle', ()=>
+      sb.from('iv_events').delete().eq('team',PAGE_TEAM).gte('date',start).lt('date',end),
+      /* A cycle with nothing in it is a legitimate reset, so an empty
+         answer only means refusal if events are still sitting there. */
+      {verify: ()=>sb.from('iv_events').select('id').eq('team',PAGE_TEAM).gte('date',start).lt('date',end)});
+    if(!ok) return;
+  }
   const victims=EVENTS.filter(e=>inCycleK(e.date,k)); EVENTS=EVENTS.filter(e=>!inCycleK(e.date,k)); victims.forEach(e=>delete ROSTERS[e.id]);
-  try{ if(sb&&!DB_MISSING){ pauseRT(2500); await sb.from('iv_events').delete().eq('team',PAGE_TEAM).gte('date',start).lt('date',end); } }catch(e){ console.warn(e); }
   auditLog('reset-cycle','events',cycleLabel(k)+' — removed '+victims.length+' events');
   await autoCreateEvents();
   if(!selEvent()){ const f=eventsInCycle(k)[0]; selEventId=f?f.id:null; }
@@ -2268,9 +2508,14 @@ function renderOvRows(){
 async function saveCycleSettings(){
   const box=document.getElementById('dcard'); const newOv={};
   (box?box.querySelectorAll('#ovRows .ov-in'):[]).forEach(inp=>{ const raw=inp.getAttribute('data-raw'),v=(inp.value||'').trim(); if(v&&v!==raw) newOv[raw]=v; });
-  OVERRIDES=newOv; clearCycleCache();
   pauseRT(4000);
-  await dbWrite('Saving the cycle settings', ()=>sb.from('iv_settings').upsert({key:'chandraat_overrides',value:OVERRIDES}));
+  /* Written before OVERRIDES moves. The overrides decide where every
+     cycle starts, so a refused save that had already been applied locally
+     left this browser rostering to dates no other browser agreed with —
+     and then autoCreateEvents() created events on them. */
+  if(!await dbWrite('Saving the cycle settings', ()=>
+      sb.from('iv_settings').upsert({key:'chandraat_overrides',value:newOv}))) return;
+  OVERRIDES=newOv; clearCycleCache();
   auditLog('cycle-settings-save','settings',Object.keys(newOv).length+' chandraat overrides');
   cM(); CYCLES=buildCycles(); await autoCreateEvents(); renderCurrent(); toast('Cycle settings saved');
 }
@@ -2507,26 +2752,36 @@ function describeChange(before, patch){
   }
   return bits.join(', ');
 }
+/* Returns whether the change was actually stored, and only touches the
+   local member once it has been. Every caller below builds the new value
+   without mutating the member first, so a refused save leaves the card
+   showing what the database still holds rather than what the person
+   typed. */
 async function updateMember(id,patch){
-  const m=memById(id); if(!m||!IS_EDIT) return;
+  const m=memById(id); if(!m||!IS_EDIT) return false;
   const before=JSON.parse(JSON.stringify(m));
+  if(sb&&!DB_MISSING){
+    pauseRT(1500);
+    if(!await dbWrite('Saving the member', ()=>sb.from('iv_members').update(patch).eq('id',id))) return false;
+  }
   Object.assign(m,patch); normMember(m);
-  try{ if(sb&&!DB_MISSING){ pauseRT(1500); const {error}=await sb.from('iv_members').update(patch).eq('id',id);
-    if(error){ console.warn('updateMember:',error.message||error); toast(tableMissing(error)||/column/i.test(error.message||'')?'Run the latest SETUP.sql to enable this field':'Could not save','err'); } } }
-  catch(e){ console.warn(e); }
   const changed=describeChange(before,patch);
   if(changed) auditLog('update','members',m.name+' \u2014 '+changed);
   if(curPage==='members') renderMemberGrid();
+  return true;
 }
-function saveMemberContact(id){ const box=document.getElementById('mbox'); const phone=(box.querySelector('#mdPhone')||{}).value||''; const email=(box.querySelector('#mdEmail')||{}).value||''; updateMember(id,{phone:phone.trim()||null,email:email.trim()||null}).then(()=>toast('Contact saved')); }
-function saveMemberNotes(id){ const box=document.getElementById('mbox'); const notes=(box.querySelector('#mdNotes')||{}).value||''; updateMember(id,{notes:notes.trim()||null}).then(()=>toast('Notes saved')); }
-function addAway(id){ const m=memById(id); if(!m) return; const box=document.getElementById('mbox'); const d=(box.querySelector('#mdAwayDate')||{}).value; if(!d) return toast('Pick a date','err'); if(!Array.isArray(m.away))m.away=[]; if(m.away.indexOf(d)<0)m.away.push(d); updateMember(id,{away:m.away.slice().sort()}).then(()=>openMemberDrawer(id)); }
-function removeAway(id,d){ const m=memById(id); if(!m) return; m.away=(m.away||[]).filter(x=>x!==d); updateMember(id,{away:m.away}).then(()=>openMemberDrawer(id)); }
+function saveMemberContact(id){ const box=document.getElementById('mbox'); const phone=(box.querySelector('#mdPhone')||{}).value||''; const email=(box.querySelector('#mdEmail')||{}).value||''; updateMember(id,{phone:phone.trim()||null,email:email.trim()||null}).then(ok=>{ if(ok) toast('Contact saved'); }); }
+function saveMemberNotes(id){ const box=document.getElementById('mbox'); const notes=(box.querySelector('#mdNotes')||{}).value||''; updateMember(id,{notes:notes.trim()||null}).then(ok=>{ if(ok) toast('Notes saved'); }); }
+function addAway(id){ const m=memById(id); if(!m) return; const box=document.getElementById('mbox'); const d=(box.querySelector('#mdAwayDate')||{}).value; if(!d) return toast('Pick a date','err');
+  const away=(Array.isArray(m.away)?m.away.slice():[]); if(away.indexOf(d)<0) away.push(d);
+  updateMember(id,{away:away.sort()}).then(()=>openMemberDrawer(id)); }
+function removeAway(id,d){ const m=memById(id); if(!m) return; updateMember(id,{away:(m.away||[]).filter(x=>x!==d)}).then(()=>openMemberDrawer(id)); }
 function cyclePref(id,key){ const m=memById(id); if(!m) return; normMember(m); const pf=m.prefs.prefer,av=m.prefs.avoid;
-  if(pf.indexOf(key)>=0){ m.prefs.prefer=pf.filter(k=>k!==key); m.prefs.avoid=av.concat([key]); }
-  else if(av.indexOf(key)>=0){ m.prefs.avoid=av.filter(k=>k!==key); }
-  else { m.prefs.prefer=pf.concat([key]); }
-  updateMember(id,{prefs:m.prefs}).then(()=>openMemberDrawer(id)); }
+  const prefs={prefer:pf.slice(),avoid:av.slice()};
+  if(pf.indexOf(key)>=0){ prefs.prefer=pf.filter(k=>k!==key); prefs.avoid=av.concat([key]); }
+  else if(av.indexOf(key)>=0){ prefs.avoid=av.filter(k=>k!==key); }
+  else { prefs.prefer=pf.concat([key]); }
+  updateMember(id,{prefs:prefs}).then(()=>openMemberDrawer(id)); }
 
 /* ════════════════════════════════════════════
    ATTENDANCE
@@ -2807,23 +3062,27 @@ async function markCoverAttendance(ci,memberId,status){
   const c=COVERING[ci]; if(!c) return;
   const cur=c.att[memberId]&&c.att[memberId].status;
   const next=(cur===status)?null:status;
+  if(!sb||DB_MISSING){ toast('Could not save attendance \u2014 no database connection','err'); return; }
+  // Hold the realtime listener off, as markAttendance does. Without it
+  // our own write echoes straight back, triggers a full reload and wipes
+  // the mark that is still being tapped in.
+  pauseRT(1200);
+  /* Same shape as markAttendance, and the same history: the clear branch
+     was an unchecked await while the branch beside it was checked. Someone
+     covering an event could untick a mark, watch it disappear, and find it
+     back where it was the next time they opened the page. */
+  const ok = next
+    ? await dbWrite('Saving attendance', ()=>sb.from('iv_attendance').upsert({event_id:c.ev.id,
+        member_id:memberId, status:next, marked_by:CU.user, marked_at:new Date().toISOString()}))
+    : await dbWrite('Clearing the mark', ()=>sb.from('iv_attendance').delete()
+        .eq('event_id',c.ev.id).eq('member_id',memberId),
+        {verify: ()=>sb.from('iv_attendance').select('event_id')
+                       .eq('event_id',c.ev.id).eq('member_id',memberId)});
+  if(!ok){ renderDashboard(); return; }
   if(next) c.att[memberId]={status:next}; else delete c.att[memberId];
   renderDashboard();
-  try{
-    if(!sb||DB_MISSING) return;
-    // Hold the realtime listener off, as markAttendance does. Without it
-    // our own write echoes straight back, triggers a full reload and wipes
-    // the mark that is still being tapped in.
-    pauseRT(1200);
-    if(!next) await sb.from('iv_attendance').delete().eq('event_id',c.ev.id).eq('member_id',memberId);
-    else{
-      const {error}=await sb.from('iv_attendance').upsert({event_id:c.ev.id,member_id:memberId,
-        status:next,marked_by:CU.user,marked_at:new Date().toISOString()});
-      if(error){ toast('Could not save: '+(error.message||error),'err'); return; }
-    }
-    auditLog('cover-attendance','attendance','Team '+c.ev.team+' '+c.ev.date+' \u2014 '+
-      ((c.members.find(m=>m.id===memberId)||{}).name||memberId)+': '+(next||'cleared'));
-  }catch(e){ console.warn(e); }
+  auditLog('cover-attendance','attendance','Team '+c.ev.team+' '+c.ev.date+' \u2014 '+
+    ((c.members.find(m=>m.id===memberId)||{}).name||memberId)+': '+(next||'cleared'));
 }
 
 /* Facilitator-side: hand this event to someone. Anyone with a Hub account
@@ -2855,11 +3114,11 @@ async function saveCover(eventId){
   const uid=sel?sel.value:'';
   const name=uid&&sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].text:'';
   const patch={cover_uid:uid||null, cover_name:uid?name:null, cover_by:uid?(CU.display||CU.user):null};
+  /* Cover is what gives somebody write access to this event's rows, so a
+     refused write that the screen accepted would tell a Facilitator the
+     hand-over had happened when the stand-in still could not see it. */
+  if(!await dbWrite('Saving cover', ()=>sb.from('iv_events').update(patch).eq('id',ev.id))) return;
   Object.assign(ev,patch);
-  try{
-    const {error}=await sb.from('iv_events').update(patch).eq('id',ev.id);
-    if(error){ toast(/column/i.test(error.message||'')?'Run the latest SETUP.sql to enable cover':'Could not save: '+error.message,'err'); return; }
-  }catch(e){ toast('Could not save cover','err'); return; }
   auditLog('cover','events',ev.name+' '+ev.date+' \u2014 '+(uid?('assigned to '+name):'cover removed'));
   cM(); toast(uid?('Cover assigned to '+name):'Cover removed'); renderRoster();
 }
@@ -3178,21 +3437,42 @@ async function postAnn(){
   const ta=document.getElementById('annNew'); const text=(ta&&ta.value||'').trim();
   if(!text) return toast('Write something first','err');
   const row={team:PAGE_TEAM,text:text,author:CU.display||CU.user};
-  try{ if(sb){ pauseRT(1500); const {data,error}=await sb.from('announcements').insert(row).select(); if(error) throw error; ANNS.unshift((data&&data[0])||Object.assign({id:-Date.now(),created_at:new Date().toISOString()},row)); } else ANNS.unshift(Object.assign({id:-Date.now(),created_at:new Date().toISOString()},row));
-    auditLog('post','announcements',text.slice(0,120)); renderAnnouncements(); toast('Announcement posted'); }
-  catch(e){ console.warn(e); toast('Could not post announcement','err'); }
+  if(!sb){ toast('Could not post announcement — no database connection','err'); return; }
+  pauseRT(1500);
+  /* The stored row goes into ANNS, not a hand-made copy of it. The edit
+     and delete buttons address an announcement by id, and a locally
+     invented one points at a row that has never existed. */
+  const rows=await dbWriteRows('Posting the announcement', ()=>sb.from('announcements').insert(row));
+  if(!rows) return;
+  ANNS.unshift(rows[0]);
+  auditLog('post','announcements',text.slice(0,120)); renderAnnouncements(); toast('Announcement posted');
 }
+/* Editing and deleting an announcement both changed ANNS first, wrote
+   without looking at the answer, and toasted green regardless. An
+   announcement is the one thing on this page every volunteer reads: a
+   lead correcting a venue an hour before Majlis saw "Announcement
+   updated" and three hundred people kept reading the old one. */
 async function saveAnnEdit(id){
   const ta=document.getElementById('annEdit_'+id); const text=(ta&&ta.value||'').trim();
   if(!text) return toast('Announcement cannot be empty','err');
-  const a=ANNS.find(x=>x.id===id); if(!a) return; a.text=text; annEditing=null;
-  try{ if(sb){ pauseRT(1500); await sb.from('announcements').update({text:text}).eq('id',id); } auditLog('edit','announcements',text.slice(0,120)); }catch(e){ console.warn(e); }
+  const a=ANNS.find(x=>x.id===id); if(!a) return;
+  if(!sb){ toast('Could not update announcement — no database connection','err'); return; }
+  pauseRT(1500);
+  if(!await dbWrite('Updating the announcement', ()=>
+      sb.from('announcements').update({text:text}).eq('id',id))) return;
+  a.text=text; annEditing=null;
+  auditLog('edit','announcements',text.slice(0,120));
   renderAnnouncements(); toast('Announcement updated');
 }
 function deleteAnn(id){ oM('<h3>Delete announcement</h3><p style="font-size:14px;color:var(--dm)">This removes it for everyone.</p><div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-da" onclick="doDeleteAnn('+id+')">Delete</button></div>'); }
 async function doDeleteAnn(id){
-  cM(); ANNS=ANNS.filter(a=>a.id!==id);
-  try{ if(sb){ pauseRT(1500); await sb.from('announcements').delete().eq('id',id); } auditLog('delete','announcements','id '+id); }catch(e){ console.warn(e); }
+  cM();
+  if(!sb){ toast('Could not delete announcement — no database connection','err'); return; }
+  pauseRT(1500);
+  if(!await dbWrite('Deleting the announcement', ()=>
+      sb.from('announcements').delete().eq('id',id))) return;
+  ANNS=ANNS.filter(a=>a.id!==id);
+  auditLog('delete','announcements','id '+id);
   renderAnnouncements(); toast('Announcement deleted');
 }
 

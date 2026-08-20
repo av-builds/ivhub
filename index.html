@@ -1165,13 +1165,122 @@ function chandraatISO(k, overrides){ const iso=nzDateStr(newMoonDate(k));
 /* ─── Utilities ─── */
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let toastTimer = null;
+let toastTimer = null, toastErrAt = 0;
+/* A success message that lands on top of a failure is worse than no
+   message at all: the screen ends up asserting the opposite of what
+   happened, and the person walks away believing it. For a second and a
+   half after a failure, a cheerful message does not get to take the toast
+   away from it. Nothing is lost — the held-back message still goes to the
+   console — and nobody completes a second action inside that window. */
+const TOAST_ERR_HOLD = 1500;
 function toast(msg, type){
+  const now = Date.now();
+  if(type !== 'err' && toastErrAt && now - toastErrAt < TOAST_ERR_HOLD){
+    console.warn('toast held back behind an error:', msg); return;
+  }
+  toastErrAt = type === 'err' ? now : 0;
   const t = $('toast');
   t.textContent = msg;
   t.className = 'toast show' + (type ? ' ' + type : ' ok');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+function tableMissing(err){ return !!err && /does not exist|42P01|relation|schema cache/i.test((err.message||'') + (err.code||'')); }
+/* Every write on this page goes through here, and none of them did
+   before — the Hub had not one checked write in it.
+
+   Checking `error` would not have been enough anyway. Row Level Security
+   does not reject an UPDATE or a DELETE whose rows it has filtered out:
+   it runs the statement against no rows and reports UPDATE 0, which is
+   success. PostgREST answers 200 with an empty body and supabase-js hands
+   back {data:[], error:null} — identical to a write that worked unless
+   you count the rows. Verified against a real Postgres, not assumed.
+
+   So the write asks for its rows back and fails when none arrive.
+   .select() is what turns "return=minimal" into "return=representation";
+   without it the database never says which rows it touched.
+
+   Zero rows is ambiguous on its own — the policy may have filtered the
+   row out, or there may honestly have been nothing to change. opts.verify
+   is a read that settles it, run only in that case. opts.rows === false
+   is the blunt version for writes where an empty answer is always fine.
+   Say why at the call site whenever you use either.
+
+   opts.quiet writes the message into opts.bag instead of showing it, for
+   a caller that means to try something else before giving up. Quiet is
+   not silent: the console still gets it, and the caller has to decide
+   what to say.
+
+   One rule this cannot infer on its own: do not send an INSERT through
+   here into a table the writer may not read. Verified against a real
+   Postgres — for UPDATE and DELETE the SELECT policy already decides
+   which rows the statement may touch, so asking for them back costs
+   nothing. For INSERT it does not: RETURNING a row the SELECT policy
+   hides raises "new row violates row-level security policy" and rolls the
+   insert back. audit_logs is exactly that shape, so its insert is written
+   out by hand rather than sent through here — and loses nothing, because
+   an INSERT that RLS refuses raises anyway. Silence is only possible for
+   UPDATE and DELETE.
+ */
+async function dbWrite(what, run, opts){
+  const o = opts || {};
+  const say = (m, kind)=>{ if(o.bag) o.bag.message = m; if(!o.quiet) toast(m, kind || 'err'); };
+  if(!sb){ say(what + ' failed — no database connection'); return false; }
+  let res, counted = false;
+  try{
+    const q = run();
+    counted = o.rows !== false && !!q && typeof q.select === 'function';
+    res = await (counted ? q.select() : q);
+  }catch(e){
+    /* supabase-js resolves rather than rejecting — a dropped connection
+       still comes back as {data,error}. So this catches a builder that
+       threw while being assembled, nothing more. */
+    console.error(what, e); if(o.bag) o.bag.error = e;
+    say(what + ' failed — ' + (e.message || e)); return false;
+  }
+  const error = res && res.error;
+  if(error){
+    console.error(what, error);
+    if(o.bag) o.bag.error = error;
+    const msg = error.message || String(error);
+    const schema = tableMissing(error) || /column/i.test(msg);
+    const dupe = /duplicate key|unique constraint|23505/i.test(msg + (error.code||''));
+    // A call site that knows what its own failure means says so itself;
+    // "duplicate key value violates..." is true and useless.
+    const hint = o.hint && o.hint(error);
+    say(hint ? hint
+        : what + ' failed — ' + (schema ? 'run the latest SETUP.sql to enable this'
+                              : dupe   ? 'it already exists'
+                                       : msg));
+    return false;
+  }
+  if(!counted) return true;      // nothing was asked for, so nothing can be judged
+  const data = res && res.data;
+  const n = data == null ? 0 : (Array.isArray(data) ? data.length : 1);
+  if(n && o.bag) o.bag.rows = Array.isArray(data) ? data : [data];
+  if(!n){
+    if(o.verify){
+      const chk = await o.verify();
+      // A verify that cannot be read is not a verify. Only an empty,
+      // error-free answer proves there was nothing there to change.
+      if(chk && !chk.error){
+        const left = chk.data;
+        const still = left == null ? 0 : (Array.isArray(left) ? left.length : 1);
+        if(!still) return true;          // there was honestly nothing to change
+      }
+    }
+    console.error(what, '— the database accepted the request and changed nothing', res);
+    say(what + ' failed — the database refused it. You may not have permission to change this.');
+    return false;
+  }
+  return true;
+}
+/* The same checks, but handing back what the database stored — for the
+   writes that need its id and its timestamps rather than invented ones. */
+async function dbWriteRows(what, run, opts){
+  const bag = {};
+  const ok = await dbWrite(what, run, Object.assign({}, opts || {}, {bag: bag}));
+  return ok ? (bag.rows || []) : null;
 }
 function reducedMotion(){ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
 function todayNZ(){ return nzDateStr(new Date()); }
@@ -1273,35 +1382,53 @@ async function clearAuditLogs(){
   const typed = prompt('This permanently deletes ALL audit log entries — both changes and page visits, for every team.\nType DELETE to confirm:');
   if(typed !== 'DELETE'){ if(typed !== null) toast('Confirmation text did not match — nothing deleted.', 'err'); return; }
   if(!sb){ toast('No database connection.', 'err'); return; }
-  try{
-    const {error} = await sb.from('audit_logs').delete().gte('id', 0);
-    if(error) throw error;
-    // The visit log is a separate table; leaving it behind would make
-    // "clear all" a half-truth on a page that shows both.
-    const v = await sb.from('view_logs').delete().gte('id', 0);
-    if(v.error) console.warn('view_logs clear skipped:', v.error.message);
-    toast('Audit logs cleared.');
-    await auditLog('Cleared audit logs', 'admin', 'All entries deleted by owner');
-    loadAuditList();
-  }catch(e){ toast('Clear failed: ' + (e.message || e), 'err'); }
+  /* Only the Owner may clear this, and the rule lives in the database —
+     so a Director who reaches this function gets a refusal, not an error.
+     Saying "cleared" over a log that is still entirely there would be the
+     worst possible lie for an audit trail to tell. An already-empty log
+     is a real success, which is what the verify read distinguishes. */
+  if(!await dbWrite('Clearing the audit log', ()=>sb.from('audit_logs').delete().gte('id', 0),
+      {verify: ()=>sb.from('audit_logs').select('id').limit(1)})) return;
+  // The visit log is a separate table; leaving it behind would make
+  // "clear all" a half-truth on a page that shows both.
+  await dbWrite('Clearing the visit log', ()=>sb.from('view_logs').delete().gte('id', 0),
+    {verify: ()=>sb.from('view_logs').select('id').limit(1)});
+  toast('Audit logs cleared.');
+  await auditLog('Cleared audit logs', 'admin', 'All entries deleted by owner');
+  loadAuditList();
 }
 /* The column is user_display, not user. 'user' is a reserved word in
    Postgres and no such column exists, so every insert made here failed —
    silently, because the only handling was a console warning. Nothing from
    any page reached the audit log until this was corrected. */
+let auditBroken = false;
 async function auditLog(action, category, detail){
-  if(!sb) return;
-  try{
-    const {error} = await sb.from('audit_logs').insert({
-      user_display: CU.display || '', username: CU.user || '',
-      /* Two volunteers will share a name across three hundred accounts,
-         and a log that cannot tell them apart fails at its only job. */
-      user_email: CU.email || '',
-      team: 'Hub',
-      action: action || '', category: category || 'home', detail: detail || ''
-    });
-    if(error) console.warn('audit_logs skipped:', error.message);
-  }catch(e){ console.warn('audit_logs skipped:', e.message); }
+  if(!sb) return false;
+  /* No .select() here, and that is deliberate — see dbWrite. Anyone signed
+     in may write to audit_logs; only rank 5 and above may read it. An
+     INSERT ... RETURNING against a row the SELECT policy hides does not
+     return nothing, it raises and rolls the insert back. Asking for the
+     row would have stopped every Team Lead's actions being logged at all.
+     Checking `error` is enough for an insert: a refused one raises. */
+  const {error} = await sb.from('audit_logs').insert({
+    user_display: CU.display || '', username: CU.user || '',
+    /* Two volunteers will share a name across three hundred accounts,
+       and a log that cannot tell them apart fails at its only job. */
+    user_email: CU.email || '',
+    team: 'Hub',
+    action: action || '', category: category || 'home', detail: detail || ''
+  });
+  if(error){
+    console.error('audit log not written:', action, category, error);
+    /* Said late and once. auditLog runs alongside the action it records,
+       so warning immediately would snatch the toast away from "Saved" —
+       a message about a write that did work. The log being broken is a
+       standing condition, not this action's result. */
+    if(!auditBroken){ auditBroken = true; setTimeout(()=>
+      toast('Your changes are being saved, but they are not being recorded in the audit log.', 'err'), 2500); }
+    return false;
+  }
+  return true;
 }
 
 
@@ -1537,12 +1664,15 @@ async function logView(section){
   if(!sb || !CU.uid || !section) return;
   if(_lastView === section) return;      // re-renders are not new visits
   _lastView = section;
-  try{
-    await sb.from('view_logs').insert({
-      username: CU.user || '', user_display: CU.display || '', user_email: CU.email || '',
-      team: 'Hub', section: section
-    });
-  }catch(e){ /* best-effort: never let recording a visit break the visit */ }
+  /* Recording a visit must never break the visit, so this one really is
+     best-effort — but best-effort means the console hears about it, not
+     that nothing does. A visit log that stops filling looks exactly like
+     a page nobody opens. */
+  const {error} = await sb.from('view_logs').insert({
+    username: CU.user || '', user_display: CU.display || '', user_email: CU.email || '',
+    team: 'Hub', section: section
+  });
+  if(error) console.warn('view log not written:', section, error.message || error);
 }
 
 /* ═══ APP SHELL / NAVIGATION ═══ */
@@ -2135,25 +2265,26 @@ function linkSuggestions(member){
 /* The one write. Setting member_id to null unlinks. */
 async function setAccountLink(profileId, memberId){
   if(!sb) { toast('No database connection.', 'err'); return false; }
-  try{
-    const {error} = await sb.from('profiles').update({member_id: memberId}).eq('id', profileId);
-    if(error) throw error;
-    const p = (PROFILES||[]).find(x=>String(x.id) === String(profileId));
-    if(p) p.member_id = memberId;
-    const m = memberId ? (mRows||[]).find(x=>String(x.id) === String(memberId)) : null;
-    await auditLog(memberId ? 'Linked account' : 'Unlinked account', 'accounts',
-      accountLabel(p) + (memberId ? (' → ' + (m ? m.name : '#' + memberId)) : ' unlinked'));
-    toast(memberId ? 'Linked.' : 'Unlinked.');
-    return true;
-  }catch(e){
+  /* profiles_guard refuses changes to somebody else's account, and it
+     refuses them the quiet way — no error, no rows, just nothing happening.
+     This used to inspect only `error`, so a link the database would not
+     make still said "Linked." and drew the link on screen; the next reload
+     put it back. Linking is what decides whose duties somebody sees, so
+     getting a false yes here sends a volunteer to the wrong roster. */
+  const ok = await dbWrite('Saving the link',
+    ()=>sb.from('profiles').update({member_id: memberId}).eq('id', profileId),
     /* One account per person is enforced in the database, so this is the
        likely failure and deserves a sentence rather than a code. */
-    const msg = /duplicate key|unique/i.test(e.message || '')
-      ? 'That person already has an account linked. Unlink the other one first.'
-      : 'Could not save the link: ' + (e.message || e);
-    toast(msg, 'err');
-    return false;
-  }
+    {hint: e=>/duplicate key|unique/i.test(e.message || '')
+      ? 'That person already has an account linked. Unlink the other one first.' : null});
+  if(!ok) return false;
+  const p = (PROFILES||[]).find(x=>String(x.id) === String(profileId));
+  if(p) p.member_id = memberId;
+  const m = memberId ? (mRows||[]).find(x=>String(x.id) === String(memberId)) : null;
+  await auditLog(memberId ? 'Linked account' : 'Unlinked account', 'accounts',
+    accountLabel(p) + (memberId ? (' → ' + (m ? m.name : '#' + memberId)) : ' unlinked'));
+  toast(memberId ? 'Linked.' : 'Unlinked.');
+  return true;
 }
 async function linkMemberTo(memberId, profileId){
   const ok = await setAccountLink(profileId, Number(memberId));
@@ -2494,30 +2625,25 @@ async function updateMember(id, patch, desc, action){
     }
     // Team is optional for all other ranks — no enforcement of a main team.
   }
-  try{
-    const before = row ? {team: row.team, name: row.name} : null;
-    const {error} = await sb.from('iv_members').update(patch).eq('id', id);
-    if(error) throw error;
-    if(row) Object.assign(row, patch);
-    auditLog(action || 'Updated member', 'members', desc);
-    /* A move between teams has to carry the person's access with it, or
-       access and reality drift apart within weeks and nobody notices
-       until somebody cannot see their own roster. */
-    if(before && patch.team !== undefined && patch.team !== before.team) await carryTeamAccess(id, before.team, patch.team);
-    if(before && patch.name  !== undefined && patch.name  !== before.name) await carryDisplayName(id, patch.name);
-    toast('Saved.');
-    return true;
-  }catch(e){
-    console.warn('updateMember failed:', e.message || e);
-    if(isMissingColumn(e) || isNullViolation(e)){
-      showMWarn('Save failed — iv_members is missing the latest columns/constraints (rank, spec, optional team). Re-run SETUP.sql on the Supabase project.');
-      toast('Save failed — re-run SETUP.sql on the Supabase project.', 'err');
-    }else{
-      toast(isMissingTable(e) ? 'iv_members table is missing — run SETUP.sql first.' : 'Save failed: ' + (e.message || e), 'err');
-    }
-    renderMembers(); // revert UI to known state
-    return false;
-  }
+  const before = row ? {team: row.team, name: row.name} : null;
+  const ok = await dbWrite('Saving the member', ()=>sb.from('iv_members').update(patch).eq('id', id),
+    {hint: e=>{
+      if(isMissingColumn(e) || isNullViolation(e)){
+        showMWarn('Save failed — iv_members is missing the latest columns/constraints (rank, spec, optional team). Re-run SETUP.sql on the Supabase project.');
+        return 'Save failed — re-run SETUP.sql on the Supabase project.';
+      }
+      return isMissingTable(e) ? 'iv_members table is missing — run SETUP.sql first.' : null;
+    }});
+  if(!ok){ renderMembers(); return false; }   // put the screen back to what the database holds
+  if(row) Object.assign(row, patch);
+  auditLog(action || 'Updated member', 'members', desc);
+  /* A move between teams has to carry the person's access with it, or
+     access and reality drift apart within weeks and nobody notices
+     until somebody cannot see their own roster. */
+  if(before && patch.team !== undefined && patch.team !== before.team) await carryTeamAccess(id, before.team, patch.team);
+  if(before && patch.name  !== undefined && patch.name  !== before.name) await carryDisplayName(id, patch.name);
+  toast('Saved.');
+  return true;
 }
 /* ── MOVING BETWEEN TEAMS ────────────────────────────────────────────
    The member record and the login account are separate things, and a
@@ -2542,10 +2668,15 @@ async function carryTeamAccess(memberId, fromTeam, toTeam){
     const was = permsOf(data);
     const now = was.map(p=>map[p] || p);
     if(now.join('|') === was.join('|')) return;      // nothing team-scoped to move
-    const {error:ue} = await sb.from('profiles').update({perms: now}).eq('id', data.id);
-    if(ue){
+    /* .select() and a row count, not just the error. profiles_guard
+       refuses a change to somebody else's account without raising
+       anything — so the swap could quietly not happen and this function
+       would report the move as complete. */
+    const {data:upd, error:ue} = await sb.from('profiles').update({perms: now}).eq('id', data.id).select('id');
+    if(ue || !upd || !upd.length){
       showMWarn('Moved to Team ' + esc(toTeam) + ', but their login still points at Team ' +
-                esc(fromTeam || '—') + ' (' + esc(ue.message) + '). Fix it in Login Management.');
+                esc(fromTeam || '—') + ' (' + esc(ue ? ue.message : 'the database refused the change') +
+                '). Fix it in Login Management.');
       return;
     }
     auditLog('Moved team', 'members',
@@ -2559,8 +2690,14 @@ async function carryTeamAccess(memberId, fromTeam, toTeam){
    name and nobody can change their own. */
 async function carryDisplayName(memberId, name){
   if(!sb || !name) return;
-  try{ await sb.from('profiles').update({display: name}).eq('member_id', memberId); }
-  catch(e){ console.warn('carryDisplayName:', e.message || e); }
+  /* Not everybody has an account, so nothing coming back is normal here
+     and is not worth a message. A refusal is worth one: the audit log
+     records the display name, and a name that only changed on the member
+     record leaves the log naming somebody who no longer exists. */
+  const {data, error} = await sb.from('profiles').update({display: name}).eq('member_id', memberId).select('id');
+  if(error) showMWarn('The member was saved, but their account still shows the old name (' +
+    esc(error.message) + '). Fix it in Login Management.');
+  else if(data && !data.length) console.warn('carryDisplayName: no account is linked to member', memberId);
 }
 
 /* ── SOMEBODY LEAVES ─────────────────────────────────────────────────
@@ -2575,30 +2712,27 @@ async function revokeMemberAccess(row){
   if(!confirm(`Revoke Hub access for ${row.name}?\n\n` +
     `They can no longer sign in. Their attendance, duties and history are all kept, ` +
     `and they stay in the member directory.\n\nGranting it again later is one tick.`)) return;
-  try{
-    const was = permsOf(prof);
-    const {error} = await sb.from('profiles').update({perms: []}).eq('id', prof.id);
-    if(error) throw error;
-    prof.perms = [];
-    auditLog('Revoked access', 'members',
-      (prof.email || row.name) + ' — left the team · was ' + (was.join(', ')||'no access') + ' · history kept');
-    toast('Access revoked for ' + row.name + '. Their history is kept.');
-    renderMembers();
-  }catch(e){ toast('Could not revoke: ' + (e.message||e), 'err'); }
+  const was = permsOf(prof);
+  /* Revoking is a security action, so a false yes is the expensive
+     direction: an Owner told "access revoked" over an account that can
+     still sign in stops thinking about it. */
+  if(!await dbWrite('Revoking access', ()=>sb.from('profiles').update({perms: []}).eq('id', prof.id))) return;
+  prof.perms = [];
+  auditLog('Revoked access', 'members',
+    (prof.email || row.name) + ' — left the team · was ' + (was.join(', ')||'no access') + ' · history kept');
+  toast('Access revoked for ' + row.name + '. Their history is kept.');
+  renderMembers();
 }
 
 async function deleteMember(row){
   if(!confirm(`Delete member "${row.name}" (${memberTeamLabel(row)})? This cannot be undone.`)) return;
   if(!sb){ toast('No database connection — cannot delete.', 'err'); return; }
-  try{
-    const {error} = await sb.from('iv_members').delete().eq('id', row.id);
-    if(error) throw error;
-    mRows = mRows.filter(r=>r.id !== row.id);
-    if(mOpenId === row.id) mOpenId = null;
-    auditLog('Deleted member', 'members', `${row.name} (${memberTeamLabel(row)})`);
-    toast('Deleted ' + row.name);
-    renderMembers();
-  }catch(e){ toast('Delete failed: ' + (e.message || e), 'err'); }
+  if(!await dbWrite('Deleting the member', ()=>sb.from('iv_members').delete().eq('id', row.id))) return;
+  mRows = mRows.filter(r=>r.id !== row.id);
+  if(mOpenId === row.id) mOpenId = null;
+  auditLog('Deleted member', 'members', `${row.name} (${memberTeamLabel(row)})`);
+  toast('Deleted ' + row.name);
+  renderMembers();
 }
 async function addMember(){
   /* all form reads scoped to the add panel */
@@ -2618,31 +2752,38 @@ async function addMember(){
     status: 'active'
   };
   const full = Object.assign({}, base, { rank, spec });
-  try{
-    let {error} = await sb.from('iv_members').insert(full);
-    if(error && isMissingColumn(error)){
-      const retry = await sb.from('iv_members').insert(base); // rank/spec columns absent — degrade
-      if(retry.error) throw retry.error;
-      showMWarn('The rank/spec columns are missing from iv_members — re-run SETUP.sql to store rank and specialized teams.');
-      toast('Added ' + name + ' (rank/spec not stored — re-run SETUP.sql).', 'err');
-    }else if(error){
-      throw error;
-    }else{
-      toast('Added ' + name);
-    }
-    auditLog('Added member', 'members', `${name} → ${team ? 'Team ' + team : 'no team (leadership)'} · ${rank}${spec.length ? ' · spec [' + spec.join(', ') + ']' : ''} (${base.gender}, ${base.age_group})`);
-    panel.querySelector('#maName').value = '';
-    panel.classList.remove('show');
-    loadMembers();
-  }catch(e){
-    console.warn('addMember failed:', e.message || e);
+  const explain = e=>{
     if(isNullViolation(e)){
       showMWarn('This member has a leadership rank (no main team), but the database still requires a team — re-run SETUP.sql to allow team-less leadership ranks.');
-      toast('Add failed — re-run SETUP.sql on the Supabase project.', 'err');
-    }else{
-      toast(isMissingTable(e) ? 'iv_members table is missing — run SETUP.sql first.' : 'Add failed: ' + (e.message || e), 'err');
+      return 'Add failed — re-run SETUP.sql on the Supabase project.';
     }
+    return isMissingTable(e) ? 'iv_members table is missing — run SETUP.sql first.' : null;
+  };
+  /* rank and spec are the newer columns. On a database that predates them
+     the insert fails with a missing-column error, and adding the person
+     without those two fields beats refusing to add them at all — so that
+     one error, and only that one, is worth a second attempt. The first
+     attempt is quiet so a message about a failure we are about to recover
+     from never reaches the screen. */
+  const bag = {};
+  let ok = await dbWrite('Adding the member', ()=>sb.from('iv_members').insert(full),
+    {bag: bag, quiet: true, hint: explain});
+  let degraded = false;
+  if(!ok && bag.error && isMissingColumn(bag.error)){
+    degraded = true;
+    ok = await dbWrite('Adding the member', ()=>sb.from('iv_members').insert(base), {hint: explain});
+    if(!ok) return;
+    showMWarn('The rank/spec columns are missing from iv_members — re-run SETUP.sql to store rank and specialized teams.');
+  }else if(!ok){
+    toast(bag.message || 'Add failed.', 'err');
+    return;
   }
+  toast(degraded ? ('Added ' + name + ' (rank/spec not stored — re-run SETUP.sql).') : ('Added ' + name),
+        degraded ? 'err' : undefined);
+  auditLog('Added member', 'members', `${name} → ${team ? 'Team ' + team : 'no team (leadership)'} · ${rank}${spec.length ? ' · spec [' + spec.join(', ') + ']' : ''} (${base.gender}, ${base.age_group})`);
+  panel.querySelector('#maName').value = '';
+  panel.classList.remove('show');
+  loadMembers();
 }
 
 /* Invites go through the `invite-user` Edge Function, which holds the
@@ -2724,8 +2865,10 @@ async function revokeAccess(id){
   if(CU && CU.uid === r.id){ toast('You cannot revoke your own access.','err'); return; }
   if(!canManageProfile(permsOf(r))){ toast('That account is at or above your level.','err'); return; }
   if(!confirm('Revoke all access for '+(r.display||r.email)+'?\n\nTheir account stays, but they will not be able to open any section until permissions are granted again.')) return;
-  const {error} = await sb.from('profiles').update({perms: []}).eq('id', id);
-  if(error){ toast('Could not revoke: '+error.message,'err'); return; }
+  /* profiles_guard refuses a change to an account at or above your own
+     level without raising anything, so "Access revoked" over an account
+     that can still sign in was entirely possible here. */
+  if(!await dbWrite('Revoking access', ()=>sb.from('profiles').update({perms: []}).eq('id', id))) return;
   auditLog('Revoked access','login',(r.email||id)+' — all permissions removed');
   toast('Access revoked for '+(r.display||r.email));
   await refreshUserRows();
@@ -2865,8 +3008,11 @@ async function saveProfile(id){
     const untouchable = permsOf(r).filter(pm=>grantable.indexOf(pm)<0);
     patch.perms = untouchable.concat(picked.filter(pm=>grantable.indexOf(pm)>=0));
   }
-  const {error} = await sb.from('profiles').update(patch).eq('id', id);
-  if(error){ toast('Save failed: '+error.message, 'err'); return; }
+  /* Permissions are the whole point of this form, and profiles_guard
+     turns down a grant at or above your own level silently — no error,
+     no rows. Saying "Saved" over that told a Facilitator they had made
+     somebody a Director. */
+  if(!await dbWrite('Saving the account', ()=>sb.from('profiles').update(patch).eq('id', id))) return;
   // Both sides of a permission change, so the log answers who gained or
   // lost what — not merely that an account was edited.
   const wasPerms = permsOf(r).slice().sort();
@@ -3151,14 +3297,21 @@ async function saveMemberEmail(id, value){
   const row = (mRows||[]).find(m=>m.id === id);
   if(!row || (row.email||'') === v) return;
   if(v && !EMAIL_RE.test(v)) return;               // wait until it is a real address
-  try{
-    const {error} = await sb.from('iv_members').update({email: v || null}).eq('id', id);
-    if(error) throw error;
-    row.email = v || null;
-    delete sbEmails[id];
-  }catch(e){
-    showSbWarn('Could not save ' + esc(row.name) + '’s address: ' + esc(e.message||e));
+  /* Not through dbWrite: this fires as the lead tabs out of a field,
+     dozens of times while they work down the list, and a toast per field
+     would bury the page. The warning strip says it once and stays up.
+     Still a row count, though — the address is what the invitation is
+     sent to, and one that silently did not save means an invitation that
+     never arrives. */
+  const {data, error} = await sb.from('iv_members').update({email: v || null}).eq('id', id).select('id');
+  if(error || !data || !data.length){
+    console.error('member email not saved:', id, error || 'no row came back');
+    showSbWarn('Could not save ' + esc(row.name) + '’s address' +
+      (error ? (': ' + esc(error.message)) : ' — the database refused the change.'));
+    return;
   }
+  row.email = v || null;
+  delete sbEmails[id];
 }
 function showSbWarn(html){ const w = $('sbWarn'); w.innerHTML = '<span>⚠️</span><span>' + html + '</span>'; w.style.display = 'flex'; }
 
@@ -3185,28 +3338,42 @@ async function submitBatch(){
               `A Facilitator checks each one before any invitation goes out.`)) return;
 
   const btn = $('sbSubmit'); btn.disabled = true; const lbl = btn.textContent; btn.textContent = 'Submitting…';
+  /* Quiet writes reporting into the warning strip, because that is where
+     the rest of this page puts its problems and it stays on screen while
+     the lead works down the list.
+
+     Both halves are checked for rows, not merely for an error. A batch
+     row that was refused used to come back as null and take the next line
+     down with it; a refused item insert left an empty batch sitting in
+     the approval queue with nobody in it. */
+  const explain = bag=>{
+    const m = bag.error ? (bag.error.message || String(bag.error)) : '';
+    return /duplicate key/i.test(m)
+      ? 'Somebody in this batch is already waiting to be approved, or their address is already claimed by another person. Refresh and check the state against each name.'
+      : 'Could not submit: ' + esc(bag.message || m || 'the database refused it.');
+  };
   try{
-    const {data:batch, error:be} = await sb.from('iv_invite_batches').insert({
+    const bBag = {};
+    const made = await dbWriteRows('Creating the submission', ()=>sb.from('iv_invite_batches').insert({
       team: sbTeam, submitted_by: CU.uid, submitted_name: CU.display || CU.user || ''
-    }).select().single();
-    if(be) throw be;
-    const {error:ie} = await sb.from('iv_invite_items')
-      .insert(people.map(p=>Object.assign({batch_id: batch.id}, p)));
-    if(ie){
+    }), {bag: bBag, quiet: true});
+    if(!made){ showSbWarn(explain(bBag)); return; }
+    const batch = made[0];
+    const iBag = {};
+    const items = await dbWriteRows('Saving the people', ()=>sb.from('iv_invite_items')
+      .insert(people.map(p=>Object.assign({batch_id: batch.id}, p))), {bag: iBag, quiet: true});
+    if(!items){
       // Leave nothing half-submitted behind.
-      try{ await sb.from('iv_invite_batches').delete().eq('id', batch.id); }catch(_e){}
-      throw ie;
+      await dbWrite('Removing the empty submission',
+        ()=>sb.from('iv_invite_batches').delete().eq('id', batch.id), {quiet: true});
+      showSbWarn(explain(iBag));
+      return;
     }
     auditLog('Submitted invitations', 'login', TEAM_LABEL[sbTeam] + ' — ' + people.length + ' for approval');
     sbPicked = {};
     toast(people.length + ' sent for approval.');
     await loadSubmitPage();
     if(CAN_APPROVE()) refreshApproveCount();
-  }catch(e){
-    const m = (e.message||String(e));
-    showSbWarn(/duplicate key/i.test(m)
-      ? 'Somebody in this batch is already waiting to be approved, or their address is already claimed by another person. Refresh and check the state against each name.'
-      : 'Could not submit: ' + esc(m));
   }finally{ btn.disabled = false; btn.textContent = lbl; }
 }
 
@@ -3235,13 +3402,15 @@ function renderMySubmissions(){
 }
 async function withdrawBatch(id){
   if(!confirm('Withdraw this submission? Nobody in it will be invited.')) return;
-  try{
-    const {error} = await sb.from('iv_invite_batches').delete().eq('id', id);
-    if(error) throw error;
-    auditLog('Withdrew invitations', 'login', 'Batch #' + id);
-    toast('Withdrawn.');
-    await loadSubmitPage();
-  }catch(e){ toast('Could not withdraw: ' + (e.message||e), 'err'); }
+  /* Withdrawing is only allowed while the batch is still pending and only
+     by the person who submitted it — both enforced in the database, and
+     both refused quietly. "Withdrawn." over a batch still queued for
+     approval would send invitations the lead thought they had stopped. */
+  if(!await dbWrite('Withdrawing the submission',
+      ()=>sb.from('iv_invite_batches').delete().eq('id', id))) return;
+  auditLog('Withdrew invitations', 'login', 'Batch #' + id);
+  toast('Withdrawn.');
+  await loadSubmitPage();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -3336,18 +3505,20 @@ function apvSetAll(batchId, on){
 async function rejectBatch(batchId){
   const note = prompt('Why is this being rejected? The lead who submitted it will see this.');
   if(note === null) return;
-  try{
-    const {error:e1} = await sb.from('iv_invite_items').update({status:'rejected'}).eq('batch_id', batchId);
-    if(e1) throw e1;
-    const {error:e2} = await sb.from('iv_invite_batches').update({
+  /* Items first, then the batch — the order the database's own rules
+     expect, since writing to the items is only allowed while the batch is
+     still pending. Both are checked: a rejection that did not happen
+     leaves the batch in the approval queue, where the next Facilitator
+     approves it and the invitations go out anyway. */
+  if(!await dbWrite('Rejecting the people in this batch',
+      ()=>sb.from('iv_invite_items').update({status:'rejected'}).eq('batch_id', batchId))) return;
+  if(!await dbWrite('Rejecting the submission', ()=>sb.from('iv_invite_batches').update({
       status:'rejected', note: note || null, decided_by: CU.uid,
       decided_name: CU.display || CU.user || '', decided_at: new Date().toISOString()
-    }).eq('id', batchId);
-    if(e2) throw e2;
-    auditLog('Rejected invitations', 'login', 'Batch #' + batchId + (note ? ' — ' + note : ''));
-    toast('Rejected.');
-    await loadApprovePage();
-  }catch(e){ toast('Could not reject: ' + (e.message||e), 'err'); }
+    }).eq('id', batchId))) return;
+  auditLog('Rejected invitations', 'login', 'Batch #' + batchId + (note ? ' — ' + note : ''));
+  toast('Rejected.');
+  await loadApprovePage();
 }
 
 /* Approve, then send. The two are separate steps in the data even though
@@ -3382,41 +3553,65 @@ async function approveBatch(batchId){
   };
   draw(0, chosen.length, 'starting');
 
+  /* Nothing here is allowed to proceed on an unconfirmed write. Marking
+     people approved is what makes the invitations go out; if that write
+     was refused and we carried on regardless, the emails would be sent
+     against records that still say "waiting", and re-running the batch
+     would send every one of them a second time. */
+  const stop = m=>{
+    $('apvWarn').innerHTML = '<span>⚠️</span><span>Sending stopped: ' + esc(m) +
+      '. Anyone still approved can be sent again from this page.</span>';
+    $('apvWarn').style.display = 'flex';
+  };
   try{
     if(refused.length){
-      await sb.from('iv_invite_items').update({status:'rejected'})
-        .in('id', refused.map(r=>r.id));
+      if(!await dbWrite('Marking the people who were not approved',
+          ()=>sb.from('iv_invite_items').update({status:'rejected'}).in('id', refused.map(r=>r.id)))) return;
     }
     for(const it of chosen){
-      await sb.from('iv_invite_items').update({status:'approved', role: it.role}).eq('id', it.id);
+      if(!await dbWrite('Approving ' + (it.name || 'this person'),
+          ()=>sb.from('iv_invite_items').update({status:'approved', role: it.role}).eq('id', it.id))) return;
     }
-    await sb.from('iv_invite_batches').update({
+    if(!await dbWrite('Marking the batch approved', ()=>sb.from('iv_invite_batches').update({
       status:'approved', decided_by: CU.uid,
       decided_name: CU.display || CU.user || '', decided_at: new Date().toISOString()
-    }).eq('id', batchId);
+    }).eq('id', batchId))) return;
 
-    let sent = 0, failed = 0;
+    let sent = 0, failed = 0, unrecorded = 0;
     for(let i = 0; i < chosen.length; i++){
       const it = chosen[i];
       draw(i, chosen.length, it.name);
       const r = await inviteOne(it);
-      if(r.ok){ sent++; await sb.from('iv_invite_items').update({status:'sent', note:null}).eq('id', it.id); }
-      else{ failed++; await sb.from('iv_invite_items').update({status:'failed', note: r.error.slice(0,300)}).eq('id', it.id); }
+      /* The invitation has already gone by this point, so a refused
+         status write must not stop the run — the people after this one
+         still need theirs. It is counted and reported at the end instead:
+         a row left saying "approved" after the email went out is what
+         makes somebody get invited twice. */
+      const marked = r.ok
+        ? await dbWrite('Recording the invitation',
+            ()=>sb.from('iv_invite_items').update({status:'sent', note:null}).eq('id', it.id), {quiet:true})
+        : await dbWrite('Recording the failure',
+            ()=>sb.from('iv_invite_items').update({status:'failed', note: r.error.slice(0,300)}).eq('id', it.id), {quiet:true});
+      if(r.ok) sent++; else failed++;
+      if(!marked) unrecorded++;
       draw(i + 1, chosen.length, it.name);
       /* Paced. Supabase's own limit is what actually throttles this; the
          gap keeps us under it rather than collecting rate-limit errors
          and calling them failures. */
       if(i < chosen.length - 1) await new Promise(r2=>setTimeout(r2, INVITE_GAP_MS));
     }
-    await sb.from('iv_invite_batches').update({status:'sent'}).eq('id', batchId);
+    await dbWrite('Closing the batch',
+      ()=>sb.from('iv_invite_batches').update({status:'sent'}).eq('id', batchId), {quiet:true});
     auditLog('Approved invitations', 'login',
       TEAM_LABEL[batch.team] + ' — ' + sent + ' invited' + (failed ? ', ' + failed + ' failed' : '') +
-      (refused.length ? ', ' + refused.length + ' not approved' : ''));
+      (refused.length ? ', ' + refused.length + ' not approved' : '') +
+      (unrecorded ? ', ' + unrecorded + ' not recorded' : ''));
+    if(unrecorded) stop(unrecorded + ' ' + (unrecorded === 1 ? 'invitation was' : 'invitations were') +
+      ' sent but could not be recorded, so this page still shows them as waiting. ' +
+      'Do not send the batch again without checking — those people already have their email');
     toast(sent + ' invited' + (failed ? ', ' + failed + ' failed' : '') + '.');
   }catch(e){
-    $('apvWarn').innerHTML = '<span>⚠️</span><span>Sending stopped: ' + esc(e.message||String(e)) +
-      '. Anyone still approved can be sent again from this page.</span>';
-    $('apvWarn').style.display = 'flex';
+    stop(e.message || String(e));
   }finally{
     apvBusy = false;
     prog.style.display = 'none';
@@ -3518,7 +3713,7 @@ function renderStats(){
     return;
   }
   if(stData.draft > 0){
-    note.textContent = `Includes assignments from ${stData.draft} draft (unconfirmed) event${stData.draft === 1 ? '' : 's'}.`;
+    note.textContent = `Includes assignments from ${stData.draft} event${stData.draft === 1 ? '' : 's'} that ${stData.draft === 1 ? 'is' : 'are'} not on the calendar, so only the leads can see ${stData.draft === 1 ? 'it' : 'them'}.`;
     note.style.display = 'block';
   }else{
     note.style.display = 'none';
@@ -3582,14 +3777,14 @@ async function saveAnchor(){
   if(!date){ toast('Please pick the anchor Chandraat date.', 'err'); return; }
   if(!confirm(`Set the cycle anchor?\n\nThe cycle containing Chandraat ${date} will belong to Team ${team}; all other cycles alternate from it.`)) return;
   if(!sb){ toast('No database connection — cannot save.', 'err'); return; }
-  try{
-    const {error} = await sb.from('iv_settings').upsert({ key:'anchor', value:{ date, team } });
-    if(error) throw error;
-    auditLog('Updated cycle anchor', 'admin', `${date} → Team ${team}`);
-    toast('Cycle anchor saved.');
-  }catch(e){
-    toast(isMissingTable(e) ? 'iv_settings table is missing — run SETUP.sql first.' : 'Save failed: ' + (e.message || e), 'err');
-  }
+  /* The anchor decides which team owns which cycle, for every page. A
+     save that only happened in this browser would have one Owner
+     rostering a cycle the other team believes is theirs. */
+  if(!await dbWrite('Saving the cycle anchor',
+      ()=>sb.from('iv_settings').upsert({ key:'anchor', value:{ date, team } }),
+      {hint: e=>isMissingTable(e) ? 'iv_settings table is missing — run SETUP.sql first.' : null})) return;
+  auditLog('Updated cycle anchor', 'admin', `${date} → Team ${team}`);
+  toast('Cycle anchor saved.');
 }
 async function saveOverrides(){
   if(!hasPerm('owner','developer')) return;
@@ -3606,16 +3801,17 @@ async function saveOverrides(){
   const n = Object.keys(map).length;
   if(!confirm(`Save Chandraat overrides?\n\n${n} override${n === 1 ? '' : 's'} will be stored; blank rows use the computed date.`)) return;
   if(!sb){ toast('No database connection — cannot save.', 'err'); return; }
-  try{
-    const {error} = await sb.from('iv_settings').upsert({ key:'chandraat_overrides', value: map });
-    if(error) throw error;
-    apOverrides = map;
-    auditLog('Updated Chandraat overrides', 'admin', JSON.stringify(map));
-    toast('Chandraat overrides saved.');
-    renderOverrideRows();
-  }catch(e){
-    toast(isMissingTable(e) ? 'iv_settings table is missing — run SETUP.sql first.' : 'Save failed: ' + (e.message || e), 'err');
-  }
+  /* apOverrides moves only once the database has taken the new map.
+     These dates move where every cycle starts and ends; a local-only copy
+     would quietly disagree with every other browser about which nights
+     belong to which team. */
+  if(!await dbWrite('Saving the Chandraat overrides',
+      ()=>sb.from('iv_settings').upsert({ key:'chandraat_overrides', value: map }),
+      {hint: e=>isMissingTable(e) ? 'iv_settings table is missing — run SETUP.sql first.' : null})) return;
+  apOverrides = map;
+  auditLog('Updated Chandraat overrides', 'admin', JSON.stringify(map));
+  toast('Chandraat overrides saved.');
+  renderOverrideRows();
 }
 /* Removed. This wrote a password in plain text into app_users.pw for three
    shared accounts that can no longer sign in anywhere — the Hub's legacy
