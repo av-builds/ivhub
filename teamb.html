@@ -955,8 +955,8 @@ const TYPE_META={
   laylatalqadr:{label:'LAYLAT AL-QADR',name:'Laylat al-Qadr',color:'#B45309'},
   custom:{label:'CUSTOM',name:'',color:'#64748B'},
 };
-// The formal occasions. These carry a doubled Seating & Discipline —
-// one adult AND one youth per gender rather than one person.
+// The formal occasions — they default the uniform to Formal. They used to
+// carry a doubled Seating & Discipline too; that is now every event.
 const FORMAL_TYPES=['chandraat','navroz','imamat','salgirah','laylatalqadr'];
 const EID_NAMES=['Eid-al-Fitr','Eid-al-Adha','Eid-al-Ghadir','Yawm-i Ali'];
 
@@ -993,7 +993,7 @@ const DUTY_INFO={
   'Number 1':                         {key:'number_1',reqM:1,reqF:1},
   'Prayer Hall Entrance':             {key:'ph_entrance',reqM:2,reqF:2},
   'Shoe Entrance':                    {key:'shoe_entrance',reqM:1,reqF:1},
-  'Seating & Discipline':             {key:'seating',reqM:1,reqF:1},
+  'Seating & Discipline':             {key:'seating',reqM:2,reqF:2},
   'Sukreet':                          {key:'sukreet',reqM:2,reqF:2},
   'Ghatpaat Closing':                 {key:'ghatpaat_closing',reqM:1,reqF:1},
   'Safety Exit Door/Discipline':      {key:'safety_exit',reqF:1},
@@ -1017,18 +1017,16 @@ const KEY_TO_NAME={}; Object.keys(DUTY_INFO).forEach(n=>{ KEY_TO_NAME[DUTY_INFO[
 function dutyTypeFor(t){ return ({friday:'friday',chandraat:'chandraat',pbs:'paanch',baithulkhayal:'baithulkhayal',student:'student',navroz:'navroz',laylatalqadr:'eid',imamat:'eid',salgirah:'eid'})[t]||'eid'; }
 function dutiesForEvent(ev){
   const dt=dutyTypeFor(ev.type);
-  // Seating & Discipline is one person per gender ordinarily, and an adult
-  // plus a youth on the formal occasions — Chandraat, Navroz, Salgirah,
-  // Imamat Day and Laylat al-Qadr. The cap lives here rather than in
-  // DUTY_INFO because it is the only requirement that varies by event.
-  const formal=FORMAL_TYPES.indexOf(ev.type)>=0;
+  /* Seating & Discipline is one adult PLUS one youth per gender on every
+     event. It used to be doubled only on the formal occasions, which meant
+     an ordinary Friday quietly lost the youth: DUTY_ASSIGNMENT_CONFIG picked
+     both tiers and capLists() sliced the second one straight back off. The
+     published duty rules say 1 Adult + 1 Youth per gender with no exception,
+     so the requirement now lives in DUTY_INFO like every other duty, and
+     FORMAL_TYPES is left deciding nothing but the uniform. */
   const out=(DUTIES[dt]||DUTIES.eid)
     .filter(n=>!((n==='Chai Station'||n==='Chai Station Pack-up')&&!HAS_CHAI.has(dt)))
-    .map(n=>{
-      const d=Object.assign({name:n,section:'core'},DUTY_INFO[n]);
-      if(n==='Seating & Discipline'&&formal){ d.reqM=2; d.reqF=2; }
-      return d;
-    });
+    .map(n=>Object.assign({name:n,section:'core'},DUTY_INFO[n]));
   if(recApplies(ev)) YOUTH_DUTIES.forEach(n=>out.push(Object.assign({name:n,section:'mph'},DUTY_INFO[n])));
   return out;
 }
@@ -1057,17 +1055,22 @@ const DUTY_ASSIGNMENT_CONFIG={
   'Number 1':(type,g,pick)=>({
     male:pick([...g.mA,...g.mY],1,'Number 1'),
     female:pick([...g.fA,...g.fY],1,'Number 1')}),
-  'Prayer Hall Entrance':(type,g,pick)=>({ // 2 per gender: children, then youth, then adults
-    male:g.tier([g.mC,g.mY,g.mA],2,'Prayer Hall Entrance'),
-    female:g.tier([g.fC,g.fY,g.fA],2,'Prayer Hall Entrance')}),
+  'Prayer Hall Entrance':(type,g,pick)=>({
+    /* 2 per gender: children, then youth, and nothing after that. It used to
+       fall through to adults as a third tier, which the duty rules do not
+       allow — the entrance is a children's duty with a youth fallback. With
+       both pools dry the slot now stays empty, which shows as a gap and keeps
+       the roster off the calendar until a lead has looked at it. That is the
+       point: an adult on the entrance was a silent rule break. */
+    male:g.tier([g.mC,g.mY],2,'Prayer Hall Entrance'),
+    female:g.tier([g.fC,g.fY],2,'Prayer Hall Entrance')}),
   'Shoe Entrance':(type,g,pick)=>({ // 1 per gender: youth, then adults, then children
     male:g.tier([g.mY,g.mA,g.mC],1,'Shoe Entrance'),
     female:g.tier([g.fY,g.fA,g.fC],1,'Shoe Entrance')}),
   'Seating & Discipline':(type,g,pick)=>({
-    // Adult slot first, then a youth slot. Ordinary events cap this to one
-    // per gender so only the adult lands; the formal occasions raise the cap
-    // to two and both are kept. Each slot falls through to the other age
-    // group rather than going empty.
+    // Adult slot first, then a youth slot, on every event — DUTY_INFO now
+    // asks for two per gender, so capLists() keeps both. Each slot falls
+    // through to the other age group rather than going empty.
     male:[...g.tier([g.mA,g.mY],1,'Seating & Discipline'),
           ...g.tier([g.mY,g.mA],1,'Seating & Discipline')],
     female:[...g.tier([g.fA,g.fY],1,'Seating & Discipline'),
@@ -1721,8 +1724,13 @@ async function generateEvent(id,silent){
   const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
   if(evLocked(ev)) return toast('This event is locked','err');
   if(!MEMBERS.filter(m=>m.status==='active').length) return toast('No active members','err');
-  if(ev.type==='friday'&&ev.youth&&!MEMBERS.some(m=>m.status==='active'&&m.age_group==='youth')&&!silent)
-    toast('No Youth members tagged yet — MPH slots will be unfilled','err');
+  /* Held back rather than toasted here. It used to fire before the work
+     started, and toast() will not let a success message replace a failure
+     for a second and a half — so this warning ate the one line that says
+     whether the roster reached the calendar. It is folded into that line
+     instead, where it explains the gaps rather than hiding them. */
+  const youthGap = ev.type==='friday' && ev.youth &&
+    !MEMBERS.some(m=>m.status==='active' && m.age_group==='youth');
   // Compare against what was there, so the log says how much a regenerate
   // actually disturbed rather than merely that one happened. A regenerate
   // that changed nothing and one that reshuffled everybody are very
@@ -1741,14 +1749,18 @@ async function generateEvent(id,silent){
      whose roster never reached the database would put an empty night in
      front of three hundred people. */
   let live=!!ev.confirmed;
-  if(stored && !ev.confirmed) live=await setOnCalendar(ev, true);
+  if(stored) live=await publishIfComplete(ev, {quiet:true});
   if(!silent){
     auditLog('generate','roster',ev.name+' '+ev.date+' \u2014 '+rosterDelta(_before,ROSTERS[id]));
     renderRoster(); refreshBadges();
     // Only claim what actually happened. saveRoster and setOnCalendar have
     // each already said what went wrong when they did.
+    const gaps=slotCounts(ev).missing;
+    const why = youthGap ? ' No Youth members are tagged, so the MPH slots cannot fill.' : '';
     if(stored && live) toast('Generated, saved, and on the calendar');
-    else if(stored) toast('Generated and saved, but it is not on the calendar yet — use the “Put on the calendar” button','err');
+    else if(stored && gaps>0) toast('Generated and saved — ' + gaps + ' slot' + (gaps===1?'':'s') +
+      ' could not be filled, so it is not on the calendar yet.' + why, 'err');
+    else if(stored) toast('Generated and saved, but it is not on the calendar — see above','err');
   }
   return stored;
 }
@@ -1768,7 +1780,7 @@ async function generateCycle(){
     ROSTERS[e.id]=generateEventData(e);
     if(await saveRoster(e.id,{quiet:true})){
       stored++;
-      if(e.confirmed || await setOnCalendar(e, true)) live++;
+      if(await publishIfComplete(e, {quiet:true})) live++;
     }
   }
   auditLog('generate-all','roster',cycleLabel(k)+' — '+evs.length+' events, '+stored+' saved, '+live+' on the calendar');
@@ -1776,7 +1788,7 @@ async function generateCycle(){
   /* Counted rather than assumed. Reporting the number generated when only
      some of them stored is how this went unnoticed for so long. */
   if(live===evs.length) toast('Generated '+evs.length+' events — all saved and on the calendar');
-  else if(stored===evs.length) toast('Generated and saved '+evs.length+', but only '+live+' reached the calendar', 'err');
+  else if(stored===evs.length) toast('Generated and saved '+evs.length+' — '+live+' went on the calendar, the rest still have unfilled slots', 'err');
   else toast('Generated '+evs.length+', but only '+stored+' saved — see the warning above', 'err');
 }
 
@@ -2220,17 +2232,24 @@ function renderEventView(ev){
      means somebody took it off on purpose — or the publish half of a
      generate failed. Either way it is worth saying, because a hidden
      roster looks from here exactly like a visible one. */
-  else if(IS_EDIT && hasRoster) h+='<div class="ib ib-warn" style="display:flex;align-items:center;gap:10px;">'+
-    '<span>👁️</span><span><b>This roster is not on the calendar — nobody else can see it.</b> '+
-    'It will not appear in anyone\u2019s My Duties until you put it there.</span>'+
-    '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">Put on the calendar</button></div>';
+  else if(IS_EDIT && hasRoster){
+    const _gaps=slotCounts(ev).missing;
+    h+='<div class="ib ib-warn" style="display:flex;align-items:center;gap:10px;">'+
+      '<span>👁️</span><span><b>This roster is not on the calendar — nobody else can see it.</b> '+
+      (_gaps>0
+        ? _gaps+' slot'+(_gaps===1?'':'s')+' still unfilled. Fill '+(_gaps===1?'it':'them')+
+          ' and it goes on the calendar by itself.'
+        : 'Every slot is filled, so it is ready to go.')+'</span>'+
+      (_gaps>0 ? '' : '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">Put on the calendar</button>')+
+      '</div>';
+  }
   if(!IS_EDIT&&!ev.confirmed) return h+'<div class="empty-gen"><div class="zap">⏳</div><h3>Roster not published yet</h3><p>The '+esc(TEAM_NAME)+' leaders have not put this one on the calendar. It appears here as soon as they do.</p></div>';
   if(!hasRoster){
     if(!IS_EDIT||hist) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster</h3><p>No duty assignments were recorded.</p></div>';
     return h+'<div class="empty-gen"><div class="zap">⚡</div><h3>Ready to Generate</h3><p>Automatically assign all duties for this event.</p>'+
       '<div class="btns"><button class="btn btn-bl" onclick="generateEvent('+ev.id+')">⚡ Generate</button>'+
       '<button class="btn btn-ol" onclick="generateCycle()">Generate All (cycle)</button></div>'+
-      '<div class="rules-line">Rules: cycle fairness carried across three cycles · no duty repeats within a cycle · Nandi requires certification · children only at entrances &amp; Nandi Passing · away-dates skipped · age groups step up when a pool runs out · duty preferences honoured on ties · Seating &amp; Discipline doubles on formal occasions</div></div>';
+      '<div class="rules-line">Rules: cycle fairness carried across three cycles · no duty repeats within a cycle · Nandi requires certification · children only at entrances &amp; Nandi Passing · away-dates skipped · age groups step up when a pool runs out · duty preferences honoured on ties · Seating &amp; Discipline is 1 adult + 1 youth per gender · Prayer Hall Entrance takes children then youth, never adults</div></div>';
   }
   const duties=dutiesForEvent(ev);
   const core=duties.filter(d=>d.section!=='mph'),mph=duties.filter(d=>d.section==='mph');
@@ -2338,9 +2357,15 @@ async function applyPick(memberId){
   r.manual[PICKER_CTX.dutyKey]=true;
   cM(); PICKER_CTX=null;
   await saveRoster(ev.id);
+  /* Filling the last empty slot is what makes a roster ready, so that is
+     the moment it goes on the calendar — without anybody having to notice
+     that it just became complete and press something. */
+  const wasLive=!!ev.confirmed;
+  const nowLive=await publishIfComplete(ev, {quiet:true});
   auditLog('manual-assign','roster',ev.name+' '+ev.date+' \u2014 '+_duty+': '+
     (_replaced ? _replaced+' \u2192 '+m.name : 'added '+m.name));
-  renderRoster(); refreshBadges(); toast(m.name+' assigned');
+  renderRoster(); refreshBadges();
+  toast(m.name+' assigned'+(!wasLive && nowLive ? ' — the roster is complete and now on the calendar' : ''));
 }
 async function removeSlot(dutyKey,arrName,idx){
   const ev=selEvent(); if(!ev||evLocked(ev)) return;
@@ -2349,7 +2374,16 @@ async function removeSlot(dutyKey,arrName,idx){
   await saveRoster(ev.id);
   auditLog('manual-remove','roster',ev.name+' '+ev.date+' \u2014 '+legacyLabel(dutyKey)+
     ': removed '+(rm&&rm.name||'?'));
-  renderRoster(); refreshBadges(); toast((rm&&rm.name||'Member')+' removed');
+  renderRoster(); refreshBadges();
+  /* A live roster stays live even when a gap opens in it. Pulling it back
+     off the calendar would take the duty off three hundred phones because
+     one person was moved, which is worse than the gap — so the lead is
+     told about it instead. */
+  const gaps=slotCounts(ev).missing;
+  const loud=!!ev.confirmed && gaps>0;
+  toast((rm&&rm.name||'Member')+' removed'+
+    (loud ? ' — '+gaps+' slot'+(gaps===1?'':'s')+' now unfilled, and this roster is on the calendar' : ''),
+    loud ? 'err' : 'ok');
 }
 async function toggleYouth(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
@@ -2384,13 +2418,44 @@ async function setOnCalendar(ev, want){
   auditLog(want?'confirm':'unconfirm','events',ev.name+' '+ev.date);
   return true;
 }
+/* Publishing is gated on the roster being complete.
+
+   A roster with holes in it is not something anybody can turn up to, so
+   it does not go in front of three hundred people. The moment the last
+   hole is filled it goes out on its own — nobody has to remember a
+   button, which is the whole point of the change.
+
+   The gate is one way. A roster that is already live and then develops a
+   gap — somebody pulled off on the Thursday — stays on the calendar,
+   because taking a published roster back out from under everybody is
+   worse than the gap itself. The lead is told instead. */
+async function publishIfComplete(ev, opts){
+  const o = opts || {};
+  if(ev.confirmed) return true;                       // already there
+  /* Unsaved beats unfilled. If the roster never reached the database there
+     is nothing to publish at all, and reporting "38 slots unfilled" would
+     send a lead off filling slots that are not being stored either.
+     setOnCalendar refuses in that case and says so. */
+  if(unsavedCount()) return await setOnCalendar(ev, true);
+  const gaps = slotCounts(ev).missing;
+  if(gaps > 0){
+    if(!o.quiet) toast(gaps + ' slot' + (gaps===1?'':'s') + ' still unfilled — fill ' +
+      (gaps===1?'it':'them') + ' and it goes on the calendar', 'err');
+    return false;
+  }
+  return await setOnCalendar(ev, true);
+}
 async function toggleConfirm(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
-  const want=!ev.confirmed;
-  const ok=await setOnCalendar(ev, want);
+  if(!ev.confirmed){
+    const ok=await publishIfComplete(ev);
+    renderRoster();
+    if(ok) toast('On the calendar — everyone can see it now');
+    return;
+  }
+  const ok=await setOnCalendar(ev, false);
   renderRoster();
-  if(ok) toast(want?'On the calendar — everyone can see it now'
-                   :'Taken off the calendar — only the leads can see it now');
+  if(ok) toast('Taken off the calendar — only the leads can see it now');
 }
 
 /* ── ADD / DELETE / RESET EVENTS ── */

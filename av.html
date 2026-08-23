@@ -1887,6 +1887,42 @@ function setSyncStatus(state){
   el.style.background = s.bg;
   el.title = s.title;
 }
+/* Awaits a write and throws unless the database says it stored something.
+
+   Checking `error` is not enough, and every write on this page used to do
+   only that. Row Level Security does not reject an UPDATE or a DELETE
+   whose rows it has filtered out: it runs the statement against no rows
+   and reports UPDATE 0, which is success. PostgREST answers 200 with an
+   empty body and supabase-js hands back {data:[], error:null} — exactly
+   what a write that worked looks like. So the dot went green, the screen
+   kept the change, and the database kept the old one. Verified against a
+   real Postgres, not assumed.
+
+   .select() is what makes PostgREST say which rows it touched. Throwing
+   rather than returning false is deliberate: this page already wraps its
+   writes in try/catch and reports through setSyncStatus, so a throw lands
+   in handling that exists.
+
+   Pass allowNone for a write where nothing coming back is a legitimate
+   answer — deleting a day that was already empty. It still throws on a
+   real error.
+
+   Do not use this for an INSERT into a table the writer may not read.
+   Verified against a real Postgres: for UPDATE and DELETE the SELECT
+   policy already gates which rows the statement can touch, so asking for
+   them back is free. For INSERT it is not — RETURNING a row the SELECT
+   policy hides raises "new row violates row-level security policy" and
+   rolls the insert back. audit_logs is exactly that shape: anyone signed
+   in may write, only a manager may read. Its insert stays plain, and it
+   loses nothing by it, because an INSERT that RLS refuses raises anyway.
+   Silence is only possible for UPDATE and DELETE. */
+async function dbStored(q, allowNone){
+  const {data, error} = await q.select();
+  if(error) throw error;
+  if(!allowNone && (!data || !data.length))
+    throw new Error('the database refused it — you may not have permission to change this');
+  return data || [];
+}
 /* ═══════════════════════════════════
    HUB AV MEMBERSHIP
    The AV roster contains EXACTLY the
@@ -1935,7 +1971,13 @@ async function syncHubMembership(){
       if(dirty) updates.push({id: v.id, data: normalizeVol({...v})});
     }
     if(updates.length){
-      try{ await sb.from('volunteers').upsert(updates); console.log('Hub sync: updated', updates.length, 'volunteer(s) from hub'); }catch(e){}
+      /* Names, genders and inactive flags coming down from the Hub. A
+         refusal here is not fatal — the sync runs again on every load —
+         but it was completely silent, so a page could spend weeks showing
+         names the Hub had already corrected. */
+      try{ await dbStored(sb.from('volunteers').upsert(updates));
+        console.log('Hub sync: updated', updates.length, 'volunteer(s) from hub');
+      }catch(e){ console.error('Hub sync: could not update volunteers from hub:', e.message||e); }
     }
     // Create AV records for hub AV members that have none yet
     const missing = avOnly.filter(m=>!claimed.has(m.id));
@@ -1947,13 +1989,16 @@ async function syncHubMembership(){
       const rows = missing.map((m,i)=>{ const vid = base + i;
         return { id: vid, data: normalizeVol({id: vid, name:m.name, gender:m.gender,
           status: m.status==='inactive'?'inactive':'active', days:[], roles:[], bds:'', hub_id:m.id}) }; });
-      const ins = await sb.from('volunteers').upsert(rows).select();
-      if(!ins.error){
-        (ins.data && ins.data.length ? ins.data : rows).forEach(r=>{
+      try{
+        /* Falling back to `rows` when nothing came back used to hide a
+           refusal completely: the page carried on with volunteers it had
+           invented, which then vanished on the next load. */
+        const made = await dbStored(sb.from('volunteers').upsert(rows));
+        made.forEach(r=>{
           const nv = normalizeVol({...(r.data||{}), id:r.id}); vols.push(nv); linked.add(r.id); });
-        console.log('Hub sync: created', rows.length, 'AV volunteer(s) from hub');
-      } else {
-        createErr = ins.error.message || String(ins.error);
+        console.log('Hub sync: created', made.length, 'AV volunteer(s) from hub');
+      }catch(e){
+        createErr = e.message || String(e);
         console.error('Hub sync: could not create AV volunteer records:', createErr);
       }
     }
@@ -1987,8 +2032,7 @@ async function cleanupUnlisted(){
     });
     if(!doomed.length){ toast('Nothing to remove — all volunteers are hub-listed ✓'); return; }
     if(!confirm(`Delete ${doomed.length} volunteer record(s) not ticked as AV Team in the hub?\nTheir availability/busy-date data will be permanently removed.\n(${keep.size} hub-listed AV member(s) will be kept.)`)) return;
-    const { error } = await sb.from('volunteers').delete().in('id', doomed.map(r=>r.id));
-    if(error) throw error;
+    await dbStored(sb.from('volunteers').delete().in('id', doomed.map(r=>r.id)));
     auditLog('Removed unlisted volunteers','volunteer',`Deleted ${doomed.length} records not in hub AV membership`);
     toast(`Removed ${doomed.length} volunteer(s) ✓`);
     await loadFromDB(); autoRoster(); renderAll();
@@ -2055,23 +2099,27 @@ async function loadFromDB(){
   }
 }
 /* ── SAVE helpers ── */
+/* Each of these reports whether the change was actually stored. They used
+   to swallow the answer and only redden the sync dot, which nobody watches
+   — so a refused save left the volunteer edited on screen and unchanged in
+   the database until the next reload put it back. */
 async function dbSaveVol(vol){
-  if(!sb) return;
+  if(!sb) return false;
   setSyncStatus('saving');
   try{
-    const {error} = await sb.from('volunteers').upsert({id:vol.id, data:vol});
-    if(error) throw error;
-    setSyncStatus('ok');
-  }catch(e){ console.error(e); setSyncStatus('error'); }
+    await dbStored(sb.from('volunteers').upsert({id:vol.id, data:vol}));
+    setSyncStatus('ok'); return true;
+  }catch(e){ console.error(e); setSyncStatus('error');
+    toast('Could not save '+(vol&&vol.name||'volunteer')+': '+(e.message||e),'err'); return false; }
 }
 async function dbDeleteVol(id){
-  if(!sb) return;
+  if(!sb) return false;
   setSyncStatus('saving');
   try{
-    const {error} = await sb.from('volunteers').delete().eq('id', id);
-    if(error) throw error;
-    setSyncStatus('ok');
-  }catch(e){ console.error(e); setSyncStatus('error'); }
+    await dbStored(sb.from('volunteers').delete().eq('id', id));
+    setSyncStatus('ok'); return true;
+  }catch(e){ console.error(e); setSyncStatus('error');
+    toast('Could not delete volunteer: '+(e.message||e),'err'); return false; }
 }
 async function dbSaveMajalis(mj){
   if(!sb) return;
@@ -2095,8 +2143,7 @@ async function dbSaveMajalis(mj){
         uniform:  mj.uniform || '',
       }
     };
-    const {error} = await sb.from('majalis').upsert(payload, {onConflict:'id'});
-    if(error) throw error;
+    await dbStored(sb.from('majalis').upsert(payload, {onConflict:'id'}));
     console.log('Majalis saved OK:', mj.name, mj.date);
     setSyncStatus('ok');
   }catch(e){
@@ -2106,13 +2153,13 @@ async function dbSaveMajalis(mj){
   }
 }
 async function dbDeleteMajalis(id){
-  if(!sb) return;
+  if(!sb) return false;
   setSyncStatus('saving');
   try{
-    const {error} = await sb.from('majalis').delete().eq('id', id);
-    if(error) throw error;
-    setSyncStatus('ok');
-  }catch(e){ console.error(e); setSyncStatus('error'); }
+    await dbStored(sb.from('majalis').delete().eq('id', id));
+    setSyncStatus('ok'); return true;
+  }catch(e){ console.error(e); setSyncStatus('error');
+    toast('Could not delete: '+(e.message||e),'err'); return false; }
 }
 async function dbSaveTraining(tr){
   if(!sb) return;
@@ -2127,34 +2174,35 @@ async function dbSaveTraining(tr){
       data: {...tr, category:'training'}
     };
     console.log('Saving training:', payload);
-    const {error} = await sb.from('majalis').upsert(payload);
-    if(error) throw error;
-    setSyncStatus('ok');
-  }catch(e){ console.error('dbSaveTraining error:', e); setSyncStatus('error'); }
+    await dbStored(sb.from('majalis').upsert(payload));
+    setSyncStatus('ok'); return true;
+  }catch(e){ console.error('dbSaveTraining error:', e); setSyncStatus('error');
+    toast('Could not save training: '+(e.message||e),'err'); return false; }
 }
 async function dbDeleteTraining(id){
-  if(!sb) return;
+  if(!sb) return false;
   setSyncStatus('saving');
   try{
-    const {error} = await sb.from('majalis').delete().eq('id', id);
-    if(error) throw error;
-    setSyncStatus('ok');
-  }catch(e){ console.error(e); setSyncStatus('error'); }
+    await dbStored(sb.from('majalis').delete().eq('id', id));
+    setSyncStatus('ok'); return true;
+  }catch(e){ console.error(e); setSyncStatus('error');
+    toast('Could not delete training: '+(e.message||e),'err'); return false; }
 }
 async function dbSaveRosterDay(date, data){
-  if(!sb) return;
+  if(!sb) return false;
   pauseRealtime(2000); // prevent echo from overwriting local state
   setSyncStatus('saving');
   try{
     if(data === null){
-      const {error} = await sb.from('roster').delete().eq('date', date);
-      if(error) throw error;
+      /* Clearing a day that was already clear is a legitimate no-op, so
+         nothing coming back is not a refusal here. */
+      await dbStored(sb.from('roster').delete().eq('date', date), true);
     } else {
-      const {error} = await sb.from('roster').upsert({date, data});
-      if(error) throw error;
+      await dbStored(sb.from('roster').upsert({date, data}));
     }
-    setSyncStatus('ok');
-  }catch(e){ console.error('dbSaveRosterDay error:',e); setSyncStatus('error'); }
+    setSyncStatus('ok'); return true;
+  }catch(e){ console.error('dbSaveRosterDay error:',e); setSyncStatus('error');
+    toast('Could not save '+fd(date)+': '+(e.message||e),'err'); return false; }
 }
 /* The dates the calendar is showing, padding days from the neighbouring
    months included — the same range autoRoster fills, and the only range
@@ -2190,11 +2238,11 @@ async function dbSaveRoster(){
     // Upsert in small batches to avoid payload limits
     for(let i=0;i<rows.length;i+=50){
       const batch=rows.slice(i,i+50);
-      const {error} = await sb.from('roster').upsert(batch);
-      if(error) throw error;
+      await dbStored(sb.from('roster').upsert(batch));
     }
-    setSyncStatus('ok');
-  }catch(e){ console.error('Roster save error:',e); setSyncStatus('error'); }
+    setSyncStatus('ok'); return true;
+  }catch(e){ console.error('Roster save error:',e); setSyncStatus('error');
+    toast('The roster did not save: '+(e.message||e),'err'); return false; }
 }
 /* ═══════════════════════════════════
    GLOBAL MONTH SETTING
@@ -2220,11 +2268,10 @@ async function loadMonthSetting(){
 async function saveMonthSetting(mo, yr){
   if(!sb) return;
   try{
-    const {error} = await sb.from('app_settings').upsert(
+    await dbStored(sb.from('app_settings').upsert(
       {key:'active_month', value: JSON.stringify({mo, yr})},
       {onConflict:'key'}
-    );
-    if(error) throw error;
+    ));
     console.log('Month saved to DB:', mo, yr);
   } catch(e){
     console.error('saveMonthSetting error:', e.message);
@@ -2259,11 +2306,10 @@ async function loadDayCaps(){
 }
 async function saveDayCaps(){
   if(!sb) return;
-  const {error} = await sb.from('app_settings').upsert(
+  await dbStored(sb.from('app_settings').upsert(
     {key:'day_capacity', value: JSON.stringify(dayCaps)},
     {onConflict:'key'}
-  );
-  if(error) throw error;
+  ));
 }
 /* ═══════════════════════════════════
    REC (MPH) CONGREGATION DATES
@@ -2297,11 +2343,10 @@ async function loadRecDates(){
 }
 async function saveRecDates(){
   if(!sb) throw new Error('No database connection');
-  const {error} = await sb.from('app_settings').upsert(
+  await dbStored(sb.from('app_settings').upsert(
     {key:'rec_dates', value: JSON.stringify(recDates)},
     {onConflict:'key'}
-  );
-  if(error) throw error;
+  ));
 }
 function addRecDate(){
   if(!isAvAdminUser()){ toast('Access denied','err'); return; }
@@ -2440,11 +2485,11 @@ async function loadUsersFromDB(){
   }
 }
 async function dbSaveUser(username, data){
-  if(!sb) return;
+  if(!sb) return false;
   const row = {username, pw:data.pw, role:data.role, perms:data.perms||[data.role], display:data.display};
   try{
-    const {error} = await sb.from('app_users').upsert(row, {onConflict:'username'});
-    if(error) throw error;
+    await dbStored(sb.from('app_users').upsert(row, {onConflict:'username'}));
+    return true;
   } catch(e){
     // 42703 = column does not exist (usually 'perms'). Retry without it so
     // the account still saves — role carries the highest privilege — and
@@ -2453,31 +2498,35 @@ async function dbSaveUser(username, data){
       _permsColMissing = true;
       try{
         const rowNoPerms = {username:row.username, pw:row.pw, role:row.role, display:row.display};
-        const r2 = await sb.from('app_users').upsert(rowNoPerms, {onConflict:'username'});
-        if(r2.error) throw r2.error;
+        await dbStored(sb.from('app_users').upsert(rowNoPerms, {onConflict:'username'}));
         toast('Saved, but app_users has no "perms" column — only the primary role was stored. Open Dashboard → DB Status for the one-line fix.','err');
-        return;
+        return true;
       }catch(e2){ console.error('dbSaveUser retry error:', e2.message); }
     }
     console.error('dbSaveUser error:', e.message);
     toast('User save failed: '+(e.message||'check connection'),'err');
+    return false;
   }
 }
 async function dbDeleteUserFromDB(username){
-  if(!sb) return;
+  if(!sb) return false;
   try{
-    const {error} = await sb.from('app_users').delete().eq('username', username);
-    if(error) throw error;
-  } catch(e){ console.error('dbDeleteUser error:', e.message); }
+    await dbStored(sb.from('app_users').delete().eq('username', username));
+    return true;
+  } catch(e){ console.error('dbDeleteUser error:', e.message);
+    toast('Could not remove '+username+': '+(e.message||e),'err'); return false; }
 }
 async function dbRenameUser(oldUsername, newUsername, data){
-  if(!sb) return;
+  if(!sb) return false;
   try{
     // Delete old, then save new via the resilient saver (handles a missing
-    // perms column the same way as any other save)
-    await sb.from('app_users').delete().eq('username', oldUsername);
-    await dbSaveUser(newUsername, data);
-  } catch(e){ console.error('dbRenameUser error:', e.message); }
+    // perms column the same way as any other save). The delete is checked
+    // too: leaving the old row behind would give one person two accounts,
+    // the older of which still has the old password.
+    await dbStored(sb.from('app_users').delete().eq('username', oldUsername));
+  } catch(e){ console.error('dbRenameUser error:', e.message);
+    toast('Could not rename '+oldUsername+': '+(e.message||e),'err'); return false; }
+  return await dbSaveUser(newUsername, data);
 }
 /* ═══════════════════════════════════
    AUTH
@@ -4005,8 +4054,7 @@ function persistAutoRoster(dateKeys){
       if(!rows.length) return;
       pauseRealtime(4000);
       for(let i=0;i<rows.length;i+=50){
-        const {error} = await sb.from('roster').upsert(rows.slice(i,i+50));
-        if(error) throw error;
+        await dbStored(sb.from('roster').upsert(rows.slice(i,i+50)));
       }
       console.log(`Auto-roster persisted: ${rows.length} day(s)`);
     }catch(e){ console.warn('Auto-roster persist failed:', e.message||e); }
@@ -4571,16 +4619,26 @@ async function dbSaveAuditLog(entry){
       detail:       entry.detail       || '',
       data:         entry
     };
+    /* No .select() here, and that is deliberate — see dbStored. Anyone
+       signed in may write to audit_logs; reading it is scoped by
+       my_log_teams(). An INSERT ... RETURNING against a row the SELECT
+       policy hides does not return nothing, it raises and rolls the insert
+       back — so asking for the row would have stopped an AV Co-ordinator's
+       actions being logged at all. Checking `error` is enough for an
+       insert: a refused one raises.
+
+       Reported once per session, and late, so it never lands on top of the
+       message about whatever action was being recorded. */
     const {error} = await sb.from('audit_logs').insert(row);
-    if(error){
-      console.error('Audit DB save failed:', error.message, error.details, row);
-    } else {
-      console.log('Audit saved to DB:', entry.action);
-    }
+    if(error) throw error;
+    console.log('Audit saved to DB:', entry.action);
   } catch(e){
-    console.error('Audit DB exception:', e.message);
+    console.error('Audit DB save failed:', e.message, row);
+    if(!_auditBroken){ _auditBroken = true; setTimeout(()=>
+      toast('Your changes are being saved, but they are not being recorded in the audit log.','err'), 2500); }
   }
 }
+let _auditBroken = false;
 /* ── WHAT PEOPLE OPEN ──────────────────────────────────────────────
    One entry per section that holds other people's information, so the
    AV Leads can see who looked as well as who changed. Not the calendar
@@ -4596,12 +4654,14 @@ async function logView(section){
   if(!sb || !section || !window.CU) return;
   if(_lastView === section) return;         // re-renders are not new visits
   _lastView = section;
-  try{
-    await sb.from('view_logs').insert({
-      username: CU.user || '', user_display: CU.display || CU.user || '',
-      user_email: CU.email || '', team: 'AV', section: section
-    });
-  }catch(e){ /* best-effort: never let recording a visit break the visit */ }
+  /* Recording a visit must never break the visit, so this one really is
+     best-effort — but best-effort means the console hears about it, not
+     that nothing does. */
+  const {error} = await sb.from('view_logs').insert({
+    username: CU.user || '', user_display: CU.display || CU.user || '',
+    user_email: CU.email || '', team: 'AV', section: section
+  });
+  if(error) console.warn('view log not written:', section, error.message || error);
 }
 async function loadAuditLogs(){
   if(!sb){ renderAuditLogs(); return; }
@@ -4749,22 +4809,46 @@ function clearAuditDisplay(){
   document.getElementById('auditFilter').value='';
   renderAuditLogs();
 }
-function confirmClearAllLogs(){
+async function confirmClearAllLogs(){
   if(!isOwnerUser()){
     toast('Only the Owner can clear audit logs.','err');
     return;
   }
   if(!confirm('Clear ALL audit logs permanently — changes and page visits, every team? This cannot be undone.')) return;
+  /* The old shape was .then(done, done) — the same "cleared" path whether
+     the delete worked or was refused, which is the worst lie an audit
+     trail can be made to tell. Only the Owner may clear this and the rule
+     lives in the database, so a refusal is a real possibility here.
+
+     An already-empty log deletes nothing and is a genuine success, so the
+     answer is read back rather than counted: anything still there means it
+     was refused. */
+  if(sb){
+    setSyncStatus('saving');
+    try{
+      // Page visits live in their own table; leaving them behind would make
+      // "clear all" a half-truth on a page that now shows both.
+      for(const t of ['audit_logs','view_logs']){
+        await dbStored(sb.from(t).delete().gte('ts','1970-01-01T00:00:00Z'), true);
+        const {data:left, error:re} = await sb.from(t).select('id').limit(1);
+        if(re) throw re;
+        if(left && left.length) throw new Error('the database refused it — only the Owner may clear the logs');
+      }
+      setSyncStatus('ok');
+    }catch(e){
+      console.error('clear logs failed:', e);
+      setSyncStatus('error');
+      toast('Could not clear the logs: '+(e.message||e),'err');
+      return;
+    }
+  }
   auditLogs = [];
   // Record the purge AFTER it happens. Logging first meant the entry saying
   // the log had been cleared was itself inside the range being deleted, so
   // the one line that mattered was the one guaranteed to disappear.
-  const done = ()=>{ auditLog('Cleared all audit logs','audit','All logs purged'); renderAuditLogs(); toast('Audit logs cleared.'); };
-  // Page visits live in their own table; leaving them behind would make
-  // "clear all" a half-truth on a page that now shows both.
-  const clearViews = ()=> sb ? sb.from('view_logs').delete().gte('ts','1970-01-01T00:00:00Z').then(done, done) : done();
-  if(sb) sb.from('audit_logs').delete().gte('ts','1970-01-01T00:00:00Z').then(clearViews, clearViews);
-  else done();
+  auditLog('Cleared all audit logs','audit','All logs purged');
+  renderAuditLogs();
+  toast('Audit logs cleared.');
 }
 /* ═══════════════════════════════════
    UTILITY FUNCTIONS
@@ -4772,8 +4856,20 @@ function confirmClearAllLogs(){
 function oM(h){ document.getElementById('mbox').innerHTML=h; document.getElementById('mo').classList.add('show'); }
 function cM(){ document.getElementById('mo').classList.remove('show'); }
 document.getElementById('mo').addEventListener('click', function(e){ if(e.target===this) cM(); });
-let _toastTimer=null;
+let _toastTimer=null, _toastErrAt=0;
+/* A success message that lands on top of a failure is worse than no
+   message at all: the screen ends up asserting the opposite of what
+   happened. For a second and a half after a failure, a cheerful message
+   does not get to take the toast away from it. The held-back message
+   still goes to the console, and nobody completes a second action inside
+   that window. */
+const TOAST_ERR_HOLD=1500;
 function toast(msg, type='ok'){
+  const now=Date.now();
+  if(type!=='err' && _toastErrAt && now-_toastErrAt<TOAST_ERR_HOLD){
+    console.warn('toast held back behind an error:', msg); return;
+  }
+  _toastErrAt = type==='err' ? now : 0;
   const t=document.getElementById('toast');
   t.textContent=msg||''; t.className='toast '+(type==='err'?'err':'ok');
   void t.offsetWidth;
@@ -5742,8 +5838,9 @@ async function orResetMonth(){
   if(sb){
     setSyncStatus('saving');
     try{
-      const {error} = await sb.from('roster').delete().gte('date', start).lte('date', end);
-      if(error) throw error;
+      /* A month with nothing saved in it is a legitimate reset, so an
+         empty answer here is not a refusal. */
+      await dbStored(sb.from('roster').delete().gte('date', start).lte('date', end), true);
       setSyncStatus('ok');
     }catch(e){
       console.error('orResetMonth DB error:', e);
