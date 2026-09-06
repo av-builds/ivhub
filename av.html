@@ -3211,7 +3211,7 @@ const AV_SKINS={
      the way to the bottom. */
   export:{
     pad:'11px 13px', padTop:9, ramp:175, badge:36, bpill:12, ruleH:3,
-    dn:31, lbl:12, nm:21, tnm:17, evSize:13, mphA:17, mphB:15,
+    dn:31, lbl:12, nm:23, tnm:18, evSize:14, mphA:18, mphB:16,
     bgPlain:'#FFFFFF',
     tint:   {mj:'#8FD9B2', tr:'#FFD76B', both:'#FFAEB6'},
     tintEnd:{mj:'#F2FBF6', tr:'#FFFCF2', both:'#FFF6F7'},
@@ -4470,6 +4470,38 @@ function renderUpcoming(){
 /* ═══════════════════════════════════
    SCREENSHOT — hi-res JPG export
 ═══════════════════════════════════ */
+/* WhatsApp re-encodes anything sent as a photo and downscales it to roughly
+   1600px on its long edge. This sheet used to leave at 4550px wide, so
+   WhatsApp discarded about two thirds of it and then JPEG-compressed what was
+   left — which is exactly why the names arrived smeared. Handing it an image
+   it does not need to resize means the only damage is one compression pass.
+
+   So the export deliberately got SMALLER. Do not "improve" it by raising the
+   number: more pixels means more thrown away per surviving pixel, and fine
+   text is the first thing to go.
+
+   Rendering straight at 1600 would be worse again, because html2canvas lays
+   text out poorly at fractional scales. Render at 2x and step the canvas down
+   by halves instead — that supersamples the glyphs rather than point-sampling
+   them, and comes out sharper than either extreme. */
+const WA_TARGET_W = 1600;
+function avDownscale(src, targetW){
+  if(src.width <= targetW) return src;
+  let cur = src;
+  const step = (from, w) => {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = Math.max(1, Math.round(from.height * (w / from.width)));
+    const g = c.getContext('2d');
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(from, 0, 0, c.width, c.height);
+    return c;
+  };
+  // Halve until one more halving would undershoot, then land exactly.
+  while(cur.width > targetW * 2) cur = step(cur, Math.round(cur.width / 2));
+  return cur.width === targetW ? cur : step(cur, targetW);
+}
 async function downloadRosterPNG(){
   const btn = document.getElementById('screenshotBtn');
   const orig = btn.innerHTML;
@@ -4577,7 +4609,7 @@ async function downloadRosterPNG(){
     document.body.appendChild(container);
     await fontsSettled();
     const canvas = await html2canvas(container,{
-      scale:2.5,
+      scale:2,
       useCORS:true,
       allowTaint:true,
       backgroundColor:'#eaf3ff',
@@ -4598,11 +4630,17 @@ async function downloadRosterPNG(){
     const out=document.createElement('canvas');
     out.width=canvas.width;out.height=cropH;
     out.getContext('2d').drawImage(canvas,0,0);
+    /* Crop first, then resize — trimming afterwards would leave the blank
+       rows in the pixels the downscaler averaged over. */
+    const shot = avDownscale(out, WA_TARGET_W);
     const link=document.createElement('a');
     link.download=`AV-Roster-${monthTitle.replace(' ','-')}.jpeg`;
-    link.href=out.toDataURL('image/jpeg',0.93);
+    /* Higher quality than before: the image is a quarter of the pixels now, so
+       the bits are affordable, and giving WhatsApp a clean source is the whole
+       point of the exercise. */
+    link.href=shot.toDataURL('image/jpeg',0.95);
     link.click();
-    toast('JPG saved!');
+    toast(`Saved — ${shot.width}\u00d7${shot.height}, sized for WhatsApp`);
   } catch(e){
     console.error(e);
     toast('Screenshot failed: '+e.message,'err');
