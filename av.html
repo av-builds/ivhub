@@ -4252,8 +4252,20 @@ async function downloadRosterPNG(){
     const monthTitle = document.getElementById('calTitle').textContent;
     const [monthPart, yearPart] = monthTitle.split(' ');
     // ── Container ──
+    /* font-stretch:normal is load-bearing, not cosmetic. The page sets
+       font-stretch:85% on body and this container inherits it, but
+       html2canvas builds its canvas font from style/variant/weight/size/family
+       only — font-stretch never reaches the canvas. So the browser laid every
+       name out at 85% width while the canvas drew it at 100%, and each word
+       was painted starting where the condensed layout said the next one began.
+       Words overran their neighbours and the spaces vanished: "Noora Sayani"
+       came out as "NooraSayani". Only elements with a non-zero letter-spacing
+       escaped it, because html2canvas positions those glyph-by-glyph from its
+       own measurements instead of from the DOM's. Laying out at normal width
+       changes nothing about the glyphs — they were always drawn that way — it
+       just makes the positions true. */
     const container = document.createElement('div');
-    container.style.cssText = `position:fixed;left:-9999px;top:0;width:1820px;background:linear-gradient(160deg,#f8fbff 0%,#eaf3ff 50%,#dceeff 100%);font-family:'Archivo',sans-serif;padding:0;margin:0;`;
+    container.style.cssText = `position:fixed;left:-9999px;top:0;width:1820px;background:linear-gradient(160deg,#f8fbff 0%,#eaf3ff 50%,#dceeff 100%);font-family:'Archivo',sans-serif;font-stretch:normal;padding:0;margin:0;`;
     // ── Title bar ──
     const titleEl = document.createElement('div');
     titleEl.style.cssText = `position:relative;background:linear-gradient(135deg,#071E5A 0%,#0D3A9E 40%,#1565C0 70%,#1E88E5 100%);text-align:center;padding:32px 40px 28px;overflow:hidden;`;
@@ -5361,7 +5373,14 @@ async function mdScreenshot(){
   capSub.textContent   = `${MO[calMo]} ${calYr}  ·  Auckland Jamatkhana · AV Roster`;
   capHdr.style.display='block';
   const el = document.getElementById('mdCapture');
+  /* Same html2canvas trap as the calendar export above: font-stretch never
+     reaches the canvas, so a page laid out at 85% is painted at 100% and
+     every name comes out with its words run together. This element is on
+     screen, so the stretch is normalised only for the length of the capture
+     and put back in the finally — the same shape as the capture header. */
+  const prevStretch = el.style.fontStretch;
   try{
+    el.style.fontStretch = 'normal';
     await fontsSettled();
     const canvas = await html2canvas(el, {
       backgroundColor: '#020B18',
@@ -5378,6 +5397,7 @@ async function mdScreenshot(){
     console.error(e);
     toast('Screenshot failed — try again','err');
   } finally {
+    el.style.fontStretch = prevStretch;
     capHdr.style.display='none';
   }
 }
