@@ -207,8 +207,11 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
   background:#060F1E;
   border-right:1px solid rgba(79,195,247,0.08);
   border-bottom:1px solid rgba(79,195,247,0.08);
-  padding:7px 9px 9px;
-  min-height:115px;
+  /* No padding here any more — the band and the body inside the cell supply
+     their own, because the exported cell needs the same structure at a
+     different scale and a single outer padding could not serve both. */
+  padding:0;
+  min-height:150px;
   position:relative;
   cursor:pointer;
   transition:background .15s ease;
@@ -222,23 +225,34 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
 .cell.other .cell-inner{opacity:1;}
 .cell.other .dn{color:#3E6A88;}
 .cell.other:hover{background:#091828;}
-/* Majalis — subtle ruby tint */
+/* ── DAY-TYPE TINT ───────────────────────────────────────────────────
+   These were 160deg gradients with percentage stops, and three things
+   went wrong at once. Percentage stops stretch to the cell's height, and
+   calendar rows stretch to their tallest cell, so the same tint landed at
+   a different lightness in a short row than in a tall one. 160deg is
+   diagonal, so the ramp also ran sideways and two tinted days side by side
+   met dark-end against light-start. And it was bottom-weighted, putting
+   the strongest colour where cells are usually empty while the date and
+   the band sat on the washed-out end.
+
+   Straight down, stops in PIXELS, tint at the top fixes all three: every
+   cell gets an identical ramp whatever its height, neighbours meet at the
+   same value, and the colour sits behind the content rather than under it.
+   The exported sheet uses the same shape with heavier stops — see
+   AV_SKINS.export, which is where the printed weights live. */
 .cell.ev-jk{
-  background:linear-gradient(160deg,#031208 0%,#062010 45%,#0A2E16 100%);
+  background:linear-gradient(180deg,#0C3A1B 0px,#060F1E 130px);
   border-color:rgba(16,185,100,0.5)!important;
-  box-shadow:inset 0 0 24px rgba(10,120,60,0.2);
 }
-/* Day with BOTH majalis and training — red gradient */
+/* Day with BOTH majalis and training */
 .cell.ev-jk.ev-training{
-  background:linear-gradient(160deg,#150306 0%,#220508 45%,#300A0E 100%);
+  background:linear-gradient(180deg,#3A0C12 0px,#060F1E 130px);
   border-color:rgba(220,38,80,0.6)!important;
-  box-shadow:inset 0 0 28px rgba(200,20,40,0.25);
 }
-/* Training — subtle amber tint */
+/* Training */
 .cell.ev-training{
-  background:linear-gradient(160deg,#060F1E 0%,#0D1008 40%,#1C1505 70%,#261A04 100%);
+  background:linear-gradient(180deg,#33210A 0px,#060F1E 130px);
   border-color:rgba(200,140,30,0.4)!important;
-  box-shadow:inset 0 0 20px rgba(160,100,10,0.12);
 }
 .cell.today{
   /* No highlight for today */
@@ -1411,6 +1425,58 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <div id="trainingCards"></div>
         </div>
       </div>
+      <!-- ── ADDITIONAL EVENTS PANEL ── -->
+      <div class="iv-panel" style="margin-top:20px;">
+        <div class="iv-ph" style="background:linear-gradient(135deg,#0E4A5A,#0891B2);">
+          <span>📌</span> Additional Events
+        </div>
+        <div class="iv-pb">
+          <div class="add-form" style="background:linear-gradient(160deg,#04141A 0%,#062A33 60%,#04222A 100%);border:1px solid rgba(34,211,238,0.35);position:relative;overflow:hidden;">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 0% 50%,rgba(34,211,238,0.09) 0%,transparent 70%);pointer-events:none;"></div>
+            <div style="position:relative;z-index:1;">
+              <div style="font-size:12px;color:#A5E9F5;line-height:1.7;margin-bottom:12px;">
+                Anything else happening that day — Navroz, a graduation, a visit. These appear as a
+                second line on the calendar cell and on the printed sheet.
+                <b>Nobody is rostered to them</b>; they are there so the team knows what else is on.
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end;">
+                <div>
+                  <div style="font-size:11px;font-weight:800;color:#22D3EE;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Event Name</div>
+                  <select id="evNameSelect" class="ws" style="background:#04222A;color:#E8F4FD;border:1px solid rgba(34,211,238,0.3);" onchange="handleEvSelect()">
+                    <option value="">— Select event —</option>
+                    <option value="Navroz">Navroz</option>
+                    <option value="Imamat Day">Imamat Day</option>
+                    <option value="Salgirah">Salgirah</option>
+                    <option value="Graduation Ceremony">Graduation Ceremony</option>
+                    <option value="Jamati Visit">Jamati Visit</option>
+                    <option value="Youth Camp">Youth Camp</option>
+                    <option value="Seniors Programme">Seniors Programme</option>
+                    <option value="__custom__">✏️ Type custom name…</option>
+                  </select>
+                  <input type="text" id="evName" placeholder="Enter custom name…" class="wi" style="margin-top:6px;display:none;border-color:rgba(34,211,238,0.3);">
+                </div>
+                <div>
+                  <div style="font-size:11px;font-weight:800;color:#22D3EE;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Date</div>
+                  <input type="date" id="evDate" class="wi" style="border-color:rgba(34,211,238,0.3);">
+                </div>
+                <div>
+                  <div style="font-size:11px;font-weight:800;color:#22D3EE;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Category <span style="color:rgba(34,211,238,0.5);font-weight:600;text-transform:none;letter-spacing:0;">(appears in the CSV)</span></div>
+                  <select id="evCat" class="ws" style="background:#04222A;color:#E8F4FD;border:1px solid rgba(34,211,238,0.3);">
+                    <option value="">— None —</option>
+                    <option value="Ceremony">Ceremony</option>
+                    <option value="Institutional">Institutional</option>
+                    <option value="Community">Community</option>
+                    <option value="Jamati">Jamati</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <button onclick="addEvent()" style="height:38px;padding:0 20px;background:linear-gradient(135deg,#0E7490,#0891B2);color:#CFFAFE;border:none;border-radius:var(--r);font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;">+ Add Event</button>
+              </div>
+            </div>
+          </div>
+          <div id="eventCards"></div>
+        </div>
+      </div>
       <!-- ── REC / MPH CONGREGATION PANEL ── -->
       <div class="iv-panel" style="margin-top:20px;">
         <div class="iv-ph" style="background:linear-gradient(135deg,#3B1A6B,#6D28D9);">
@@ -1753,7 +1819,7 @@ const ROLES=[
 ];
 const MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-let vols=[], majalisEvs=[], trainings=[], roster={};
+let vols=[], majalisEvs=[], trainings=[], avEvents=[], roster={};
 // Hub AV membership — Map(nameLower → iv_members row) once hub membership loads OK.
 // Null means the hub list was unavailable, in which case nothing is filtered out.
 let hubAvSet=null;
@@ -2084,8 +2150,15 @@ async function loadFromDB(){
       roster[r.date] = loaded;
     });
     // Split trainings from majalis
+    /* One table, three kinds of row. Trainings already lived in `majalis`
+       and were split out here by category; additional events do the same,
+       which is why they needed no migration. Doing it once at the load
+       boundary is what keeps the ~25 places that do
+       `majalisEvs.find(e=>e.date===ds)` correct by construction — none of
+       them has to learn what an event is. */
     trainings  = majalisEvs.filter(e=>e.category==='training');
-    majalisEvs = majalisEvs.filter(e=>e.category!=='training');
+    avEvents   = majalisEvs.filter(e=>e.category==='event');
+    majalisEvs = majalisEvs.filter(e=>e.category!=='training'&&e.category!=='event');
     console.log(`✓ Loaded: ${vols.length} volunteers, ${majalisEvs.length} majalis, ${trainings.length} trainings, ${Object.keys(roster).length} roster days`);
     setSyncStatus('ok');
     toast(`✓ Synced — ${vols.length} volunteers, ${majalisEvs.length} majalis, ${Object.keys(roster).length} roster entries`);
@@ -2801,7 +2874,7 @@ async function logout(){
   try{ if(sb) await sb.auth.signOut(); }catch(e){}
   window.CU = null;
   // Clear all data so next login starts fresh
-  vols=[]; majalisEvs=[]; trainings=[]; roster={}; auditLogs=[]; hubAvSet=null;
+  vols=[]; majalisEvs=[]; trainings=[]; avEvents=[]; roster={}; auditLogs=[]; hubAvSet=null;
   localStorage.removeItem('ivhub_session');
   // Reset calendar to current month
   calMo=new Date().getMonth(); calYr=new Date().getFullYear();
@@ -2822,7 +2895,7 @@ async function logout(){
 /* ═══════════════════════════════════
    RENDER ALL
 ═══════════════════════════════════ */
-function renderAll(){updateStats();renderCal();renderVolCards();renderMajalisCards();renderTrainingCards();renderRecCards();renderUpcoming();populateTrainingDropdowns();}
+function renderAll(){updateStats();renderCal();renderVolCards();renderMajalisCards();renderTrainingCards();renderEventCards();renderRecCards();renderUpcoming();populateTrainingDropdowns();}
 /* ═══════════════════════════════════
    STATS
 ═══════════════════════════════════ */
@@ -3102,6 +3175,127 @@ function getMjBadge(name){
   }
   return null;
 }
+/* ═══════════════════════════════════════════════════════════════════
+   THE CALENDAR CELL — ONE RENDERER, TWO SKINS
+
+   renderCal() and downloadRosterPNG() used to build this cell twice: the
+   export cloned the on-screen cells and then restyled about ten element
+   types by hand. Every bug in the exported sheet has lived in that seam —
+   the names running together, the badges hanging off their row — because
+   nothing made the two agree. They now call one function and differ only
+   in the skin handed to it. Sizes and colours vary; structure cannot.
+
+   Layout is a band and a body. The band carries the date, the badges and
+   any additional events — what the day IS. The body carries JAMĀTKHANA and
+   MPH — who is ON it. A coloured rule under the band does the day-typing.
+   ═══════════════════════════════════════════════════════════════════ */
+const AV_SKINS={
+  site:{
+    pad:'8px 10px', padTop:8, ramp:130, badge:32, bpill:10,
+    dn:22, lbl:11, nm:16, tnm:13, evSize:12, mphA:14, mphB:12,
+    bgPlain:'#060F1E',
+    tint:   {mj:'#0C3A1B', tr:'#33210A', both:'#3A0C12'},
+    tintEnd:{mj:'#060F1E', tr:'#060F1E', both:'#060F1E'},
+    dnC: {plain:'#4A7A98', mj:'#4ADE80', tr:'#FCD34D', both:'#FF6B6B'},
+    dnOther:'#3E6A88', bgOther:'#060F1E',
+    rule:{plain:'#2A5570', mj:'#16A34A', tr:'#C88A1E', both:'#DC2650'},
+    name:'#FFFFFF', nameSh:'0 1px 4px rgba(0,0,0,0.35)',
+    evFg:'#9FC4DA', jkFg:'#6A9AB0', jkRule:'#3A6A80',
+    mphFg:'#A06010', mphRule:'#7A4A00', mphAc:'#E8C060', mphBc:'#C8A040',
+    trFg:'#E0B060', unassigned:'#F87171', dash:'#5A7A90', supBg:'rgba(21,101,192,0.12)', supFg:'#6A9EC0',
+  },
+  /* The printed sheet is compressed, re-shared and often looked at on paper,
+     where a tint that reads on a bright screen disappears. So the export runs
+     the same ramp with deeper stops and lands on a faint residual tint rather
+     than pure white — that is what keeps a tall cell's day type legible all
+     the way to the bottom. */
+  export:{
+    pad:'11px 13px', padTop:9, ramp:175, badge:36, bpill:12,
+    dn:31, lbl:12, nm:21, tnm:17, evSize:13, mphA:17, mphB:15,
+    bgPlain:'#FFFFFF',
+    tint:   {mj:'#8FD9B2', tr:'#FFD76B', both:'#FFAEB6'},
+    tintEnd:{mj:'#F2FBF6', tr:'#FFFCF2', both:'#FFF6F7'},
+    dnC: {plain:'#1E5A8A', mj:'#166534', tr:'#78350F', both:'#B91C1C'},
+    dnOther:'#90AECB', bgOther:'#F4F8FC',
+    rule:{plain:'#8FB6D4', mj:'#16A34A', tr:'#C88A1E', both:'#DC2626'},
+    name:'#0A1828', nameSh:'none',
+    evFg:'#243B52', jkFg:'#1A6090', jkRule:'#3A90C0',
+    mphFg:'#7A4A00', mphRule:'#B07010', mphAc:'#3A2800', mphBc:'#5A4A20',
+    trFg:'#5A3A00', unassigned:'#B91C1C', dash:'#A0B8CC', supBg:'rgba(21,101,192,0.10)', supFg:'#1258B0',
+  },
+};
+function avCellKind(mj,tr){ return mj&&tr?'both':mj?'mj':tr?'tr':'plain'; }
+function avCellBG(kind,S,isOther){
+  /* A day from the previous or next month is dimmed by its date colour and a
+     flatter ground, never by opacity — fading the whole cell was making the
+     names on those days hard to read on the printed sheet. A trailing day that
+     carries a majalis or a training still gets its full tint, because it is a
+     real duty day for whoever is on it. */
+  if(kind==='plain') return isOther ? S.bgOther : S.bgPlain;
+  return `linear-gradient(180deg,${S.tint[kind]} 0px,${S.tintEnd[kind]} ${S.ramp}px)`;
+}
+/* Badges sit inline in the band rather than floating in the corner, so they
+   can never overlap the content beneath them and the exporter has nothing to
+   strip out before it draws. */
+function avBadges(mj,tr,S){
+  let h='';
+  if(tr) h+=`<div style="background:linear-gradient(135deg,#7A3500,#B45309);border:2px solid #FFFFFF;border-radius:50%;width:${S.badge}px;height:${S.badge}px;min-width:${S.badge}px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',sans-serif;font-size:${Math.round(S.badge*0.47)}px;font-weight:900;color:#FFFFFF;flex-shrink:0;line-height:1;">T</div>`;
+  if(mj){
+    const b=getMjBadge(mj.name);
+    const grad=(b&&b.isK)?'linear-gradient(135deg,#044A22,#0A7A38)':'linear-gradient(135deg,#063A1A,#0D6B2E)';
+    const label=b?b.abbr:esc(trunc(mj.name,12));
+    if(b && !b.isPill && b.abbr.length<=4){
+      h+=`<div style="background:${grad};border:2px solid #FFFFFF;border-radius:50%;width:${S.badge}px;height:${S.badge}px;min-width:${S.badge}px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',sans-serif;font-size:${S.bpill+1}px;font-weight:900;text-transform:uppercase;color:#FFFFFF;flex-shrink:0;line-height:1;">${label}</div>`;
+    } else {
+      h+=`<div style="background:${grad};border:2px solid #FFFFFF;border-radius:999px;height:${S.badge}px;padding:0 ${Math.round(S.badge*0.32)}px;display:flex;align-items:center;font-family:'Archivo',sans-serif;font-size:${S.bpill}px;font-weight:900;text-transform:uppercase;letter-spacing:0.03em;color:#FFFFFF;white-space:nowrap;flex-shrink:0;line-height:1;">${label}</div>`;
+    }
+  }
+  return h;
+}
+/* ctx = {day, mj, tr, evs, ro, isFri} */
+function avCellHTML(ctx,S){
+  const {day,mj,tr,evs,ro,isFri,isOther}=ctx;
+  const k=avCellKind(mj,tr);
+  const dnCol=(isOther&&k==='plain')?S.dnOther:S.dnC[k];
+  const nmBase=`font-family:'Archivo',sans-serif;font-weight:800;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;`;
+  const lblBase=`font-family:'Archivo',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;line-height:1;font-size:${S.lbl}px;`;
+  let h='<div class="cell-inner">';
+  // ── Band: the date, the badges, and what else is on that day ──
+  h+=`<div style="padding:${S.pad};padding-bottom:${Math.round(S.padTop*0.75)}px;border-bottom:3px solid ${S.rule[k]};">`;
+  h+=`<div style="display:flex;align-items:center;gap:6px;min-height:${S.badge}px;">`;
+  h+=`<div class="dn" style="font-family:'Archivo',sans-serif;font-size:${S.dn}px;font-weight:900;line-height:1;letter-spacing:0;color:${dnCol};font-variant-numeric:tabular-nums;">${String(day).padStart(2,'0')}</div>`;
+  h+=`<div style="margin-left:auto;display:flex;gap:5px;align-items:center;">${avBadges(mj,tr,S)}</div>`;
+  h+=`</div>`;
+  for(const e of (evs||[]))
+    h+=`<div style="${nmBase}font-size:${S.evSize}px;color:${S.evFg};margin-top:3px;">${esc(e.name)}</div>`;
+  h+=`</div>`;
+  // ── Body: who is on ──
+  h+=`<div style="padding:${S.pad};padding-top:${S.padTop}px;">`;
+  if(tr){
+    h+=`<div style="${lblBase}color:${S.jkFg};border-left:2px solid ${S.jkRule};padding-left:5px;margin-bottom:4px;">JAM&#256;TKHANA</div>`+
+       `<div style="${nmBase}font-size:${S.nm}px;color:${S.name};text-shadow:${S.nameSh};">${esc(tr.trainer)}</div>`+
+       `<div style="${nmBase}font-size:${S.tnm}px;color:${S.trFg};margin-top:3px;">Trainee: ${esc(tr.trainee)}</div>`;
+  } else {
+    const jkP=getJKP(ro);
+    const lock=ro._manual?`<span title="Manually assigned — the engine will not change this day" style="font-size:${S.lbl}px;margin-left:4px;opacity:.85;">🔒</span>`:'';
+    h+=`<div style="${lblBase}color:${S.jkFg};border-left:2px solid ${S.jkRule};padding-left:5px;margin-bottom:4px;">JAM&#256;TKHANA</div>`;
+    h+= jkP
+      ? `<div style="${nmBase}font-size:${S.nm}px;color:${S.name};text-shadow:${S.nameSh};">${esc(jkP)}${lock}</div>`+
+        (ro._sup?`<div style="display:inline-block;background:${S.supBg};color:${S.supFg};font-family:'Archivo',sans-serif;font-size:${S.lbl}px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:2px 7px;border-radius:3px;margin-top:3px;">SUP: ${esc(ro._sup)}</div>`:'')
+      : `<div style="font-family:'Archivo',sans-serif;font-size:${S.tnm}px;font-weight:800;color:${S.unassigned};">UNASSIGNED</div>`;
+  }
+  const showMph=(isFri||ro._mph_primary)&&!ro._mph_removed;
+  if(showMph){
+    const mphP=ro._mph_primary||null, mphP2=ro._mph_primary2||null;
+    h+=`<div style="${lblBase}color:${S.mphFg};border-left:2px solid ${S.mphRule};padding-left:5px;margin:7px 0 3px;">MPH</div>`;
+    h+= mphP
+      ? `<div style="${nmBase}font-size:${S.mphA}px;color:${S.mphAc};">${esc(mphP)}</div>`+
+        (mphP2?`<div style="${nmBase}font-size:${S.mphB}px;color:${S.mphBc};">${esc(mphP2)}</div>`:'')
+      : `<div style="font-family:'Archivo',sans-serif;font-size:${S.tnm}px;font-weight:600;font-style:italic;color:${S.dash};">—</div>`;
+  }
+  h+='</div></div>';
+  return h;
+}
 function renderCal(){
   document.getElementById('calTitle').textContent=`${MO[calMo]} ${calYr}`;
   document.getElementById('rMonthSub').textContent=`${MO[calMo].toUpperCase()} ${calYr}`;
@@ -3157,81 +3351,11 @@ function renderCal(){
     div.className=cls;
     div.dataset.ds=ds;
     div.onclick=()=>openDayModal(ds,c.d);
-    let h='<div class="cell-inner">';
-    // ── Badges ── (all carry .x-badge so the exporter can find/remove them)
-    if(tr && mj){
-      // Both: wrap in a flex row, majalis badge right, T badge 2px to its left
-      const _bc=getMjBadge(mj.name);
-      const T_BADGE = `<div style="background:linear-gradient(135deg,#7A3500,#B45309);border:2px solid #FFFFFF;border-radius:50%;width:28px;height:28px;min-width:28px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',sans-serif;font-size:15px;font-weight:900;color:#FFFFFF;flex-shrink:0;">T</div>`;
-      let MJ_BADGE = '';
-      if(_bc && _bc.isPill){
-        MJ_BADGE = `<div style="background:linear-gradient(135deg,#063A1A,#0D6B2E);border:2px solid #FFFFFF;border-radius:20px;padding:4px 10px;font-family:'Archivo',sans-serif;font-size:11px;font-weight:900;text-transform:uppercase;color:#FFFFFF;white-space:nowrap;max-width:100px;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;">${_bc.abbr}</div>`;
-      } else if(_bc){
-        MJ_BADGE = `<div style="background:${_bc.isK?'linear-gradient(135deg,#044A22,#0A7A38)':'linear-gradient(135deg,#063A1A,#0D6B2E)'};border:2px solid #FFFFFF;border-radius:50%;width:38px;height:38px;min-width:38px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',sans-serif;font-size:${_bc.abbr.length>5?'7px':_bc.abbr.length>3?'9px':'11px'};font-weight:900;text-transform:uppercase;color:#FFFFFF;flex-shrink:0;">${_bc.abbr}</div>`;
-      } else {
-        MJ_BADGE = `<div style="background:linear-gradient(135deg,#063A1A,#0D6B2E);border:2px solid #FFFFFF;border-radius:20px;padding:4px 10px;font-family:'Archivo',sans-serif;font-size:11px;font-weight:900;text-transform:uppercase;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;">${esc(trunc(mj.name,10))}</div>`;
-      }
-      h+=`<div class="x-badge" style="position:absolute;top:7px;right:7px;display:flex;flex-direction:row;align-items:center;gap:2px;">${T_BADGE}${MJ_BADGE}</div>`;
-    } else if(tr){
-      // T badge only
-      h+=`<div class="x-badge" style="position:absolute;top:7px;right:7px;background:linear-gradient(135deg,#7A3500,#B45309);border:2px solid #FFFFFF;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',sans-serif;font-size:20px;font-weight:900;color:#FFFFFF;">T</div>`;
-    } else if(mj){
-      // Majalis badge only — emerald
-      const _bc=getMjBadge(mj.name);
-      if(_bc && _bc.isPill){
-        h+=`<div class="x-badge" style="position:absolute;top:7px;right:7px;background:linear-gradient(135deg,#063A1A,#0D6B2E);border:2px solid #FFFFFF;border-radius:20px;padding:5px 11px;font-family:'Archivo',sans-serif;font-size:11px;font-weight:900;text-transform:uppercase;color:#FFFFFF;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;">${_bc.abbr}</div>`;
-      } else if(_bc){
-        h+=`<div class="cell-badge x-badge ${_bc.isK?'badge-k':'badge-jk'}" style="font-size:${_bc.abbr.length>5?'8px':_bc.abbr.length>3?'10px':'13px'}">${_bc.abbr}</div>`;
-      } else {
-        h+=`<div class="x-badge" style="position:absolute;top:7px;right:7px;background:linear-gradient(135deg,#063A1A,#0D6B2E);border:2px solid #FFFFFF;border-radius:20px;padding:5px 11px;font-family:'Archivo',sans-serif;font-size:11px;font-weight:900;text-transform:uppercase;color:#FFFFFF;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;">${esc(trunc(mj.name,12))}</div>`;
-      }
-    }
-    // ── Day number ──
-    h+=`<div class="dn">${String(c.d).padStart(2,'0')}</div>`;
-    // ── JK duty block ──
-    if(tr){
-      h+=`<div class="duty" style="margin-top:2px;">
-        <div class="duty-lbl" style="padding-right:${tr&&mj?'130':'72'}px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">JAM&#256;TKHANA</div>
-        <div class="duty-name">${esc(tr.trainer)}</div>
-        <div style="font-size:13px;font-weight:800;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          Trainee: ${esc(tr.trainee)}
-        </div>
-      </div>`;
-    } else {
-      const jkP=getJKP(ro);
-      const lock=ro._manual?`<span class="lock-tag" title="Manually assigned — the engine will not change this day" style="font-size:12px;margin-left:4px;opacity:.85;">🔒</span>`:'';
-      h+=`<div class="duty">
-        <div class="duty-lbl" style="padding-right:38px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">JAM&#256;TKHANA</div>
-        ${jkP
-          ?`<div class="duty-name">${esc(jkP)}${lock}</div>${ro._sup?`<div class="sup-tag">SUP: ${esc(ro._sup)}</div>`:''}`
-          :`<div class="duty-unassigned" style="color:#F87171;font-weight:800;font-style:normal;">UNASSIGNED</div>`}
-      </div>`;
-    }
-    // ── MPH block (Fridays only) ──
-    if(isFri && !ro._mph_removed){
-      const mphP=ro._mph_primary||null;
-      const mphP2=ro._mph_primary2||null;
-      h+=`<hr class="duty-sep">
-        <div class="duty">
-          <div class="duty-lbl" style="color:#A06010;border-left-color:#7A4A00;">MPH</div>
-          ${mphP
-            ?`<div class="duty-name" style="color:#E8C060;">${esc(mphP)}</div>${mphP2?`<div class="duty-name" style="color:#C8A040;font-size:12px;">${esc(mphP2)}</div>`:''}`
-            :`<div class="duty-unassigned">—</div>`}
-        </div>`;
-    }
-    // Non-Friday MPH (manually set via override)
-    if(!isFri && ro._mph_primary && !ro._mph_removed){
-      const mphP=ro._mph_primary;
-      const mphP2=ro._mph_primary2||null;
-      h+=`<hr class="duty-sep">
-        <div class="duty">
-          <div class="duty-lbl" style="color:#A06010;border-left-color:#7A4A00;">MPH</div>
-          <div class="duty-name" style="color:#E8C060;">${esc(mphP)}</div>
-          ${mphP2?`<div class="duty-name" style="color:#C8A040;font-size:12px;">${esc(mphP2)}</div>`:''}
-        </div>`;
-    }
-    h+='</div>';
-    div.innerHTML=h;
+    /* The cell itself is drawn by the shared renderer — see avCellHTML().
+       Everything that used to be built inline here is now built once and
+       handed a skin, so the exported sheet cannot drift away from it. */
+    const evs=avEvents.filter(e=>e.date===ds);
+    div.innerHTML=avCellHTML({day:c.d,mj:mj,tr:tr,evs:evs,ro:ro,isFri:isFri,isOther:!!c.pad},AV_SKINS.site);
     body.appendChild(div);
   });
   // Month-slide animation (set by chMo). Class lives on the grid only —
@@ -4179,6 +4303,104 @@ function renderTrainingCards(){
     </div>`;
   }).join('');
 }
+/* ═══════════════════════════════════
+   ADDITIONAL EVENTS
+   Anything else on that day — Navroz, a graduation, a visit. They carry no
+   duty and no volunteer; they exist so the calendar can say what else is on.
+   Stored in the `majalis` table under category 'event', which is why adding
+   this needed no migration: the table already held trainings the same way.
+═══════════════════════════════════ */
+function handleEvSelect(){
+  const sel=document.getElementById('evNameSelect');
+  const customInput=document.getElementById('evName');
+  if(sel.value==='__custom__'){ customInput.style.display='block'; customInput.focus(); }
+  else { customInput.style.display='none'; customInput.value=''; }
+}
+async function dbSaveEvent(ev){
+  if(!sb) return false;
+  setSyncStatus('saving');
+  try{
+    await dbStored(sb.from('majalis').upsert({
+      id:   Number(ev.id),
+      date: ev.date || '',
+      name: ev.name || '',
+      type: 'Event',
+      time: '',
+      data: {...ev, category:'event'},
+    }));
+    setSyncStatus('ok'); return true;
+  }catch(e){ console.error('dbSaveEvent error:', e); setSyncStatus('error');
+    toast('Could not save event: '+(e.message||e),'err'); return false; }
+}
+async function dbDeleteEvent(id){
+  if(!sb) return false;
+  setSyncStatus('saving');
+  try{
+    await dbStored(sb.from('majalis').delete().eq('id', id));
+    setSyncStatus('ok'); return true;
+  }catch(e){ console.error(e); setSyncStatus('error');
+    toast('Could not delete event: '+(e.message||e),'err'); return false; }
+}
+function addEvent(){
+  const sel=document.getElementById('evNameSelect');
+  const name=(sel.value==='__custom__'
+    ? document.getElementById('evName').value.trim()
+    : sel.value.trim());
+  const date=document.getElementById('evDate').value;
+  const evcat=document.getElementById('evCat').value;
+  if(!name){ toast('Pick an event or type a name','err'); return; }
+  if(!date){ toast('Select a date','err'); return; }
+  /* Three on a day is what the cell was designed to hold; past that the band
+     grows until it pushes the roster out of view, so refuse rather than let
+     the calendar quietly degrade. */
+  if(avEvents.filter(e=>e.date===date).length>=3){
+    toast('That day already has three events — remove one first','err'); return;
+  }
+  const newEv={id:uid(),name,type:'Event',date,time:'',evcat,category:'event'};
+  avEvents.push(newEv);
+  sel.value=''; document.getElementById('evName').value='';
+  document.getElementById('evName').style.display='none';
+  document.getElementById('evDate').value=''; document.getElementById('evCat').value='';
+  renderEventCards(); renderCal(); renderUpcoming();
+  dbSaveEvent(newEv);
+  auditLog(`Added Event: ${name}`, 'event', `Date: ${date}${evcat?' · '+evcat:''}`);
+  toast('Event added!');
+}
+function delEvent(id){
+  const de=avEvents.find(e=>e.id===id);
+  avEvents=avEvents.filter(e=>e.id!==id);
+  renderEventCards(); renderCal(); renderUpcoming();
+  dbDeleteEvent(id);
+  auditLog(`Deleted Event: ${de?de.name:id}`, 'event', `Date: ${de?de.date:''}`);
+  toast('Event removed.');
+}
+function renderEventCards(){
+  const c=document.getElementById('eventCards'); if(!c) return;
+  const s=[...avEvents].sort((a,b)=>a.date.localeCompare(b.date));
+  if(!s.length){
+    c.innerHTML=`<div style="text-align:center;padding:24px;color:var(--dm);font-size:13px;opacity:.6;">No additional events added yet.</div>`;
+    return;
+  }
+  c.innerHTML=s.map(e=>{
+    const dt=new Date(e.date+'T12:00');
+    const dow=dt.toLocaleDateString('en-NZ',{weekday:'long'});
+    return `<div class="mj-list-card" style="border-color:rgba(34,211,238,0.25);background:linear-gradient(135deg,rgba(34,211,238,0.06),rgba(34,211,238,0.02));">
+      <div class="mj-list-date" style="background:linear-gradient(135deg,#0E7490,#155E75);border-color:rgba(34,211,238,0.3);">
+        <div class="mj-list-mo">${MOS[dt.getMonth()]}</div>
+        <div class="mj-list-d">${String(dt.getDate()).padStart(2,'0')}</div>
+        <div class="mj-list-yr">${dt.getFullYear()}</div>
+      </div>
+      <div class="mj-list-body">
+        <div class="mj-list-name" style="color:#67E8F9;">📌 ${esc(e.name)}</div>
+        <div class="mj-list-meta" style="gap:12px;">
+          ${e.evcat?`<span style="font-size:12px;color:var(--dm);">${esc(e.evcat)}</span>`:''}
+          <span style="font-size:12px;color:var(--dm);">${dow}</span>
+        </div>
+      </div>
+      <button class="ev-del" onclick="delEvent(${e.id})" title="Remove">🗑</button>
+    </div>`;
+  }).join('');
+}
 function populateTrainingDropdowns(){
   const juniors   = vols.filter(v=>v.status==='active' && ((v.roles||[]).includes('Junior Team Member') || v.type==='Junior Team Member')).sort((a,b)=>a.name.localeCompare(b.name));
   const supervisors = vols.filter(v=>v.status==='active' && ((v.roles||[]).includes('Supervisor') || v.type==='Supervisor')).sort((a,b)=>a.name.localeCompare(b.name));
@@ -4320,116 +4542,29 @@ async function downloadRosterPNG(){
       gridWrap.appendChild(hdr);
     });
     // ── Cells ──
-    const CELL_H='195px';
-    const CELL_P='13px 14px 14px';
+    /* The exported cell is the SAME cell, drawn with the export skin.
+       This used to clone the on-screen cells and restyle about ten element
+       types by hand, which is how the two drifted apart: the badges ended up
+       overlapping the content and every name lost its spaces. Reading the
+       day's data straight out of the arrays and calling the shared renderer
+       removes the whole class of problem — there is nothing left to keep in
+       sync by hand. */
     document.querySelectorAll('#calBody > div').forEach(cell=>{
-      const isMajalis=cell.classList.contains('ev-jk');
-      const isTraining=cell.classList.contains('ev-training');
-      const isOther=cell.classList.contains('other');
-      const clone=cell.cloneNode(true);
-      // ── Cell background — ALL same white, majalis/training tinted ──
-      let bg='#FFFFFF', bdr='rgba(21,101,192,0.15)';
-      if(isMajalis && isTraining){bg='linear-gradient(160deg,#FFFFFF 0%,#FFF0F0 40%,#FFD0D4 100%)';bdr='rgba(185,28,60,0.5)';}
-      else if(isMajalis){bg='linear-gradient(160deg,#FFFFFF 0%,#F0FBF5 40%,#C6F0D8 100%)';bdr='rgba(16,185,100,0.45)';}
-      else if(isTraining){bg='linear-gradient(160deg,#FFFFFF 0%,#FFFBF0 40%,#FFF0C0 100%)';bdr='rgba(200,140,30,0.45)';}
-      clone.style.cssText=`background:${bg};border-right:1px solid ${bdr};border-bottom:1px solid ${bdr};padding:${CELL_P};min-height:${CELL_H};position:relative;box-sizing:border-box;overflow:visible;opacity:1;`;
-      // Reset cell-inner opacity
-      clone.querySelectorAll('.cell-inner').forEach(el=>el.style.opacity='1');
-      // ── Day number ──
-      clone.querySelectorAll('.dn').forEach(el=>{
-        const bothMjTr = isMajalis && isTraining;
-        const col = bothMjTr?'#B91C1C' : isMajalis?'#166534' : isTraining?'#78350F' : isOther?'#90AECB' : '#1E5A8A';
-        el.style.cssText=`font-family:'Archivo',sans-serif;font-size:31px;font-weight:900;color:${col};line-height:1;margin-bottom:7px;letter-spacing:0;display:block;font-variant-numeric:tabular-nums;`;
-      });
-      // ── Badges in screenshot — rebuilt from DATA, not DOM scraping ──
-      // The cell carries data-ds, so we look up the actual majalis/training
-      // for that date. All on-screen badges (.x-badge) are removed and fresh
-      // export-sized badges are laid out in a single flex row: no overlap,
-      // no duplicates, no truncated labels.
-      const dsKey = cell.dataset.ds || '';
-      const mjEv  = dsKey ? majalisEvs.find(e=>e.date===dsKey) : null;
-      const trEv  = dsKey ? trainings.find(e=>e.date===dsKey)  : null;
-      clone.querySelectorAll('.x-badge, .cell-badge, .lock-tag').forEach(el=>el.remove());
-      if(mjEv || trEv){
-        const badgeWrap=document.createElement('div');
-        badgeWrap.style.cssText='position:absolute;top:10px;right:10px;display:flex;flex-direction:row;align-items:center;gap:6px;z-index:5;';
-        if(trEv){
-          const both = !!mjEv;
-          const size = both ? 38 : 54;
-          const font = both ? 19 : 26;
-          const tBadge=document.createElement('div');
-          tBadge.style.cssText=`background:linear-gradient(135deg,#7A3500,#B45309);border:2.5px solid #FFFFFF;border-radius:50%;width:${size}px;height:${size}px;min-width:${size}px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',sans-serif;font-size:${font}px;font-weight:900;color:#FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.2);flex-shrink:0;line-height:1;`;
-          tBadge.textContent='T';
-          badgeWrap.appendChild(tBadge);
-        }
-        if(mjEv){
-          const b=getMjBadge(mjEv.name);
-          const label=b?b.abbr:(mjEv.name||'').toUpperCase();
-          const grad=(b&&b.isK)?'linear-gradient(135deg,#044A22,#0A7A38)':'linear-gradient(135deg,#063A1A,#0D6B2E)';
-          const mjEl=document.createElement('div');
-          if(b && !b.isPill && label.length<=6){
-            // Short abbreviation — circle badge
-            const fs=label.length>=5?11:label.length>=4?13:label.length>=3?15:19;
-            mjEl.style.cssText=`width:54px;height:54px;min-width:54px;border-radius:50%;background:${grad};border:2.5px solid #FFFFFF;display:flex;align-items:center;justify-content:center;font-family:'Archivo',sans-serif;font-size:${fs}px;font-weight:900;text-transform:uppercase;color:#FFFFFF;letter-spacing:0.02em;box-shadow:0 2px 8px rgba(0,0,0,0.2);flex-shrink:0;line-height:1;text-align:center;`;
-          } else {
-            // Full name — pill, never truncated (cells are wide in export)
-            mjEl.style.cssText=`background:${grad};border:2.5px solid #FFFFFF;border-radius:20px;padding:6px 14px;font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;color:#FFFFFF;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2);flex-shrink:0;line-height:1.2;`;
-          }
-          mjEl.textContent=label;
-          badgeWrap.appendChild(mjEl);
-        }
-        (clone.querySelector('.cell-inner')||clone).appendChild(badgeWrap);
-      }
-      // ── Duty label ──
-      clone.querySelectorAll('.duty-lbl').forEach(el=>{
-        const isMph = el.style.color&&(el.style.color.includes('A060')||el.style.color.includes('F59E'));
-        const isTrain2 = el.style.color&&el.style.color.includes('C890');
-        const bothDuty = isMajalis && isTraining;
-        let col='#1A6090', bdrL='#3A90C0';
-        if(isMph){col='#7A4A00';bdrL='#B07010';}
-        if(isTrain2){col='#78350F';bdrL='#B07010';}
-        if(isMajalis&&!isTraining&&!isMph&&!isTrain2){col='#166534';bdrL='#16A34A';}
-        if(bothDuty&&!isMph){col='#991B1B';bdrL='#DC2626';}
-        el.style.cssText=`font-family:'Archivo',sans-serif;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:${col};border-left:3px solid ${bdrL};padding-left:7px;padding-right:70px;margin-bottom:5px;line-height:1;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`;
-      });
-      // ── Volunteer / Trainer name ──
-      clone.querySelectorAll('.duty-name').forEach(el=>{
-        const isMphN = el.style.color&&(el.style.color.includes('E8C0')||el.style.color.includes('C8A0'));
-        let col = isMajalis ? '#1A0510' : isTraining ? '#2A1800' : '#0A1828';
-        if(isMphN) col='#3A2800';
-        el.style.cssText=`font-family:'Archivo',sans-serif;font-size:21px;font-weight:800;color:${col};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;line-height:1.3;letter-spacing:0;`;
-      });
-      // ── MPH Duty 2 name (smaller) ──
-      clone.querySelectorAll('.duty-name + .duty-name').forEach(el=>{
-        el.style.fontSize='16px';
-        el.style.fontWeight='700';
-        el.style.color='#3A3000';
-        el.style.marginTop='1px';
-      });
-      // ── Trainee line ──
-      clone.querySelectorAll('div[style*="A07830"],div[style*="B08840"],div[style*="margin-top:4px"]').forEach(el=>{
-        const elBothT = isMajalis && isTraining;
-        el.style.cssText=`font-family:'Archivo',sans-serif;font-size:18px;font-weight:800;color:${elBothT?'#7F1D1D':isTraining?'#451A03':'#5A3A00'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px;display:block;line-height:1.3;`;
-        // Update emoji label inside
-        el.querySelectorAll('span').forEach(s=>{s.style.color='#A06000';s.style.fontWeight='700';});
-      });
-      // ── SUP tag ──
-      clone.querySelectorAll('.sup-tag').forEach(el=>{
-        el.style.cssText=`display:inline-block;font-family:'Archivo',sans-serif;font-size:12px;font-weight:800;padding:2px 8px;border-radius:4px;margin-top:3px;background:rgba(21,101,192,0.1);color:#1258B0;border:1px solid rgba(21,101,192,0.3);letter-spacing:0.04em;`;
-      });
-      // ── MPH divider ──
-      clone.querySelectorAll('.duty-sep').forEach(el=>{
-        el.style.cssText='border:none;border-top:1.5px solid rgba(21,101,192,0.18);margin:7px 0 6px;';
-      });
-      // ── Duty label right-padding (clear badge) ──
-      clone.querySelectorAll('.duty-lbl').forEach((el,i)=>{
-        if(i===0) el.style.paddingRight='70px'; // only first label needs to clear badge
-      });
-      // ── Unassigned ──
-      clone.querySelectorAll('.duty-unassigned').forEach(el=>{
-        el.style.cssText=`font-family:'Archivo',sans-serif;font-size:14px;font-style:italic;color:#A0B8CC;`;
-      });
-      gridWrap.appendChild(clone);
+      const ds   = cell.dataset.ds || '';
+      const day  = Number((ds.split('-')[2]||'0'));
+      const mjEv = ds ? majalisEvs.find(e=>e.date===ds) : null;
+      const trEv = ds ? trainings.find(e=>e.date===ds)  : null;
+      const evs  = ds ? avEvents.filter(e=>e.date===ds) : [];
+      const ro   = roster[ds] || {};
+      const isFri= ds ? new Date(ds+'T12:00').getDay()===5 : false;
+      const isOther = cell.classList.contains('other');
+      const S    = AV_SKINS.export;
+      const kind = avCellKind(mjEv,trEv);
+      const out=document.createElement('div');
+      out.style.cssText=`background:${avCellBG(kind,S,isOther)};border-right:1px solid rgba(21,101,192,0.15);`+
+        `border-bottom:1px solid rgba(21,101,192,0.15);min-height:195px;box-sizing:border-box;overflow:hidden;`;
+      out.innerHTML=avCellHTML({day:day,mj:mjEv,tr:trEv,evs:evs,ro:ro,isFri:isFri,isOther:isOther},S);
+      gridWrap.appendChild(out);
     });
     container.appendChild(gridWrap);
     document.body.appendChild(container);
@@ -4524,8 +4659,14 @@ function buildRosterCSV(){
       if(p.isK) khCol = p.text; else mjCol = p.text;
     }
     const uniCol = (mj && mj.uniform) || '';
+    /* The 'Other Events' column has been in the header since the CSV was
+       written and has always gone out empty — there was nothing to put in it.
+       Additional events are that thing. Category in brackets where one is set,
+       so the spreadsheet can be grouped on it. */
+    const evCol = avEvents.filter(e => e.date === ds)
+      .map(e => e.evcat ? `${e.name} (${e.evcat})` : e.name).join('; ');
     const add = (name, location) => {
-      if(name && String(name).trim()) rows.push([dateStr, dayName, String(name).trim(), location, mjCol, khCol, uniCol, '']);
+      if(name && String(name).trim()) rows.push([dateStr, dayName, String(name).trim(), location, mjCol, khCol, uniCol, evCol]);
     };
     // ── Jamatkhana. A training day replaces the JK slot with the
     //    trainer + trainee pair, exactly as the calendar displays it.
@@ -5548,6 +5689,7 @@ function handleMajalisChange(payload){
   if(eventType === 'DELETE'){
     majalisEvs = majalisEvs.filter(e=>e.id!==old.id);
     trainings  = trainings.filter(e=>e.id!==old.id);
+    avEvents   = avEvents.filter(e=>e.id!==old.id);
   } else {
     const d = row.data || {};
     const entry = {
@@ -5561,17 +5703,20 @@ function handleMajalisChange(payload){
       trainer: d.trainer||'',
       uniform: d.uniform||'',
     };
-    if(entry.category === 'training'){
-      const idx = trainings.findIndex(e=>e.id===row.id);
-      if(idx>=0) trainings[idx]=entry; else trainings.push(entry);
-      majalisEvs = majalisEvs.filter(e=>e.id!==row.id);
-    } else {
-      const idx = majalisEvs.findIndex(e=>e.id===row.id);
-      if(idx>=0) majalisEvs[idx]=entry; else majalisEvs.push(entry);
-      trainings = trainings.filter(e=>e.id!==row.id);
-    }
+    /* Three kinds of row share this table, so a change has to be routed the
+       same way the loader splits them. Miss a branch and an event arriving
+       from someone else's device lands in majalisEvs and starts colouring
+       the day green as though it were a majalis. */
+    const bucket = entry.category==='training' ? 'training'
+                 : entry.category==='event'    ? 'event' : 'majalis';
+    majalisEvs = majalisEvs.filter(e=>e.id!==row.id);
+    trainings  = trainings.filter(e=>e.id!==row.id);
+    avEvents   = avEvents.filter(e=>e.id!==row.id);
+    if(bucket==='training')   trainings.push(entry);
+    else if(bucket==='event') avEvents.push(entry);
+    else                      majalisEvs.push(entry);
   }
-  renderMajalisCards(); renderTrainingCards(); renderUpcoming(); updateStats(); autoRoster();
+  renderMajalisCards(); renderTrainingCards(); renderEventCards(); renderUpcoming(); updateStats(); autoRoster();
   showSyncPulse('🕌');
 }
 function handleRosterChange(payload){
