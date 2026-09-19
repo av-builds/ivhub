@@ -270,6 +270,15 @@ tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(79,195,24
 .cyc-empty{font-size:12px;color:var(--dm);padding:8px 6px;font-style:italic;}
 .add-ev-btn{width:100%;padding:10px;border:1.5px dashed var(--db);background:transparent;color:var(--dm);border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;transition:all .18s;margin-top:6px;}
 .add-ev-btn:hover{border-color:var(--blue-lt);color:var(--blue-lt);}
+/* The cycle bar. Building a cycle and adding a one-off event both already
+   existed and neither could be found, so they live here now. */
+.cyc-bar{display:flex;align-items:center;gap:18px;margin:0 0 14px;padding:14px 18px;border-radius:var(--r-lg);
+  background:var(--ds);background-image:linear-gradient(180deg,rgba(79,195,247,.05),rgba(79,195,247,0) 90px);
+  border:1px solid var(--db);}
+.cyc-bar .cb-k{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;}
+.cyc-bar .cb-t{font-size:17px;font-weight:900;letter-spacing:.01em;}
+.cyc-bar .cb-s{font-size:12.5px;font-weight:700;color:var(--dm);margin-top:4px;}
+.cyc-bar .cb-a{margin-left:auto;display:flex;gap:9px;align-items:center;flex:none;}
 
 .ev-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:12px;padding:14px 20px;margin-bottom:14px;box-shadow:0 8px 26px rgba(12,36,97,.4);}
 .ev-banner .t{font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.03em;color:#fff;}
@@ -1764,17 +1773,21 @@ async function generateEvent(id,silent){
   }
   return stored;
 }
-async function generateCycle(){
-  const ev=selEvent(); if(!ev) return;
-  const k=cycleForDate(ev.date);
-  /* Events that have no roster yet. This used to be "everything not yet
-     published", which meant everything — nothing was published until
-     somebody pressed the button. Now that generating publishes, that
-     filter would re-roll rosters a lead had already tuned by hand, so it
-     fills the gaps and leaves the rest alone. Regenerate does one event
-     on purpose. */
-  const evs=eventsInCycle(k).filter(e=>!isHistoricEvent(e)&&!ROSTERS[e.id]);
-  if(!evs.length) return toast('Every event in this cycle already has a roster','err');
+async function generateCycle(k){
+  /* Takes the cycle to build. Called without one it falls back to the
+     selected event's cycle, which is how the button in an unbuilt event's
+     empty state still works. */
+  if(k==null){ const ev=selEvent(); if(!ev) return; k=cycleForDate(ev.date); }
+  /* Every non-historic event in the cycle, whether or not it already has a
+     roster. This used to skip anything already generated, on the reasoning
+     that re-rolling would discard a lead's hand-tuning — but it does not:
+     generateEventData carries any duty flagged `manual` straight across and
+     skips it, so only the generator's own picks change. Skipping meant that
+     once a cycle was built there was no way to rebuild it at all, which is
+     the opposite of useful. confirmBuildCycle() says what it will touch
+     before this runs. */
+  const evs=eventsInCycle(k).filter(e=>!isHistoricEvent(e));
+  if(!evs.length) return toast('No events in this cycle to build','err');
   let stored=0, live=0;
   for(const e of evs){
     ROSTERS[e.id]=generateEventData(e);
@@ -2173,6 +2186,91 @@ function selectEvent(id){
   if(curPage!=='roster') nav('roster'); else renderRoster();
 }
 function toggleCycle(k){ if(expandedCycles.has(k)) expandedCycles.delete(k); else expandedCycles.add(k); renderRoster(); }
+/* ── THE CYCLE BAR ───────────────────────────────────────────────────
+   Two things a Team Lead does constantly were both already built and both
+   effectively hidden. generateCycle() could only be reached from the empty
+   state of an event that had no roster yet — so the moment every event had
+   one, the button that rebuilds them disappeared. openAddEvent() was a
+   dashed ghost button underneath every cycle group in the sidebar.
+
+   They are first-class actions now, on a bar that also answers the question
+   you actually have when you open this page: what state is this cycle in.
+   The bar follows the selected event's cycle, falling back to the current
+   one when nothing is selected. */
+function rosterCycleBar(){
+  if(!IS_EDIT) return '';
+  const sel=selEvent();
+  let k=null;
+  if(sel) k=cycleForDate(sel.date);
+  else {
+    /* Teams alternate cycles, so on any given day one of the two pages has
+       no current cycle at all — today belongs to the other team. Falling
+       back to the next upcoming one keeps the bar useful there instead of
+       making it disappear. */
+    const cur=CYCLES.find(c=>c.status==='current')||CYCLES.find(c=>c.status==='upcoming');
+    if(cur) k=cur.k;
+  }
+  if(k==null) return '';
+  const meta=CYCLES.find(c=>c.k===k);
+  const status=meta?meta.status:'upcoming';
+  const historic=status==='historic';
+  const evs=eventsInCycle(k);
+  let built=0, live=0, gaps=0;
+  for(const e of evs){
+    const sc=slotCounts(e);
+    if(sc.generated){ built++; if(sc.missing) gaps++; }
+    if(e.confirmed) live++;
+  }
+  const unbuilt=evs.length-built;
+  let sum;
+  if(!evs.length) sum='No events in this cycle yet.';
+  else {
+    const bits=[];
+    if(unbuilt) bits.push('<b style="color:var(--dt)">'+unbuilt+'</b> not built yet');
+    if(live)    bits.push('<b style="color:var(--green-lt)">'+live+'</b> on the calendar');
+    if(gaps)    bits.push('<b style="color:var(--gold-lt)">'+gaps+'</b> with gaps');
+    if(!bits.length) bits.push('every event built');
+    sum=evs.length+' event'+(evs.length===1?'':'s')+' \u00b7 '+bits.join(' \u00b7 ');
+  }
+  let acts='';
+  if(historic) acts='<span style="font-size:12.5px;font-weight:800;color:var(--dm)">\ud83d\udd12 Historic \u2014 read only</span>';
+  else {
+    if(evs.length) acts+='<button class="btn btn-bl" onclick="confirmBuildCycle('+k+')">\u26a1 Build this cycle</button>';
+    acts+='<button class="btn btn-ol" onclick="openAddEvent()">+ Add event</button>';
+  }
+  return '<div class="cyc-bar"><div style="min-width:0">'+
+    '<div class="cb-k">'+esc(status)+' cycle</div>'+
+    '<div class="cb-t">'+esc(cycleLabel(k))+'</div>'+
+    '<div class="cb-s">'+sum+'</div></div>'+
+    '<div class="cb-a">'+acts+'</div></div>';
+}
+/* Rebuilding a cycle re-rolls rosters that are already on the calendar, and
+   there is no undo, so it says exactly what it is about to do first. The
+   reassuring half is worth stating plainly: anything a lead assigned or
+   removed by hand is flagged manual and is carried through untouched. */
+function confirmBuildCycle(k){
+  if(!IS_EDIT) return;
+  const evs=eventsInCycle(k).filter(e=>!isHistoricEvent(e));
+  if(!evs.length) return toast('No events in this cycle to build','err');
+  let withRoster=0, onCal=0, kept=0;
+  for(const e of evs){
+    const r=ROSTERS[e.id];
+    if(slotCounts(e).generated) withRoster++;
+    if(e.confirmed) onCal++;
+    if(r&&r.manual) kept+=Object.keys(r.manual).filter(key=>r.manual[key]).length;
+  }
+  const lines=[];
+  lines.push('Regenerate <b style="color:var(--dt)">'+evs.length+' event'+(evs.length===1?'':'s')+'</b> in <b style="color:var(--dt)">'+esc(cycleLabel(k))+'</b>.');
+  if(withRoster) lines.push('<b style="color:var(--gold-lt)">'+withRoster+'</b> already ha'+(withRoster===1?'s':'ve')+' a roster and will be re-rolled.');
+  if(onCal) lines.push('<b style="color:var(--green-lt)">'+onCal+'</b> '+(onCal===1?'is':'are')+' on the calendar and will stay there.');
+  lines.push(kept
+    ? '<b style="color:var(--dt)">'+kept+'</b> dut'+(kept===1?'y':'ies')+' you set by hand will be kept \u2014 only the generator\u2019s own picks are re-rolled.'
+    : 'Nothing has been set by hand in this cycle, so every duty will be re-rolled.');
+  oM('<h3>Build this cycle</h3>'+
+    '<p style="font-size:14px;color:var(--dm);line-height:1.6">'+lines.join('<br>')+'</p>'+
+    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
+    '<button class="btn btn-bl" onclick="cM();generateCycle('+k+')">Build '+evs.length+' event'+(evs.length===1?'':'s')+'</button></div>');
+}
 function renderRoster(){
   const el=document.getElementById('body-roster'); if(!el) return;
   // sidebar cycle list
@@ -2202,6 +2300,7 @@ function renderRoster(){
     main=renderEventView(ev);
   }
   el.innerHTML='<div class="ph"><div><h1>Roster</h1><p>Duty assignments — historic cycles are read-only · 🔒 marks locked slots</p></div></div>'+
+    rosterCycleBar()+
     '<div class="roster-layout"><aside class="rl-side">'+side+'</aside><div class="rl-main">'+main+'</div></div>';
 }
 function renderEventView(ev){
@@ -3315,18 +3414,25 @@ function attendanceStats(memberId, k){
 /* id -> { total, cyc, prev, byDuty:{dutyName:count} } */
 function dutyStats(k){
   const out={};
-  const bump=(id,key,duty)=>{
-    const o=out[id]=out[id]||{total:0,cyc:0,prev:0,byDuty:{}};
+  const bump=(id,key,duty,recent)=>{
+    const o=out[id]=out[id]||{total:0,cyc:0,prev:0,recent:0,byDuty:{}};
     o.total++; if(key) o[key]++;
+    /* `recent` is the three-cycle carry the generator actually weighs —
+       computeCounts() sums cycles k-1, k-2 and k-3. The report only ever
+       showed `prev`, a single cycle, so a lead reading this page was being
+       shown a narrower window than the policy uses and could not tell why
+       somebody kept being skipped. */
+    if(recent) o.recent++;
     if(duty) o.byDuty[duty]=(o.byDuty[duty]||0)+1;
   };
   EVENTS.forEach(ev=>{
     const r=ROSTERS[ev.id]; if(!r||!r.assign) return;
     const kk=cycleForDate(ev.date);
     const where = (k!=null && kk===k) ? 'cyc' : ((k!=null && kk===k-1) ? 'prev' : null);
+    const inRecent = k!=null && (kk===k-1 || kk===k-2 || kk===k-3);
     for(const key in r.assign){
       const label=recName(legacyLabel(key));
-      for(const q of people(r.assign[key])){ if(q.id!=null) bump(q.id, where, label); }
+      for(const q of people(r.assign[key])){ if(q.id!=null) bump(q.id, where, label, inRecent); }
     }
   });
   return out;
@@ -3361,24 +3467,79 @@ function renderAttendanceReport(k){
     '<div class="ib" style="margin-top:12px">A justified absence is left out of the attendance rate entirely \u2014 giving notice costs nothing. Lateness is measured against the times someone actually turned up, so missing an event cannot make them look more punctual. A dash means they have never been rostered.</div>';
 }
 
+/* The routine events a cycle creates for itself. Anything else in the cycle
+   was put there by hand, which is what makes it worth calling out here:
+   an unexpected event moves everybody's numbers and the lead should be able
+   to see which ones did it. */
+const ROUTINE_TYPES=new Set(['friday','pbs']);
 function renderDutyReporting(k){
   const active=MEMBERS.filter(m=>m.status==='active');
   if(!active.length) return '<div class="empty-note">No active members.</div>';
   const ds=dutyStats(k);
   if(repMember!=null) return renderMemberDutyChart(repMember, ds);
-  const rows=active.map(m=>({m:m,d:ds[m.id]||{total:0,cyc:0,prev:0}}))
-    .sort((x,y)=>y.d.total-x.d.total||x.m.name.localeCompare(y.m.name));
-  let h='<div class="tw"><div class="tw-scroll"><table><thead><tr><th>Member</th>'+
-    '<th>Duty days completed in total</th><th>Duties this cycle</th><th>Duties last cycle</th><th></th></tr></thead><tbody>';
+  const rows=active.map(m=>({m:m,d:ds[m.id]||{total:0,cyc:0,prev:0,recent:0}}))
+    .sort((x,y)=>y.d.cyc-x.d.cyc||y.d.total-x.d.total||x.m.name.localeCompare(y.m.name));
+
+  // ── The spread, which is the thing fairness is actually about ──
+  const cycCounts=rows.map(r=>r.d.cyc);
+  const recCounts=rows.map(r=>r.d.recent);
+  const min=Math.min.apply(null,cycCounts), max=Math.max.apply(null,cycCounts);
+  const mean=cycCounts.reduce((a,b)=>a+b,0)/(cycCounts.length||1);
+  const rMin=Math.min.apply(null,recCounts), rMax=Math.max.apply(null,recCounts);
+  /* Two clear of the average, not one. At one, a perfectly healthy spread of
+     2-4 around a mean of 3.2 flagged eighteen people as barely used, which is
+     noise dressed up as a warning — the flag has to mean something when it
+     fires. Stated in the panel rather than left as a magic threshold. */
+  const heavy=rows.filter(r=>r.d.cyc>=mean+2).length;
+  const light=rows.filter(r=>r.d.cyc<=mean-2).length;
+  const stat=(label,val,col)=>'<div style="min-width:120px"><div style="font-size:11px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:var(--dm)">'+label+'</div>'+
+    '<div class="num" style="font-size:20px;font-weight:900;margin-top:3px;'+(col?'color:'+col:'')+'">'+val+'</div></div>';
+
+  let h='<div class="pnl" style="margin-bottom:14px"><div class="pnl-h">Fairness \u00b7 '+esc(cycleLabel(k))+'</div><div class="pnl-b">'+
+    '<div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">'+
+      stat('Spread this cycle', min+' \u2013 '+max, max-min>=3?'var(--gold-lt)':'var(--green-lt)')+
+      stat('Average', mean.toFixed(1))+
+      stat('Carrying more', heavy, heavy?'var(--gold-lt)':'')+
+      stat('Barely used', light, light?'var(--red-lt)':'')+
+      stat('Across three cycles', rMin+' \u2013 '+rMax)+
+    '</div>'+
+    '<div style="font-size:12px;color:var(--dm);margin-top:12px;line-height:1.55">'+
+      'The generator balances on <b style="color:var(--dt)">three cycles</b>, not one \u2014 the same window shown here as \u201cLast 3 cycles\u201d. '+
+      '<b style="color:var(--gold-lt)">Carrying more</b> and <b style="color:var(--red-lt)">barely used</b> mean two or more duties clear of the average. '+
+      'A wide spread is not automatically unfair: certification, away dates and age limits all legitimately narrow who can take a duty.'+
+    '</div></div></div>';
+
+  // ── What was added to this cycle by hand ──
+  const evs=eventsInCycle(k);
+  const added=evs.filter(e=>!ROUTINE_TYPES.has(e.type));
+  if(added.length){
+    h+='<div class="pnl" style="margin-bottom:14px"><div class="pnl-h">Added to this cycle <span class="ct">'+added.length+'</span></div><div class="pnl-b">'+
+      '<div style="font-size:12px;color:var(--dm);margin-bottom:9px;line-height:1.5">Events beyond the Friday Majlis and Paanch Baar Saal a cycle creates for itself. Fairness counts these exactly like any other duty \u2014 they are listed so you can see what moved the numbers.</div>'+
+      added.map(function(e){
+        const sc=slotCounts(e);
+        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(79,195,247,.08)">'+
+          '<span style="font-weight:800">'+esc(e.name)+'</span>'+
+          '<span style="font-size:12px;color:var(--dm)">'+esc(fmtShort(e.date))+'</span>'+
+          '<span style="margin-left:auto;font-size:12px;color:var(--dm)">'+sc.assigned+' slot'+(sc.assigned===1?'':'s')+' filled'+
+          (sc.missing?' \u00b7 <b style="color:var(--gold-lt)">'+sc.missing+' open</b>':'')+'</span></div>';
+      }).join('')+'</div></div>';
+  }
+
+  h+='<div class="tw"><div class="tw-scroll"><table><thead><tr><th>Member</th>'+
+    '<th>Duties this cycle</th><th>Last 3 cycles</th><th>Last cycle</th><th>Total</th><th></th></tr></thead><tbody>';
   rows.forEach(r=>{
+    const flag = r.d.cyc>=mean+2 ? '<span class="bdg bdg-warn" style="margin-left:7px">carrying more</span>'
+               : r.d.cyc<=mean-2 ? '<span class="bdg bdg-no" style="margin-left:7px">barely used</span>' : '';
     h+='<tr style="cursor:pointer" onclick="repMember='+r.m.id+';renderReports()" title="See every duty '+esc(r.m.name)+' has done">'+
-       '<td style="font-weight:800">'+esc(r.m.name)+'</td>'+
-       '<td class="num" style="font-weight:900">'+r.d.total+'</td>'+
-       '<td class="num">'+r.d.cyc+'</td><td class="num">'+r.d.prev+'</td>'+
+       '<td style="font-weight:800">'+esc(r.m.name)+flag+'</td>'+
+       '<td class="num" style="font-weight:900">'+r.d.cyc+'</td>'+
+       '<td class="num" style="font-weight:800;color:var(--blue-lt)">'+r.d.recent+'</td>'+
+       '<td class="num">'+r.d.prev+'</td>'+
+       '<td class="num">'+r.d.total+'</td>'+
        '<td style="color:var(--blue-lt);font-weight:800">View \u2192</td></tr>';
   });
   return h+'</tbody></table></div></div>'+
-    '<div class="ib" style="margin-top:12px">Click anyone to see how often they have done each duty.</div>';
+    '<div class="ib" style="margin-top:12px">Click anyone to see how often they have done each duty. This page redraws itself whenever a roster changes on any device.</div>';
 }
 
 /* Horizontal bars rather than a canvas chart: they survive the page's own
@@ -3456,9 +3617,12 @@ function reportCSV(k){
   }
   if(repMode==='fairness'){
     const ds=dutyStats(k);
-    let out='Member,Duty days completed in total,Duties this cycle,Duties last cycle\n';
-    active.forEach(m=>{ const d=ds[m.id]||{total:0,cyc:0,prev:0};
-      out+=[q(m.name),d.total,d.cyc,d.prev].join(',')+'\n'; });
+    /* Same columns as the table, in the same order, including the three-cycle
+       window — a CSV that disagrees with the page it was exported from is
+       worse than no CSV. */
+    let out='Member,Duties this cycle,Last 3 cycles,Duties last cycle,Duty days completed in total\n';
+    active.forEach(m=>{ const d=ds[m.id]||{total:0,cyc:0,prev:0,recent:0};
+      out+=[q(m.name),d.cyc,d.recent,d.prev,d.total].join(',')+'\n'; });
     return out;
   }
   // Attendance: the same three headline numbers the table shows, so the
