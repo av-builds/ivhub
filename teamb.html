@@ -22,7 +22,7 @@
   --pur:#7C3AED;--pur-bg:rgba(124,58,237,0.12);--pur-bd:rgba(124,58,237,0.3);
   --gold:#F59E0B;--gold-lt:#FCD34D;--gold-bg:rgba(245,158,11,0.12);--gold-bd:rgba(245,158,11,0.3);
   --r:10px;
-  --ds3:#132B52;--dm2:#4A6A85;--db2:rgba(79,195,247,0.32);
+  --ds3:#132B52;--dm2:#6B8FAD;--db2:rgba(79,195,247,0.32);
   --green:#10B981;--green-lt:#4ADE80;--red2:#EF4444;--red-lt:#F87171;
   --r-sm:8px;--r-lg:16px;--r-xl:20px;
   --sh-1:0 1px 2px rgba(0,0,0,.35),0 3px 12px rgba(2,11,24,.35);
@@ -33,7 +33,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;scrollbar-gutter:stable;}
-body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-family:'Archivo',sans-serif;background:var(--dp);color:var(--dt);min-height:100vh;
+body{overflow-x:hidden;font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-family:'Archivo',sans-serif;background:var(--dp);color:var(--dt);min-height:100vh;
   background-image:radial-gradient(ellipse 60% 40% at 85% -5%,rgba(21,101,192,.10),transparent 65%);}
 ::-webkit-scrollbar{width:6px;height:6px;}::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(79,195,247,.3);border-radius:3px;}
@@ -42,7 +42,7 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
 img{-webkit-user-drag:none;}
 button,input,select,textarea{font-family:'Archivo',sans-serif;}
 .tnum,.dn,.sc-v,.next-d,td,.dash-clock,.num{font-variant-numeric:tabular-nums;letter-spacing:0;}
-input,select,textarea{color:var(--dt);background:rgba(2,11,24,.5);border:1px solid var(--db);border-radius:var(--r-sm);padding:9px 12px;font-size:14px;outline:none;transition:border-color .18s,box-shadow .18s;}
+input,select,textarea{color:var(--dt);background:rgba(2,11,24,.5);border:1px solid var(--db);border-radius:var(--r-sm);padding:10px 12px;font-size:16px;outline:none;transition:border-color .18s,box-shadow .18s;}
 input:focus,select:focus,textarea:focus{border-color:var(--blue-lt);box-shadow:0 0 0 3px rgba(79,195,247,.1);}
 select option{background:var(--ds2);color:var(--dt);}
 input[type=date]{color-scheme:dark;}
@@ -83,7 +83,7 @@ a{color:var(--blue-lt);text-decoration:none;}
 .hub-link{display:flex;align-items:center;gap:9px;padding:9px 12px;margin:0 3px 10px;border:1px solid var(--db);border-radius:var(--r);color:var(--blue-lt);font-size:13px;font-weight:800;text-decoration:none;transition:all .18s;white-space:nowrap;}
 .hub-link:hover{background:rgba(79,195,247,.08);border-color:var(--db2);}
 .nav-sec{font-size:11px;font-weight:900;color:var(--dm2);text-transform:uppercase;letter-spacing:0.06em;padding:10px 12px 5px;white-space:nowrap;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-sm);cursor:pointer;color:var(--dm);font-size:13px;font-weight:700;border:1px solid transparent;position:relative;white-space:nowrap;transition:all .2s cubic-bezier(.16,1,.3,1);animation:navIn .4s cubic-bezier(.16,1,.3,1) backwards;}
+.nav-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;font-family:inherit;padding:9px 12px;border-radius:var(--r-sm);cursor:pointer;color:var(--dm);font-size:13px;font-weight:700;border:1px solid transparent;position:relative;white-space:nowrap;transition:all .2s cubic-bezier(.16,1,.3,1);animation:navIn .4s cubic-bezier(.16,1,.3,1) backwards;}
 .nav-item:hover{background:var(--ds2);color:var(--dt);transform:translateX(3px);}
 .nav-item.active{background:linear-gradient(90deg,rgba(79,195,247,.14),rgba(79,195,247,.05));color:var(--blue-lt);border-color:rgba(79,195,247,.22);}
 .nav-item::before{content:'';position:absolute;left:-8px;top:22%;bottom:22%;width:3px;border-radius:3px;background:linear-gradient(180deg,var(--blue-lt),var(--blue2));transform:scaleY(0);transition:transform .25s cubic-bezier(.16,1,.3,1);}
@@ -127,7 +127,7 @@ a{color:var(--blue-lt);text-decoration:none;}
 .bell-row:last-child{border-bottom:none;}
 .bell-row:hover{background:var(--ds);}
 .bell-row b{display:block;font-size:12.5px;font-weight:800;}
-.bell-row small{display:block;color:var(--dm);font-size:11.5px;margin-top:1px;}
+.bell-row small{display:block;color:var(--dm);font-size:12.5px;margin-top:1px;}
 .bell-row .tag{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-lt);}
 .sb-nav .nav-item:nth-of-type(1){animation-delay:.02s}.sb-nav .nav-item:nth-of-type(2){animation-delay:.05s}
 .sb-nav .nav-item:nth-of-type(3){animation-delay:.08s}.sb-nav .nav-item:nth-of-type(4){animation-delay:.11s}
@@ -161,7 +161,7 @@ body.sb-min .main{margin-left:70px;}
 .page.active{display:block;animation:pageIn .32s cubic-bezier(.16,1,.3,1);}
 .ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:14px;flex-wrap:wrap;}
 .ph h1{font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:0.03em;}
-.ph p{color:var(--dm);font-size:12px;margin-top:4px;line-height:1.55;max-width:660px;}
+.ph p{color:var(--dm);font-size:13.5px;margin-top:4px;line-height:1.55;max-width:660px;}
 .ha{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
 
 /* ─── BUTTONS ─── */
@@ -177,8 +177,8 @@ body.sb-min .main{margin-left:70px;}
 .btn-gd{background:var(--gold-bg);color:var(--gold-lt);border:1px solid var(--gold-bd);}
 .btn-gd:hover{border-color:var(--gold);}
 .btn-gd.on{background:var(--gold);color:#20180a;border-color:var(--gold);}
-.btn-sm{padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;border:1px solid var(--db);background:var(--ds2);color:var(--dm);transition:all .18s;}
+.btn-sm{padding:5px 11px;font-size:13px;border-radius:var(--r-sm);}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:800;cursor:pointer;border:1px solid var(--db);background:var(--ds2);color:var(--dm);transition:all .18s;}
 .pill.on{background:rgba(16,185,129,.13);border-color:rgba(16,185,129,.4);color:var(--green-lt);}
 
 /* ─── PANELS / TABLES ─── */
@@ -195,7 +195,7 @@ body.sb-min .main{margin-left:70px;}
 .tw{background:var(--ds);background-image:var(--surface-grad);border:var(--hairline);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-1);}
 .tw-scroll{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;}
-th{padding:11px 15px;text-align:left;font-size:11px;font-weight:900;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;background:rgba(79,195,247,.04);border-bottom:var(--hairline);white-space:nowrap;}
+th{padding:11px 15px;text-align:left;font-size:12px;font-weight:900;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;background:rgba(79,195,247,.04);border-bottom:var(--hairline);white-space:nowrap;}
 td{padding:10px 15px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.035);vertical-align:top;}
 tr:last-child td{border-bottom:none;}
 tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(79,195,247,.035);}
@@ -245,7 +245,58 @@ tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(79,195,24
 .qa-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
 
 /* ─── ROSTER LAYOUT ─── */
-.roster-layout{display:grid;grid-template-columns:284px 1fr;gap:16px;align-items:start;}
+.roster-layout{display:grid;grid-template-columns:284px minmax(0,1fr);gap:16px;align-items:start;}
+.roster-layout.with-info{grid-template-columns:284px minmax(0,1fr) 336px;}
+.rl-info{position:sticky;top:14px;max-height:calc(100vh - 40px);overflow-y:auto;}
+.gp{background:var(--ds);border:var(--hairline);border-radius:var(--r-lg);overflow:hidden;}
+.gp-hd{padding:13px 15px;}
+.gp.preview .gp-hd{background:var(--gold-bg);border-bottom:1px solid var(--gold-bd);}
+.gp.receipt .gp-hd{background:rgba(16,185,129,.10);border-bottom:1px solid rgba(16,185,129,.30);}
+.gp.idle .gp-hd{border-bottom:var(--hairline);}
+.gp-tag{font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;}
+.gp.preview .gp-tag{color:var(--gold-lt);}
+.gp.receipt .gp-tag{color:var(--green-lt);}
+.gp.idle .gp-tag{color:var(--dm2);}
+.gp-ttl{font-size:15px;font-weight:900;color:var(--dt);margin-top:4px;line-height:1.25;}
+.gp-sub{font-size:12.5px;font-weight:600;color:var(--dm);margin-top:5px;line-height:1.55;}
+.gp-acts{display:flex;gap:7px;padding:11px 15px;border-bottom:var(--hairline);}
+.gp-acts .btn{flex:1;justify-content:center;}
+.gp-live{display:flex;align-items:flex-start;gap:9px;padding:10px 15px 12px;cursor:pointer;
+  font-size:12px;font-weight:700;color:var(--dm);line-height:1.5;border-bottom:var(--hairline);}
+.gp-live input{width:auto;flex:none;margin-top:1px;accent-color:var(--gold);}
+.gp-live b{color:var(--gold-lt);}
+.gp-ev.gp-skip{cursor:default;opacity:.74;}
+.gp-ev.gp-skip:hover{background:transparent;}
+.gp-sec{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--dm2);padding:13px 15px 5px;}
+.gp-b{padding:0 15px 13px;}
+.gp-nums{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:13px 15px 2px;}
+.gp-n{background:var(--ds2);border-radius:var(--r-sm);padding:9px 11px;}
+.gp-n .v{font-size:20px;font-weight:900;color:var(--dt);line-height:1.05;}
+.gp-n .l{font-size:12px;font-weight:700;color:var(--dm);margin-top:3px;}
+.gp-row{display:flex;gap:8px;align-items:center;font-size:12px;padding:5px 0;}
+.gp-row .nm{flex:1;min-width:0;color:var(--dt);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gp-row .nm.zero{color:var(--dm2);font-weight:600;}
+.gp-row .mt{color:var(--dt);font-weight:900;flex:none;min-width:16px;text-align:right;}
+.gp-bar{height:6px;border-radius:6px;background:var(--db);overflow:hidden;flex:none;width:86px;}
+.gp-bar i{display:block;height:100%;background:var(--blue-lt);border-radius:6px;}
+.gp-pill{display:inline-block;font-size:11px;font-weight:900;padding:2px 7px;border-radius:99px;flex:none;}
+.gp-away{font-size:10.5px;font-weight:900;color:var(--gold-lt);background:var(--gold-bg);padding:1px 5px;border-radius:99px;margin-left:6px;}
+.gp-ev{border-top:1px solid rgba(79,195,247,.09);padding:4px 0 6px;cursor:pointer;}
+.gp-ev:first-child{border-top:0;}
+.gp-ev:hover{background:rgba(79,195,247,.04);}
+.gp-mt{font-size:12px;font-weight:700;color:var(--dm);margin-top:-2px;}
+.gp-mv{font-size:11px;color:var(--dm);margin-top:5px;padding-left:9px;border-left:2px solid var(--db);line-height:1.5;}
+.gp-mv b{color:var(--dt);display:block;font-size:10.5px;}
+.gp-mv .out{color:var(--gold-lt);margin-right:8px;}
+.gp-mv .in{color:var(--green-lt);}
+.gp-note{font-size:12px;font-weight:600;color:var(--dm2);margin-top:7px;line-height:1.5;}
+.gp-list{max-height:262px;overflow-y:auto;}
+.gp-warn{background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:var(--r-sm);
+  padding:9px 11px;font-size:11px;color:var(--gold-lt);font-weight:600;line-height:1.55;margin-top:7px;}
+.gp-warn:first-child{margin-top:0;}
+.gp-warn b{font-weight:900;}
+@media(max-width:1480px){.roster-layout.with-info{grid-template-columns:284px minmax(0,1fr);}
+  .rl-info{grid-column:2;position:static;max-height:none;}}
 .rl-side{background:var(--ds);border:var(--hairline);border-radius:var(--r-lg);padding:12px 10px;position:sticky;top:14px;max-height:calc(100vh - 40px);overflow-y:auto;}
 .sb-label{font-size:11px;font-weight:900;letter-spacing:0.06em;color:var(--dm);text-transform:uppercase;padding:4px 6px 10px;}
 .cyc-group{margin-bottom:9px;border:1px solid var(--db);border-radius:12px;overflow:hidden;background:rgba(13,32,64,.35);}
@@ -277,6 +328,17 @@ tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(79,195,24
   border:1px solid var(--db);}
 .cyc-bar .cb-k{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;}
 .cyc-bar .cb-t{font-size:17px;font-weight:900;letter-spacing:.01em;}
+.cyc-bar .cb-sel{font-size:17px;font-weight:900;letter-spacing:.01em;color:var(--dt);
+  background:transparent;border:1px solid transparent;border-radius:9px;padding:3px 26px 3px 8px;
+  margin:1px 0 0 -8px;max-width:100%;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--dm) 50%),linear-gradient(135deg,var(--dm) 50%,transparent 50%);
+  background-position:calc(100% - 13px) 52%,calc(100% - 8px) 52%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
+.cyc-bar .cb-sel:hover{border-color:var(--db2);background-color:var(--ds2);}
+.cyc-bar .cb-sel option{background:var(--ds);color:var(--dt);}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 .cyc-bar .cb-s{font-size:12.5px;font-weight:700;color:var(--dm);margin-top:4px;}
 .cyc-bar .cb-a{margin-left:auto;display:flex;gap:9px;align-items:center;flex:none;}
 
@@ -292,17 +354,28 @@ tr.sec td{background:rgba(21,101,192,.14);font-size:12px;font-weight:900;letter-
 td.dn2{font-size:13px;font-weight:800;width:230px;color:var(--dt);}
 td.dn2 .lock{font-size:12px;margin-left:5px;}
 td.dn2 .warns{margin-top:4px;display:flex;flex-direction:column;gap:3px;}
-.warn-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:var(--gold-lt);background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:6px;padding:2px 7px;width:fit-content;}
+.warn-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:var(--gold-lt);background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:6px;padding:2px 7px;width:fit-content;}
 .cellwrap{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:26px;}
-.chip{position:relative;display:inline-flex;align-items:center;gap:5px;background:var(--ds2);border:1px solid var(--db);border-radius:7px;padding:4px 9px;font-size:13px;font-weight:700;transition:all .15s;animation:popIn .2s ease both;}
+.chip{position:relative;display:inline-flex;align-items:center;gap:5px;background:var(--ds2);color:var(--dt);border:1px solid var(--db);border-radius:7px;padding:4px 9px;font-size:13px;font-weight:700;transition:all .15s;animation:popIn .2s ease both;}
 .chip:hover{border-color:var(--blue-lt);}
-.chip .acts{display:none;gap:2px;margin-left:2px;}
-.chip:hover .acts{display:inline-flex;}
-.chip .acts button{background:transparent;border:none;color:var(--dm);cursor:pointer;font-size:12px;padding:0 3px;border-radius:3px;line-height:1.4;}
-.chip .acts button:hover{color:var(--blue-lt);}
-.chip .acts button.rm:hover{color:var(--red-lt);}
-.chip.un{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.5);color:var(--red-lt);font-weight:900;font-size:12px;letter-spacing:0.06em;}
-.chip.add{background:transparent;border:1.5px dashed var(--db);color:var(--dm);cursor:pointer;font-size:12px;font-weight:800;}
+/* The swap and remove buttons used to live behind .chip:hover. There is no
+   hover on a tablet, so on the device this app is actually used on they had
+   a computed width of zero and a lead could add someone to a duty and then
+   never move or remove them. The chip is the button now, and it opens a
+   sheet that also has room to say why the person is there. */
+button.chip{cursor:pointer;text-align:left;font-family:inherit;}
+button.chip:active{transform:scale(.97);}
+.chip .chip-more{color:var(--dm);font-size:13px;line-height:1;margin-left:1px;letter-spacing:.06em;}
+button.chip:hover .chip-more{color:var(--blue-lt);}
+.chip .chip-note{font-size:11px;font-weight:900;color:var(--gold-lt);background:var(--gold-bg);
+  border-radius:99px;padding:1px 6px;margin-left:2px;text-decoration:none;}
+.chip.un{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.5);color:var(--red-lt);font-weight:900;font-size:13px;letter-spacing:0.06em;}
+button.chip.un:hover{background:rgba(239,68,68,.22);border-color:var(--red-lt);}
+/* Said in words rather than hidden in a title= nobody on touch can reach. */
+.lock-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:900;
+  color:var(--blue-lt);background:rgba(79,195,247,.10);border:1px solid rgba(79,195,247,.28);
+  border-radius:99px;padding:1px 8px;margin-left:6px;white-space:nowrap;letter-spacing:.02em;}
+.chip.add{background:transparent;border:1.5px dashed var(--db);color:var(--dm);cursor:pointer;font-size:13px;font-weight:800;}
 .chip.add:hover{color:var(--blue-lt);border-color:var(--blue-lt);}
 .chip.away{opacity:.6;text-decoration:line-through;}
 .empty-gen{text-align:center;padding:56px 20px;border:1.5px dashed var(--db);border-radius:14px;background:rgba(13,32,64,.25);}
@@ -325,7 +398,7 @@ td.dn2 .warns{margin-top:4px;display:flex;flex-direction:column;gap:3px;}
 .cal-cell .dnum{font-weight:900;}
 .cal-cell .towner{position:absolute;top:4px;right:5px;font-size:11px;font-weight:900;padding:1px 5px;border-radius:4px;background:var(--ds2);color:var(--dm);border:1px solid var(--db);}
 .cal-cell.mine .towner{background:var(--blue2);color:#fff;border-color:transparent;}
-.cal-ev{display:block;width:100%;text-align:left;margin-top:3px;background:var(--blue2);color:#fff;border:none;border-radius:5px;padding:2px 5px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-ev{display:block;width:100%;text-align:left;margin-top:3px;background:var(--blue2);color:#fff;border:none;border-radius:5px;padding:2px 5px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cal-ev:hover{filter:brightness(1.2);}
 .cal-ev.conf{background:var(--gold);color:#20180a;}
 
@@ -336,7 +409,7 @@ td.dn2 .warns{margin-top:4px;display:flex;flex-direction:column;gap:3px;}
 .rbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--green),var(--green-lt));}
 .rbar i.low{background:linear-gradient(90deg,#B91C1C,var(--red-lt));}
 .seg{display:inline-flex;border:1px solid var(--db);border-radius:8px;overflow:hidden;}
-.seg button{background:transparent;border:none;color:var(--dm);font-size:12px;font-weight:800;padding:6px 12px;cursor:pointer;border-right:1px solid var(--db);}
+.seg button{background:transparent;border:none;color:var(--dm);font-size:13px;font-weight:800;padding:6px 12px;cursor:pointer;border-right:1px solid var(--db);}
 .seg button:last-child{border-right:none;}
 .seg button.on{background:var(--blue2);color:#fff;}
 
@@ -357,7 +430,7 @@ td.dn2 .warns{margin-top:4px;display:flex;flex-direction:column;gap:3px;}
 .att-nm{flex:1;min-width:0;font-size:14px;font-weight:800;}
 .att-nm .sub{font-size:12px;font-weight:600;color:var(--dm);}
 .att-seg{display:inline-flex;gap:4px;flex-wrap:wrap;}
-.att-btn{background:var(--ds2);border:1px solid var(--db);color:var(--dm);font-size:12px;font-weight:900;padding:5px 10px;border-radius:7px;cursor:pointer;letter-spacing:0.04em;transition:all .14s;}
+.att-btn{background:var(--ds2);border:1px solid var(--db);color:var(--dm);font-size:13.5px;font-weight:900;padding:5px 10px;border-radius:7px;cursor:pointer;letter-spacing:0.04em;transition:all .14s;}
 .att-btn:hover{border-color:var(--blue-lt);}
 .att-btn.present.on{background:rgba(16,185,129,.16);border-color:rgba(16,185,129,.5);color:var(--green-lt);}
 .att-btn.late.on{background:var(--gold-bg);border-color:var(--gold-bd);color:var(--gold-lt);}
@@ -375,7 +448,7 @@ td.dn2 .warns{margin-top:4px;display:flex;flex-direction:column;gap:3px;}
 .mem-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px;}
 .mem-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
 .dchips{display:flex;flex-wrap:wrap;gap:6px;}
-.dchip-tog{font-size:12px;font-weight:800;padding:5px 10px;border-radius:8px;border:1px solid var(--db);background:var(--ds2);color:var(--dm);cursor:pointer;transition:all .14s;}
+.dchip-tog{font-size:13px;font-weight:800;padding:5px 10px;border-radius:8px;border:1px solid var(--db);background:var(--ds2);color:var(--dm);cursor:pointer;transition:all .14s;}
 .dchip-tog:hover{border-color:var(--blue-lt);}
 .dchip-tog.prefer{background:rgba(16,185,129,.14);border-color:rgba(16,185,129,.45);color:var(--green-lt);}
 .dchip-tog.avoid{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.45);color:var(--red-lt);}
@@ -402,7 +475,10 @@ td.dn2 .warns{margin-top:4px;display:flex;flex-direction:column;gap:3px;}
 .dp-row:last-child{border-bottom:none;}
 .dp-row .dl{color:var(--dm);}.dp-row .dv{font-weight:800;text-align:right;}
 .dp-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;}
-.flabel{display:block;font-size:11px;font-weight:900;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;margin:14px 0 6px;}
+.ae-hint{font-size:12.5px;font-weight:700;margin-top:7px;line-height:1.5;color:var(--dm);}
+.ae-hint.ok{color:var(--green-lt);}
+.ae-hint.bad{color:var(--gold-lt);}
+.flabel{display:block;font-size:12.5px;font-weight:900;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;margin:14px 0 6px;}
 .frow{margin-bottom:11px;}
 .frow input,.frow select,.frow textarea{width:100%;}
 
@@ -500,7 +576,7 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4FC3F7
 .exp-foot{margin-top:18px;font-size:12px;color:#7AAECB;}
 
 /* ─── RESPONSIVE ─── */
-@media(max-width:1100px){.sg{grid-template-columns:repeat(2,1fr);}.dash-2col{grid-template-columns:1fr;}.roster-layout{grid-template-columns:1fr;}.rl-side{position:static;max-height:none;}}
+@media(max-width:1100px){.sg{grid-template-columns:repeat(2,1fr);}.dash-2col{grid-template-columns:1fr;}.roster-layout,.roster-layout.with-info{grid-template-columns:minmax(0,1fr);}.rl-side{position:static;max-height:none;}.rl-info{grid-column:1;position:static;max-height:none;}}
 @media(max-width:900px){
   #menuBtn{display:flex;}
   .sidebar{transform:translateX(-100%);width:250px;}
@@ -514,6 +590,62 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4FC3F7
   .mbox::before{content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);width:44px;height:4px;border-radius:2px;background:rgba(122,174,203,.4);}
   .toast{left:14px;right:14px;transform:translateY(140%);}.toast.show{transform:translateY(0);}
   .cal-cell{min-height:58px;}
+}
+/* ── TOUCH ──────────────────────────────────────────────────────────
+   Keyed to the pointer, not the viewport. A 12-inch tablet has a coarse
+   pointer and a 13-inch laptop does not, and it was the tablet at the
+   Jamatkhana this app kept failing on — a width query would have missed it.
+   44px is the floor Apple and Google both publish; before this, exactly one
+   control in the file met it. */
+/* ── THE ROSTER ON A NARROW SCREEN ──────────────────────────────────
+   The duty table is 560px at its narrowest and a phone column is about
+   332px, so two thirds of it sat off-screen behind a 6px scrollbar at 30%
+   opacity — and the part off-screen was the names. Same markup, same
+   single renderer: the table reflows into one card per duty. */
+@media(max-width:760px){
+  .tw-scroll{overflow-x:visible;}
+  table.duty{min-width:0;display:block;}
+  table.duty thead{display:none;}
+  table.duty tbody{display:block;}
+  table.duty tr{display:block;border:1px solid var(--db);border-radius:12px;
+    background:rgba(13,32,64,.34);margin:0 0 10px;overflow:hidden;}
+  table.duty td{display:block;border:0;padding:10px 13px;}
+  table.duty td.dn2{width:auto;font-size:15px;background:rgba(79,195,247,.05);
+    border-bottom:1px solid var(--db);padding:11px 13px;}
+  table.duty td[data-col]::before{content:attr(data-col);display:block;font-size:11px;
+    font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--dm);margin-bottom:7px;}
+  table.duty td[data-col="Female"]{border-top:1px solid rgba(79,195,247,.09);}
+  table.duty tr.sec{border:0;background:transparent;margin:16px 0 7px;}
+  table.duty tr.sec td{padding:7px 12px;border-radius:8px;}
+  /* A duty name plus its badges needs to wrap here rather than force width. */
+  td.dn2{white-space:normal;}
+  .lock-badge{margin-left:0;margin-top:6px;}
+  td.dn2 .warns{margin-top:6px;}
+}
+@media(hover:none){
+  .btn,.btn-sm,.chip,.att-btn,.pill,.dchip-tog,.seg button,.cal-ev,.nav-item,.hub-link,
+  .pick-row,.ev-card,.cyc-head,.add-ev-btn,.tn-b,.tn-out,.tn-tog,.tn-show,
+  .away-chip button,.uout,.dpx,.bell-row,.next-row,.mem-card,#sbCollapse,#menuBtn{min-height:44px;}
+  .btn,.btn-sm,.att-btn,.pill,.dchip-tog,.seg button,.chip,.cal-ev,.away-chip button,
+  .uout,.dpx,#sbCollapse,#menuBtn{display:inline-flex;align-items:center;justify-content:center;}
+  .chip{justify-content:flex-start;padding:8px 12px;font-size:14px;}
+  .chip .chip-more{font-size:15px;}
+  .btn-sm{padding:10px 15px;}
+  .att-btn{padding:10px 16px;font-size:15px;}
+  .pill,.dchip-tog,.seg button{padding:11px 16px;}
+  .cal-ev{padding:8px 7px;font-size:12.5px;white-space:normal;}
+  .cal-cell{min-height:104px;}
+  .away-chip button,.uout{padding:0 10px;font-size:17px;}
+  .dpx,#sbCollapse,#menuBtn{width:44px;}
+  .cellwrap{gap:8px;min-height:44px;}
+  .flabel{font-size:13px;}
+  /* Every :hover transform in this file is decorative and never fires on
+     touch, so tapping these gave no feedback whatsoever. */
+  .nav-item:active,.mem-card:active,.next-row:active,.ev-card:active,.cal-cell:active,
+  .pick-row:active,.gp-ev:active,.bell-row:active,.cyc-head:active{background:var(--ds2);}
+  /* A 9px invisible strip under each top-bar menu bridging mouse travel.
+     On touch it is a dead zone that swallows taps. */
+  .tn-group::after{display:none;}
 }
 @media(max-width:480px){.sg{grid-template-columns:1fr 1fr;gap:9px;}.sc-v{font-size:24px;}.ph h1{font-size:19px;}.mem-grid{grid-template-columns:1fr;}}
 b,strong{font-weight:900;} /*_iv_bold_lift*/
@@ -593,10 +725,10 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 
 
 <!-- ═══════════ APP SHELL ═══════════ -->
-<button id="menuBtn" onclick="toggleSidebar()" aria-label="Open menu">☰</button>
+<button id="menuBtn" onclick="toggleSidebar()" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar">☰</button>
 <div id="sideOverlay" onclick="closeSidebar()"></div>
 
-<div id="app">
+<div id="app" style="display:none">
   <aside class="sidebar" id="sidebar">
     <div class="sb-logo">
       <img class="sb-logo-img" src="logo.png" alt="Ismaili Volunteers" onerror="this.onerror=null;this.src=window.IV_LOGO">
@@ -609,14 +741,14 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <!-- General is the volunteer view. The brand at the top of the bar is
            the way back to the dashboard, so there is no Dashboard item. -->
       <div class="nav-sec">General</div>
-      <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard')" style="display:none"><span class="ni">⊞</span><span class="nt">Dashboard</span></div>
-      <div class="nav-item" data-page="calendar" onclick="nav('calendar')"><span class="ni">📅</span><span class="nt">IV Duties Calendar</span></div>
-      <div class="nav-item" data-page="announce" onclick="nav('announce')"><span class="ni">📣</span><span class="nt">Announcements</span></div>
+      <button type="button" class="nav-item active" data-page="dashboard" onclick="nav('dashboard')" style="display:none"><span class="ni">⊞</span><span class="nt">Dashboard</span></button>
+      <button type="button" class="nav-item" data-page="calendar" onclick="nav('calendar')"><span class="ni">📅</span><span class="nt">IV Duties Calendar</span></button>
+      <button type="button" class="nav-item" data-page="announce" onclick="nav('announce')"><span class="ni">📣</span><span class="nt">Announcements</span></button>
       <div class="nav-sec nav-mgmt">Management</div>
-      <div class="nav-item nav-mgmt" data-page="roster" onclick="nav('roster')"><span class="ni">📋</span><span class="nt">Rostering</span><span class="nbadge" id="navUnfilled" style="display:none"></span></div>
-      <div class="nav-item nav-mgmt" data-page="attendance" onclick="nav('attendance')"><span class="ni">✅</span><span class="nt">Attendance</span></div>
-      <div class="nav-item nav-mgmt" data-page="reports" onclick="nav('reports')"><span class="ni">📊</span><span class="nt">Analytics</span></div>
-      <div class="nav-item nav-mgmt" data-page="members" onclick="nav('members')"><span class="ni">👥</span><span class="nt">Member Management</span></div>
+      <button type="button" class="nav-item nav-mgmt" data-page="roster" onclick="nav('roster')"><span class="ni">📋</span><span class="nt">Rostering</span><span class="nbadge" id="navUnfilled" style="display:none"></span></button>
+      <button type="button" class="nav-item nav-mgmt" data-page="attendance" onclick="nav('attendance')"><span class="ni">✅</span><span class="nt">Attendance</span></button>
+      <button type="button" class="nav-item nav-mgmt" data-page="reports" onclick="nav('reports')"><span class="ni">📊</span><span class="nt">Analytics</span></button>
+      <button type="button" class="nav-item nav-mgmt" data-page="members" onclick="nav('members')"><span class="ni">👥</span><span class="nt">Member Management</span></button>
     </nav>
     <div class="sb-bot">
       <div class="uchip">
@@ -629,11 +761,11 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   </aside>
 
   <main class="main">
-    <div id="dbHint"></div>
+    <div id="dbHint" role="status" aria-live="polite"></div>
     <!-- Shown only when something on screen is not in the database.
          Sits above every page, because losing a roster matters wherever
          you happen to be looking. -->
-    <div id="saveWarn" class="ib ib-warn" style="display:none;align-items:center;gap:10px;margin-bottom:14px;"></div>
+    <div id="saveWarn" class="ib ib-warn" role="alert" aria-live="assertive" style="display:none;align-items:center;gap:10px;margin-bottom:14px;"></div>
     <div class="page active" id="page-dashboard"><div id="body-dashboard"></div></div>
     <div class="page" id="page-roster"><div id="body-roster"></div></div>
     <div class="page" id="page-calendar"><div id="body-calendar"></div></div>
@@ -650,9 +782,9 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 </button>
 <div class="bell-pop" id="bellPop"></div>
 
-<div id="mo" class="mo"><div id="mbox" class="mbox"></div></div>
-<div id="dlg" class="dlg"><div id="dcard" class="dcard"></div></div>
-<div id="toast" class="toast"></div>
+<div id="mo" class="mo"><div id="mbox" class="mbox" role="dialog" aria-modal="true" aria-label="Details"></div></div>
+<div id="dlg" class="dlg"><div id="dcard" class="dcard" role="dialog" aria-modal="true" aria-label="Dialog"></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <div id="exportStage" style="position:fixed;left:-10000px;top:0;" aria-hidden="true"></div>
 
 <script>
@@ -866,8 +998,12 @@ async function auditLog(action,category,detail){
   return true;
 }
 function stableHash(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h; }
-function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sideOverlay').classList.toggle('show'); }
-function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sideOverlay').classList.remove('show'); }
+function syncSidebarAria(){
+  const b=document.getElementById('menuBtn'), sb=document.getElementById('sidebar');
+  if(b&&sb) b.setAttribute('aria-expanded', sb.classList.contains('open')?'true':'false');
+}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sideOverlay').classList.toggle('show'); syncSidebarAria(); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sideOverlay').classList.remove('show'); syncSidebarAria(); }
 function toggleCollapse(){ document.body.classList.toggle('sb-min'); }
 
 /* ════════════════════════════════════════════
@@ -1716,63 +1852,10 @@ function renderSaveWarning(){
     + 'The database refused the write — the reason was shown when it happened and is in the browser console.</span>'
     + '<button class="btn btn-bl btn-sm" onclick="retryUnsaved()" style="margin-left:auto">Try again</button>';
 }
-/* Summarises what a regenerate changed: how many duties gained, lost or
-   swapped people. Names are compared rather than ids so a renamed member
-   does not read as a swap. */
-function rosterDelta(before,after){
-  const A=(before&&before.assign)||{}, B=(after&&after.assign)||{};
-  const names=o=>people(o||{}).map(p=>p.name).sort().join('|');
-  const keys=new Set(Object.keys(A).concat(Object.keys(B)));
-  let changed=0, unchanged=0;
-  keys.forEach(k=>{ (names(A[k])===names(B[k])) ? unchanged++ : changed++; });
-  if(!before||!before.assign) return 'first generation, '+keys.size+' duties filled';
-  if(!changed) return 'no change';
-  return changed+' of '+(changed+unchanged)+' duties changed';
-}
-async function generateEvent(id,silent){
-  const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
-  if(evLocked(ev)) return toast('This event is locked','err');
-  if(!MEMBERS.filter(m=>m.status==='active').length) return toast('No active members','err');
-  /* Held back rather than toasted here. It used to fire before the work
-     started, and toast() will not let a success message replace a failure
-     for a second and a half — so this warning ate the one line that says
-     whether the roster reached the calendar. It is folded into that line
-     instead, where it explains the gaps rather than hiding them. */
-  const youthGap = ev.type==='friday' && ev.youth &&
-    !MEMBERS.some(m=>m.status==='active' && m.age_group==='youth');
-  // Compare against what was there, so the log says how much a regenerate
-  // actually disturbed rather than merely that one happened. A regenerate
-  // that changed nothing and one that reshuffled everybody are very
-  // different events to read about afterwards.
-  const _before=ROSTERS[id];
-  ROSTERS[id]=generateEventData(ev);
-  const stored=await saveRoster(id);
-  /* Generating publishes. A roster that is stored but not on the calendar
-     is invisible to every volunteer, and from the lead's own screen it
-     looks exactly like one everybody can see — which is how a roster built
-     on the Wednesday turned out on the Friday to be a roster nobody had
-     seen. Making it two steps put the whole thing behind a button people
-     forgot to press, so it is one step now.
-
-     The order matters: stored first, calendar second. Publishing an event
-     whose roster never reached the database would put an empty night in
-     front of three hundred people. */
-  let live=!!ev.confirmed;
-  if(stored) live=await publishIfComplete(ev, {quiet:true});
-  if(!silent){
-    auditLog('generate','roster',ev.name+' '+ev.date+' \u2014 '+rosterDelta(_before,ROSTERS[id]));
-    renderRoster(); refreshBadges();
-    // Only claim what actually happened. saveRoster and setOnCalendar have
-    // each already said what went wrong when they did.
-    const gaps=slotCounts(ev).missing;
-    const why = youthGap ? ' No Youth members are tagged, so the MPH slots cannot fill.' : '';
-    if(stored && live) toast('Generated, saved, and on the calendar');
-    else if(stored && gaps>0) toast('Generated and saved — ' + gaps + ' slot' + (gaps===1?'':'s') +
-      ' could not be filled, so it is not on the calendar yet.' + why, 'err');
-    else if(stored) toast('Generated and saved, but it is not on the calendar — see above','err');
-  }
-  return stored;
-}
+/* generateEvent() and rosterDelta() lived here. Both are gone: every
+   route to them now goes through previewEvent() -> applyPlan(), which
+   shows the roster before it is stored rather than after. generateCycle()
+   below survives deliberately as the one-step, no-preview entry point. */
 async function generateCycle(k){
   /* Takes the cycle to build. Called without one it falls back to the
      selected event's cycle, which is how the button in an unbuilt event's
@@ -1784,25 +1867,15 @@ async function generateCycle(k){
      generateEventData carries any duty flagged `manual` straight across and
      skips it, so only the generator's own picks change. Skipping meant that
      once a cycle was built there was no way to rebuild it at all, which is
-     the opposite of useful. confirmBuildCycle() says what it will touch
-     before this runs. */
-  const evs=eventsInCycle(k).filter(e=>!isHistoricEvent(e));
-  if(!evs.length) return toast('No events in this cycle to build','err');
-  let stored=0, live=0;
-  for(const e of evs){
-    ROSTERS[e.id]=generateEventData(e);
-    if(await saveRoster(e.id,{quiet:true})){
-      stored++;
-      if(await publishIfComplete(e, {quiet:true})) live++;
-    }
-  }
-  auditLog('generate-all','roster',cycleLabel(k)+' — '+evs.length+' events, '+stored+' saved, '+live+' on the calendar');
-  renderRoster(); refreshBadges();
-  /* Counted rather than assumed. Reporting the number generated when only
-     some of them stored is how this went unnoticed for so long. */
-  if(live===evs.length) toast('Generated '+evs.length+' events — all saved and on the calendar');
-  else if(stored===evs.length) toast('Generated and saved '+evs.length+' — '+live+' went on the calendar, the rest still have unfilled slots', 'err');
-  else toast('Generated '+evs.length+', but only '+stored+' saved — see the warning above', 'err');
+     the opposite of useful. previewCycle() shows exactly what it will
+     touch, before anything is stored. */
+  /* Generates and stores in one go, with no preview. The buttons all go
+     through previewCycle() now; this stays for anything that wants the
+     old one-step behaviour, and shares applyPlan() so there is exactly
+     one piece of code that writes rosters to the database. */
+  const plan=buildPlan(k);
+  if(!plan) return toast('No events in this cycle to build','err');
+  await applyPlan(plan);
 }
 
 /* ── ATTENDANCE HELPERS ── */
@@ -1894,7 +1967,11 @@ async function logView(section){
 function nav(page){
   if(!IS_EDIT && VOLUNTEER_PAGES.indexOf(page)<0) page='dashboard';   // volunteers stay in scope
   curPage=page;
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    const on=n.dataset.page===page;
+    n.classList.toggle('active',on);
+    if(on) n.setAttribute('aria-current','page'); else n.removeAttribute('aria-current');
+  });
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
   closeSidebar();
   renderCurrent();
@@ -2033,8 +2110,11 @@ function volunteerCards(){
 function dashCards(nextEv,nextFill,unfilled,active,owner,kNow){
   return IS_EDIT ? leadCards(nextEv,nextFill,unfilled) : volunteerCards();
 }
-function slotCounts(ev){
-  const data=ROSTERS[ev.id]; if(!data||!data.assign) return {assigned:0,missing:0,generated:false};
+function slotCounts(ev){ return slotCountsFor(ev,ROSTERS[ev.id]); }
+/* Takes the roster rather than reading it, so the plan panel can count a
+   staged build the same way the page counts a stored one. */
+function slotCountsFor(ev,data){
+  if(!data||!data.assign) return {assigned:0,missing:0,generated:false};
   let assigned=0,missing=0;
   for(const d of dutiesForEvent(ev)){
     const a=data.assign[d.key]||{m:[],f:[],x:[]};
@@ -2115,7 +2195,7 @@ function renderDashboard(){
   const nextFill=nextEv?slotCounts(nextEv):null;
   let h='<div class="ph"><div><h1>Dashboard</h1><p>'+esc(TEAM_NAME)+' roster overview · Auckland Jamatkhana</p></div>'+
     '<div class="ha"><button class="btn btn-ol btn-sm" onclick="nav(\'roster\')">📋 Roster</button>'+
-    (IS_EDIT&&nextEv&&!evLocked(nextEv)?'<button class="btn btn-bl btn-sm" onclick="generateEvent('+nextEv.id+')">↻ Regenerate next</button>':'')+
+    (IS_EDIT&&nextEv&&!evLocked(nextEv)?'<button class="btn btn-bl btn-sm" onclick="previewEvent('+nextEv.id+')">↻ Regenerate next</button>':'')+
     (nextEv?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+(nextEv.id)+');setTimeout(exportPNG,300)">📷 Export</button>':'')+'</div></div>';
   // hero
   h+='<div class="hero"><div style="position:relative;z-index:1;min-width:0"><div class="dash-greet">Ya Ali Madad</div>'+
@@ -2181,11 +2261,383 @@ function renderDashboard(){
 ════════════════════════════════════════════ */
 function selectEvent(id){
   selEventId=id; const ev=selEvent();
+  /* A staged build belongs to one cycle. Navigating out of that cycle
+     leaves a panel describing work you can no longer see, so it goes. */
+  if(ev&&ROSTER_PLAN&&ROSTER_PLAN.k!==cycleForDate(ev.date)){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }
+  if(ev) ROSTER_BAR_K=cycleForDate(ev.date);
   if(ev){ expandedCycles.add(cycleForDate(ev.date)); CAL={y:+ev.date.slice(0,4),m:+ev.date.slice(5,7)-1}; }
   closeDrawer();
   if(curPage!=='roster') nav('roster'); else renderRoster();
 }
 function toggleCycle(k){ if(expandedCycles.has(k)) expandedCycles.delete(k); else expandedCycles.add(k); renderRoster(); }
+
+/* ── THE PLAN PANEL ──────────────────────────────────────────────────
+   Generating was a black box. You pressed the button, every name on the
+   screen changed at once, and the three questions a lead actually has
+   went unanswered: what did that change, who is carrying this cycle, and
+   did anybody get missed. Worse, it answered them only after the write —
+   a regenerate on a live roster reaches three hundred people before you
+   can look at it, and there is no undo.
+
+   So the work is done first and shown before it is stored.
+
+   The preview has to BE the outcome, not a forecast of it. pick() breaks
+   fairness ties with Math.random(), so generating twice gives two
+   different rosters; a preview that re-rolled on approval would show
+   names that were never saved, which is worse than showing nothing. The
+   plan therefore holds the generated rosters themselves and approving it
+   stores those, rather than generating again. */
+let ROSTER_PLAN=null;            // the staged build, before or just after it was stored
+const PLAN_OPEN=new Set();       // event ids whose change detail is expanded
+
+/* Every duty each member holds in cycle k, read out of `map` rather than
+   the live ROSTERS so one function serves both the staged plan and the
+   state on screen. */
+function planCounts(k,map){
+  const per={};
+  for(const ev of EVENTS){
+    if(!inCycleK(ev.date,k)) continue;
+    const r=map[ev.id]; if(!r||!r.assign) continue;
+    for(const key in r.assign)
+      for(const p of people(r.assign[key])) if(p.id!=null) per[p.id]=(per[p.id]||0)+1;
+  }
+  return per;
+}
+/* Which duties differ and who moves in or out of each. Compared by name
+   rather than id, matching rosterDelta, so renaming a member does not
+   read as a swap. */
+function dutyDiff(before,after){
+  const A=(before&&before.assign)||{}, B=(after&&after.assign)||{};
+  let changed=0,unchanged=0; const moves=[];
+  /* The union, not just the new roster's keys: a duty that existed before
+     and is absent now — REC toggled off, say — is a change, and reading
+     only B would score it as nothing happening. */
+  for(const key of new Set(Object.keys(A).concat(Object.keys(B)))){
+    const a=people(A[key]).map(p=>p.name).filter(Boolean);
+    const b=people(B[key]).map(p=>p.name).filter(Boolean);
+    if(a.slice().sort().join('|')===b.slice().sort().join('|')){ unchanged++; continue; }
+    changed++;
+    const sA=new Set(a), sB=new Set(b);
+    moves.push({duty:legacyLabel(key), in:b.filter(n=>!sA.has(n)), out:a.filter(n=>!sB.has(n))});
+  }
+  return {changed:changed,unchanged:unchanged,total:changed+unchanged,moves:moves};
+}
+/* The shortfalls, named. slotCounts only says how many slots are short,
+   which is no help deciding what to do about it — a lead needs the duty
+   and the gender it could not fill. */
+function gapsFor(ev,data){
+  const out=[];
+  for(const d of dutiesForEvent(ev)){
+    const a=(data&&data.assign&&data.assign[d.key])||{m:[],f:[],x:[]};
+    const nm=(a.m||[]).length,nf=(a.f||[]).length,nx=(a.x||[]).length,tot=nm+nf+nx;
+    const mM=Math.max(0,(d.reqM||0)-nm), mF=Math.max(0,(d.reqF||0)-nf);
+    const mAny=Math.max(0,(d.reqAny||0)-tot-mM-mF);
+    if(mM+mF+mAny) out.push({duty:d.name,short:mM+mF+mAny,
+      why:[mM?mM+' male':'',mF?mF+' female':'',mAny?mAny+' any':''].filter(Boolean).join(', ')});
+  }
+  return out;
+}
+/* The numbers behind the panel. `prevMap` is what the cycle looked like
+   before; pass null for the standing view, where nothing is changing. */
+function cycleStats(k,map,prevMap){
+  const before=prevMap?planCounts(k,prevMap):null, after=planCounts(k,map);
+  const active=MEMBERS.filter(m=>m.status==='active');
+  const per=active.map(m=>({id:m.id,name:m.name,now:after[m.id]||0,
+                            was:before?(before[m.id]||0):null,
+                            away:(m.away||[]).filter(d=>inCycleK(d,k)).length}))
+    .sort((a,b)=>b.now-a.now||String(a.name).localeCompare(String(b.name)));
+  const counts=per.filter(p=>p.now>0).map(p=>p.now);
+  const hist={}; counts.forEach(c=>{ hist[c]=(hist[c]||0)+1; });
+  let slots=0,missing=0; const gaps=[];
+  for(const e of eventsInCycle(k)){
+    const sc=slotCountsFor(e,map[e.id]);
+    if(!sc.generated) continue;         // an unbuilt event is not a gap, it is unbuilt
+    slots+=sc.assigned; missing+=sc.missing;
+    gapsFor(e,map[e.id]).forEach(g=>gaps.push(Object.assign({event:e.name,date:e.date},g)));
+  }
+  return {per:per, used:counts.length, activeTotal:active.length,
+          hist:hist, slots:slots, missing:missing, gaps:gaps,
+          min:counts.length?Math.min.apply(null,counts):0,
+          max:counts.length?Math.max.apply(null,counts):0,
+          mean:counts.length?+(counts.reduce((a,b)=>a+b,0)/counts.length).toFixed(1):0};
+}
+/* Generates without storing anything. Returns the staged rosters plus
+   everything the panel needs to describe them. */
+function buildPlan(k,onlyEventId,opts){
+  const inCyc=eventsInCycle(k).filter(e=>!isHistoricEvent(e));
+  const evs=onlyEventId!=null?inCyc.filter(e=>e.id===onlyEventId):inCyc;
+  if(!evs.length) return null;
+  /* An event that is on the calendar has already been read by whoever is
+     on it. Re-rolling it moves people who were told where to stand, so
+     building a cycle leaves those alone and touches only what is still a
+     draft. That is what makes "Build this cycle" safe to press on reflex
+     when something has been added mid-cycle — the worst it can do is
+     re-roll work nobody has seen.
+
+     Asking for one event by name is different: that is a lead pointing at
+     a specific roster and saying rebuild this one. Honour it. */
+  const includeLive=onlyEventId!=null||!!(opts&&opts.includeLive);
+  const willBuild=e=>includeLive||!e.confirmed;
+  const toBuild=evs.filter(willBuild);
+  /* Generate against a copy of the whole map. Each event's picks depend
+     on what the earlier ones took — computeCounts reads ROSTERS — so the
+     run has to happen with the staged rosters in place, not one at a
+     time against the live map. The skipped events stay in the copy at
+     their stored value, so the ones being rebuilt still count them.
+     Restored in a finally: leaving ROSTERS pointed at a scratch copy
+     would silently throw away every save that followed it. */
+  const liveMap=ROSTERS, staged=Object.assign({},ROSTERS);
+  try{ ROSTERS=staged; for(const e of toBuild) staged[e.id]=generateEventData(e); }
+  finally{ ROSTERS=liveMap; }
+  const rows=evs.map(e=>{
+    const skipped=!willBuild(e);
+    const data=skipped?liveMap[e.id]:staged[e.id];
+    const diff=skipped?{changed:0,total:0,moves:[]}:dutyDiff(liveMap[e.id],staged[e.id]);
+    const sc=slotCountsFor(e,data);
+    return {id:e.id,name:e.name,date:e.date,skipped:skipped,live:!!e.confirmed,
+            wasBuilt:!!slotCountsFor(e,liveMap[e.id]).generated,
+            kept:data&&data.manual?Object.keys(data.manual).filter(x=>data.manual[x]).length:0,
+            changed:diff.changed,total:diff.total,moves:diff.moves,
+            assigned:sc.assigned,missing:sc.missing,
+            gaps:gapsFor(e,data)};
+  });
+  /* Worth saying out loud rather than leaving as a mystery gap: with no
+     Youth tagged, every REC slot on a youth Friday is unfillable, and the
+     panel would otherwise just report a pile of empty duties. */
+  const notes=[];
+  /* Only about the events actually being rebuilt — a warning about a
+     roster this run is deliberately not touching is just noise. */
+  if(toBuild.some(e=>e.type==='friday'&&e.youth)&&!MEMBERS.some(m=>m.status==='active'&&m.age_group==='youth'))
+    notes.push('No members are tagged Youth, so the REC congregation slots cannot fill.');
+  const awayHere=MEMBERS.filter(m=>m.status==='active'&&(m.away||[]).some(d=>toBuild.some(e=>e.date===d)));
+  if(awayHere.length) notes.push(awayHere.length===1
+    ? '1 member is away on one of these dates and was left out — '+awayHere[0].name
+    : awayHere.length+' members are away on one of these dates and were left out — '+
+      awayHere.map(m=>m.name).join(', '));
+  const skippedCount=rows.filter(r=>r.skipped).length;
+  return {k:k, label:cycleLabel(k), scope:onlyEventId!=null?'event':'cycle',
+          staged:staged, prev:liveMap, events:rows, notes:notes,
+          includeLive:includeLive, buildCount:toBuild.length, skippedCount:skippedCount,
+          stats:cycleStats(k,staged,liveMap), applied:false, at:null};
+}
+/* The single writer. Stores the staged rosters, publishes the ones that
+   are complete, and reports what actually happened rather than what was
+   attempted — counting stored and live separately is how a cycle that
+   half-saved stops reading as a success. */
+async function applyPlan(plan){
+  if(!plan) return false;
+  /* Rows the plan deliberately left alone are not written, are not
+     counted, and are not mentioned in the audit line — otherwise the
+     receipt would claim credit for rosters this run never touched. */
+  const build=plan.events.filter(r=>!r.skipped);
+  if(!build.length) return false;
+  ROSTER_PLAN=plan;
+  let stored=0, live=0;
+  for(const row of build){
+    const e=EVENTS.find(x=>x.id===row.id); if(!e) continue;
+    ROSTERS[e.id]=plan.staged[e.id];
+    if(await saveRoster(e.id,{quiet:true})){
+      stored++;
+      if(await publishIfComplete(e,{quiet:true})) live++;
+    }
+  }
+  const n=build.length;
+  auditLog(n>1?'generate-all':'generate','roster',
+    plan.label+' — '+n+' event'+(n===1?'':'s')+', '+stored+' saved, '+live+' on the calendar'+
+    (plan.skippedCount?', '+plan.skippedCount+' left as '+(plan.skippedCount===1?'it was':'they were')+' (on the calendar)':''));
+  plan.applied=true; plan.at=new Date(); plan.stored=stored; plan.live=live;
+  renderRoster(); refreshBadges();
+  if(live===n) toast('Built '+n+' event'+(n===1?'':'s')+' — all saved and on the calendar');
+  else if(stored===n) toast('Built and saved '+n+' — '+live+' went on the calendar, the rest still have unfilled slots','err');
+  else toast('Built '+n+', but only '+stored+' saved — see the warning above','err');
+  return stored===n;
+}
+function previewCycle(k){
+  if(!IS_EDIT) return;
+  const plan=buildPlan(k);
+  if(!plan) return toast('No events in this cycle to build','err');
+  PLAN_OPEN.clear(); ROSTER_PLAN=plan; renderRoster();
+}
+function previewEvent(id){
+  if(!IS_EDIT) return;
+  const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
+  if(evLocked(ev)) return toast('This event is locked','err');
+  if(!MEMBERS.filter(m=>m.status==='active').length) return toast('No active members','err');
+  selectEvent(id);
+  const plan=buildPlan(cycleForDate(ev.date),id);
+  if(!plan) return toast('This event cannot be rebuilt','err');
+  PLAN_OPEN.clear(); PLAN_OPEN.add(id); ROSTER_PLAN=plan; renderRoster();
+}
+function commitPlan(){ if(ROSTER_PLAN&&!ROSTER_PLAN.applied) applyPlan(ROSTER_PLAN); }
+/* Rebuilds the plan with the published rosters in or out. Generating is
+   cheap and nothing has been stored yet, so flipping the box simply
+   produces a different plan rather than trying to patch this one. */
+function togglePlanLive(on){
+  if(!ROSTER_PLAN||ROSTER_PLAN.applied) return;
+  const k=ROSTER_PLAN.k;
+  const plan=buildPlan(k,null,{includeLive:!!on});
+  if(!plan) return;
+  PLAN_OPEN.clear(); ROSTER_PLAN=plan; renderRoster();
+}
+function discardPlan(){ ROSTER_PLAN=null; PLAN_OPEN.clear(); renderRoster(); }
+function togglePlanRow(id){ PLAN_OPEN.has(id)?PLAN_OPEN.delete(id):PLAN_OPEN.add(id); renderRoster(); }
+/* A hand edit invalidates a staged plan outright — it was generated
+   against the roster as it was a moment ago, so storing it now would
+   quietly overwrite what was just set by hand. Dropped rather than
+   recomputed: silently re-rolling underneath somebody is the behaviour
+   this whole panel exists to stop. */
+function invalidatePlan(){ if(ROSTER_PLAN&&!ROSTER_PLAN.applied){ ROSTER_PLAN=null; PLAN_OPEN.clear(); } }
+
+/* The panel itself. Three states out of one renderer: a staged build
+   waiting for approval, the receipt for the one just stored, and — when
+   neither applies — the standing picture of the cycle, so the column is
+   answering "who is carrying this one" even when nobody has pressed
+   anything. */
+function renderPlanPanel(){
+  if(!IS_EDIT) return '';
+  const plan=ROSTER_PLAN;
+  let k=null;
+  if(plan) k=plan.k;
+  else k=barCycleK();     // one answer to "which cycle", shared with the bar
+  if(k==null) return '';
+  const st=plan?plan.stats:cycleStats(k,ROSTERS,null);
+  const preview=!!plan&&!plan.applied, receipt=!!plan&&plan.applied;
+  const state=preview?'preview':receipt?'receipt':'idle';
+
+  /* ── header ── */
+  let tag,ttl,sub,acts='';
+  if(preview){
+    const build=plan.events.filter(e=>!e.skipped);
+    const n=build.length, skipped=plan.skippedCount||0;
+    const touched=build.filter(e=>e.wasBuilt).length;
+    const kept=build.reduce((s,e)=>s+e.kept,0);
+    tag='Preview · nothing saved yet';
+    ttl=plan.scope==='event'?esc(plan.events[0].name):'Build '+esc(plan.label);
+    if(!n){
+      sub='Every event in this cycle is already on the calendar, so there is '+
+        'nothing here to rebuild. Tick the box below if you really do want to re-roll '+
+        (skipped===1?'it':'them')+'.';
+    } else {
+      /* Two counts in one sentence read as the same number if you are not
+         careful, so the skipped ones get their own line and the rebuilt
+         ones are described only where there is no ambiguity. */
+      sub=n+' event'+(n===1?'':'s')+' generated below'+
+        (skipped?'. <b style="color:var(--green-lt)">'+skipped+'</b> '+(skipped===1?'is':'are')+
+                 ' on the calendar and stay'+(skipped===1?'s':'')+' exactly as '+
+                 (skipped===1?'it is':'they are')+' — nobody already told their duty gets moved'
+                :(touched?', '+touched+' of them replacing a roster that is already there':''))+
+        '. '+
+        (kept?kept+' dut'+(kept===1?'y':'ies')+' set by hand '+(kept===1?'is':'are')+' carried through untouched.'
+             :'Nothing being rebuilt was set by hand.');
+    }
+    acts=(n?'<button class="btn btn-bl btn-sm" onclick="commitPlan()">Save '+n+' event'+(n===1?'':'s')+'</button>':'')+
+         '<button class="btn btn-ol btn-sm" onclick="discardPlan()">Discard</button>';
+  } else if(receipt){
+    const n=plan.events.length;
+    tag='Built '+(plan.at?esc(plan.at.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})):'');
+    ttl=plan.scope==='event'?esc(plan.events[0].name):esc(plan.label);
+    sub=n+' event'+(n===1?'':'s')+' · '+plan.stored+' saved · '+plan.live+' on the calendar'+
+      (plan.stored<n?'. The rest are not stored — see the warning above the roster.':'.');
+    acts='<button class="btn btn-ol btn-sm" onclick="discardPlan()">Done</button>';
+  } else {
+    tag='This cycle';
+    ttl=esc(cycleLabel(k));
+    sub='How the roster stands right now. Press “Build this cycle” to see what a rebuild would change before anything is saved.';
+  }
+  let h='<div class="gp '+state+'"><div class="gp-hd"><div class="gp-tag">'+tag+'</div>'+
+        '<div class="gp-ttl">'+ttl+'</div><div class="gp-sub">'+sub+'</div></div>';
+  if(acts) h+='<div class="gp-acts">'+acts+'</div>';
+  /* The escape hatch. A lead who genuinely wants the published rosters
+     re-rolled can have it — they just cannot get it by accident. Only
+     offered when the cycle actually contains something live. */
+  if(preview&&plan.scope==='cycle'&&plan.events.some(e=>e.live)){
+    const liveN=plan.events.filter(e=>e.live).length;
+    h+='<label class="gp-live"><input type="checkbox" onchange="togglePlanLive(this.checked)"'+
+       (plan.includeLive?' checked':'')+'>'+
+       '<span>Also re-roll the <b>'+liveN+'</b> already on the calendar'+
+       (plan.includeLive?' — people already told their duty will move':'')+'</span></label>';
+  }
+
+  /* ── the four numbers ── */
+  const unused=st.activeTotal-st.used;
+  h+='<div class="gp-nums">'+
+    '<div class="gp-n"><div class="v">'+st.slots+'</div><div class="l">slots filled</div></div>'+
+    '<div class="gp-n"><div class="v" style="color:'+(st.missing?'var(--gold-lt)':'var(--green-lt)')+'">'+st.missing+'</div><div class="l">slots unfilled</div></div>'+
+    '<div class="gp-n"><div class="v">'+st.used+'</div><div class="l">people rostered</div></div>'+
+    '<div class="gp-n"><div class="v" style="color:'+(unused?'var(--gold-lt)':'var(--dt)')+'">'+unused+'</div><div class="l">not used</div></div>'+
+    '</div>';
+
+  /* ── what changes ── */
+  if(plan){
+    h+='<div class="gp-sec">'+(preview?'What would change':'What changed')+'</div><div class="gp-b">';
+    for(const row of plan.events){
+      const open=PLAN_OPEN.has(row.id)&&!row.skipped;
+      const what=row.skipped
+                ?'<span class="gp-pill" style="background:rgba(16,185,129,.14);color:var(--green-lt)">left alone</span>'
+                : !row.wasBuilt?'<span class="gp-pill" style="background:var(--db);color:var(--blue-lt)">new</span>'
+                : row.changed? '<span class="gp-pill" style="background:var(--gold-bg);color:var(--gold-lt)">'+row.changed+' of '+row.total+(preview?' change':' changed')+'</span>'
+                             : '<span class="gp-pill" style="background:rgba(16,185,129,.14);color:var(--green-lt)">no change</span>';
+      h+='<div class="gp-ev'+(open?' open':'')+(row.skipped?' gp-skip':'')+'"'+
+         (row.skipped?'':' onclick="togglePlanRow('+row.id+')"')+'>'+
+         '<div class="gp-row"><span class="nm">'+esc(fmtShort(row.date))+' · '+esc(row.name)+'</span>'+what+'</div>'+
+         '<div class="gp-mt">'+(row.skipped
+            ?'On the calendar — staying exactly as it is'
+            :row.assigned+' filled'+(row.missing?' · <b style="color:var(--gold-lt)">'+row.missing+' short</b>':'')+
+             (row.kept?' · '+row.kept+' kept by hand':''))+'</div>';
+      if(open){
+        if(!row.moves.length) h+='<div class="gp-mv">Every duty landed on the same people.</div>';
+        else for(const mv of row.moves.slice(0,40))
+          h+='<div class="gp-mv"><b>'+esc(mv.duty)+'</b>'+
+             (mv.out.length?'<span class="out">− '+esc(mv.out.join(', '))+'</span>':'')+
+             (mv.in.length?'<span class="in">+ '+esc(mv.in.join(', '))+'</span>':'')+'</div>';
+        if(row.moves.length>40) h+='<div class="gp-mv">…and '+(row.moves.length-40)+' more.</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div>';
+  }
+
+  /* ── duty load ── */
+  const keys=Object.keys(st.hist).map(Number).sort((a,b)=>a-b);
+  if(keys.length){
+    const peak=Math.max.apply(null,keys.map(n=>st.hist[n]));
+    h+='<div class="gp-sec">Duty load</div><div class="gp-b">';
+    for(const n of keys)
+      h+='<div class="gp-row"><span class="nm">'+n+' dut'+(n===1?'y':'ies')+'</span>'+
+         '<span class="gp-bar"><i style="width:'+Math.round(st.hist[n]/peak*100)+'%"></i></span>'+
+         '<span class="mt">'+st.hist[n]+'</span></div>';
+    h+='<div class="gp-note">Fewest '+st.min+' · average '+st.mean+' · most '+st.max+
+       ' duties each, across the whole cycle.</div></div>';
+  }
+
+  /* ── every member ── */
+  h+='<div class="gp-sec">Every member · duties this cycle</div><div class="gp-b"><div class="gp-list">';
+  if(!st.per.length) h+='<div class="gp-note">No active members.</div>';
+  for(const p of st.per){
+    const d=p.was==null?0:p.now-p.was;
+    const chip=!d?'':'<span class="gp-pill" style="background:'+(d>0?'var(--db);color:var(--blue-lt)':'var(--gold-bg);color:var(--gold-lt)')+'">'+(d>0?'+':'−')+Math.abs(d)+'</span>';
+    h+='<div class="gp-row"><span class="nm'+(p.now?'':' zero')+'">'+esc(p.name)+
+       (p.away?'<span class="gp-away" title="away on '+p.away+' date'+(p.away===1?'':'s')+' this cycle">away</span>':'')+
+       '</span>'+chip+'<span class="mt">'+p.now+'</span></div>';
+  }
+  h+='</div></div>';
+
+  /* ── needs attention ── */
+  const never=st.per.filter(p=>!p.now&&!p.away);
+  const bits=[];
+  if(st.gaps.length){
+    const top=st.gaps.slice(0,6).map(g=>esc(g.duty)+' ('+g.why+') on '+esc(fmtShort(g.date)));
+    bits.push('<b>'+st.missing+' slot'+(st.missing===1?'':'s')+' could not be filled:</b> '+top.join('; ')+
+      (st.gaps.length>6?'; and '+(st.gaps.length-6)+' more.':'.'));
+  }
+  if(never.length) bits.push('<b>'+never.length+' active member'+(never.length===1?'':'s')+' not rostered at all this cycle:</b> '+
+    never.slice(0,12).map(p=>esc(p.name)).join(', ')+(never.length>12?', and '+(never.length-12)+' more':''));
+  if(plan) plan.notes.forEach(n=>bits.push(esc(n)));
+  if(bits.length) h+='<div class="gp-sec">Needs attention</div><div class="gp-b">'+
+    bits.map(b=>'<div class="gp-warn">'+b+'</div>').join('')+'</div>';
+
+  return h+'</div>';
+}
 /* ── THE CYCLE BAR ───────────────────────────────────────────────────
    Two things a Team Lead does constantly were both already built and both
    effectively hidden. generateCycle() could only be reached from the empty
@@ -2197,10 +2649,26 @@ function toggleCycle(k){ if(expandedCycles.has(k)) expandedCycles.delete(k); els
    you actually have when you open this page: what state is this cycle in.
    The bar follows the selected event's cycle, falling back to the current
    one when nothing is selected. */
+let ROSTER_BAR_K=null;          // the cycle the bar is pointed at, when chosen by hand
+function setBarCycle(v){
+  ROSTER_BAR_K=Number(v);
+  /* Open that cycle in the list too, so choosing it here actually shows you
+     its events rather than leaving you looking at another cycle's. */
+  expandedCycles.add(ROSTER_BAR_K);
+  renderRoster();
+}
+function barCycleK(){
+  if(ROSTER_BAR_K!=null) return ROSTER_BAR_K;
+  const sel=selEvent();
+  if(sel) return cycleForDate(sel.date);
+  const cur=CYCLES.find(c=>c.status==='current')||CYCLES.find(c=>c.status==='upcoming');
+  return cur?cur.k:null;
+}
 function rosterCycleBar(){
   if(!IS_EDIT) return '';
+  let k=ROSTER_BAR_K;
+  if(k==null){
   const sel=selEvent();
-  let k=null;
   if(sel) k=cycleForDate(sel.date);
   else {
     /* Teams alternate cycles, so on any given day one of the two pages has
@@ -2209,6 +2677,7 @@ function rosterCycleBar(){
        making it disappear. */
     const cur=CYCLES.find(c=>c.status==='current')||CYCLES.find(c=>c.status==='upcoming');
     if(cur) k=cur.k;
+  }
   }
   if(k==null) return '';
   const meta=CYCLES.find(c=>c.k===k);
@@ -2235,49 +2704,34 @@ function rosterCycleBar(){
   let acts='';
   if(historic) acts='<span style="font-size:12.5px;font-weight:800;color:var(--dm)">\ud83d\udd12 Historic \u2014 read only</span>';
   else {
-    if(evs.length) acts+='<button class="btn btn-bl" onclick="confirmBuildCycle('+k+')">\u26a1 Build this cycle</button>';
+    if(evs.length) acts+='<button class="btn btn-bl" onclick="previewCycle('+k+')">\u26a1 Build this cycle</button>';
     acts+='<button class="btn btn-ol" onclick="openAddEvent()">+ Add event</button>';
   }
+  const opts=CYCLES.map(c=>'<option value="'+c.k+'"'+(c.k===k?' selected':'')+'>'+
+    esc(cycleLabel(c.k))+' \u2014 '+esc(c.status)+'</option>').join('');
   return '<div class="cyc-bar"><div style="min-width:0">'+
     '<div class="cb-k">'+esc(status)+' cycle</div>'+
-    '<div class="cb-t">'+esc(cycleLabel(k))+'</div>'+
+    '<label class="sr-only" for="barCycle">Cycle to work on</label>'+
+    '<select id="barCycle" class="cb-sel" onchange="setBarCycle(this.value)">'+opts+'</select>'+
     '<div class="cb-s">'+sum+'</div></div>'+
     '<div class="cb-a">'+acts+'</div></div>';
 }
-/* Rebuilding a cycle re-rolls rosters that are already on the calendar, and
-   there is no undo, so it says exactly what it is about to do first. The
-   reassuring half is worth stating plainly: anything a lead assigned or
-   removed by hand is flagged manual and is carried through untouched. */
-function confirmBuildCycle(k){
-  if(!IS_EDIT) return;
-  const evs=eventsInCycle(k).filter(e=>!isHistoricEvent(e));
-  if(!evs.length) return toast('No events in this cycle to build','err');
-  let withRoster=0, onCal=0, kept=0;
-  for(const e of evs){
-    const r=ROSTERS[e.id];
-    if(slotCounts(e).generated) withRoster++;
-    if(e.confirmed) onCal++;
-    if(r&&r.manual) kept+=Object.keys(r.manual).filter(key=>r.manual[key]).length;
-  }
-  const lines=[];
-  lines.push('Regenerate <b style="color:var(--dt)">'+evs.length+' event'+(evs.length===1?'':'s')+'</b> in <b style="color:var(--dt)">'+esc(cycleLabel(k))+'</b>.');
-  if(withRoster) lines.push('<b style="color:var(--gold-lt)">'+withRoster+'</b> already ha'+(withRoster===1?'s':'ve')+' a roster and will be re-rolled.');
-  if(onCal) lines.push('<b style="color:var(--green-lt)">'+onCal+'</b> '+(onCal===1?'is':'are')+' on the calendar and will stay there.');
-  lines.push(kept
-    ? '<b style="color:var(--dt)">'+kept+'</b> dut'+(kept===1?'y':'ies')+' you set by hand will be kept \u2014 only the generator\u2019s own picks are re-rolled.'
-    : 'Nothing has been set by hand in this cycle, so every duty will be re-rolled.');
-  oM('<h3>Build this cycle</h3>'+
-    '<p style="font-size:14px;color:var(--dm);line-height:1.6">'+lines.join('<br>')+'</p>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
-    '<button class="btn btn-bl" onclick="cM();generateCycle('+k+')">Build '+evs.length+' event'+(evs.length===1?'':'s')+'</button></div>');
-}
+/* Rebuilding a cycle re-rolls rosters that are already on the calendar and
+   there is no undo, so it used to describe itself in a modal first \u2014 how
+   many events, how many already built, how many hand-set duties would be
+   kept. That was the right instinct in the wrong place: a modal has room
+   for four lines of summary and none at all for the thing a lead actually
+   wants, which is the roster itself before it is stored. previewCycle()
+   says all of the same things, and then shows the work. Kept as a
+   delegate so nothing that still calls it goes to a dead end. */
+
 function renderRoster(){
   const el=document.getElementById('body-roster'); if(!el) return;
   // sidebar cycle list
   let side='<div class="sb-label">Cycles &amp; Events</div>';
   for(const c of CYCLES){
     const evs=eventsInCycle(c.k), open=expandedCycles.has(c.k);
-    side+='<div class="cyc-group'+(open?' open':'')+'"><button class="cyc-head" onclick="toggleCycle('+c.k+')"><span class="car">▶</span>'+
+    side+='<div class="cyc-group'+(open?' open':'')+'"><button class="cyc-head" aria-expanded="'+(open?'true':'false')+'" onclick="toggleCycle('+c.k+')"><span class="car">▶</span>'+
       '<span class="cyc-title">'+esc(cycleLabel(c.k))+'</span><span class="cyc-tag '+c.status+'">'+c.status.toUpperCase()+'</span></button><div class="cyc-body">';
     if(!evs.length) side+='<div class="cyc-empty">No events yet</div>';
     for(const ev of evs){
@@ -2299,9 +2753,12 @@ function renderRoster(){
   } else {
     main=renderEventView(ev);
   }
+  const info=renderPlanPanel();
   el.innerHTML='<div class="ph"><div><h1>Roster</h1><p>Duty assignments — historic cycles are read-only · 🔒 marks locked slots</p></div></div>'+
     rosterCycleBar()+
-    '<div class="roster-layout"><aside class="rl-side">'+side+'</aside><div class="rl-main">'+main+'</div></div>';
+    '<div class="roster-layout'+(info?' with-info':'')+'"><aside class="rl-side">'+side+'</aside>'+
+    '<div class="rl-main">'+main+'</div>'+
+    (info?'<aside class="rl-info">'+info+'</aside>':'')+'</div>';
 }
 function renderEventView(ev){
   const hist=isHistoricEvent(ev), locked=evLocked(ev);
@@ -2317,7 +2774,7 @@ function renderEventView(ev){
     /* Still available on a live roster. Somebody drops out on the
        Thursday and the duty has to move; freezing the roster the moment
        it went on the calendar would mean unpublishing it to fix it. */
-    h+='<button class="btn btn-ol" onclick="generateEvent('+ev.id+')">↻ Regenerate</button>';
+    h+='<button class="btn btn-ol" onclick="previewEvent('+ev.id+')">↻ Regenerate</button>';
     h+='<button class="btn btn-gd'+(ev.confirmed?' on':'')+'" onclick="toggleConfirm()">'+(ev.confirmed?'On the calendar ✓ (Hide)':'Put on the calendar')+'</button>';
   }
   h+='<button class="btn btn-ol" onclick="exportPNG()">📷 Export PNG</button>'+(CAN_ASSIGN_COVER()&&ev?'<button class="btn btn-ol btn-sm" onclick="openCoverDialog('+ev.id+')" title="Hand this event to someone else">\u{1F91D} '+(ev.cover_name?('Cover: '+esc(ev.cover_name)):'Assign cover')+'</button>':'')+'';
@@ -2346,8 +2803,8 @@ function renderEventView(ev){
   if(!hasRoster){
     if(!IS_EDIT||hist) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster</h3><p>No duty assignments were recorded.</p></div>';
     return h+'<div class="empty-gen"><div class="zap">⚡</div><h3>Ready to Generate</h3><p>Automatically assign all duties for this event.</p>'+
-      '<div class="btns"><button class="btn btn-bl" onclick="generateEvent('+ev.id+')">⚡ Generate</button>'+
-      '<button class="btn btn-ol" onclick="generateCycle()">Generate All (cycle)</button></div>'+
+      '<div class="btns"><button class="btn btn-bl" onclick="previewEvent('+ev.id+')">⚡ Generate</button>'+
+      '<button class="btn btn-ol" onclick="previewCycle('+cycleForDate(ev.date)+')">Generate All (cycle)</button></div>'+
       '<div class="rules-line">Rules: cycle fairness carried across three cycles · no duty repeats within a cycle · Nandi requires certification · children only at entrances &amp; Nandi Passing · away-dates skipped · age groups step up when a pool runs out · duty preferences honoured on ties · Seating &amp; Discipline is 1 adult + 1 youth per gender · Prayer Hall Entrance takes children then youth, never adults</div></div>';
   }
   const duties=dutiesForEvent(ev);
@@ -2367,16 +2824,61 @@ function renderLegacyRow(label,a){
   const male=(a.m||[]).map(p=>esc(p.name||'?')),female=(a.f||[]).map(p=>esc(p.name||'?'));
   (a.x||[]).forEach(p=>{ const mem=memById(p.id); ((mem&&mem.gender)==='Female'?female:male).push(esc(p.name||'?')); });
   const chip=n=>'<span class="chip">'+n+'</span>';
-  return '<tr><td class="dn2">'+esc(label)+'<span class="lock" title="Saved under a previous duty set — read only">🗄</span></td>'+
-    '<td><div class="cellwrap">'+(male.map(chip).join('')||'<span style="color:var(--dm)">—</span>')+'</div></td>'+
-    '<td><div class="cellwrap">'+(female.map(chip).join('')||'<span style="color:var(--dm)">—</span>')+'</div></td></tr>';
+  return '<tr><td class="dn2">'+esc(label)+'<span class="lock-badge">🗄 Old duty set — read only</span></td>'+
+    '<td data-col="Male"><div class="cellwrap">'+(male.map(chip).join('')||'<span style="color:var(--dm)">—</span>')+'</div></td>'+
+    '<td data-col="Female"><div class="cellwrap">'+(female.map(chip).join('')||'<span style="color:var(--dm)">—</span>')+'</div></td></tr>';
 }
 function chipHTML(ev,dutyKey,arrName,idx,p,locked){
   const mem=memById(p.id); const away=mem&&isAway(mem,ev.date);
-  const acts=locked?'':'<span class="acts">'+
-    '<button title="Swap" onclick="event.stopPropagation();openPicker(\''+escJs(dutyKey)+'\',\''+escJs(arrName)+'\','+idx+')">↔</button>'+
-    '<button class="rm" title="Remove" onclick="event.stopPropagation();removeSlot(\''+escJs(dutyKey)+'\',\''+escJs(arrName)+'\','+idx+')">×</button></span>';
-  return '<span class="chip'+(away?' away':'')+'"'+(away?' title="On away-date for this event"':'')+'>'+esc(p.name||'?')+acts+'</span>';
+  /* "away" was carried by a strikethrough plus a title= — a styling a
+     colour-blind user may not register and a tooltip a touch user cannot
+     reach. It is a word now. */
+  const note=away?'<span class="chip-note">away</span>':'';
+  const nm=esc(p.name||'?');
+  if(locked) return '<span class="chip'+(away?' away':'')+'">'+nm+note+'</span>';
+  return '<button class="chip'+(away?' away':'')+'" aria-label="'+nm+' — change or remove" '+
+    'onclick="openChipMenu(\''+escJs(dutyKey)+'\',\''+escJs(arrName)+'\','+idx+')">'+
+    nm+note+'<span class="chip-more" aria-hidden="true">⋯</span></button>';
+}
+/* One tap on a person opens this. It carries the two actions that used to
+   be hover-only, and the two things the roster never told anybody: whether
+   this person is away, and that a hand-set duty survives a rebuild. */
+function openChipMenu(dutyKey,arrName,idx){
+  const ev=selEvent(); if(!ev||evLocked(ev)) return;
+  const r=ROSTERS[ev.id]; const a=r&&r.assign&&r.assign[dutyKey];
+  const per=a&&a[arrName]&&a[arrName][idx]; if(!per) return;
+  const mem=memById(per.id); const away=mem&&isAway(mem,ev.date);
+  const duty=legacyLabel(dutyKey);
+  const q=s=>"'"+escJs(s)+"'";
+  let h='<h3>'+esc(per.name||'?')+'</h3>'+
+    '<p style="font-size:13.5px;color:var(--dm);line-height:1.6;margin:-4px 0 14px">'+
+      esc(duty)+' · '+esc(fmtShort(ev.date))+'</p>';
+  if(away) h+='<div class="ib ib-warn">This person has marked themselves away on this date. '+
+    'They can still be rostered, but they told you they would not be here.</div>';
+  if(r.manual&&r.manual[dutyKey]) h+='<div class="ib">This duty was set by hand, so rebuilding '+
+    'the cycle will leave it exactly as it is.</div>';
+  h+='<div class="macts" style="flex-direction:column;align-items:stretch;justify-content:flex-start">'+
+     '<button class="btn btn-bl" onclick="cM();openPicker('+q(dutyKey)+','+q(arrName)+','+idx+')">↔ Swap for someone else</button>'+
+     '<button class="btn btn-da" onclick="cM();confirmRemoveSlot('+q(dutyKey)+','+q(arrName)+','+idx+')">× Remove from this duty</button>'+
+     '<button class="btn btn-ol" onclick="cM()">Cancel</button></div>';
+  oM(h);
+}
+/* Taking somebody off a roster that is already on the calendar leaves a
+   hole three hundred people can see, and removeSlot has never asked. It
+   asks only in that case — a draft needs no ceremony. */
+function confirmRemoveSlot(dutyKey,arrName,idx){
+  const ev=selEvent(); if(!ev) return;
+  if(!ev.confirmed) return removeSlot(dutyKey,arrName,idx);
+  const r=ROSTERS[ev.id]; const a=r&&r.assign&&r.assign[dutyKey];
+  const per=a&&a[arrName]&&a[arrName][idx];
+  const nm=(per&&per.name)||'This person';
+  const q=s=>"'"+escJs(s)+"'";
+  oM('<h3>Remove from a live roster</h3>'+
+    '<p style="font-size:14px;color:var(--dm);line-height:1.6">'+esc(nm)+' is on <b style="color:var(--dt)">'+
+      esc(legacyLabel(dutyKey))+'</b> for '+esc(fmtShort(ev.date))+
+      ', which is on the calendar. Removing them leaves the duty short until somebody fills it.</p>'+
+    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
+    '<button class="btn btn-da" onclick="cM();removeSlot('+q(dutyKey)+','+q(arrName)+','+idx+')">Remove anyway</button></div>');
 }
 function renderDutyRow(ev,d,data,locked){
   const a=(data.assign&&data.assign[d.key])||{m:[],f:[],x:[]};
@@ -2390,17 +2892,22 @@ function renderDutyRow(ev,d,data,locked){
   let missM=Math.max(0,(d.reqM||0)-(a.m||[]).length);
   let missF=Math.max(0,(d.reqF||0)-(a.f||[]).length);
   let missX=Math.max(0,(d.reqAny||0)-total-missM-missF);
-  for(let i=0;i<missM;i++) maleChips.push('<span class="chip un">UNASSIGNED</span>');
-  for(let i=0;i<missF;i++) femaleChips.push('<span class="chip un">UNASSIGNED</span>');
-  for(let i=0;i<missX;i++) (maleChips.length<=femaleChips.length?maleChips:femaleChips).push('<span class="chip un">UNASSIGNED</span>');
+  const un=col=>locked
+    ? '<span class="chip un">UNASSIGNED</span>'
+    : '<button class="chip un" aria-label="Unfilled '+esc(d.name)+' slot — assign somebody" '+
+      'onclick="addToSlot(\''+escJs(d.key)+'\',\''+col+'\')">UNASSIGNED</button>';
+  for(let i=0;i<missM;i++) maleChips.push(un('m'));
+  for(let i=0;i<missF;i++) femaleChips.push(un('f'));
+  for(let i=0;i<missX;i++) (maleChips.length<=femaleChips.length?maleChips:femaleChips).push(
+    un(maleChips.length<=femaleChips.length?'m':'f'));
   if(!locked){
     maleChips.push('<button class="chip add" onclick="addToSlot(\''+escJs(d.key)+'\',\'m\')">+ Add</button>');
     femaleChips.push('<button class="chip add" onclick="addToSlot(\''+escJs(d.key)+'\',\'f\')">+ Add</button>');
   }
   const warnHtml=warns.length?'<div class="warns">'+warns.map(w=>'<span class="warn-chip">⚠ '+esc(w)+'</span>').join('')+'</div>':'';
-  return '<tr><td class="dn2">'+esc(d.name)+(manual?'<span class="lock" title="Manually locked — Regenerate never touches this duty">🔒</span>':'')+warnHtml+'</td>'+
-    '<td><div class="cellwrap">'+maleChips.join('')+'</div></td>'+
-    '<td><div class="cellwrap">'+femaleChips.join('')+'</div></td></tr>';
+  return '<tr><td class="dn2">'+esc(d.name)+(manual?'<span class="lock-badge">🔒 Set by hand</span>':'')+warnHtml+'</td>'+
+    '<td data-col="Male"><div class="cellwrap">'+maleChips.join('')+'</div></td>'+
+    '<td data-col="Female"><div class="cellwrap">'+femaleChips.join('')+'</div></td></tr>';
 }
 
 /* ── MANUAL SLOT OPS + MEMBER PICKER ── */
@@ -2413,6 +2920,7 @@ function openPickerModal(){
   const ev=selEvent(); if(!ev||!PICKER_CTX) return;
   const d=dutyDef(ev,PICKER_CTX.dutyKey); if(!d) return;
   oM('<h3>'+(PICKER_CTX.idx==null?'Assign to':'Swap in')+' — '+esc(d.name)+'</h3>'+
+    '<label class="sr-only" for="pickSearch">Search members</label>'+
     '<input type="text" id="pickSearch" placeholder="Search members…" style="width:100%" oninput="renderPickList()">'+
     '<div class="pick-list" id="pickList"></div>'+
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button></div>');
@@ -2454,6 +2962,7 @@ async function applyPick(memberId){
   const _replaced=(PICKER_CTX.idx==null)?null:(arr[PICKER_CTX.idx]&&arr[PICKER_CTX.idx].name);
   if(PICKER_CTX.idx==null) arr.push(entry); else arr[PICKER_CTX.idx]=entry;
   r.manual[PICKER_CTX.dutyKey]=true;
+  invalidatePlan();      // a staged build predates this edit and would overwrite it
   cM(); PICKER_CTX=null;
   await saveRoster(ev.id);
   /* Filling the last empty slot is what makes a roster ready, so that is
@@ -2470,6 +2979,7 @@ async function removeSlot(dutyKey,arrName,idx){
   const ev=selEvent(); if(!ev||evLocked(ev)) return;
   const r=ensureRoster(ev); const a=r.assign[dutyKey]; if(!a||!a[arrName]||idx>=a[arrName].length) return;
   const rm=a[arrName].splice(idx,1)[0]; r.manual[dutyKey]=true;
+  invalidatePlan();      // as above — the staged build no longer matches what is on screen
   await saveRoster(ev.id);
   auditLog('manual-remove','roster',ev.name+' '+ev.date+' \u2014 '+legacyLabel(dutyKey)+
     ': removed '+(rm&&rm.name||'?'));
@@ -2561,18 +3071,67 @@ async function toggleConfirm(){
 function openAddEvent(){
   if(!IS_EDIT) return;
   const types=[['friday','Friday Majlis'],['chandraat','Chandraat'],['pbs','Paanch Baar Saal'],['baithulkhayal','Baithulkhayal'],['student','Student Majlis'],['navroz','Navroz'],['eid','Eid / Khushiali'],['imamat','Imamat Day'],['salgirah','Salgirah'],['custom','Custom…']];
+  /* Cycle ownership comes out of an astronomical new-moon calculation with
+     leader overrides. Nobody can derive it in their head, and the dialog
+     used to be a bare date box that rejected you only after you pressed Add
+     Event. It now opens on a date that is definitely this team's, bounds
+     the picker to the cycles this page can see, and answers live. */
+  const k0=barCycleK();
+  const mine=CYCLES.filter(c=>c.status!=='historic');
+  const lo=mine.length?cyStart(mine[0].k):null;
+  const hi=mine.length?cyStart(mine[mine.length-1].k+1):null;
+  const today=nzTodayISO();
+  /* The bar can be pointed at a finished cycle, and defaulting to its start
+     would open the picker on a date outside its own min/max. Fall back to
+     the first cycle you can actually add to. */
+  const addable=(k0!=null&&mine.some(c=>c.k===k0))?k0:(mine.length?mine[0].k:null);
+  const start=addable!=null?cyStart(addable):null;
+  const def=(start&&start>today)?start:(addable!=null&&inCycleK(today,addable)?today:start);
   oM('<h3>Add Event</h3>'+
-    '<div class="frow"><label class="flabel" for="aeDate">Date</label><input type="date" id="aeDate"></div>'+
+    '<div class="frow"><label class="flabel" for="aeDate">Date</label>'+
+      '<input type="date" id="aeDate" onchange="aeDateChanged()"'+
+      (def?' value="'+esc(def)+'"':'')+(lo?' min="'+esc(lo)+'"':'')+(hi?' max="'+esc(hi)+'"':'')+'>'+
+      '<div id="aeDateHint" class="ae-hint"></div></div>'+
     '<div class="frow"><label class="flabel" for="aeType">Type</label><select id="aeType" onchange="aeTypeChanged()">'+types.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join('')+'</select></div>'+
     '<div class="frow"><label class="flabel" for="aeName">Event name</label><input type="text" id="aeName" value="Friday Majlis"><datalist id="eidNames">'+EID_NAMES.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist></div>'+
     '<div class="frow"><label class="flabel" for="aeUniform">Uniform</label><select id="aeUniform"><option>Casual</option><option>Formal</option></select></div>'+
     '<div class="frow"><label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="aeYouth" checked style="width:auto"> Youth Congregation (MPH section)</label></div>'+
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" onclick="submitAddEvent()">Add Event</button></div>');
+  aeDateChanged();
+}
+/* Says who owns the chosen date the moment it changes, instead of after a
+   rejected submit. */
+function aeDateChanged(){
+  const box=document.getElementById('dcard'); if(!box) return;
+  const el=box.querySelector('#aeDate'), hint=box.querySelector('#aeDateHint');
+  if(!el||!hint) return;
+  const v=el.value;
+  if(!v){ hint.className='ae-hint'; hint.textContent='Pick a date.'; return; }
+  const k=cycleForDate(v), owner=teamForCycle(k);
+  const historic=cyStart(k+1)<=nzTodayISO();
+  if(owner!==PAGE_TEAM){
+    hint.className='ae-hint bad';
+    hint.textContent='\u2715 '+fmtShort(v)+' is in Team '+owner+'\u2019s cycle \u2014 '+cycleLabel(k)+'. Pick a date in one of Team '+PAGE_TEAM+'\u2019s.';
+  } else if(historic){
+    hint.className='ae-hint bad';
+    hint.textContent='\u2715 '+cycleLabel(k)+' has finished. You cannot add events to a past cycle.';
+  } else {
+    hint.className='ae-hint ok';
+    hint.textContent='\u2713 Team '+PAGE_TEAM+' \u00b7 '+cycleLabel(k);
+  }
 }
 function aeTypeChanged(){
   const box=document.getElementById('dcard'); const type=(box.querySelector('#aeType')||{}).value; const tm=TYPE_META[type]||TYPE_META.custom;
   const nameEl=box.querySelector('#aeName'),uniEl=box.querySelector('#aeUniform'),yEl=box.querySelector('#aeYouth');
-  if(nameEl){ nameEl.value=type==='eid'?EID_NAMES[0]:tm.name; if(type==='eid') nameEl.setAttribute('list','eidNames'); else nameEl.removeAttribute('list'); }
+  /* This used to overwrite the name unconditionally, so typing a name and
+     then setting the type silently threw the name away. It only fills the
+     field when it still holds a default nobody has edited. */
+  if(nameEl){
+    const auto=type==='eid'?EID_NAMES[0]:tm.name;
+    const defaults=Object.keys(TYPE_META).map(t=>TYPE_META[t].name).concat(EID_NAMES);
+    if(!nameEl.value.trim()||defaults.indexOf(nameEl.value.trim())>=0) nameEl.value=auto;
+    if(type==='eid') nameEl.setAttribute('list','eidNames'); else nameEl.removeAttribute('list');
+  }
   if(uniEl) uniEl.value=FORMAL_TYPES.includes(type)?'Formal':'Casual';
   if(yEl) yEl.checked=(type==='friday');
 }
@@ -2698,15 +3257,22 @@ function openEventDrawer(id){
   h+='<div class="dp-sec">Fill status</div><div class="dp-card"><div class="dp-row"><span class="dl">Assignments</span><span class="dv num">'+sc.assigned+'</span></div>'+
     '<div class="dp-row"><span class="dl">Unfilled slots</span><span class="dv num" style="color:'+(sc.missing?'var(--red-lt)':'var(--green-lt)')+'">'+sc.missing+'</span></div>'+
     '<div class="dp-row"><span class="dl">State</span><span class="dv">'+(sc.generated?'Generated':'Not generated')+'</span></div></div>';
-  if(data&&data.assign){
+  const mayRead = IS_EDIT || ev.confirmed;
+  if(data&&data.assign&&!mayRead){
+    h+='<div class="dp-sec">Duties</div><div class="dp-card">'+
+      '<div style="font-size:13px;color:var(--dm);line-height:1.6">\u23f3 Not on the calendar yet \u2014 '+
+      'the '+esc(TEAM_NAME)+' leaders have not published this roster. It appears here as soon as they do.</div></div>';
+  }
+  if(data&&data.assign&&mayRead){
     h+='<div class="dp-sec">Duties</div><div class="dp-card">';
     const lines=rosterLines(ev); let any=false;
     lines.forEach(l=>{ const names=l.male.concat(l.female); if(names.length){ any=true; h+='<div class="dp-row"><span class="dl">'+esc(l.name)+'</span><span class="dv" style="max-width:60%">'+esc(names.join(', '))+'</span></div>'; } });
     if(!any) h+='<div style="font-size:13px;color:var(--dm)">No assignments yet.</div>';
     h+='</div>';
   }
-  h+='<div class="dp-actions"><button class="btn btn-bl btn-sm" onclick="selectEvent('+ev.id+')">Open in Roster →</button>'+
-    (IS_EDIT&&!evLocked(ev)?'<button class="btn btn-ol btn-sm" onclick="generateEvent('+ev.id+')">↻ Regenerate</button>':'')+
+  h+='<div class="dp-actions">'+
+    (IS_EDIT?'<button class="btn btn-bl btn-sm" onclick="selectEvent('+ev.id+')">Open in Roster →</button>':'')+
+    (IS_EDIT&&!evLocked(ev)?'<button class="btn btn-ol btn-sm" onclick="previewEvent('+ev.id+')">↻ Regenerate</button>':'')+
     '<button class="btn btn-ol btn-sm" onclick="selEventId='+ev.id+';copyRoster()">⧉ Copy</button></div>';
   openDrawer(h);
 }
@@ -2750,13 +3316,13 @@ async function openDayDuties(iso){
 
   let h=head;
   for(const ev of evs){
-    const data=rosters[ev.id]||{assign:{}};
+    const data=(IS_EDIT||ev.confirmed)?(rosters[ev.id]||{assign:{}}):null;
     h+='<div style="margin-bottom:16px"><div style="font-size:15px;font-weight:900;margin-bottom:7px">'+
        esc(ev.name)+' <span style="font-weight:700;color:var(--dm);font-size:13px">\u00b7 '+
        esc(ev.uniform||'Casual')+' uniform'+(ev.confirmed?'':' \u00b7 draft')+'</span></div>'+
        '<table style="width:100%;border-collapse:collapse;font-size:13px">';
     let any=false;
-    for(const d of dutiesForEvent(ev)){
+    for(const d of (data?dutiesForEvent(ev):[])){
       const a=(data.assign&&data.assign[d.key])||{m:[],f:[],x:[]};
       const names=people(a).map(p=>p.name);
       if(!names.length) continue;
@@ -2764,7 +3330,9 @@ async function openDayDuties(iso){
       h+='<tr><td style="padding:4px 8px 4px 0;font-weight:800;white-space:nowrap;vertical-align:top">'+
          esc(recName(d.name))+'</td><td style="padding:4px 0;color:var(--dm)">'+esc(names.join(' / '))+'</td></tr>';
     }
-    if(!any) h+='<tr><td style="padding:4px 0;color:var(--dm)">Not yet rostered.</td></tr>';
+    if(!data) h+='<tr><td style="padding:4px 0;color:var(--dm)">Not on the calendar yet \u2014 '+
+      'the leaders have not published this roster.</td></tr>';
+    else if(!any) h+='<tr><td style="padding:4px 0;color:var(--dm)">Not yet rostered.</td></tr>';
     h+='</table></div>';
   }
   h+='<div class="macts"><button class="btn btn-ol" onclick="cM()">Close</button></div>';
