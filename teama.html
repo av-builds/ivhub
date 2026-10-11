@@ -3330,12 +3330,32 @@ function calNav(dir){ CAL.m+=dir; if(CAL.m<0){CAL.m=11;CAL.y--;} if(CAL.m>11){CA
    Team A's page only loads Team A's events, so a Team B day has to be
    fetched on demand rather than looked up locally. Reading is allowed for
    anyone signed in; writing still is not, so this is a view only. */
-async function openDayDuties(iso){
+/* Grows the dialog out of the cell that was tapped, so it is obvious which
+   day opened and where it came from. Runs once per open: openDayDuties
+   replaces the card's contents after loading, and the card itself stays put.
+   prefers-reduced-motion users get the plain dialog. */
+function zoomFromCell(src){
+  const card=document.getElementById('dcard');
+  if(!src||!card||!card.animate) return;
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const a=src.getBoundingClientRect(), c=card.getBoundingClientRect();
+  if(!a.width||!c.width) return;
+  const dx=(a.left+a.width/2)-(c.left+c.width/2), dy=(a.top+a.height/2)-(c.top+c.height/2);
+  const sc=Math.max(.12,Math.min(.5,a.width/c.width));
+  card.style.animation='none';
+  const run=card.animate([
+    {transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')',opacity:.2},
+    {transform:'none',opacity:1}],
+    {duration:300,easing:'cubic-bezier(.16,1,.3,1)'});
+  run.onfinish=run.oncancel=()=>{ card.style.animation=''; };
+}
+async function openDayDuties(iso,src){
   const owner=teamForCycle(cycleForDate(iso));
   const head='<h3>'+esc(fmtNice(iso))+'</h3>'+
     '<p style="font-size:13px;color:var(--dm);margin:-4px 0 14px">Team '+esc(owner)+
     (owner===PAGE_TEAM?' \u00b7 your team':' \u00b7 other team')+'</p>';
   oM(head+'<p style="font-size:14px;color:var(--dm)">Loading\u2026</p>');
+  zoomFromCell(src);
 
   let evs=EVENTS.filter(e=>e.date===iso), rosters={};
   if(evs.length){ evs.forEach(e=>{ if(ROSTERS[e.id]) rosters[e.id]=ROSTERS[e.id]; }); }
@@ -3402,7 +3422,7 @@ function renderCalendar(){
     const owner=teamForCycle(cycleForDate(iso)); const mine=owner===PAGE_TEAM; const evs=evByDate[iso]||[];
     h+='<div class="cal-cell'+(out?' out':'')+(mine?' mine':'')+(iso===today?' today':'')+'" role="button" tabindex="0"'+
       ' title="Open the duties for '+esc(fmtNice(iso))+'"'+
-      ' onclick="openDayDuties(\''+iso+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDayDuties(\''+iso+'\')}">'+
+      ' onclick="openDayDuties(\''+iso+'\',this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDayDuties(\''+iso+'\',this)}">'+
       '<span class="dnum num">'+cd+'</span><span class="towner">'+owner+'</span>';
     for(const e of evs) h+='<button class="cal-ev'+(e.confirmed?' conf':'')+'" title="'+esc(e.name)+' — '+esc(fmtNice(e.date))+'" onclick="openEventDrawer('+e.id+')">'+esc(e.name)+'</button>';
     h+='</div>';
