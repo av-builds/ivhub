@@ -2794,9 +2794,12 @@ function renderEventView(ev){
       '<span>👁️</span><span><b>This roster is not on the calendar — nobody else can see it.</b> '+
       (_gaps>0
         ? _gaps+' slot'+(_gaps===1?'':'s')+' still unfilled. Fill '+(_gaps===1?'it':'them')+
-          ' and it goes on the calendar by itself.'
+          ' and it goes on the calendar by itself — or put it up as it is.'
         : 'Every slot is filled, so it is ready to go.')+'</span>'+
-      (_gaps>0 ? '' : '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">Put on the calendar</button>')+
+      /* This used to hide the button whenever there were gaps, so the one
+         place that explained the problem also removed the way out of it. */
+      '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">'+
+        (_gaps>0?'Put on the calendar with '+_gaps+' gap'+(_gaps===1?'':'s'):'Put on the calendar')+'</button>'+
       '</div>';
   }
   if(!IS_EDIT&&!ev.confirmed) return h+'<div class="empty-gen"><div class="zap">⏳</div><h3>Roster not published yet</h3><p>The '+esc(TEAM_NAME)+' leaders have not put this one on the calendar. It appears here as soon as they do.</p></div>';
@@ -2892,7 +2895,12 @@ function renderDutyRow(ev,d,data,locked){
   let missM=Math.max(0,(d.reqM||0)-(a.m||[]).length);
   let missF=Math.max(0,(d.reqF||0)-(a.f||[]).length);
   let missX=Math.max(0,(d.reqAny||0)-total-missM-missF);
-  const un=col=>locked
+  /* Gated on IS_EDIT rather than `locked`, which also covers historic
+     events — a lead looking back should still see where the team was short.
+     A volunteer gets an empty space instead: UNASSIGNED is a job for whoever
+     builds the roster, not a message for whoever reads it. */
+  const un=col=>!IS_EDIT ? ''
+    : locked
     ? '<span class="chip un">UNASSIGNED</span>'
     : '<button class="chip un" aria-label="Unfilled '+esc(d.name)+' slot — assign somebody" '+
       'onclick="addToSlot(\''+escJs(d.key)+'\',\''+col+'\')">UNASSIGNED</button>';
@@ -3015,6 +3023,29 @@ async function toggleYouth(){
 
    Shared by generateEvent, which does this automatically, and by the
    button, which is now only needed to hide a roster deliberately. */
+/* Names what is short rather than counting it. "7 slots unfilled" gives a
+   lead nothing to act on; "Nandi Line — 1 male, 3 female" tells them whether
+   it is worth chasing somebody before it goes out. */
+function confirmPublishWithGaps(ev,gaps){
+  const list=gapsFor(ev,ROSTERS[ev.id]||{});
+  const shown=list.slice(0,8).map(g=>'<li>'+esc(g.duty)+' — '+esc(g.why)+'</li>').join('');
+  oM('<h3>Put it on the calendar with gaps?</h3>'+
+    '<p style="font-size:14px;color:var(--dm);line-height:1.6">'+
+      esc(ev.name)+' on '+esc(fmtShort(ev.date))+' has <b style="color:var(--gold-lt)">'+gaps+
+      '</b> unfilled slot'+(gaps===1?'':'s')+'. Everyone will see the roster, and '+
+      (gaps===1?'that slot':'those slots')+' will simply show nobody.</p>'+
+    '<ul style="font-size:13px;color:var(--dm);line-height:1.7;margin:0 0 14px;padding-left:20px">'+shown+
+      (list.length>8?'<li>…and '+(list.length-8)+' more</li>':'')+'</ul>'+
+    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
+    '<button class="btn btn-gd" onclick="cM();doPublishWithGaps('+ev.id+')">Put it on the calendar anyway</button></div>');
+}
+async function doPublishWithGaps(id){
+  const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
+  const gaps=slotCounts(ev).missing;
+  const ok=await publishIfComplete(ev,{force:true});
+  renderRoster(); refreshBadges();
+  if(ok) toast('On the calendar — everyone can see it, with '+gaps+' slot'+(gaps===1?'':'s')+' still open');
+}
 async function setOnCalendar(ev, want){
   if(want && unsavedCount()){
     toast('The roster is not stored yet, so there is nothing to put on the calendar.','err'); return false;
@@ -3047,16 +3078,29 @@ async function publishIfComplete(ev, opts){
      setOnCalendar refuses in that case and says so. */
   if(unsavedCount()) return await setOnCalendar(ev, true);
   const gaps = slotCounts(ev).missing;
-  if(gaps > 0){
+  /* o.force is a lead saying "I know — publish it anyway". Some shortfalls
+     cannot be filled at all: two Nandi-certified members cannot cover four
+     Nandi slots. Without this, a roster that is 41 of 48 filled stays
+     invisible for ever and three hundred people see nothing rather than
+     most of it. Only a deliberate press sets it — every automatic publish
+     calls this without force and still refuses. */
+  if(gaps > 0 && !o.force){
     if(!o.quiet) toast(gaps + ' slot' + (gaps===1?'':'s') + ' still unfilled — fill ' +
-      (gaps===1?'it':'them') + ' and it goes on the calendar', 'err');
+      (gaps===1?'it':'them') + ', or use Put on the calendar to publish it as it is', 'err');
     return false;
   }
-  return await setOnCalendar(ev, true);
+  const ok = await setOnCalendar(ev, true);
+  if(ok && gaps > 0) auditLog('confirm-incomplete','events',
+    ev.name+' '+ev.date+' — put on the calendar with '+gaps+' slot'+(gaps===1?'':'s')+' unfilled');
+  return ok;
 }
 async function toggleConfirm(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
   if(!ev.confirmed){
+    /* Publishing with holes in it is a real decision, so it gets made once,
+       with the duties named, rather than guessed at from a slot count. */
+    const gaps=slotCounts(ev).missing;
+    if(gaps>0) return confirmPublishWithGaps(ev,gaps);
     const ok=await publishIfComplete(ev);
     renderRoster();
     if(ok) toast('On the calendar — everyone can see it now');
