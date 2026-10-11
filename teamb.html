@@ -159,6 +159,29 @@ body.sb-min .main{margin-left:70px;}
 .main{margin-left:238px;padding:26px 30px 80px;min-height:100vh;max-width:1360px;transition:margin-left .28s cubic-bezier(.16,1,.3,1);}
 .page{display:none;}
 .page.active{display:block;animation:pageIn .32s cubic-bezier(.16,1,.3,1);}
+/* Pages slide in from the side you are travelling towards, following the
+   order of the menu, so moving around feels like going somewhere. */
+.page.active.from-right{animation:pageInR .42s cubic-bezier(.16,1,.3,1);}
+.page.active.from-left{animation:pageInL .42s cubic-bezier(.16,1,.3,1);}
+@keyframes pageInR{from{opacity:0;transform:translateX(38px) scale(.995)}to{opacity:1;transform:none}}
+@keyframes pageInL{from{opacity:0;transform:translateX(-38px) scale(.995)}to{opacity:1;transform:none}}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes cellIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:none}}
+/* Staggered entrance, only on the render that follows a page change. The
+   .enter class is removed again, so later re-renders (every save, every
+   realtime update) do not replay it. */
+.page.enter .sc,.page.enter .next-row,.page.enter .mem-card,.page.enter .att-row,
+.page.enter .ev-card,.page.enter .cyc-group,.page.enter .gp-n,.page.enter .pnl{animation:riseIn .46s cubic-bezier(.16,1,.3,1) both;}
+.page.enter .cal-cell{animation:cellIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i,0)*14ms);}
+.page.enter :is(.sc,.next-row,.mem-card,.att-row,.ev-card,.cyc-group,.pnl):nth-child(2){animation-delay:.05s;}
+.page.enter :is(.sc,.next-row,.mem-card,.att-row,.ev-card,.cyc-group,.pnl):nth-child(3){animation-delay:.1s;}
+.page.enter :is(.sc,.next-row,.mem-card,.att-row,.ev-card,.cyc-group,.pnl):nth-child(4){animation-delay:.15s;}
+.page.enter :is(.sc,.next-row,.mem-card,.att-row,.ev-card,.cyc-group,.pnl):nth-child(n+5){animation-delay:.2s;}
+/* A thin progress bar across the top while a page loads. */
+#navBar{position:fixed;left:0;top:0;height:3px;width:0;z-index:2000;pointer-events:none;opacity:0;
+  background:linear-gradient(90deg,var(--blue),var(--blue-lt),var(--gold-lt));box-shadow:0 0 10px rgba(79,195,247,.7);}
+#navBar.run{opacity:1;animation:navBar .7s cubic-bezier(.22,.8,.3,1) forwards;}
+@keyframes navBar{0%{width:0;opacity:1}70%{width:88%;opacity:1}100%{width:100%;opacity:0}}
 .ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:14px;flex-wrap:wrap;}
 .ph h1{font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:0.03em;}
 .ph p{color:var(--dm);font-size:13.5px;margin-top:4px;line-height:1.55;max-width:660px;}
@@ -784,6 +807,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 
 <div id="mo" class="mo"><div id="mbox" class="mbox" role="dialog" aria-modal="true" aria-label="Details"></div></div>
 <div id="dlg" class="dlg"><div id="dcard" class="dcard" role="dialog" aria-modal="true" aria-label="Dialog"></div></div>
+<div id="navBar" aria-hidden="true"></div>
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <div id="exportStage" style="position:fixed;left:-10000px;top:0;" aria-hidden="true"></div>
 
@@ -1964,6 +1988,11 @@ async function logView(section){
     user_email:CU.email||'',team:PAGE_TEAM,section:section});
   if(error) console.warn('view log not written:', section, error.message||error);
 }
+let NAV_PREV='dashboard';
+function navProgress(){
+  const b=document.getElementById('navBar'); if(!b) return;
+  b.classList.remove('run'); void b.offsetWidth; b.classList.add('run');
+}
 function nav(page){
   if(!IS_EDIT && VOLUNTEER_PAGES.indexOf(page)<0) page='dashboard';   // volunteers stay in scope
   curPage=page;
@@ -1972,7 +2001,16 @@ function nav(page){
     n.classList.toggle('active',on);
     if(on) n.setAttribute('aria-current','page'); else n.removeAttribute('aria-current');
   });
-  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
+  const _order=['dashboard','calendar','announce','roster','attendance','reports','members'];
+  const _prev=NAV_PREV; NAV_PREV=page;
+  const _dir=_order.indexOf(page)>=_order.indexOf(_prev)?'from-right':'from-left';
+  document.querySelectorAll('.page').forEach(p=>{
+    const on=p.id==='page-'+page;
+    p.classList.remove('from-right','from-left','enter');
+    p.classList.toggle('active',on);
+    if(on&&_prev!==page){ void p.offsetWidth; p.classList.add(_dir,'enter'); setTimeout(()=>p.classList.remove('enter'),900); }
+  });
+  navProgress();
   closeSidebar();
   renderCurrent();
   if(LOGGED_SECTIONS[page]) logView(LOGGED_SECTIONS[page]);
@@ -3420,7 +3458,7 @@ function renderCalendar(){
     else if(cd>dim){ out=true; cd-=dim; cm=m+1; if(cm>11){cm=0;cy++;} }
     const iso=cy+'-'+pad2(cm+1)+'-'+pad2(cd);
     const owner=teamForCycle(cycleForDate(iso)); const mine=owner===PAGE_TEAM; const evs=evByDate[iso]||[];
-    h+='<div class="cal-cell'+(out?' out':'')+(mine?' mine':'')+(iso===today?' today':'')+'" role="button" tabindex="0"'+
+    h+='<div style="--i:'+i+'" class="cal-cell'+(out?' out':'')+(mine?' mine':'')+(iso===today?' today':'')+'" role="button" tabindex="0"'+
       ' title="Open the duties for '+esc(fmtNice(iso))+'"'+
       ' onclick="openDayDuties(\''+iso+'\',this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDayDuties(\''+iso+'\',this)}">'+
       '<span class="dnum num">'+cd+'</span><span class="towner">'+owner+'</span>';
