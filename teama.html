@@ -284,6 +284,9 @@ tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(79,195,24
 .gp-sub{font-size:12.5px;font-weight:600;color:var(--dm);margin-top:5px;line-height:1.55;}
 .gp-acts{display:flex;gap:7px;padding:11px 15px;border-bottom:var(--hairline);}
 .gp-acts .btn{flex:1;justify-content:center;}
+.num-link{margin:0 0 10px;}
+.tn-team{cursor:pointer;border-radius:6px;padding:2px 5px;}
+.tn-team:hover{background:rgba(79,195,247,.14);}
 .gp-live{display:flex;align-items:flex-start;gap:9px;padding:10px 15px 12px;cursor:pointer;
   font-size:12px;font-weight:700;color:var(--dm);line-height:1.5;border-bottom:var(--hairline);}
 .gp-live input{width:auto;flex:none;margin-top:1px;accent-color:var(--gold);}
@@ -424,6 +427,24 @@ button.chip.un:hover{background:rgba(239,68,68,.22);border-color:var(--red-lt);}
 .cal-ev{display:block;width:100%;text-align:left;margin-top:3px;background:var(--blue2);color:#fff;border:none;border-radius:5px;padding:2px 5px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cal-ev:hover{filter:brightness(1.2);}
 .cal-ev.conf{background:var(--gold);color:#20180a;}
+.cal-ev.st-nb{background:transparent;color:var(--dm);border:1px dashed var(--db2);}
+.cal-st{display:block;font-size:11px;font-weight:800;margin:1px 0 0 2px;line-height:1.25;}
+.cal-st.st-nb{color:var(--dm);}.cal-st.st-dr{color:var(--blue-lt);}.cal-st.st-lv{color:var(--gold-lt);}
+.cal-st b{color:var(--red-lt);font-weight:900;}
+.cal-cell.theirs:not(.out){opacity:.5;background:transparent;}
+.cal-cell.theirs:hover{opacity:.85;}
+.cal-legend{display:flex;gap:12px;align-items:center;margin-left:auto;font-size:12px;font-weight:700;color:var(--dm);flex-wrap:wrap;}
+.cal-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.cal-legend i.st-nb{border:1px dashed var(--dm);}.cal-legend i.st-dr{background:var(--blue2);}.cal-legend i.st-lv{background:var(--gold);}
+.cal-grid.anim-l .cal-ev,.cal-grid.anim-r .cal-ev{animation:popIn .45s cubic-bezier(.16,1,.3,1) .18s both;}
+.cal-cell.today{animation:todayPulse 2.6s ease-in-out infinite;}
+@keyframes todayPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.0)}50%{box-shadow:0 0 0 5px rgba(245,158,11,.22)}}
+.tonight{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 14px;padding:14px 18px;border-radius:var(--r-lg);
+  background:linear-gradient(135deg,rgba(245,158,11,.14),rgba(21,101,192,.12));border:1px solid var(--gold-bd);}
+.tonight .tn-k{font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--gold-lt);}
+.tonight .tn-t{font-size:18px;font-weight:900;margin-top:2px;}
+.tonight .tn-s{font-size:13px;font-weight:700;color:var(--dm);margin-top:2px;}.tonight .tn-s b{color:var(--gold-lt);}
+.tonight .tn-txt{flex:1;min-width:200px;}.tonight .tn-btns{display:flex;gap:9px;flex-wrap:wrap;}
 
 /* ─── FAIRNESS / REPORTS ─── */
 .fbar{height:8px;border-radius:99px;background:var(--ds2);overflow:hidden;min-width:110px;}
@@ -761,17 +782,16 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     </div>
     <nav class="sb-nav" id="sbNav">
       <a class="hub-link" href="index.html"><span>←</span><span class="hl-t">Back to Hub</span></a>
-      <!-- General is the volunteer view. The brand at the top of the bar is
-           the way back to the dashboard, so there is no Dashboard item. -->
-      <div class="nav-sec">General</div>
-      <button type="button" class="nav-item active" data-page="dashboard" onclick="nav('dashboard')" style="display:none"><span class="ni">⊞</span><span class="nt">Dashboard</span></button>
-      <button type="button" class="nav-item" data-page="calendar" onclick="nav('calendar')"><span class="ni">📅</span><span class="nt">IV Duties Calendar</span></button>
+      <!-- Team pages are for leaders. One flat list, calendar first, because
+           the calendar is where a lead lands. The Dashboard item stays hidden
+           and exists only for a stand-in, who has no other page. -->
+      <button type="button" class="nav-item active" data-page="dashboard" onclick="nav('dashboard')" style="display:none"><span class="ni">⊞</span><span class="nt">Covering</span></button>
+      <button type="button" class="nav-item" data-page="calendar" onclick="nav('calendar')"><span class="ni">📅</span><span class="nt">Calendar</span></button>
+      <button type="button" class="nav-item" data-page="roster" onclick="nav('roster')"><span class="ni">📋</span><span class="nt">Roster</span><span class="nbadge" id="navUnfilled" style="display:none"></span></button>
+      <button type="button" class="nav-item" data-page="attendance" onclick="nav('attendance')"><span class="ni">✅</span><span class="nt">Attendance</span></button>
+      <button type="button" class="nav-item" data-page="reports" onclick="nav('reports')"><span class="ni">📊</span><span class="nt">Numbers</span></button>
+      <button type="button" class="nav-item" data-page="members" onclick="nav('members')"><span class="ni">👥</span><span class="nt">People</span></button>
       <button type="button" class="nav-item" data-page="announce" onclick="nav('announce')"><span class="ni">📣</span><span class="nt">Announcements</span></button>
-      <div class="nav-sec nav-mgmt">Management</div>
-      <button type="button" class="nav-item nav-mgmt" data-page="roster" onclick="nav('roster')"><span class="ni">📋</span><span class="nt">Rostering</span><span class="nbadge" id="navUnfilled" style="display:none"></span></button>
-      <button type="button" class="nav-item nav-mgmt" data-page="attendance" onclick="nav('attendance')"><span class="ni">✅</span><span class="nt">Attendance</span></button>
-      <button type="button" class="nav-item nav-mgmt" data-page="reports" onclick="nav('reports')"><span class="ni">📊</span><span class="nt">Analytics</span></button>
-      <button type="button" class="nav-item nav-mgmt" data-page="members" onclick="nav('members')"><span class="ni">👥</span><span class="nt">Member Management</span></button>
     </nav>
     <div class="sb-bot">
       <div class="uchip">
@@ -789,9 +809,9 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
          Sits above every page, because losing a roster matters wherever
          you happen to be looking. -->
     <div id="saveWarn" class="ib ib-warn" role="alert" aria-live="assertive" style="display:none;align-items:center;gap:10px;margin-bottom:14px;"></div>
-    <div class="page active" id="page-dashboard"><div id="body-dashboard"></div></div>
+    <div class="page" id="page-dashboard"><div id="body-dashboard"></div></div>
     <div class="page" id="page-roster"><div id="body-roster"></div></div>
-    <div class="page" id="page-calendar"><div id="body-calendar"></div></div>
+    <div class="page active" id="page-calendar"><div id="body-calendar"></div></div>
     <div class="page" id="page-members"><div id="body-members"></div></div>
     <div class="page" id="page-attendance"><div id="body-attendance"></div></div>
     <div class="page" id="page-reports"><div id="body-reports"></div></div>
@@ -831,7 +851,7 @@ const MOVE_PERMS=IV_TOP.concat(['facilitator']);
    announcements, plus the dashboard, which shows the day's roster for
    their own team. Rostering itself is a Management tool now — building a
    roster is not the same job as reading one. */
-const VOLUNTEER_PAGES=['dashboard','calendar','announce'];
+const VOLUNTEER_PAGES=['dashboard'];   // a stand-in's cover panel; everything else is leaders-only
 
 /* ── SESSION ── */
 let CU=null;
@@ -841,17 +861,30 @@ const hasPerm=(...ps)=>ps.some(p=>((CU&&CU.perms)||[]).includes(p));
 let IS_VIEW=!!CU&&hasPerm(...VIEW_PERMS);
 let IS_EDIT=!!CU&&hasPerm(...EDIT_PERMS);
 let CAN_MOVE=!!CU&&hasPerm(...MOVE_PERMS);
+/* Facilitators and IV leadership can see both teams, which are two separate
+   pages. Switching keeps you on the same page (Roster A to Roster B) rather
+   than dropping you on the other team's front door. */
+window.CAN_SWITCH_TEAM=()=>hasPerm(...IV_TOP,'facilitator');
+function openTeamSwitch(){
+  if(!window.CAN_SWITCH_TEAM()) return;
+  const other=PAGE_TEAM==='A'?'B':'A';
+  const go=t=>"location.href='team"+t.toLowerCase()+".html?p="+curPage+"'";
+  oM('<h3>Switch team</h3>'+
+    '<div class="macts" style="flex-direction:column;align-items:stretch;justify-content:flex-start">'+
+    '<button class="btn btn-ol" disabled style="opacity:.6">\u2713 Team '+PAGE_TEAM+' \u2014 you are here</button>'+
+    '<button class="btn btn-bl" onclick="'+go(other)+'">Switch to Team '+other+' \u2192</button>'+
+    '<button class="btn btn-ol" onclick="location.href=\'index.html\'">\u2190 Back to the Hub</button>'+
+    '<button class="btn btn-ol" onclick="cM()">Cancel</button></div>');
+}
 function applyNavScope(){
-  if(IS_EDIT){                              // leaders see everything
-    document.querySelectorAll('.nav-mgmt').forEach(n=>n.style.removeProperty('display'));
-    return;
-  }
+  /* Team pages are for leaders. Anyone else who gets this far is a stand-in
+     and sees nothing in the menu; their cover panel is the page. */
   document.querySelectorAll('.nav-item[data-page]').forEach(n=>{
-    if(VOLUNTEER_PAGES.indexOf(n.dataset.page)<0) n.style.display='none';
+    if(IS_EDIT) n.style.removeProperty('display');
+    else n.style.display='none';
   });
-  // The section heading has no data-page, so hide it explicitly or a
-  // volunteer gets an empty "Management" group with nothing under it.
-  document.querySelectorAll('.nav-sec.nav-mgmt').forEach(n=>n.style.display='none');
+  const dash=document.querySelector('.nav-item[data-page="dashboard"]');
+  if(dash) dash.style.display='none';
 }
 function recomputeAccess(){
   IS_VIEW=!!CU&&hasPerm(...VIEW_PERMS);
@@ -1338,7 +1371,7 @@ let MEMBERS=[],EVENTS=[],ROSTERS={},ANNS=[],ATTEND={};
    ATTEND holds the raw register for the cycles on screen; this holds the
    whole history as four numbers per person. */
 let ATT_TOTALS={};
-let CYCLES=[],selEventId=null,DB_MISSING=false,LOADED=false,curPage='dashboard';
+let CYCLES=[],selEventId=null,DB_MISSING=false,LOADED=false,curPage='calendar';
 let expandedCycles=new Set();
 let CAL={y:2026,m:0};
 let attEventId=null, repCycleK=null, repMode='attendance', repMember=null, lbDuty='', lbSort='count', memFilter={q:'',rank:'',age:'',nandi:'',away:''};
@@ -1988,7 +2021,7 @@ async function logView(section){
     user_email:CU.email||'',team:PAGE_TEAM,section:section});
   if(error) console.warn('view log not written:', section, error.message||error);
 }
-let NAV_PREV='dashboard';
+let NAV_PREV='calendar';
 function navProgress(){
   const b=document.getElementById('navBar'); if(!b) return;
   b.classList.remove('run'); void b.offsetWidth; b.classList.add('run');
@@ -2001,7 +2034,7 @@ function nav(page){
     n.classList.toggle('active',on);
     if(on) n.setAttribute('aria-current','page'); else n.removeAttribute('aria-current');
   });
-  const _order=['dashboard','calendar','announce','roster','attendance','reports','members'];
+  const _order=['dashboard','calendar','roster','attendance','reports','members','announce'];
   const _prev=NAV_PREV; NAV_PREV=page;
   const _dir=_order.indexOf(page)>=_order.indexOf(_prev)?'from-right':'from-left';
   document.querySelectorAll('.page').forEach(p=>{
@@ -2174,7 +2207,16 @@ async function boot(){
   if(!(await verifyAuth())) return;
   if(!CU||!CU.user) return;
   document.title='IV '+TEAM_NAME+' — Roster';
-  const sbTeam=document.getElementById('sbTeam'); if(sbTeam) sbTeam.textContent='IV '+TEAM_NAME;
+  const sbTeam=document.getElementById('sbTeam');
+  if(sbTeam){
+    sbTeam.textContent='IV '+TEAM_NAME;
+    if(window.CAN_SWITCH_TEAM&&window.CAN_SWITCH_TEAM()){
+      sbTeam.textContent+=' \u25be'; sbTeam.style.cursor='pointer'; sbTeam.title='Switch team';
+      sbTeam.setAttribute('role','button'); sbTeam.setAttribute('tabindex','0');
+      sbTeam.onclick=openTeamSwitch;
+      sbTeam.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openTeamSwitch(); } };
+    }
+  }
   document.getElementById('unm').textContent=CU.display||CU.user;
   document.getElementById('url').textContent=IS_EDIT?'Leader':'Viewer';
   document.getElementById('uav').textContent=(CU.display||CU.user||'?').slice(0,1).toUpperCase();
@@ -2189,11 +2231,18 @@ async function boot(){
   applyNavScope();
   startClock();
   const t=nzTodayISO(); CAL={y:+t.slice(0,4),m:+t.slice(5,7)-1};
-  renderDashboard(); // skeleton-ish initial
+  if(IS_EDIT) renderCalendar(); else nav('dashboard');
   await waitSupabase();
   setSyncStatus(sb?'ok':'off');
   await loadAll();
   await loadCovering();   // events elsewhere I have been asked to stand in for
+  if(!IS_EDIT && !COVERING.length){
+    document.body.insertAdjacentHTML('beforeend',
+      '<div class="noaccess"><div class="box"><div style="font-size:30px">📋</div><h2>Leaders only</h2>'+
+      '<p>The '+esc(TEAM_NAME)+' pages are for team leaders. Your duties, away dates and attendance are on the Hub.</p>'+
+      '<a class="btn btn-bl" href="index.html">← Go to the Hub</a></div></div>');
+    return;
+  }
   await loadMyMember();   // which of these members the viewer is, for their own cards
   CYCLES=buildCycles();
   await autoCreateEvents();
@@ -2207,6 +2256,14 @@ async function boot(){
   repCycleK=fairnessCycleK();
   attEventId=def?def.id:null;
   LOADED=true;
+  /* Arriving from the team switcher: land on the page you were on. */
+  try{
+    const want=new URLSearchParams(location.search).get('p');
+    if(want&&IS_EDIT&&['calendar','roster','attendance','reports','members','announce'].indexOf(want)>=0){
+      curPage=want; document.querySelectorAll('.page').forEach(pg=>pg.classList.toggle('active',pg.id==='page-'+want));
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===want));
+    }
+  }catch(e){}
   renderCurrent();
   subscribeRT();
 }
@@ -2849,6 +2906,7 @@ function renderEventView(ev){
       '<div class="rules-line">Rules: cycle fairness carried across three cycles · no duty repeats within a cycle · Nandi requires certification · children only at entrances &amp; Nandi Passing · away-dates skipped · age groups step up when a pool runs out · duty preferences honoured on ties · Seating &amp; Discipline is 1 adult + 1 youth per gender · Prayer Hall Entrance takes children then youth, never adults</div></div>';
   }
   const duties=dutiesForEvent(ev);
+  h+='<div class="num-link"><button class="btn btn-ol btn-sm" onclick="repMode=\'fairness\';repMember=null;nav(\'reports\')">📊 See fairness and counts in Numbers →</button></div>';
   const core=duties.filter(d=>d.section!=='mph'),mph=duties.filter(d=>d.section==='mph');
   h+='<div class="tw"><div class="tw-scroll"><table class="duty"><thead><tr><th style="width:230px">Duty</th><th>Male</th><th>Female</th></tr></thead><tbody>';
   if(core.length) h+='<tr class="sec"><td colspan="3">ADULTS &amp; YOUTH</td></tr>';
@@ -3363,6 +3421,27 @@ function openEventDrawer(id){
    CYCLE CALENDAR (month view)
 ════════════════════════════════════════════ */
 let _calAnim='';
+/* Today's events for this team, with the two things a lead does on the
+   night one tap away. Absent on days with nothing on, so it only takes room
+   when it is useful. */
+function tonightStrip(){
+  const today=nzTodayISO();
+  const evs=EVENTS.filter(e=>e.date===today);
+  if(!evs.length) return '';
+  return evs.map(e=>{
+    const sc=slotCounts(e);
+    const names=new Set(); const r=ROSTERS[e.id];
+    if(r&&r.assign) for(const k in r.assign) people(r.assign[k]).forEach(q=>names.add(q.id!=null?q.id:q.name));
+    const info=!sc.generated?'Roster not built yet'
+      :names.size+' on duty'+(sc.missing?' · <b>'+sc.missing+' short</b>':'')+(e.confirmed?'':' · draft');
+    return '<div class="tonight"><div class="tn-txt"><div class="tn-k">Tonight</div>'+
+      '<div class="tn-t">'+esc(e.name)+'</div><div class="tn-s">'+info+'</div></div>'+
+      '<div class="tn-btns">'+
+      (sc.generated?'<button class="btn btn-ol" onclick="openDayDuties(\''+today+'\',this)">Who\u2019s on</button>'
+                   :'<button class="btn btn-bl" onclick="selectEvent('+e.id+')">Build roster</button>')+
+      '<button class="btn btn-bl" onclick="attEventId='+e.id+';nav(\'attendance\')">Mark attendance</button></div></div>';
+  }).join('');
+}
 function calNav(dir){ CAL.m+=dir; if(CAL.m<0){CAL.m=11;CAL.y--;} if(CAL.m>11){CAL.m=0;CAL.y++;} _calAnim=dir>0?'anim-l':'anim-r'; renderCalendar(); }
 /* Opens the duties for one day, whichever team owns it.
    Team A's page only loads Team A's events, so a Team B day has to be
@@ -3446,9 +3525,11 @@ function renderCalendar(){
   const monthName=new Date(y,m,1).toLocaleDateString('en-NZ',{month:'long',year:'numeric'});
   const first=new Date(y,m,1); const off=(first.getDay()+6)%7; const dim=new Date(y,m+1,0).getDate(); const dimPrev=new Date(y,m,0).getDate();
   const today=nzTodayISO(); const evByDate={}; EVENTS.forEach(e=>{ (evByDate[e.date]=evByDate[e.date]||[]).push(e); });
-  let h='<div class="ph"><div><h1>IV Duties Calendar</h1><p>Every day is owned by a team — '+esc(TEAM_NAME)+' cells are highlighted. Chandraat is computed from the new-moon + leader overrides.</p></div></div>';
+  let h='<div class="ph"><div><h1>Calendar</h1><p>Every day is owned by a team — '+esc(TEAM_NAME)+' cells are highlighted. Chandraat is computed from the new-moon + leader overrides.</p></div></div>';
   h+='<div class="cal-nav"><button class="btn btn-ol btn-sm" onclick="calNav(-1)" aria-label="Previous month">‹</button><h3>'+esc(monthName)+'</h3><button class="btn btn-ol btn-sm" onclick="calNav(1)" aria-label="Next month">›</button>'+
-    '<span style="font-size:12px;color:var(--dm);margin-left:auto">A/B tag on each day · click any day to see its duties</span></div>';
+    '<span class="cal-legend"><i class="st-nb"></i>Not built <i class="st-dr"></i>Draft <i class="st-lv"></i>On the calendar</span></div>';
+  h+=tonightStrip();
+  h+=renderCoverPanels();
   h+='<div class="cal-grid '+_calAnim+'">';
   ['MON','TUE','WED','THU','FRI','SAT','SUN'].forEach(d=>h+='<div class="cal-dow">'+d+'</div>');
   const cells=Math.ceil((off+dim)/7)*7;
@@ -3458,11 +3539,21 @@ function renderCalendar(){
     else if(cd>dim){ out=true; cd-=dim; cm=m+1; if(cm>11){cm=0;cy++;} }
     const iso=cy+'-'+pad2(cm+1)+'-'+pad2(cd);
     const owner=teamForCycle(cycleForDate(iso)); const mine=owner===PAGE_TEAM; const evs=evByDate[iso]||[];
-    h+='<div style="--i:'+i+'" class="cal-cell'+(out?' out':'')+(mine?' mine':'')+(iso===today?' today':'')+'" role="button" tabindex="0"'+
+    h+='<div style="--i:'+i+'" class="cal-cell'+(out?' out':'')+(mine?' mine':' theirs')+(iso===today?' today':'')+'" role="button" tabindex="0"'+
       ' title="Open the duties for '+esc(fmtNice(iso))+'"'+
       ' onclick="openDayDuties(\''+iso+'\',this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDayDuties(\''+iso+'\',this)}">'+
       '<span class="dnum num">'+cd+'</span><span class="towner">'+owner+'</span>';
-    for(const e of evs) h+='<button class="cal-ev'+(e.confirmed?' conf':'')+'" title="'+esc(e.name)+' — '+esc(fmtNice(e.date))+'" onclick="openEventDrawer('+e.id+')">'+esc(e.name)+'</button>';
+    for(const e of evs){
+      /* Three states, said in words as well as colour: nothing built yet, a
+         draft only the leads can see, or on the calendar. Plus how many
+         slots are still empty, because a hole in a cycle is the thing a
+         lead opens this page to find. */
+      const sc=slotCounts(e);
+      const st=e.confirmed?'lv':(sc.generated?'dr':'nb');
+      const label=e.confirmed?'On the calendar':(sc.generated?'Draft':'Not built');
+      h+='<button class="cal-ev st-'+st+(e.confirmed?' conf':'')+'" title="'+esc(e.name)+' — '+esc(fmtNice(e.date))+'" onclick="event.stopPropagation();openEventDrawer('+e.id+')">'+esc(e.name)+'</button>'+
+         '<span class="cal-st st-'+st+'">'+label+(sc.generated&&sc.missing?' · <b>'+sc.missing+' short</b>':'')+'</span>';
+    }
     h+='</div>';
   }
   h+='</div>'; _calAnim=''; el.innerHTML=h;
@@ -3476,7 +3567,7 @@ function renderMembers(){
   const act=MEMBERS.filter(m=>m.status==='active').length;
   const nnd=MEMBERS.filter(m=>m.status==='active'&&!!m.nandi).length;
   const ranks=Array.from(new Set(MEMBERS.map(m=>m.rank||'Member'))).sort();
-  let h='<div class="ph"><div><h1>Members</h1><p>Leader-managed profiles — Nandi, away-dates, duty preferences, contact &amp; notes. Identity fields mirror the Hub.</p></div>'+
+  let h='<div class="ph"><div><h1>People</h1><p>Leader-managed profiles — Nandi, away-dates, duty preferences, contact &amp; notes. Identity fields mirror the Hub.</p></div>'+
     '<div class="ha"><button class="btn btn-ol btn-sm" onclick="syncFromHub()" title="Reload members from the Hub">↻ Sync from Hub</button></div></div>';
   h+='<div class="ib">🔗 Membership is managed in the <b>Hub</b> — tick <b>'+esc(TEAM_NAME)+'</b> under a person\'s main team in Home → User Management to add them here. This page manages team-side data only. <span id="hubSyncStatus" style="font-weight:800"></span></div>';
   h+='<div class="mem-filters"><input type="text" placeholder="Search members…" value="'+esc(memFilter.q)+'" style="max-width:220px" oninput="memFilter.q=this.value;renderMemberGrid()">'+
@@ -3743,8 +3834,16 @@ function bellItems(){
   COVERING.forEach((c, i)=>out.push({kind:'cover', sort:c.ev.date,
     title: 'You are covering ' + fmtShort(c.ev.date),
     sub: 'Team ' + c.ev.team + ' · ' + (c.ev.name || 'IV Event'),
-    go: ()=>{ nav('dashboard'); setTimeout(()=>{
+    go: ()=>{ nav(IS_EDIT?'calendar':'dashboard'); setTimeout(()=>{
       const p = document.querySelector('.cover-pnl'); if(p) p.scrollIntoView({block:'center'}); }, 120); }}));
+
+  /* 4. A past event nobody has marked attendance for. This is the one job
+        the dashboard cards did that nothing else covers now that the
+        calendar is the front door. */
+  unmarkedEvents().forEach(ev=>out.push({kind:'att', sort:ev.date,
+    title:'Attendance not marked for '+fmtShort(ev.date),
+    sub:ev.name||'IV Event',
+    go:()=>{ attEventId=ev.id; nav('attendance'); }}));
 
   out.sort((a,b)=>a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0);
   return out;
@@ -3968,6 +4067,7 @@ function renderAttendance(){
   let h='<div class="ph"><div><h1>Attendance</h1><p>'+
     (IS_EDIT?'Everyone rostered for this event, plus the team leads. Their duties are listed so you can see who is covering what.'
             :'Attendance is recorded by the team leads.')+'</p></div></div>';
+  h+='<div class="num-link"><button class="btn btn-ol btn-sm" onclick="repMode=\'attendance\';repMember=null;nav(\'reports\')">📊 See attendance rates in Numbers →</button></div>';
   h+='<div class="pnl" style="margin-bottom:14px"><div class="pnl-b" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
     '<label class="flabel" style="margin:0">Event</label><select onchange="attEventId=+this.value;renderAttendance()" style="min-width:260px">'+
     (evs.length?evs.map(e=>'<option value="'+e.id+'"'+(e.id===attEventId?' selected':'')+'>'+esc(fmtShort(e.date))+' \u00b7 '+esc(e.name)+'</option>').join(''):'<option>No events</option>')+
@@ -4041,7 +4141,7 @@ function renderReports(){
   const el=document.getElementById('body-reports'); if(!el) return;
   if(repCycleK==null) repCycleK=fairnessCycleK();
   const cyclesForPick=CYCLES.slice();
-  let h='<div class="ph"><div><h1>Analytics</h1><p>Attendance rates and duty-count fairness across a cycle.</p></div></div>';
+  let h='<div class="ph"><div><h1>Numbers</h1><p>Attendance rates and duty-count fairness across a cycle.</p></div></div>';
   h+='<div class="pnl" style="margin-bottom:14px"><div class="pnl-b" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'+
     '<div class="seg">'+
     [['attendance','Attendance'],['fairness','Duty Reporting'],['leaderboard','Duty Leaderboard']]
@@ -4589,12 +4689,22 @@ async function fontsSettled(ms){
     var logo=document.querySelector('.sb-logo-img, .sb-logo img, .sidebar img');
     if(logo){ var im=document.createElement('img'); im.src=logo.getAttribute('src')||''; im.alt=''; brand.appendChild(im); }
     var h2=document.querySelector('.sb-logo h2, .sidebar h2');
-    brand.appendChild(document.createTextNode(h2?h2.textContent.trim():'IV Hub'));
+    var _bt=h2?h2.textContent.trim():'IV Hub';
+    if(window.CAN_SWITCH_TEAM&&window.CAN_SWITCH_TEAM()){
+      /* Leaders who can see both teams get the team name as a switcher. */
+      var sw=mk('span','tn-team','');
+      sw.textContent=_bt.replace(/\s*\u25be$/,'')+' \u25be';
+      sw.title='Switch team';
+      sw.setAttribute('role','button'); sw.setAttribute('tabindex','0');
+      sw.addEventListener('click',function(ev){ ev.stopPropagation(); closeAll(); openTeamSwitch(); });
+      sw.addEventListener('keydown',function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); ev.stopPropagation(); closeAll(); openTeamSwitch(); } });
+      brand.appendChild(sw);
+    } else brand.appendChild(document.createTextNode(_bt));
     /* The brand doubles as the way home, so the pages do not each need a
        Dashboard item taking up a slot in the bar. */
-    var home=document.querySelector('.sb-nav .nav-item[data-page="dashboard"]');
+    var home=document.querySelector('.sb-nav .nav-item[data-page="'+(window.IS_EDIT?'calendar':'dashboard')+'"]');
     if(home){
-      brand.title='Go to the dashboard';
+      brand.title='Go to the calendar';
       brand.setAttribute('role','button'); brand.setAttribute('tabindex','0');
       brand.addEventListener('click',function(ev){ ev.stopPropagation(); closeAll(); home.click(); });
       brand.addEventListener('keydown',function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); home.click(); } });
