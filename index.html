@@ -639,6 +639,11 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <div class="md-empty"><div class="big">🗓️</div>Open My Duties to see your schedule.</div>
         </div>
       </section>
+
+      <section class="panel" id="myTeamPanel" style="display:none;animation-delay:.08s;">
+        <div><h2 style="margin:0;">My Team</h2><div class="sub" style="margin-top:2px;">How you are doing, and who to speak to.</div></div>
+        <div id="myTeamBody" class="sg" style="margin:12px 0 0;"></div>
+      </section>
     </div>
 
     <!-- ═══ PAGE: MY DUTIES ═══ -->
@@ -1725,12 +1730,28 @@ function pageActive(id){ const p = $('page-' + id); return !!(p && p.classList.c
 function toggleSidebar(){ $('sidebar').classList.toggle('open'); $('sideOverlay').classList.toggle('show', $('sidebar').classList.contains('open')); }
 function closeSidebar(){ $('sidebar').classList.remove('open'); $('sideOverlay').classList.remove('show'); }
 
+/* Teams this account has been handed an upcoming event for. Filled in after
+   sign-in; until then the links simply stay hidden for plain volunteers. */
+const COVER_TEAMS = new Set();
+async function loadCoverTeams(){
+  try{
+    if(!sb || !CU || !CU.uid) return;
+    const {data} = await sb.from('iv_events').select('team,date')
+      .eq('cover_uid', CU.uid).gte('date', new Date().toISOString().slice(0,10));
+    COVER_TEAMS.clear();
+    (data||[]).forEach(e=>{ if(e.team==='A'||e.team==='B') COVER_TEAMS.add(e.team); });
+    applyNavVisibility();
+  }catch(e){ console.warn('loadCoverTeams:', e.message||e); }
+}
 function applyNavVisibility(){
   const item = (id,on)=>{ const el=$(id); if(el) el.style.display = on ? 'flex' : 'none'; };
   const sec  = (id,on)=>{ const el=$(id); if(el) el.style.display = on ? 'block' : 'none'; };
-  sec('secIV', IV_ANY());
-  item('navTeamA', VIEW_A());
-  item('navTeamB', VIEW_B());
+  sec('secIV', ADMIN_A() || ADMIN_B() || COVER_TEAMS.size>0);
+  /* The team pages are for leaders now. A plain volunteer's way in is the
+     Hub, so the links disappear for them — unless they have been asked to
+     stand in for an event, in which case the page is how they do it. */
+  item('navTeamA', ADMIN_A() || (VIEW_A() && COVER_TEAMS.has('A')));
+  item('navTeamB', ADMIN_B() || (VIEW_B() && COVER_TEAMS.has('B')));
   sec('secSpec', AV_VIEW());
   item('navAV', AV_VIEW());
   const mm = USERS_ADMIN(), st = STATS_VIEW(), ow = hasPerm('owner','developer'), au = AUDIT_VIEW();
@@ -1917,6 +1938,8 @@ async function loadHubVolunteerCards(){
 }
 async function loadDashStats(){
   loadMyDutiesDash();
+  loadMyTeamCards();
+  loadCoverTeams();
   await loadAway();               // MY_MEMBER and MY_AWAY, which the cards read
   loadSignupStats();
   maybeWelcome();
@@ -2085,6 +2108,37 @@ async function openMyDuties(){
   if(noteEl){ noteEl.innerHTML = r.note || ''; noteEl.style.display = r.note ? 'block' : 'none'; }
   if(!input.value && r.name){ input.value = r.name; }
   if(input.value.trim()) runDutySearch();
+}
+/* Two things volunteers used to find on their team's dashboard, which they no
+   longer open: how reliably they have turned up, and who to ask when they
+   need to swap or report a problem. Both come from the same sources the team
+   page used, so the numbers are the same ones. */
+async function loadMyTeamCards(){
+  const panel = $('myTeamPanel'), body = $('myTeamBody');
+  if(!panel || !body) return;
+  try{
+    const {data:mv} = await sb.rpc('my_member_view');
+    const m = mv && mv.member ? mv.member : null;
+    if(!m || (m.team!=='A' && m.team!=='B')){ panel.style.display='none'; return; }
+    const [att, mem] = await Promise.all([
+      sb.rpc('member_attendance_totals',{p_team:m.team}),
+      sb.from('iv_members').select('name,team,rank,spec,status').eq('team',m.team)
+    ]);
+    const row = (att.data||[]).find(r=>String(r.member_id)===String(m.id)) || null;
+    const n = k=>row?(Number(row[k])||0):0;
+    const present=n('present'), late=n('late'), absent=n('absent'), excused=n('excused');
+    const denom=present+late+absent, total=denom+excused;
+    const rate = denom ? Math.round((present+late)/denom*100) : null;
+    const LEAD=['Team Leader','Team Lead','Assistant Team Lead'];
+    const isAv = r=>{ let s=r.spec; if(typeof s==='string'){ try{s=JSON.parse(s);}catch(e){s=[];} } return Array.isArray(s)&&s.some(x=>String(x).toUpperCase()==='AV'); };
+    const leads = (mem.data||[]).filter(r=>r.status==='active' && LEAD.indexOf(r.rank||'')>=0 && !isAv(r)).map(r=>r.name);
+    // hubCard is the Hub's own stat card, so these match the cards above them
+    body.innerHTML =
+      hubCard('My attendance', rate!=null ? rate+'%' : '—', total ? total+' duties marked' : 'nothing marked yet', '', '') +
+      hubCard('Who to ask', leads.length ? esc(leads[0].split(' ')[0]) : '—',
+           leads.length ? esc(leads.join(' · '))+' · your Team '+m.team+' lead'+(leads.length>1?'s':'') : 'no lead listed for Team '+m.team, '', '');
+    panel.style.display='';
+  }catch(e){ console.warn('loadMyTeamCards:', e.message||e); panel.style.display='none'; }
 }
 async function loadMyDutiesDash(){
   const box = $('mdDashResults');
@@ -2505,6 +2559,11 @@ function editPanelHTML(r){
       <div class="fg"><label>Gender</label><select data-ef="gender"><option${(r.gender || 'Male') === 'Male' ? ' selected' : ''}>Male</option><option${r.gender === 'Female' ? ' selected' : ''}>Female</option></select></div>
       <div class="fg"><label>Age Group</label><select data-ef="age_group">${AGE_OPTS.map(([v,l])=>`<option value="${v}"${v === (r.age_group || 'adult') ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
       <div class="fg"><label>Status</label><div><button type="button" class="pill-tgl ${active ? 'on' : 'off'}" data-ef="status">${active ? 'Active' : 'Inactive'}</button></div></div>
+      <!-- Team details. The same columns the team page's People screen edits, so
+           either screen changes the one record. -->
+      <div class="fg"><label>Nandi certified</label><div><button type="button" class="pill-tgl ${r.nandi ? 'on' : 'off'}" data-ef="nandi">${r.nandi ? 'Certified' : 'Not certified'}</button></div></div>
+      <div class="fg"><label>Phone</label><input type="tel" data-ef="phone" value="${esc(r.phone || '')}" autocomplete="off"></div>
+      <div class="fg" style="grid-column:1/-1"><label>Notes</label><textarea data-ef="notes" rows="2" style="width:100%">${esc(r.notes || '')}</textarea></div>
     </div>
     ${linkbox}
     <div class="um-form-acts">
@@ -2567,6 +2626,12 @@ function bindMemberRowEvents(box){
     if(!wasActive) b.classList.add('active'); // clicking the active team again → no team
   }));
   panel.querySelectorAll('.spec-chip').forEach(b=>b.addEventListener('click', ()=>{ if(!b.disabled) b.classList.toggle('active'); }));
+  const nd = panel.querySelector('[data-ef="nandi"]');
+  if(nd) nd.addEventListener('click', ()=>{
+    const on = nd.classList.toggle('on');
+    nd.classList.toggle('off', !on);
+    nd.textContent = on ? 'Certified' : 'Not certified';
+  });
   const st = panel.querySelector('[data-ef="status"]');
   if(st) st.addEventListener('click', ()=>{
     const on = st.classList.toggle('on');
@@ -2608,6 +2673,12 @@ async function saveMemberEdit(row, panel){
   if(gender !== (row.gender || '')) patch.gender = gender;
   if(age !== (row.age_group || 'adult')) patch.age_group = age;
   if(status !== (row.status || 'active')) patch.status = status;
+  const nandi = panel.querySelector('[data-ef="nandi"]').classList.contains('on');
+  if(nandi !== !!row.nandi) patch.nandi = nandi;
+  const phone = (panel.querySelector('[data-ef="phone"]').value || '').trim();
+  if(phone !== (row.phone || '')) patch.phone = phone || null;
+  const notes = (panel.querySelector('[data-ef="notes"]').value || '').trim();
+  if(notes !== (row.notes || '')) patch.notes = notes || null;
   if(!Object.keys(patch).length){ toast('No changes to save.'); return; }
   const summary = Object.keys(patch).map(k=>k + ' → ' + (patch[k] === null ? 'none' : (Array.isArray(patch[k]) ? '[' + patch[k].join(', ') + ']' : patch[k]))).join(', ');
   const ok = await updateMember(row.id, patch, `${row.name}: ${summary}`);
