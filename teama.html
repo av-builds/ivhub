@@ -795,6 +795,135 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   body.tn-hidden .main{padding-top:26px!important;}
   body.tn-hidden .tn-show{display:inline-flex;}
 }
+/* ─── ROSTER: CYCLES → CYCLE → EVENT ─── */
+.ro-crumbs{display:flex;align-items:center;gap:10px;margin:0 0 14px;flex-wrap:wrap;}
+.ro-crumbs .rc-here{font-size:13px;font-weight:800;color:var(--dm);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ro-crumbs .rc-nav{margin-left:auto;display:flex;gap:6px;}
+.ro-crumbs .rc-nav .btn{font-size:17px;line-height:1;padding:5px 12px;}
+.cy-legend{margin:-8px 0 14px;}
+.cy-legend .cal-legend{margin-left:0;}
+.cy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
+.cy-sec{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--dm2);margin:26px 0 10px;}
+.cy-card{position:relative;display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;color:var(--dt);
+  background:var(--ds);background-image:var(--surface-grad);border:var(--hairline);border-radius:var(--r-lg);
+  padding:16px 18px 15px;box-shadow:var(--sh-1);overflow:hidden;
+  transition:transform .25s var(--ease-out,ease),border-color .25s,box-shadow .25s;}
+.cy-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue2),var(--blue-lt),transparent 85%);opacity:.85;}
+.cy-card.st-current{border-color:rgba(16,185,129,.4);}
+.cy-card.st-current::before{background:linear-gradient(90deg,#059669,var(--green-lt),transparent 85%);}
+.cy-card:hover{transform:translateY(-3px);border-color:rgba(79,195,247,.38);box-shadow:0 12px 30px rgba(2,11,24,.45);}
+.cy-grid.past .cy-card{opacity:.72;}
+.cy-grid.past .cy-card:hover{opacity:1;}
+.cy-top{display:flex;align-items:center;gap:8px;}
+.cy-count{margin-left:auto;font-size:12px;font-weight:800;color:var(--dm);}
+.cy-name{font-size:20px;font-weight:900;letter-spacing:.01em;line-height:1.15;margin-top:4px;}
+.cy-dates{font-size:12.5px;font-weight:700;color:var(--dm);}
+.cy-prog{display:flex;gap:3px;height:7px;margin:8px 0 2px;border-radius:7px;overflow:hidden;}
+.cy-prog i{display:block;border-radius:3px;}
+.cy-prog i.lv{background:var(--gold);}
+.cy-prog i.dr{background:var(--blue2);}
+.cy-prog i.nb{background:transparent;border:1px dashed var(--db2);}
+.cy-line{font-size:12.5px;font-weight:700;color:var(--dm);padding-right:24px;}
+.cy-more{margin:4px 0 18px;}
+.cy-more summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;min-height:44px;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--dm);}
+.cy-more summary::-webkit-details-marker{display:none;}
+.cy-more summary::before{content:'\25B6';font-size:10px;transition:transform .2s;}
+.cy-more[open] summary::before{transform:rotate(90deg);}
+.cy-more summary:hover{color:var(--blue-lt);}
+.cy-more[open] .gp-wide{animation:riseIn .32s cubic-bezier(.16,1,.3,1) both;}
+.cy-line b{color:var(--gold-lt);}
+.cy-go{position:absolute;right:16px;bottom:14px;font-size:16px;color:var(--dm2);transition:transform .25s var(--ease-out,ease),color .25s;}
+.cy-card:hover .cy-go{transform:translateX(4px);color:var(--blue-lt);}
+
+.cy-hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 14px;padding:18px 22px;border-radius:var(--r-lg);
+  background:linear-gradient(135deg,var(--navy),var(--blue));box-shadow:0 8px 26px rgba(12,36,97,.4);}
+.cy-hero.st-historic{background:linear-gradient(135deg,#0B1D38,#132B52);}
+.cy-hero-t{min-width:0;}
+.cy-hero h1{font-size:24px;font-weight:900;letter-spacing:.02em;color:#fff;margin-top:7px;line-height:1.1;}
+.cy-hero-s{font-size:13px;font-weight:700;color:rgba(232,244,253,.82);margin-top:4px;}
+.cy-hero-a{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+.cy-hero .btn-ol{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28);color:#fff;}
+.cy-hero .btn-ol:hover{background:rgba(255,255,255,.16);border-color:#fff;color:#fff;}
+
+.gen-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 14px;padding:18px 22px;border-radius:var(--r-lg);
+  border:1.5px dashed rgba(79,195,247,.35);background:rgba(13,32,64,.35);}
+.gen-cta .gc-ic{font-size:30px;line-height:1;}
+.gen-cta .gc-t{flex:1;min-width:220px;}
+.gen-cta h3{font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;}
+.gen-cta p{font-size:13px;font-weight:600;color:var(--dm);margin-top:4px;line-height:1.55;max-width:620px;}
+.gen-cta .gc-btn{padding:12px 22px;font-size:14.5px;}
+
+.gp-wide{margin:0 0 14px;}
+.gp-wide .gp{box-shadow:var(--sh-1);}
+.gp-wide .gp-hd{padding:16px 20px;}
+.gp-wide .gp-ttl{font-size:19px;}
+.gp-wide .gp-sub{font-size:13.5px;max-width:760px;}
+.gp-wide .gp-acts{padding:12px 20px;flex-wrap:wrap;}
+.gp-wide .gp-acts .btn{flex:none;}
+.gp-wide .gp-live{padding:10px 20px 12px;}
+.gp-wide .gp-nums{grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 20px 4px;}
+.gp-wide .gp-n{padding:12px 14px;}
+.gp-wide .gp-n .v{font-size:26px;}
+.gp-wide .gp-sec{padding:16px 20px 6px;}
+.gp-wide .gp-b{padding:0 20px 14px;}
+.gp-wide .gp-row{font-size:13px;}
+.gp-wide .gp-mt{font-size:12.5px;}
+.gp-wide .gp-b:has(> .gp-ev){display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));column-gap:22px;align-items:start;}
+.gp-wide .gp-ev:first-child{border-top:1px solid rgba(79,195,247,.09);}
+.gp-wide .gp-ev{padding:7px 4px 8px;}
+.gp-wide .gp-bar{flex:1;width:auto;max-width:360px;}
+.gp-wide .gp-list{max-height:none;columns:3 210px;column-gap:26px;}
+.gp-wide .gp-list .gp-row{break-inside:avoid;}
+.gp-wide .gp-note,.gp-wide .gp-warn{max-width:860px;}
+@media(max-width:640px){ .gp-wide .gp-nums{grid-template-columns:1fr 1fr;} }
+
+.pub-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 18px;padding:14px 20px;border-radius:var(--r-lg);
+  background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(21,101,192,.10));border:1px solid var(--gold-bd);}
+.pub-bar .pb-t{flex:1;min-width:200px;}
+.pub-bar .pb-k{font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--gold-lt);}
+.pub-bar .pb-s{font-size:13.5px;font-weight:700;color:var(--dm);margin-top:4px;}
+.pub-bar .pb-s b{color:var(--dt);}.pub-bar .pb-s b.lv{color:var(--gold-lt);}.pub-bar .pb-s b.ok{color:var(--green-lt);}.pub-bar .pb-s b.gp{color:var(--red-lt);}
+.pub-bar .pb-a{display:flex;gap:9px;flex-wrap:wrap;}
+.pub-bar .pb-done{font-size:13px;font-weight:800;color:var(--green-lt);}
+
+.cy-evs-h{display:flex;align-items:center;gap:10px;margin:6px 0 10px;}
+.cy-evs-h h2{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--dm);}
+.cy-evs-h .btn{margin-left:auto;}
+.cy-evs{display:grid;gap:8px;margin-bottom:18px;}
+.cy-ev{display:flex;align-items:center;gap:14px;background:var(--ds);border:var(--hairline);border-left:3px solid var(--db2);
+  border-radius:var(--r);padding:11px 14px;transition:border-color .2s,background-color .2s;}
+.cy-ev.st-lv{border-left-color:var(--gold);}
+.cy-ev.st-dr{border-left-color:var(--blue2);}
+.cy-ev.st-nb{border-left-style:dashed;}
+.cy-ev:hover{border-color:rgba(79,195,247,.32);background-color:var(--ds2);}
+.cy-ev.st-lv:hover{border-left-color:var(--gold);}.cy-ev.st-dr:hover{border-left-color:var(--blue2);}
+.ce-date{display:flex;flex-direction:column;align-items:center;min-width:44px;line-height:1.05;}
+.ce-date b{font-size:21px;font-weight:900;}
+.ce-date span{font-size:11px;font-weight:900;letter-spacing:.06em;color:var(--blue-lt);}
+.ce-date small{font-size:10.5px;font-weight:800;color:var(--dm2);text-transform:uppercase;margin-top:2px;}
+.ce-main{flex:1;min-width:0;}
+.ce-nm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14.5px;font-weight:900;}
+.ce-st{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:3px;}
+.ce-st .cal-st{display:inline;margin:0;font-size:12.5px;}
+.ce-meta{font-size:12px;font-weight:700;color:var(--dm2);}
+.ce-acts{display:flex;gap:7px;flex:none;}
+@media(max-width:640px){
+  .cy-ev{flex-wrap:wrap;}
+  .ce-acts{width:100%;justify-content:flex-end;}
+  .cy-hero{padding:16px;}
+  .cy-hero-a{margin-left:0;}
+}
+.page.enter .cy-card,.page.enter .cy-ev,.page.enter .gen-cta,.page.enter .pub-bar,.page.enter .cy-hero{animation:riseIn .46s cubic-bezier(.16,1,.3,1) both;}
+.page.enter :is(.cy-card,.cy-ev):nth-child(2){animation-delay:.04s;}
+.page.enter :is(.cy-card,.cy-ev):nth-child(3){animation-delay:.08s;}
+.page.enter :is(.cy-card,.cy-ev):nth-child(4){animation-delay:.12s;}
+.page.enter :is(.cy-card,.cy-ev):nth-child(n+5){animation-delay:.16s;}
+.page.enter .gen-cta,.page.enter .pub-bar{animation-delay:.06s;}
+@media(hover:none){
+  .cy-card:active,.cy-ev:active{background-color:var(--ds2);}
+  .page.enter :is(.cy-card,.cy-ev,.gen-cta,.pub-bar,.cy-hero){animation-duration:.22s;animation-delay:0s!important;}
+}
+
 /* ═══════════════ MOTION LAYER ═══════════════
    One set of curves and durations for everything that moves, so the page
    feels like one thing rather than a dozen rules timed by hand. It sits at
@@ -894,11 +1023,11 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .btn-bl:hover::after{transform:translateX(130%);transition:transform .7s var(--ease-out);}
   /* A soft light follows the pointer across cards. --mx/--my come from the
      one pointermove listener at the foot of the page. */
-  .sc,.mem-card{position:relative;isolation:isolate;}
-  .sc::after,.mem-card::after{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+  .sc,.mem-card,.cy-card{position:relative;isolation:isolate;}
+  .sc::after,.mem-card::after,.cy-card::after{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
     background:radial-gradient(240px circle at var(--mx,50%) var(--my,0%),rgba(79,195,247,.13),transparent 70%);
     opacity:0;transition:opacity .35s var(--ease-out);}
-  .sc:hover::after,.mem-card:hover::after{opacity:1;}
+  .sc:hover::after,.mem-card:hover::after,.cy-card:hover::after{opacity:1;}
   .chip:hover{box-shadow:0 0 0 3px rgba(79,195,247,.10);}
   .cal-cell{transition:border-color var(--t-fast),background-color var(--t-fast),box-shadow var(--t-fast);}
   .cal-cell:not(.out):hover{border-color:rgba(79,195,247,.4);box-shadow:inset 0 0 0 1px rgba(79,195,247,.12),0 6px 18px rgba(2,11,24,.35);}
@@ -1529,7 +1658,6 @@ let MEMBERS=[],EVENTS=[],ROSTERS={},ANNS=[],ATTEND={};
    whole history as four numbers per person. */
 let ATT_TOTALS={};
 let CYCLES=[],selEventId=null,DB_MISSING=false,LOADED=false,curPage='calendar';
-let expandedCycles=new Set();
 let CAL={y:2026,m:0};
 let attEventId=null, repCycleK=null, repMode='attendance', repMember=null, lbDuty='', lbSort='count', memFilter={q:'',rank:'',age:'',nandi:'',away:''};
 const AGES=['adult','youth','child'];
@@ -2185,6 +2313,10 @@ function navProgress(){
 }
 function nav(page){
   if(!IS_EDIT && VOLUNTEER_PAGES.indexOf(page)<0) page='dashboard';   // volunteers stay in scope
+  /* The Roster item opens on the list of cycles. Links that name an event
+     or cycle set _rosterJump first and go straight there instead. */
+  if(page==='roster'&&!_rosterJump) ROSTER_VIEW='cycles';
+  _rosterJump=false;
   curPage=page;
   document.querySelectorAll('.nav-item').forEach(n=>{
     const on=n.dataset.page===page;
@@ -2300,7 +2432,7 @@ function leadCards(nextEv,nextFill,unfilled){
     + card(drafts.length?'alert':'ok-green', 'Not on the calendar', drafts.length,
            drafts.length ? 'nobody else can see ' + (drafts.length===1?'it':'them')
                          : 'every roster is on the calendar',
-           drafts.length ? 'selectEvent('+drafts[0].id+');nav(\'roster\')' : 'nav(\'roster\')');
+           drafts.length ? 'selectEvent('+drafts[0].id+')' : 'nav(\'roster\')');
 }
 function volunteerCards(){
   const today = nzTodayISO();
@@ -2424,9 +2556,7 @@ async function boot(){
   const upc=EVENTS.filter(e=>e.date>=today&&CYCLES.some(c=>inCycleK(e.date,c.k)));
   const vis=EVENTS.filter(e=>CYCLES.some(c=>inCycleK(e.date,c.k)));
   const def=upc[0]||vis[vis.length-1]||null;
-  if(def){ selEventId=def.id; expandedCycles.add(cycleForDate(def.date)); }
-  CYCLES.forEach(c=>{ if(c.status==='current') expandedCycles.add(c.k); });
-  if(!expandedCycles.size&&CYCLES.length) expandedCycles.add(CYCLES[0].k);
+  if(def) selEventId=def.id;
   repCycleK=fairnessCycleK();
   attEventId=def?def.id:null;
   LOADED=true;
@@ -2534,12 +2664,10 @@ function selectEvent(id){
   /* A staged build belongs to one cycle. Navigating out of that cycle
      leaves a panel describing work you can no longer see, so it goes. */
   if(ev&&ROSTER_PLAN&&ROSTER_PLAN.k!==cycleForDate(ev.date)){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }
-  if(ev) ROSTER_BAR_K=cycleForDate(ev.date);
-  if(ev){ expandedCycles.add(cycleForDate(ev.date)); CAL={y:+ev.date.slice(0,4),m:+ev.date.slice(5,7)-1}; }
-  closeDrawer();
-  if(curPage!=='roster') nav('roster'); else renderRoster();
+  if(ev){ ROSTER_BAR_K=ROSTER_K=cycleForDate(ev.date); ROSTER_VIEW='event';
+          CAL={y:+ev.date.slice(0,4),m:+ev.date.slice(5,7)-1}; }
+  rosterGo();
 }
-function toggleCycle(k){ if(expandedCycles.has(k)) expandedCycles.delete(k); else expandedCycles.add(k); renderRoster(); }
 
 /* ── THE PLAN PANEL ──────────────────────────────────────────────────
    Generating was a black box. You pressed the button, every name on the
@@ -2694,8 +2822,11 @@ function buildPlan(k,onlyEventId,opts){
    are complete, and reports what actually happened rather than what was
    attempted — counting stored and live separately is how a cycle that
    half-saved stops reading as a success. */
-async function applyPlan(plan){
+async function applyPlan(plan,opts){
   if(!plan) return false;
+  /* publish:false stores the rosters as drafts for the publish bar. The
+     default is unchanged: complete rosters go on the calendar as they save. */
+  const publish=!(opts&&opts.publish===false);
   /* Rows the plan deliberately left alone are not written, are not
      counted, and are not mentioned in the audit line — otherwise the
      receipt would claim credit for rosters this run never touched. */
@@ -2708,7 +2839,7 @@ async function applyPlan(plan){
     ROSTERS[e.id]=plan.staged[e.id];
     if(await saveRoster(e.id,{quiet:true})){
       stored++;
-      if(await publishIfComplete(e,{quiet:true})) live++;
+      if(publish ? await publishIfComplete(e,{quiet:true}) : e.confirmed) live++;
     }
   }
   const n=build.length;
@@ -2717,7 +2848,8 @@ async function applyPlan(plan){
     (plan.skippedCount?', '+plan.skippedCount+' left as '+(plan.skippedCount===1?'it was':'they were')+' (on the calendar)':''));
   plan.applied=true; plan.at=new Date(); plan.stored=stored; plan.live=live;
   renderRoster(); refreshBadges();
-  if(live===n) toast('Built '+n+' event'+(n===1?'':'s')+' — all saved and on the calendar');
+  if(!publish&&stored===n) toast('Saved '+n+' as draft'+(n===1?'':'s')+' — publish from the bar when ready');
+  else if(live===n) toast('Built '+n+' event'+(n===1?'':'s')+' — all saved and on the calendar');
   else if(stored===n) toast('Built and saved '+n+' — '+live+' went on the calendar, the rest still have unfilled slots','err');
   else toast('Built '+n+', but only '+stored+' saved — see the warning above','err');
   return stored===n;
@@ -2726,7 +2858,8 @@ function previewCycle(k){
   if(!IS_EDIT) return;
   const plan=buildPlan(k);
   if(!plan) return toast('No events in this cycle to build','err');
-  PLAN_OPEN.clear(); ROSTER_PLAN=plan; plan.fresh=true; setTimeout(()=>{ if(ROSTER_PLAN===plan) plan.fresh=false; },900); renderRoster();
+  PLAN_OPEN.clear(); ROSTER_PLAN=plan; plan.fresh=true; setTimeout(()=>{ if(ROSTER_PLAN===plan) plan.fresh=false; },900);
+  ROSTER_VIEW='cycle'; ROSTER_K=k; ROSTER_BAR_K=k; rosterGo();
 }
 function previewEvent(id){
   if(!IS_EDIT) return;
@@ -2738,7 +2871,7 @@ function previewEvent(id){
   if(!plan) return toast('This event cannot be rebuilt','err');
   PLAN_OPEN.clear(); PLAN_OPEN.add(id); ROSTER_PLAN=plan; renderRoster();
 }
-function commitPlan(){ if(ROSTER_PLAN&&!ROSTER_PLAN.applied) applyPlan(ROSTER_PLAN); }
+function commitPlan(publish){ if(ROSTER_PLAN&&!ROSTER_PLAN.applied) applyPlan(ROSTER_PLAN,{publish:publish!==false}); }
 /* Rebuilds the plan with the published rosters in or out. Generating is
    cheap and nothing has been stored yet, so flipping the box simply
    produces a different plan rather than trying to patch this one. */
@@ -2800,7 +2933,14 @@ function renderPlanPanel(){
         (kept?kept+' dut'+(kept===1?'y':'ies')+' set by hand '+(kept===1?'is':'are')+' carried through untouched.'
              :'Nothing being rebuilt was set by hand.');
     }
-    acts=(n?'<button class="btn btn-bl btn-sm" onclick="commitPlan()">Save '+n+' event'+(n===1?'':'s')+'</button>':'')+
+    if(plan.midCycle) sub+=' Added mid-cycle, so it was filled using everyone\u2019s duties across the other '+
+      plan.midCycle+' event'+(plan.midCycle===1?'':'s')+' in this cycle. Those rosters do not change.';
+    /* Saving no longer has to mean publishing. Complete rosters can go up
+       with the save, as before, or be kept as drafts for the publish bar. */
+    const ready=build.filter(e=>!e.missing&&!e.live).length;
+    acts=(n?(ready?'<button class="btn btn-bl btn-sm" onclick="commitPlan(true)">Save &amp; publish '+ready+' complete</button>'+
+                   '<button class="btn btn-ol btn-sm" onclick="commitPlan(false)">Save as drafts</button>'
+                  :'<button class="btn btn-bl btn-sm" onclick="commitPlan(false)">Save '+n+' event'+(n===1?'':'s')+'</button>'):'')+
          '<button class="btn btn-ol btn-sm" onclick="discardPlan()">Discard</button>';
   } else if(receipt){
     const n=plan.events.length;
@@ -2812,7 +2952,7 @@ function renderPlanPanel(){
   } else {
     tag='This cycle';
     ttl=esc(cycleLabel(k));
-    sub='How the roster stands right now. Press “Build this cycle” to see what a rebuild would change before anything is saved.';
+    sub='How the cycle stands right now: who has how many duties, and what is still short.';
   }
   let h='<div class="gp '+state+((plan&&plan.fresh)?' fresh':'')+'"><div class="gp-hd"><div class="gp-tag">'+tag+'</div>'+
         '<div class="gp-ttl">'+ttl+'</div><div class="gp-sub">'+sub+'</div></div>';
@@ -2908,25 +3048,26 @@ function renderPlanPanel(){
 
   return h+'</div>';
 }
-/* ── THE CYCLE BAR ───────────────────────────────────────────────────
-   Two things a Team Lead does constantly were both already built and both
-   effectively hidden. generateCycle() could only be reached from the empty
-   state of an event that had no roster yet — so the moment every event had
-   one, the button that rebuilds them disappeared. openAddEvent() was a
-   dashed ghost button underneath every cycle group in the sidebar.
+/* ── ROSTER: CYCLES → ONE CYCLE → ONE EVENT ─────────────────────────
+   The page used to open on three columns at once: every cycle and event
+   in a sidebar, one event in the middle, and the build preview squeezed
+   into a third column. A lead's actual order of work is a cycle at a time
+   — pick it, generate it, check it, publish it, then fix single events —
+   so the page now follows that order.
 
-   They are first-class actions now, on a bar that also answers the question
-   you actually have when you open this page: what state is this cycle in.
-   The bar follows the selected event's cycle, falling back to the current
-   one when nothing is selected. */
-let ROSTER_BAR_K=null;          // the cycle the bar is pointed at, when chosen by hand
-function setBarCycle(v){
-  ROSTER_BAR_K=Number(v);
-  /* Open that cycle in the list too, so choosing it here actually shows you
-     its events rather than leaving you looking at another cycle's. */
-  expandedCycles.add(ROSTER_BAR_K);
-  renderRoster();
-}
+   1. Cycles: a card per cycle with how far along it is.
+   2. One cycle: generate it if it is not built, the preview full width in
+      the middle, a publish bar, and the events with their states.
+   3. One event: the roster itself, with a way back to its cycle.
+
+   Building, previewing and saving are the same code as before (buildPlan,
+   applyPlan); only where the result is shown has changed. The calendar is
+   still the landing page — this is where the Roster item opens. */
+let ROSTER_BAR_K=null;          // the cycle the page is working on, when chosen
+let ROSTER_VIEW='cycles';       // 'cycles' | 'cycle' | 'event'
+let ROSTER_K=null;              // the cycle shown in the cycle view
+let _rosterJump=false;          // set when something sends you straight to a cycle or event
+let _publishing=false;          // one publish run at a time
 function barCycleK(){
   if(ROSTER_BAR_K!=null) return ROSTER_BAR_K;
   const sel=selEvent();
@@ -2934,58 +3075,232 @@ function barCycleK(){
   const cur=CYCLES.find(c=>c.status==='current')||CYCLES.find(c=>c.status==='upcoming');
   return cur?cur.k:null;
 }
-function rosterCycleBar(){
-  if(!IS_EDIT) return '';
-  let k=ROSTER_BAR_K;
-  if(k==null){
-  const sel=selEvent();
-  if(sel) k=cycleForDate(sel.date);
-  else {
-    /* Teams alternate cycles, so on any given day one of the two pages has
-       no current cycle at all — today belongs to the other team. Falling
-       back to the next upcoming one keeps the bar useful there instead of
-       making it disappear. */
-    const cur=CYCLES.find(c=>c.status==='current')||CYCLES.find(c=>c.status==='upcoming');
-    if(cur) k=cur.k;
-  }
-  }
-  if(k==null) return '';
-  const meta=CYCLES.find(c=>c.k===k);
-  const status=meta?meta.status:'upcoming';
-  const historic=status==='historic';
+/* Arriving from somewhere else lands on the list of cycles; links that
+   name an event or a cycle (the calendar, the bell) go straight to it. */
+function rosterGo(){
+  closeDrawer();
+  if(curPage!=='roster'){ _rosterJump=true; nav('roster'); return; }
+  renderRoster();
+  /* Each level is a new screen, so it starts at the top and gets the same
+     staggered entrance as a page change. */
+  const p=document.getElementById('page-roster');
+  if(p){ p.classList.remove('enter'); void p.offsetWidth; p.classList.add('enter'); setTimeout(()=>p.classList.remove('enter'),900); }
+  try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ window.scrollTo(0,0); }
+}
+function openRosterHome(){
+  ROSTER_VIEW='cycles'; ROSTER_K=null;
+  /* A receipt has been read by now. A preview that has not been saved is
+     kept: it is still there when you come back into its cycle. */
+  if(ROSTER_PLAN&&ROSTER_PLAN.applied){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }
+  rosterGo();
+}
+function openCycle(k){
+  k=Number(k);
+  if(ROSTER_PLAN&&ROSTER_PLAN.k!==k){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }
+  ROSTER_VIEW='cycle'; ROSTER_K=k; ROSTER_BAR_K=k;
+  rosterGo();
+}
+function cyclePretty(k){
+  const s=cyStart(k),e=cyStart(k+1);
+  const mon=i=>MON_UP[i].charAt(0)+MON_UP[i].slice(1).toLowerCase();
+  const sm=+s.slice(5,7)-1,em=+e.slice(5,7)-1;
+  return s.slice(0,4)===e.slice(0,4)?mon(sm)+' – '+mon(em)+' '+s.slice(0,4)
+                                    :mon(sm)+' '+s.slice(0,4)+' – '+mon(em)+' '+e.slice(0,4);
+}
+function cycleDates(k){ return fmtShort(cyStart(k))+' → '+fmtShort(addDaysLocal(cyStart(k+1),-1)); }
+/* One pass over a cycle's events, in the calendar's own words: not built,
+   draft, on the calendar. Drafts are split by whether they can go up with
+   one press (complete) or need a deliberate one (gaps). */
+function cycleSummary(k){
   const evs=eventsInCycle(k);
-  let built=0, live=0, gaps=0;
+  const s={evs:evs,n:evs.length,built:0,live:0,unbuilt:0,drafts:0,short:0,ready:[],gapDrafts:[]};
   for(const e of evs){
     const sc=slotCounts(e);
-    if(sc.generated){ built++; if(sc.missing) gaps++; }
-    if(e.confirmed) live++;
+    if(e.confirmed) s.live++;
+    if(!sc.generated){ s.unbuilt++; continue; }
+    s.built++; s.short+=sc.missing;
+    if(!e.confirmed){ s.drafts++; (sc.missing?s.gapDrafts:s.ready).push(e); }
   }
-  const unbuilt=evs.length-built;
-  let sum;
-  if(!evs.length) sum='No events in this cycle yet.';
-  else {
-    const bits=[];
-    if(unbuilt) bits.push('<b style="color:var(--dt)">'+unbuilt+'</b> not built yet');
-    if(live)    bits.push('<b style="color:var(--green-lt)">'+live+'</b> on the calendar');
-    if(gaps)    bits.push('<b style="color:var(--gold-lt)">'+gaps+'</b> with gaps');
-    if(!bits.length) bits.push('every event built');
-    sum=evs.length+' event'+(evs.length===1?'':'s')+' \u00b7 '+bits.join(' \u00b7 ');
-  }
-  let acts='';
-  if(historic) acts='<span style="font-size:12.5px;font-weight:800;color:var(--dm)">\ud83d\udd12 Historic \u2014 read only</span>';
-  else {
-    if(evs.length) acts+='<button class="btn btn-bl" onclick="previewCycle('+k+')">\u26a1 Build this cycle</button>';
-    acts+='<button class="btn btn-ol" onclick="openAddEvent()">+ Add event</button>';
-  }
-  const opts=CYCLES.map(c=>'<option value="'+c.k+'"'+(c.k===k?' selected':'')+'>'+
-    esc(cycleLabel(c.k))+' \u2014 '+esc(c.status)+'</option>').join('');
-  return '<div class="cyc-bar"><div style="min-width:0">'+
-    '<div class="cb-k">'+esc(status)+' cycle</div>'+
-    '<label class="sr-only" for="barCycle">Cycle to work on</label>'+
-    '<select id="barCycle" class="cb-sel" onchange="setBarCycle(this.value)">'+opts+'</select>'+
-    '<div class="cb-s">'+sum+'</div></div>'+
-    '<div class="cb-a">'+acts+'</div></div>';
+  return s;
 }
+function evStateHTML(e){
+  const sc=slotCounts(e);
+  const st=e.confirmed?'lv':(sc.generated?'dr':'nb');
+  const label=e.confirmed?'On the calendar':(sc.generated?'Draft':'Not built');
+  return '<span class="cal-st st-'+st+'">'+label+(sc.generated&&sc.missing?' · <b>'+sc.missing+' short</b>':'')+'</span>';
+}
+
+/* ── 1. THE CYCLES ── */
+function cycleCardHTML(c){
+  const s=cycleSummary(c.k);
+  let line;
+  if(!s.n) line='No events yet';
+  else if(s.unbuilt===s.n) line='Not generated';
+  else if(s.live===s.n) line='All on the calendar';
+  else line=[s.live?s.live+' on the calendar':'',s.drafts?s.drafts+' draft'+(s.drafts===1?'':'s'):'',
+             s.unbuilt?s.unbuilt+' not built':''].filter(Boolean).join(' · ');
+  if(s.short&&c.status!=='historic') line+=' · <b>'+s.short+' short</b>';
+  const seg=(n,cls)=>n?'<i class="'+cls+'" style="flex:'+n+'"></i>':'';
+  return '<button class="cy-card st-'+c.status+'" onclick="openCycle('+c.k+')">'+
+    '<span class="cy-top"><span class="cyc-tag '+c.status+'">'+c.status.toUpperCase()+'</span>'+
+      '<span class="cy-count">'+s.n+' event'+(s.n===1?'':'s')+'</span></span>'+
+    '<span class="cy-name">'+esc(cyclePretty(c.k))+'</span>'+
+    '<span class="cy-dates">'+esc(cycleDates(c.k))+'</span>'+
+    '<span class="cy-prog" aria-hidden="true">'+(s.n?seg(s.live,'lv')+seg(s.drafts,'dr')+seg(s.unbuilt,'nb'):'<i class="nb" style="flex:1"></i>')+'</span>'+
+    '<span class="cy-line">'+line+'</span>'+
+    '<span class="cy-go" aria-hidden="true">→</span></button>';
+}
+function renderCyclePicker(){
+  const live=CYCLES.filter(c=>c.status!=='historic'), past=CYCLES.filter(c=>c.status==='historic').slice().reverse();
+  let h='<div class="ph"><div><h1>Roster</h1><p>Pick a cycle to generate, check and publish its rosters.</p></div>'+
+    (IS_EDIT?'<div class="ha"><button class="btn btn-da btn-sm" onclick="openResetCycle()">Reset next cycle</button></div>':'')+'</div>';
+  if(!CYCLES.length) return h+'<div class="empty-gen"><div class="zap">📅</div><h3>No cycles found</h3><p>Nothing to roster yet.</p></div>';
+  h+='<div class="cy-legend"><span class="cal-legend"><i class="st-nb"></i>Not built <i class="st-dr"></i>Draft <i class="st-lv"></i>On the calendar</span></div>';
+  if(live.length) h+='<div class="cy-grid">'+live.map(cycleCardHTML).join('')+'</div>';
+  if(past.length) h+='<div class="cy-sec">Past cycles · read only</div><div class="cy-grid past">'+past.map(cycleCardHTML).join('')+'</div>';
+  return h;
+}
+
+/* ── 2. ONE CYCLE ── */
+function renderCycleView(k){
+  const meta=CYCLES.find(c=>c.k===k)||{status:'upcoming'};
+  const hist=meta.status==='historic', s=cycleSummary(k);
+  const plan=ROSTER_PLAN&&ROSTER_PLAN.k===k?ROSTER_PLAN:null, preview=!!plan&&!plan.applied;
+  const edit=IS_EDIT&&!hist;
+  let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openRosterHome()">← All cycles</button></div>';
+  h+='<div class="cy-hero st-'+meta.status+'"><div class="cy-hero-t">'+
+       '<span class="cyc-tag '+meta.status+'">'+meta.status.toUpperCase()+'</span>'+
+       '<h1>'+esc(cyclePretty(k))+'</h1>'+
+       '<div class="cy-hero-s">'+esc(cycleDates(k))+' · '+s.n+' event'+(s.n===1?'':'s')+(hist?' · 🔒 read only':'')+'</div></div>'+
+     (edit?'<div class="cy-hero-a"><button class="btn btn-ol" onclick="openAddEvent()">+ Add event</button>'+
+           '<button class="btn btn-ol btn-sm" title="Chandraat overrides" aria-label="Cycle settings" onclick="openCycleSettings()">⚙</button></div>':'')+
+     '</div>';
+
+  /* Generate: offered while anything in the cycle is unbuilt. Once all of
+     it is built, rebuilding the drafts is still a button, just a quieter
+     one, because it re-rolls work that may already have been checked. */
+  if(edit&&!preview){
+    if(!s.n){
+      h+='<div class="empty-gen"><div class="zap">📅</div><h3>No events in this cycle</h3><p>Add the first one to start building.</p>'+
+         '<div class="btns"><button class="btn btn-bl" onclick="openAddEvent()">+ Add event</button></div></div>';
+    } else if(s.unbuilt){
+      const all=s.unbuilt===s.n;
+      h+='<div class="gen-cta"><div class="gc-ic" aria-hidden="true">⚡</div><div class="gc-t">'+
+           '<h3>'+(all?'This cycle has not been generated':s.unbuilt+' of '+s.n+' events not generated yet')+'</h3>'+
+           '<p>Generates every draft in one go and shows you the result here before anything is saved. '+
+           (s.live?'The '+s.live+' already on the calendar '+(s.live===1?'is':'are')+' left alone.':'Nothing goes on the calendar until you say so.')+'</p></div>'+
+           '<button class="btn btn-bl gc-btn" onclick="previewCycle('+k+')">⚡ Generate '+(all?'entire cycle':'cycle')+'</button></div>';
+    }
+  }
+  if(plan) h+='<div class="gp-wide">'+renderPlanPanel()+'</div>';
+
+  /* Publish: what is ready goes up in one press. Drafts with gaps are a
+     second, deliberate press that names what is missing — the same gate
+     as a single event, applied to the cycle. */
+  if(edit&&!preview&&s.built){
+    const bits=[];
+    if(s.live) bits.push('<b class="lv">'+s.live+'</b> on the calendar');
+    if(s.ready.length) bits.push('<b class="ok">'+s.ready.length+'</b> ready');
+    if(s.gapDrafts.length) bits.push('<b class="gp">'+s.gapDrafts.length+'</b> with gaps');
+    if(s.unbuilt) bits.push('<b>'+s.unbuilt+'</b> not built');
+    let acts='';
+    if(s.ready.length) acts+='<button class="btn btn-gd" onclick="publishCycle('+k+')">📅 Publish '+s.ready.length+' complete</button>';
+    if(s.gapDrafts.length) acts+='<button class="btn btn-ol" onclick="confirmPublishCycleGaps('+k+')">Publish '+s.gapDrafts.length+' with gaps…</button>';
+    if(!acts) acts='<span class="pb-done">✓ Everything built is on the calendar</span>';
+    h+='<div class="pub-bar"><div class="pb-t"><div class="pb-k">Publish to calendar</div><div class="pb-s">'+bits.join(' · ')+'</div></div>'+
+       '<div class="pb-a">'+acts+'</div></div>';
+  }
+
+  /* The events. Opening one is how you edit it; an unbuilt one can also be
+     built on its own, against the rest of the cycle. */
+  if(s.n){
+    h+='<div class="cy-evs-h"><h2>Events</h2>'+
+       (edit&&!s.unbuilt&&!preview&&s.drafts?'<button class="btn btn-ol btn-sm" onclick="previewCycle('+k+')">↻ Rebuild drafts</button>':'')+'</div>';
+    h+='<div class="cy-evs">';
+    for(const e of s.evs){
+      const tm=TYPE_META[e.type]||TYPE_META.custom, sc=slotCounts(e), d=new Date(e.date+'T12:00:00');
+      h+='<div class="cy-ev st-'+(e.confirmed?'lv':sc.generated?'dr':'nb')+'">'+
+         '<div class="ce-date"><b>'+d.getDate()+'</b><span>'+MON_UP[d.getMonth()]+'</span><small>'+esc(fmtDowLong(e.date).slice(0,3))+'</small></div>'+
+         '<div class="ce-main"><div class="ce-nm">'+esc(e.name)+'<span class="ev-badge" style="background:'+tm.color+'">'+esc(tm.label)+'</span></div>'+
+         '<div class="ce-st">'+evStateHTML(e)+'<span class="ce-meta">'+esc(e.uniform||'Casual')+(e.cover_name?' · cover: '+esc(e.cover_name):'')+'</span></div></div>'+
+         '<div class="ce-acts">'+
+           (edit&&!sc.generated&&!preview?'<button class="btn btn-ol btn-sm" onclick="previewEventInCycle('+e.id+')">⚡ Build</button>':'')+
+           '<button class="btn btn-bl btn-sm" onclick="selectEvent('+e.id+')">'+(edit?'Edit':'Open')+' →</button></div></div>';
+    }
+    h+='</div>';
+  }
+
+  /* The standing numbers for the cycle, where the preview was before. */
+  /* Closed by default: the member list runs to forty-odd rows on a phone. */
+  if(!plan&&IS_EDIT&&s.built) h+='<details class="cy-more"><summary>Cycle overview \u00b7 who has how many duties</summary><div class="gp-wide">'+renderPlanPanel()+'</div></details>';
+  return h;
+}
+/* Builds one event against the rest of its cycle and shows the preview in
+   the cycle view. computeCounts reads every other roster in the cycle, so
+   the fairness rules see what everybody already has; nothing else is
+   regenerated. */
+function previewEventInCycle(id,opts){
+  if(!IS_EDIT) return;
+  const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
+  if(evLocked(ev)) return toast('This event is locked','err');
+  if(!MEMBERS.some(m=>m.status==='active')) return toast('No active members','err');
+  const k=cycleForDate(ev.date);
+  const plan=buildPlan(k,id);
+  if(!plan) return toast('This event cannot be built','err');
+  if(opts&&opts.midCycle) plan.midCycle=opts.midCycle;
+  PLAN_OPEN.clear(); PLAN_OPEN.add(id); ROSTER_PLAN=plan;
+  plan.fresh=true; setTimeout(()=>{ if(ROSTER_PLAN===plan) plan.fresh=false; },900);
+  ROSTER_VIEW='cycle'; ROSTER_K=k; ROSTER_BAR_K=k;
+  rosterGo();
+}
+async function publishCycle(k){
+  if(!IS_EDIT||_publishing) return;
+  const ready=cycleSummary(k).ready; if(!ready.length) return;
+  _publishing=true; let ok=0;
+  try{ for(const e of ready) if(await publishIfComplete(e,{quiet:true})) ok++; }
+  finally{ _publishing=false; }
+  renderRoster(); refreshBadges();
+  if(ok===ready.length) toast(ok+' event'+(ok===1?'':'s')+' on the calendar — everyone can see '+(ok===1?'it':'them')+' now');
+  else toast('Only '+ok+' of '+ready.length+' went on the calendar — see the warning above','err');
+}
+function confirmPublishCycleGaps(k){
+  const list=cycleSummary(k).gapDrafts; if(!list.length) return;
+  const rows=list.map(e=>{
+    const g=gapsFor(e,ROSTERS[e.id]||{}), n=slotCounts(e).missing;
+    return '<li><b style="color:var(--dt)">'+esc(fmtShort(e.date))+' · '+esc(e.name)+'</b> — '+n+' short'+
+      (g.length?'<br><span style="font-size:12px">'+g.slice(0,3).map(x=>esc(x.duty)+' ('+esc(x.why)+')').join('; ')+(g.length>3?'; …':'')+'</span>':'')+'</li>';
+  }).join('');
+  oM('<h3>Publish '+list.length+' with gaps?</h3>'+
+    '<p style="font-size:14px;color:var(--dm);line-height:1.6">Everyone will see '+(list.length===1?'this roster':'these rosters')+', and the unfilled slots will simply show nobody.</p>'+
+    '<ul style="font-size:13px;color:var(--dm);line-height:1.6;margin:0 0 14px;padding-left:20px">'+rows+'</ul>'+
+    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
+    '<button class="btn btn-gd" onclick="cM();doPublishCycleGaps('+k+')">Publish them anyway</button></div>');
+}
+async function doPublishCycleGaps(k){
+  if(!IS_EDIT||_publishing) return;
+  const list=cycleSummary(k).gapDrafts; if(!list.length) return;
+  _publishing=true; let ok=0;
+  try{ for(const e of list) if(await publishIfComplete(e,{force:true,quiet:true})) ok++; }
+  finally{ _publishing=false; }
+  renderRoster(); refreshBadges();
+  if(ok===list.length) toast(ok+' event'+(ok===1?'':'s')+' on the calendar, with slots still open');
+  else toast('Only '+ok+' of '+list.length+' went on the calendar','err');
+}
+
+/* ── 3. ONE EVENT ── */
+function renderEventPage(ev){
+  const k=cycleForDate(ev.date), evs=eventsInCycle(k), i=evs.findIndex(e=>e.id===ev.id);
+  const prev=i>0?evs[i-1]:null, next=i>=0&&i<evs.length-1?evs[i+1]:null;
+  let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openCycle('+k+')">← '+esc(cyclePretty(k))+'</button>'+
+    '<span class="rc-here">'+esc(ev.name)+' · '+esc(fmtShort(ev.date))+'</span>'+
+    '<span class="rc-nav">'+
+      (prev?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+prev.id+')" aria-label="Previous event: '+esc(prev.name)+'">‹</button>':'')+
+      (next?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+next.id+')" aria-label="Next event: '+esc(next.name)+'">›</button>':'')+
+    '</span></div>';
+  if(IS_EDIT&&ROSTER_PLAN&&ROSTER_PLAN.k===k) h+='<div class="gp-wide">'+renderPlanPanel()+'</div>';
+  return h+renderEventView(ev);
+}
+
 /* Rebuilding a cycle re-rolls rosters that are already on the calendar and
    there is no undo, so it used to describe itself in a modal first \u2014 how
    many events, how many already built, how many hand-set duties would be
@@ -2997,38 +3312,11 @@ function rosterCycleBar(){
 
 function renderRoster(){
   const el=document.getElementById('body-roster'); if(!el) return;
-  // sidebar cycle list
-  let side='<div class="sb-label">Cycles &amp; Events</div>';
-  for(const c of CYCLES){
-    const evs=eventsInCycle(c.k), open=expandedCycles.has(c.k);
-    side+='<div class="cyc-group'+(open?' open':'')+'"><button class="cyc-head" aria-expanded="'+(open?'true':'false')+'" onclick="toggleCycle('+c.k+')"><span class="car">▶</span>'+
-      '<span class="cyc-title">'+esc(cycleLabel(c.k))+'</span><span class="cyc-tag '+c.status+'">'+c.status.toUpperCase()+'</span></button><div class="cyc-body">';
-    if(!evs.length) side+='<div class="cyc-empty">No events yet</div>';
-    for(const ev of evs){
-      const tm=TYPE_META[ev.type]||TYPE_META.custom;
-      side+='<button class="ev-card'+(ev.id===selEventId?' sel':'')+'" onclick="selectEvent('+ev.id+')"><span class="ev-nm">'+
-        (ev.confirmed?'<span class="ev-conf">✓</span>':'')+esc(ev.name)+'<span class="ev-badge" style="background:'+tm.color+'">'+esc(tm.label)+'</span></span>'+
-        '<span class="ev-dt">'+esc(fmtShort(ev.date))+' · '+esc(ev.uniform||'Casual')+'</span></button>';
-    }
-    side+='</div></div>';
-  }
-  if(!CYCLES.length) side='<div class="cyc-empty">No cycles found</div>';
-  if(IS_EDIT) side+='<button class="add-ev-btn" onclick="openAddEvent()">+ Add Event</button>'+
-    '<button class="btn btn-da btn-sm" style="width:100%;justify-content:center;margin-top:8px" onclick="openResetCycle()">Reset Next Cycle</button>';
-
-  const ev=selEvent();
-  let main='';
-  if(!ev){
-    main='<div class="empty-gen"><div class="zap">📅</div><h3>No event selected</h3><p>'+(EVENTS.length?'Pick an event from the list.':'No events yet.'+(IS_EDIT?' Use “+ Add Event”.':''))+'</p></div>';
-  } else {
-    main=renderEventView(ev);
-  }
-  const info=renderPlanPanel();
-  el.innerHTML='<div class="ph"><div><h1>Roster</h1><p>Duty assignments — historic cycles are read-only · 🔒 marks locked slots</p></div></div>'+
-    rosterCycleBar()+
-    '<div class="roster-layout'+(info?' with-info':'')+'"><aside class="rl-side">'+side+'</aside>'+
-    '<div class="rl-main">'+main+'</div>'+
-    (info?'<aside class="rl-info">'+info+'</aside>':'')+'</div>';
+  let v=ROSTER_VIEW;
+  if(v==='event'&&!selEvent()) v=ROSTER_K!=null?'cycle':'cycles';
+  if(v==='cycle'&&(ROSTER_K==null||!CYCLES.some(c=>c.k===ROSTER_K))) v='cycles';
+  ROSTER_VIEW=v;
+  el.innerHTML=v==='cycles'?renderCyclePicker():v==='cycle'?renderCycleView(ROSTER_K):renderEventPage(selEvent());
 }
 function renderEventView(ev){
   const hist=isHistoricEvent(ev), locked=evLocked(ev);
@@ -3437,7 +3725,10 @@ function aeDateChanged(){
     hint.textContent='\u2715 '+cycleLabel(k)+' has finished. You cannot add events to a past cycle.';
   } else {
     hint.className='ae-hint ok';
-    hint.textContent='\u2713 Team '+PAGE_TEAM+' \u00b7 '+cycleLabel(k);
+    const built=eventsInCycle(k).filter(e=>slotCounts(e).generated).length;
+    hint.textContent='\u2713 Team '+PAGE_TEAM+' \u00b7 '+cycleLabel(k)+
+      (built?' \u00b7 This cycle is under way, so the new event will be filled fairly against its other '+built+
+             ' roster'+(built===1?'':'s')+'. Nothing already built changes.':'');
   }
 }
 function aeTypeChanged(){
@@ -3475,7 +3766,16 @@ async function submitAddEvent(){
   if(!rows) return;
   const ev=rows[0];
   EVENTS.push(ev); EVENTS.sort((a,b)=>a.date<b.date?-1:1);
-  cM(); auditLog('add','events',name+' '+date); selectEvent(ev.id); toast('Event added');
+  cM(); auditLog('add','events',name+' '+date);
+  /* Mid-cycle (anything else in the cycle already built), the new event is
+     built straight away on its own, scored against everyone's duties in the
+     rest of the cycle, and shown for checking before it is saved. Nothing
+     already built is touched. Otherwise it simply joins its cycle's list. */
+  const others=eventsInCycle(k).filter(e=>e.id!==ev.id&&slotCounts(e).generated).length;
+  if(others&&MEMBERS.some(m=>m.status==='active')){
+    previewEventInCycle(ev.id,{midCycle:others});
+    toast('Event added and built against the rest of the cycle — check it, then save');
+  } else { openCycle(k); toast('Event added'); }
 }
 function confirmDeleteEvent(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
@@ -3495,9 +3795,8 @@ async function deleteEvent(){
   if(!await dbWrite('Deleting the event', ()=>sb.from('iv_events').delete().eq('id',ev.id))) return;
   EVENTS=EVENTS.filter(e=>e.id!==ev.id); delete ROSTERS[ev.id];
   auditLog('delete','events',ev.name+' '+ev.date);
-  selEventId=null; const today=nzTodayISO();
-  const next=EVENTS.filter(e=>e.date>=today)[0]||EVENTS[EVENTS.length-1]; if(next) selEventId=next.id;
-  renderRoster(); refreshBadges(); toast('Event deleted');
+  selEventId=null; refreshBadges(); toast('Event deleted');
+  openCycle(cycleForDate(ev.date));
 }
 function openResetCycle(){
   if(!IS_EDIT) return;
@@ -3994,7 +4293,7 @@ function bellItems(){
           out.push({kind:'away', sort:ev.date,
             title: m.name + ' is away on ' + fmtShort(ev.date),
             sub: 'Rostered for ' + (ev.name||'this event') + ' · ' + recName(legacyLabel(key)),
-            go: ()=>{ selEventId = ev.id; nav('roster'); }});
+            go: ()=>selectEvent(ev.id)});
         }
       }
     }
@@ -4006,7 +4305,7 @@ function bellItems(){
     if(n > 0) out.push({kind:'gap', sort:ev.date,
       title: n + ' unfilled ' + (n === 1 ? 'slot' : 'slots') + ' on ' + fmtShort(ev.date),
       sub: ev.name || 'IV Event',
-      go: ()=>{ selEventId = ev.id; nav('roster'); }});
+      go: ()=>selectEvent(ev.id)});
   });
 
   /* 3. A day on the other team handed to you. Until now this was only
@@ -4965,7 +5264,7 @@ async function fontsSettled(ms){
 (function(){
   if(!window.matchMedia||!matchMedia('(hover:hover) and (pointer:fine)').matches) return;
   if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  var SEL='.sc,.mem-card', ev=null, raf=0;
+  var SEL='.sc,.mem-card,.cy-card', ev=null, raf=0;
   document.addEventListener('pointermove',function(e){
     ev=e; if(raf) return;
     raf=requestAnimationFrame(function(){
