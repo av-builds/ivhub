@@ -666,6 +666,39 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4FC3F7
   .lock-badge{margin-left:0;margin-top:6px;}
   td.dn2 .warns{margin-top:6px;}
 }
+/* ── MOTION: splash, skeletons, roster ───────────────────────────── */
+#splash{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 40%,#0D2040,#020B18 70%);transition:opacity .45s ease,visibility .45s;}
+#splash.gone{opacity:0;visibility:hidden;pointer-events:none;}
+#splash .sp-in{display:flex;flex-direction:column;align-items:center;gap:14px;animation:spIn .6s cubic-bezier(.16,1,.3,1) both;}
+#splash img{width:84px;height:84px;border-radius:50%;background:#fff;object-fit:contain;animation:spPulse 1.8s ease-in-out infinite;}
+#splash .sp-t{font-size:15px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--dm);}
+#splash .sp-bar{width:150px;height:3px;border-radius:3px;background:rgba(79,195,247,.16);overflow:hidden;}
+#splash .sp-bar i{display:block;height:100%;width:40%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--blue-lt));animation:spBar 1.1s ease-in-out infinite;}
+@keyframes spIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@keyframes spPulse{0%,100%{box-shadow:0 0 0 0 rgba(79,195,247,.35)}50%{box-shadow:0 0 0 16px rgba(79,195,247,0)}}
+@keyframes spBar{0%{transform:translateX(-110%)}100%{transform:translateX(300%)}}
+.skel-wrap{display:grid;gap:12px;}
+.skel-b{height:64px;border-radius:12px;background:linear-gradient(90deg,var(--ds) 25%,var(--ds2) 37%,var(--ds) 63%);background-size:400% 100%;animation:skShimmer 1.3s ease infinite;}
+.skel-b.t{height:26px;width:42%;}
+.skel-b.s{height:96px;}
+.chip.flash{animation:chipFlash 1.1s ease;}
+@keyframes chipFlash{0%{box-shadow:0 0 0 0 rgba(74,222,128,.7);background:rgba(74,222,128,.28);transform:scale(1.08)}60%{box-shadow:0 0 0 10px rgba(74,222,128,0)}100%{box-shadow:none;transform:none}}
+.gp.fresh .gp-ev,.gp.fresh .gp-n{animation:riseIn .45s cubic-bezier(.16,1,.3,1) both;}
+.gp.fresh .gp-ev:nth-child(2),.gp.fresh .gp-n:nth-child(2){animation-delay:.06s;}
+.gp.fresh .gp-ev:nth-child(3),.gp.fresh .gp-n:nth-child(3){animation-delay:.12s;}
+.gp.fresh .gp-ev:nth-child(n+4),.gp.fresh .gp-n:nth-child(n+4){animation-delay:.18s;}
+.gp-ev.open .gp-mv{animation:riseIn .3s ease both;}
+/* Phones and tablets: shorter, no stagger, so older devices stay smooth. */
+@media(hover:none){
+  #splash .sp-in,#splash img{animation-duration:.35s;}
+  .page.active.from-right,.page.active.from-left{animation-duration:.24s;}
+  .page.enter .sc,.page.enter .next-row,.page.enter .mem-card,.page.enter .att-row,.page.enter .ev-card,
+  .page.enter .cyc-group,.page.enter .gp-n,.page.enter .pnl{animation-duration:.22s;animation-delay:0s!important;}
+  .page.enter .cal-cell{animation:none;}
+  .cal-cell.today{animation:none;}
+  .gp.fresh .gp-ev,.gp.fresh .gp-n{animation-duration:.2s;animation-delay:0s!important;}
+}
 @media(hover:none){
   .btn,.btn-sm,.chip,.att-btn,.pill,.dchip-tog,.seg button,.cal-ev,.nav-item,.hub-link,
   .pick-row,.ev-card,.cyc-head,.add-ev-btn,.tn-b,.tn-out,.tn-tog,.tn-show,
@@ -765,6 +798,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true"><div class="sp-in"><img alt="" id="spLogo"><div class="sp-t">IV Roster</div><div class="sp-bar"><i></i></div></div></div>
 <header class="topnav" id="topnav" aria-label="Main navigation"></header>
 
 
@@ -2048,7 +2082,15 @@ function nav(page){
   renderCurrent();
   if(LOGGED_SECTIONS[page]) logView(LOGGED_SECTIONS[page]);
 }
+function skeletonHTML(){
+  return '<div class="skel-wrap"><div class="skel-b t"></div><div class="skel-b s"></div><div class="skel-b"></div><div class="skel-b"></div><div class="skel-b"></div></div>';
+}
 function renderCurrent(){
+  if(!LOADED){
+    const b=document.getElementById('body-'+curPage);
+    if(b&&!b.innerHTML.trim()) b.innerHTML=skeletonHTML();
+    return;
+  }
   renderDbHint();
   if(curPage==='dashboard') renderDashboard();
   else if(curPage==='roster') renderRoster();
@@ -2203,9 +2245,18 @@ function refreshBadges(){
   const b=document.getElementById('navUnfilled');
   if(b){ if(unfilled>0&&IS_EDIT){ b.textContent=unfilled; b.style.display=''; } else b.style.display='none'; }
 }
+function hideSplash(){
+  const sp=document.getElementById('splash'); if(!sp||sp.classList.contains('gone')) return;
+  sp.classList.add('gone'); setTimeout(()=>{ try{sp.remove();}catch(e){} },700);
+}
+(function(){
+  const im=document.getElementById('spLogo'); if(im&&window.IV_LOGO) im.src=window.IV_LOGO;
+  // never trap anyone behind it: a failed sign-in or a slow network still gets out
+  setTimeout(hideSplash,9000);
+})();
 async function boot(){
-  if(!(await verifyAuth())) return;
-  if(!CU||!CU.user) return;
+  if(!(await verifyAuth())){ hideSplash(); return; }
+  if(!CU||!CU.user){ hideSplash(); return; }
   document.title='IV '+TEAM_NAME+' — Roster';
   const sbTeam=document.getElementById('sbTeam');
   if(sbTeam){
@@ -2256,6 +2307,7 @@ async function boot(){
   repCycleK=fairnessCycleK();
   attEventId=def?def.id:null;
   LOADED=true;
+  hideSplash();
   /* Arriving from the team switcher: land on the page you were on. */
   try{
     const want=new URLSearchParams(location.search).get('p');
@@ -2551,7 +2603,7 @@ function previewCycle(k){
   if(!IS_EDIT) return;
   const plan=buildPlan(k);
   if(!plan) return toast('No events in this cycle to build','err');
-  PLAN_OPEN.clear(); ROSTER_PLAN=plan; renderRoster();
+  PLAN_OPEN.clear(); ROSTER_PLAN=plan; plan.fresh=true; setTimeout(()=>{ if(ROSTER_PLAN===plan) plan.fresh=false; },900); renderRoster();
 }
 function previewEvent(id){
   if(!IS_EDIT) return;
@@ -2572,7 +2624,7 @@ function togglePlanLive(on){
   const k=ROSTER_PLAN.k;
   const plan=buildPlan(k,null,{includeLive:!!on});
   if(!plan) return;
-  PLAN_OPEN.clear(); ROSTER_PLAN=plan; renderRoster();
+  PLAN_OPEN.clear(); ROSTER_PLAN=plan; plan.fresh=true; setTimeout(()=>{ if(ROSTER_PLAN===plan) plan.fresh=false; },900); renderRoster();
 }
 function discardPlan(){ ROSTER_PLAN=null; PLAN_OPEN.clear(); renderRoster(); }
 function togglePlanRow(id){ PLAN_OPEN.has(id)?PLAN_OPEN.delete(id):PLAN_OPEN.add(id); renderRoster(); }
@@ -2639,7 +2691,7 @@ function renderPlanPanel(){
     ttl=esc(cycleLabel(k));
     sub='How the roster stands right now. Press “Build this cycle” to see what a rebuild would change before anything is saved.';
   }
-  let h='<div class="gp '+state+'"><div class="gp-hd"><div class="gp-tag">'+tag+'</div>'+
+  let h='<div class="gp '+state+((plan&&plan.fresh)?' fresh':'')+'"><div class="gp-hd"><div class="gp-tag">'+tag+'</div>'+
         '<div class="gp-ttl">'+ttl+'</div><div class="gp-sub">'+sub+'</div></div>';
   if(acts) h+='<div class="gp-acts">'+acts+'</div>';
   /* The escape hatch. A lead who genuinely wants the published rosters
@@ -3052,6 +3104,10 @@ function renderPickList(){
       '<span class="meta num">cycle '+(counts.cyc[m.id]||0)+' · all '+(counts.all[m.id]||0)+'</span></button>';
   }).join(''):'<div style="padding:16px;font-size:13px;color:var(--dm)">No eligible members'+(q?' match “'+esc(q)+'”':'')+'.</div>';
 }
+function flashChip(name){
+  setTimeout(()=>{ [...document.querySelectorAll('.cellwrap .chip')].filter(c=>c.firstChild&&c.firstChild.textContent.trim()===name)
+    .forEach(c=>{ c.classList.add('flash'); setTimeout(()=>c.classList.remove('flash'),1200); }); },30);
+}
 async function applyPick(memberId){
   const ev=selEvent(); if(!ev||!PICKER_CTX) return;
   const m=memById(memberId); if(!m) return;
@@ -3077,6 +3133,7 @@ async function applyPick(memberId){
   auditLog('manual-assign','roster',ev.name+' '+ev.date+' \u2014 '+_duty+': '+
     (_replaced ? _replaced+' \u2192 '+m.name : 'added '+m.name));
   renderRoster(); refreshBadges();
+  flashChip(m.name);
   toast(m.name+' assigned'+(!wasLive && nowLive ? ' — the roster is complete and now on the calendar' : ''));
 }
 async function removeSlot(dutyKey,arrName,idx){
@@ -3471,7 +3528,7 @@ async function openDayDuties(iso,src){
   const head='<h3>'+esc(fmtNice(iso))+'</h3>'+
     '<p style="font-size:13px;color:var(--dm);margin:-4px 0 14px">Team '+esc(owner)+
     (owner===PAGE_TEAM?' \u00b7 your team':' \u00b7 other team')+'</p>';
-  oM(head+'<p style="font-size:14px;color:var(--dm)">Loading\u2026</p>');
+  oM(head+'<div class="skel-wrap" style="margin-top:6px"><div class="skel-b" style="height:22px"></div><div class="skel-b" style="height:22px"></div><div class="skel-b" style="height:22px"></div></div>');
   zoomFromCell(src);
 
   let evs=EVENTS.filter(e=>e.date===iso), rosters={};

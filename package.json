@@ -1,0 +1,8 @@
+{
+  "name": "ivhub-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Regression suite for the IV Hub pages. The site itself is static HTML and needs none of this to run.",
+  "scripts": { "test": "node tests/verify.cjs" },
+  "devDependencies": { "playwright": "^1.40.0" }
+}

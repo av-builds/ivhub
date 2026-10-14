@@ -1,0 +1,28 @@
+# Runs the regression suite on GitHub's runners so nobody has to install
+# anything. The result is the tick or cross next to the commit.
+name: Verify pages
+on:
+  push:
+    paths: ['*.html', 'tests/**', 'package.json', '.github/workflows/verify.yml']
+  pull_request:
+    paths: ['*.html', 'tests/**', 'package.json', '.github/workflows/verify.yml']
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: npm install
+      - uses: actions/cache@v4
+        id: browser-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
+      - if: steps.browser-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.browser-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - run: npm test
