@@ -2559,6 +2559,11 @@ function editPanelHTML(r){
       <div class="fg"><label>Gender</label><select data-ef="gender"><option${(r.gender || 'Male') === 'Male' ? ' selected' : ''}>Male</option><option${r.gender === 'Female' ? ' selected' : ''}>Female</option></select></div>
       <div class="fg"><label>Age Group</label><select data-ef="age_group">${AGE_OPTS.map(([v,l])=>`<option value="${v}"${v === (r.age_group || 'adult') ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
       <div class="fg"><label>Status</label><div><button type="button" class="pill-tgl ${active ? 'on' : 'off'}" data-ef="status">${active ? 'Active' : 'Inactive'}</button></div></div>
+      <!-- Team details. The same columns the team page's People screen edits, so
+           either screen changes the one record. -->
+      <div class="fg"><label>Nandi certified</label><div><button type="button" class="pill-tgl ${r.nandi ? 'on' : 'off'}" data-ef="nandi">${r.nandi ? 'Certified' : 'Not certified'}</button></div></div>
+      <div class="fg"><label>Phone</label><input type="tel" data-ef="phone" value="${esc(r.phone || '')}" autocomplete="off"></div>
+      <div class="fg" style="grid-column:1/-1"><label>Notes</label><textarea data-ef="notes" rows="2" style="width:100%">${esc(r.notes || '')}</textarea></div>
     </div>
     ${linkbox}
     <div class="um-form-acts">
@@ -2621,6 +2626,12 @@ function bindMemberRowEvents(box){
     if(!wasActive) b.classList.add('active'); // clicking the active team again → no team
   }));
   panel.querySelectorAll('.spec-chip').forEach(b=>b.addEventListener('click', ()=>{ if(!b.disabled) b.classList.toggle('active'); }));
+  const nd = panel.querySelector('[data-ef="nandi"]');
+  if(nd) nd.addEventListener('click', ()=>{
+    const on = nd.classList.toggle('on');
+    nd.classList.toggle('off', !on);
+    nd.textContent = on ? 'Certified' : 'Not certified';
+  });
   const st = panel.querySelector('[data-ef="status"]');
   if(st) st.addEventListener('click', ()=>{
     const on = st.classList.toggle('on');
@@ -2662,6 +2673,12 @@ async function saveMemberEdit(row, panel){
   if(gender !== (row.gender || '')) patch.gender = gender;
   if(age !== (row.age_group || 'adult')) patch.age_group = age;
   if(status !== (row.status || 'active')) patch.status = status;
+  const nandi = panel.querySelector('[data-ef="nandi"]').classList.contains('on');
+  if(nandi !== !!row.nandi) patch.nandi = nandi;
+  const phone = (panel.querySelector('[data-ef="phone"]').value || '').trim();
+  if(phone !== (row.phone || '')) patch.phone = phone || null;
+  const notes = (panel.querySelector('[data-ef="notes"]').value || '').trim();
+  if(notes !== (row.notes || '')) patch.notes = notes || null;
   if(!Object.keys(patch).length){ toast('No changes to save.'); return; }
   const summary = Object.keys(patch).map(k=>k + ' → ' + (patch[k] === null ? 'none' : (Array.isArray(patch[k]) ? '[' + patch[k].join(', ') + ']' : patch[k]))).join(', ');
   const ok = await updateMember(row.id, patch, `${row.name}: ${summary}`);
