@@ -38,6 +38,9 @@ const srv=await serve(); const BASE='http://127.0.0.1:'+srv.address().port;
 const b=await chromium.launch({args:['--no-sandbox']});
 const open=async(file,vp,touch)=>{
   const ctx=await b.newContext({viewport:vp,isMobile:!!touch,hasTouch:!!touch}); const p=await ctx.newPage();
+  // The suite runs the pages offline. Where the CDN is reachable, Supabase
+  // loads, finds no session and redirects to the Hub mid-test, so block it.
+  await ctx.route(u=>!String(u).startsWith(BASE),r=>r.abort());
   p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
   await p.goto(BASE+'/'+file,{waitUntil:'domcontentloaded'});
   await p.addStyleTag({content:'.noaccess{display:none!important}#loginScreen{display:none!important}'});
