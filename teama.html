@@ -795,6 +795,123 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   body.tn-hidden .main{padding-top:26px!important;}
   body.tn-hidden .tn-show{display:inline-flex;}
 }
+/* ═══════════════ MOTION LAYER ═══════════════
+   One set of curves and durations for everything that moves, so the page
+   feels like one thing rather than a dozen rules timed by hand. It sits at
+   the end of the sheet and only overrides; delete it and the page goes back
+   to its earlier motion, nothing else changes.
+   Overlays now leave the way they arrived instead of vanishing. That uses
+   @starting-style and display transitions (allow-discrete); a browser
+   without them simply opens and closes as before. The reduced-motion rule
+   near the top still switches every bit of this off. */
+:root{
+  --ease-out:cubic-bezier(.16,1,.3,1);      /* arrivals: quick start, long settle */
+  --ease-in:cubic-bezier(.55,0,.75,.2);      /* departures: gather, then go */
+  --ease-spring:cubic-bezier(.34,1.45,.64,1);/* a small overshoot for things that pop */
+  --t-fast:.16s;--t:.26s;--t-slow:.42s;
+}
+@keyframes dlgIn{from{opacity:0;transform:translateY(14px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes calInL{from{opacity:0;transform:translateX(30px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+@keyframes calInR{from{opacity:0;transform:translateX(-30px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+@keyframes spOut{to{opacity:0;transform:scale(1.08);filter:blur(6px)}}
+@keyframes toastTime{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@keyframes iconPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.25);opacity:1}100%{transform:none}}
+
+/* Backdrops fade rather than snap. While one is fading out it must not
+   catch clicks meant for the page underneath. */
+.mo,.dlg,#sideOverlay{opacity:0;transition-property:opacity,display;transition-duration:var(--t);
+  transition-timing-function:var(--ease-out);transition-behavior:allow-discrete;}
+.mo.show,.dlg.show,#sideOverlay.show{opacity:1;}
+@starting-style{.mo.show,.dlg.show,#sideOverlay.show{opacity:0;}}
+.mo:not(.show),.dlg:not(.show),#sideOverlay:not(.show){pointer-events:none;}
+
+/* Drawer: slides back out to the side it came from (down, as a sheet). */
+.mo:not(.show) .mbox{opacity:0;transform:translateX(64px);
+  transition:transform var(--t) var(--ease-in),opacity var(--t) var(--ease-in);}
+@media(max-width:900px){ .mo:not(.show) .mbox{transform:translateY(90px);} }
+/* Its contents rise in one after another, but only as it opens; refreshing
+   an open drawer after a save does not replay them (see openDrawer). */
+.mo.opening .mbox>*{animation:riseIn var(--t-slow) var(--ease-out) backwards;}
+.mo.opening .mbox>:nth-child(2){animation-delay:.04s}.mo.opening .mbox>:nth-child(3){animation-delay:.08s}
+.mo.opening .mbox>:nth-child(4){animation-delay:.12s}.mo.opening .mbox>:nth-child(5){animation-delay:.16s}
+.mo.opening .mbox>:nth-child(n+6){animation-delay:.2s}
+
+/* Dialog: a small spring in, a quick drop out. The fill is backwards, not
+   both, so the exit transition is free to move it once it has landed. */
+.dcard{animation:dlgIn .38s var(--ease-spring) backwards;}
+.dlg:not(.show) .dcard{opacity:0;transform:translateY(8px) scale(.97);
+  transition:transform .18s var(--ease-in),opacity .18s var(--ease-in);}
+
+/* Menus open from the button they belong to. */
+.tn-menu,.bell-pop{transition-property:opacity,transform,display;transition-duration:var(--t-fast);
+  transition-timing-function:var(--ease-out);transition-behavior:allow-discrete;opacity:0;}
+.tn-menu{transform-origin:top left;transform:translateY(-6px) scale(.98);}
+.bell-pop{transform-origin:bottom right;transform:translateY(8px) scale(.97);}
+.tn-group.open .tn-menu,.bell-pop.open{opacity:1;transform:none;}
+@starting-style{
+  .tn-group.open .tn-menu{opacity:0;transform:translateY(-6px) scale(.98);}
+  .bell-pop.open{opacity:0;transform:translateY(8px) scale(.97);}
+}
+.tn-group:not(.open) .tn-menu,.bell-pop:not(.open){pointer-events:none;}
+.tn-b{transition:background-color var(--t-fast),color var(--t-fast),box-shadow var(--t-fast);}
+.tn-b.on{box-shadow:0 4px 16px rgba(21,101,192,.35);}
+
+/* Toast: springs in, fades as it leaves, and a hairline drains along the
+   bottom so you can see how long it will stay. toast() re-adds .show for
+   every message, which restarts the line. */
+.toast{opacity:0;overflow:hidden;
+  transition:transform .44s var(--ease-spring),opacity var(--t) var(--ease-out);}
+.toast.show{opacity:1;}
+.toast::before{display:inline-block;}
+.toast.show::before{animation:iconPop .45s var(--ease-out) .12s backwards;}
+.toast::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;transform-origin:left;opacity:.7;
+  background:linear-gradient(90deg,var(--blue2),var(--blue-lt));transform:scaleX(0);}
+.toast.ok::after{background:linear-gradient(90deg,var(--green),var(--green-lt));}
+.toast.err::after{background:linear-gradient(90deg,#B91C1C,var(--red-lt));}
+.toast.show::after{animation:toastTime 3.2s linear forwards;}
+
+/* Splash lifts away instead of only fading. */
+#splash.gone .sp-in{animation:spOut .45s var(--ease-in) forwards;}
+
+/* Calendar month change: a short slide with a touch of motion blur. */
+.cal-grid.anim-l{animation:calInL .36s var(--ease-out) both;}
+.cal-grid.anim-r{animation:calInR .36s var(--ease-out) both;}
+.chip{animation:popIn .24s var(--ease-out) both;}
+
+/* Buttons spring back when released. */
+.btn{transition:transform .32s var(--ease-spring),box-shadow var(--t) var(--ease-out),background-color var(--t),border-color var(--t),color var(--t),filter var(--t);}
+.btn:active{transform:scale(.96);transition-duration:.08s;}
+
+/* Precise pointers only: these are hover effects, so on touch they would
+   never be seen, and nothing here carries meaning. */
+@media (hover:hover) and (pointer:fine){
+  /* A sheen sweeps across a primary button on hover. It sits under the
+     label (z-index -1 inside an isolated button). */
+  .btn-bl{position:relative;overflow:hidden;isolation:isolate;}
+  .btn-bl::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);
+    transform:translateX(-130%);}
+  .btn-bl:hover::after{transform:translateX(130%);transition:transform .7s var(--ease-out);}
+  /* A soft light follows the pointer across cards. --mx/--my come from the
+     one pointermove listener at the foot of the page. */
+  .sc,.mem-card{position:relative;isolation:isolate;}
+  .sc::after,.mem-card::after{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(240px circle at var(--mx,50%) var(--my,0%),rgba(79,195,247,.13),transparent 70%);
+    opacity:0;transition:opacity .35s var(--ease-out);}
+  .sc:hover::after,.mem-card:hover::after{opacity:1;}
+  .chip:hover{box-shadow:0 0 0 3px rgba(79,195,247,.10);}
+  .cal-cell{transition:border-color var(--t-fast),background-color var(--t-fast),box-shadow var(--t-fast);}
+  .cal-cell:not(.out):hover{border-color:rgba(79,195,247,.4);box-shadow:inset 0 0 0 1px rgba(79,195,247,.12),0 6px 18px rgba(2,11,24,.35);}
+}
+
+/* Phones and tablets: shorter and unstaggered, as elsewhere on the page,
+   and no blur (filters are costly on older phones). */
+@media(hover:none){
+  .mo.opening .mbox>*{animation-duration:.22s;animation-delay:0s!important;}
+  .cal-grid.anim-l{animation:slideInL .26s var(--ease-out) both;}
+  .cal-grid.anim-r{animation:slideInR .26s var(--ease-out) both;}
+  #splash.gone .sp-in{animation-name:fadeIn;animation-direction:reverse;}
+}
 </style>
 </head>
 <body>
@@ -1046,7 +1163,13 @@ function toast(msg,type){
   _toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
 }
 /* drawer (right slide-in / bottom sheet) */
-function openDrawer(h){ document.getElementById('mbox').innerHTML=h; document.getElementById('mo').classList.add('show'); }
+function openDrawer(h){
+  const mo=document.getElementById('mo'), wasOpen=mo.classList.contains('show');
+  document.getElementById('mbox').innerHTML=h; mo.classList.add('show');
+  // Stagger the contents in only on a real open. A save re-renders an open
+  // drawer through here too, and replaying the entrance each time is noise.
+  if(!wasOpen){ mo.classList.add('opening'); clearTimeout(openDrawer._t); openDrawer._t=setTimeout(()=>mo.classList.remove('opening'),800); }
+}
 function closeDrawer(){ document.getElementById('mo').classList.remove('show'); }
 /* centered dialog (pickers / confirms) */
 function oM(h){ document.getElementById('dcard').innerHTML=h; document.getElementById('dlg').classList.add('show'); }
@@ -4833,6 +4956,25 @@ async function fontsSettled(ms){
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start);
   else start();
+})();
+</script>
+<script>
+/* Pointer light for cards (see the motion layer). One listener for the whole
+   page, at most one style write per frame, and only for a precise pointer
+   with motion allowed; otherwise it never attaches. */
+(function(){
+  if(!window.matchMedia||!matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var SEL='.sc,.mem-card', ev=null, raf=0;
+  document.addEventListener('pointermove',function(e){
+    ev=e; if(raf) return;
+    raf=requestAnimationFrame(function(){
+      raf=0; var el=ev.target&&ev.target.closest&&ev.target.closest(SEL); if(!el) return;
+      var r=el.getBoundingClientRect();
+      el.style.setProperty('--mx',(ev.clientX-r.left).toFixed(0)+'px');
+      el.style.setProperty('--my',(ev.clientY-r.top).toFixed(0)+'px');
+    });
+  },{passive:true});
 })();
 </script>
 </body>

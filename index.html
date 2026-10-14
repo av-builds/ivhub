@@ -466,6 +466,108 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   body.tn-hidden .main{padding-top:26px!important;}
   body.tn-hidden .tn-show{display:inline-flex;}
 }
+/* ═══════════════ MOTION LAYER ═══════════════
+   The same curves and durations as the team pages, so moving between the
+   Hub and a team page feels like one app. It sits at the end of the sheet
+   and only overrides; delete it and the Hub goes back to its earlier
+   motion, nothing else changes. Overlays and menus leave the way they
+   arrived (@starting-style and display transitions; a browser without them
+   opens and closes as before). The reduced-motion rule above still
+   switches all of it off. */
+:root{
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-in:cubic-bezier(.55,0,.75,.2);
+  --ease-spring:cubic-bezier(.34,1.45,.64,1);
+  --t-fast:.16s;--t:.26s;--t-slow:.42s;
+}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.97);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes barGrow{from{transform:scaleX(0)}to{transform:none}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+@keyframes toastTime{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@keyframes iconPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.25);opacity:1}100%{transform:none}}
+
+/* Sign-in: the card settles in, and a failed attempt gives it a shake.
+   The error line is emptied before each try, so every failure replays it. */
+.lbox{animation:cardIn .7s var(--ease-out) backwards;}
+#loginErr:not(:empty){animation:shake .45s var(--ease-out);}
+
+/* Page change: header, stat strip and panels arrive one after another. */
+.sg{animation:none;}
+.hero,.panel{animation-name:riseIn;animation-duration:var(--t-slow);animation-timing-function:var(--ease-out);}
+.page.active>:is(.hero,.panel):nth-child(2){animation-delay:.05s}
+.page.active>:is(.hero,.panel):nth-child(3){animation-delay:.1s}
+.page.active>:is(.hero,.panel):nth-child(4){animation-delay:.15s}
+.page.active>:is(.hero,.panel):nth-child(n+5){animation-delay:.2s}
+.sg .scard{animation:riseIn var(--t-slow) var(--ease-out) backwards;}
+.sg .scard:nth-child(2){animation-delay:.05s}.sg .scard:nth-child(3){animation-delay:.1s}
+.sg .scard:nth-child(n+4){animation-delay:.15s}
+.um-form.show{animation:riseIn .32s var(--ease-out);}
+
+/* Duty Stats: each bar grows out from the left, a beat after the last. */
+.st-fill{transform-origin:left;animation:barGrow .8s var(--ease-out) backwards;}
+.st-row:nth-child(2) .st-fill{animation-delay:.03s}.st-row:nth-child(3) .st-fill{animation-delay:.06s}
+.st-row:nth-child(4) .st-fill{animation-delay:.09s}.st-row:nth-child(5) .st-fill{animation-delay:.12s}
+.st-row:nth-child(n+6) .st-fill{animation-delay:.15s}
+
+/* Phone sidebar: the dimmed backdrop fades, and the drawer eases rather
+   than slides at a constant speed. */
+#sideOverlay{opacity:0;transition-property:opacity,display;transition-duration:var(--t);
+  transition-timing-function:var(--ease-out);transition-behavior:allow-discrete;}
+#sideOverlay.show{opacity:1;}
+@starting-style{#sideOverlay.show{opacity:0;}}
+#sideOverlay:not(.show){pointer-events:none;}
+@media(max-width:900px){ .sidebar{transition:transform .34s var(--ease-out);} }
+
+/* Top-bar menus open from their button and fade away. */
+.tn-menu{transition-property:opacity,transform,display;transition-duration:var(--t-fast);
+  transition-timing-function:var(--ease-out);transition-behavior:allow-discrete;
+  opacity:0;transform-origin:top left;transform:translateY(-6px) scale(.98);}
+.tn-group.open .tn-menu{opacity:1;transform:none;}
+@starting-style{.tn-group.open .tn-menu{opacity:0;transform:translateY(-6px) scale(.98);}}
+.tn-group:not(.open) .tn-menu{pointer-events:none;}
+.tn-b{transition:background-color var(--t-fast),color var(--t-fast),box-shadow var(--t-fast);}
+.tn-b.on{box-shadow:0 4px 16px rgba(21,101,192,.35);}
+
+/* Toast: springs in, fades out, and a hairline drains along the bottom
+   for as long as it will stay. toast() restarts it for each message. */
+.toast{opacity:0;overflow:hidden;transition:transform .44s var(--ease-spring),opacity var(--t) var(--ease-out);}
+.toast.show{opacity:1;}
+.toast::before{display:inline-block;}
+.toast.show::before{animation:iconPop .45s var(--ease-out) .12s backwards;}
+.toast::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;transform-origin:left;opacity:.7;
+  background:linear-gradient(90deg,var(--blue2),var(--blue-lt));transform:scaleX(0);}
+.toast.ok::after{background:linear-gradient(90deg,#00A344,#4ADE80);}
+.toast.err::after{background:linear-gradient(90deg,#B91C1C,#F87171);}
+.toast.show::after{animation:toastTime 3.2s linear forwards;}
+
+/* Buttons spring back when released. */
+.btn,.lbtn{transition:transform .32s var(--ease-spring),box-shadow var(--t) var(--ease-out),background-color var(--t),border-color var(--t),color var(--t);}
+.btn:active,.lbtn:active{transform:scale(.96);transition-duration:.08s;}
+
+/* Precise pointers only: hover effects that touch would never show, and
+   none of them carries meaning. */
+@media (hover:hover) and (pointer:fine){
+  .btn-bl,.lbtn{position:relative;overflow:hidden;isolation:isolate;}
+  .btn-bl::after,.lbtn::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);
+    transform:translateX(-130%);}
+  .btn-bl:hover::after,.lbtn:hover::after{transform:translateX(130%);transition:transform .7s var(--ease-out);}
+  /* A soft light follows the pointer across cards; --mx/--my come from
+     the one pointermove listener at the foot of the page. */
+  .scard,.dcard{position:relative;isolation:isolate;}
+  .scard::after,.dcard::after{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(240px circle at var(--mx,50%) var(--my,0%),rgba(79,195,247,.13),transparent 70%);
+    opacity:0;transition:opacity .35s var(--ease-out);}
+  .scard:hover::after,.dcard:hover::after{opacity:1;}
+}
+
+/* Phones and tablets: shorter, unstaggered, no blur. */
+@media(hover:none){
+  .lbox{animation:riseIn .35s var(--ease-out) backwards;}
+  .hero,.panel,.sg .scard{animation-duration:.24s;}
+  .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
+}
 </style>
 </head>
 <body>
@@ -1186,6 +1288,8 @@ function toast(msg, type){
   toastErrAt = type === 'err' ? now : 0;
   const t = $('toast');
   t.textContent = msg;
+  // Drop .show for one reflow so a second message restarts the timer line.
+  t.className = 'toast'; void t.offsetWidth;
   t.className = 'toast show' + (type ? ' ' + type : ' ok');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
@@ -4183,6 +4287,25 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start);
   else start();
+})();
+</script>
+<script>
+/* Pointer light for cards (see the motion layer). One listener, at most one
+   style write per frame, and only for a precise pointer with motion
+   allowed; otherwise it never attaches. */
+(function(){
+  if(!window.matchMedia||!matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var SEL='.scard,.dcard', ev=null, raf=0;
+  document.addEventListener('pointermove',function(e){
+    ev=e; if(raf) return;
+    raf=requestAnimationFrame(function(){
+      raf=0; var el=ev.target&&ev.target.closest&&ev.target.closest(SEL); if(!el) return;
+      var r=el.getBoundingClientRect();
+      el.style.setProperty('--mx',(ev.clientX-r.left).toFixed(0)+'px');
+      el.style.setProperty('--my',(ev.clientY-r.top).toFixed(0)+'px');
+    });
+  },{passive:true});
 })();
 </script>
 </body>
