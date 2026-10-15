@@ -1064,6 +1064,106 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 </style>
 </head>
 <body>
+<!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
+     The same block sits at the top of index.html, teama.html (and so
+     teamb.html) and av.html; change it in all of them together.
+     It covers the page while it loads, and again on the way out when you
+     move between the Hub, a team page and the AV page, so the jump between
+     them reads as one app rather than a blank flash. data-hide="load"
+     lifts it when the page has loaded; "manual" waits for the page to call
+     ivVeilOff() once its data is in. It never stays more than 9 seconds. -->
+<style>
+#ivVeil{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(120% 90% at 50% 38%,#0E2448 0%,#06142B 46%,#020B18 78%);
+  font-family:'Archivo',system-ui,sans-serif;color:#E8F4FD;
+  transition:opacity .45s cubic-bezier(.16,1,.3,1),visibility .45s;}
+#ivVeil.off{opacity:0;visibility:hidden;pointer-events:none;}
+#ivVeil.leaving{animation:ivFade .26s ease both;}
+#ivVeil .iv-in{display:flex;flex-direction:column;align-items:center;gap:22px;animation:ivRise .6s cubic-bezier(.16,1,.3,1) both;}
+#ivVeil.off .iv-in{transform:scale(1.05);filter:blur(4px);transition:transform .45s cubic-bezier(.55,0,.75,.2),filter .45s;}
+#ivVeil .iv-mark{position:relative;width:92px;height:92px;}
+#ivVeil .iv-halo{position:absolute;inset:-34px;border-radius:50%;
+  background:radial-gradient(circle,rgba(79,195,247,.24) 0%,rgba(79,195,247,0) 64%);animation:ivBreathe 2.4s ease-in-out infinite;}
+#ivVeil .iv-ring{position:absolute;inset:-11px;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(79,195,247,0) 0deg,rgba(79,195,247,0) 150deg,rgba(79,195,247,.85) 290deg,#FCD34D 356deg,rgba(252,211,77,0) 360deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+          mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+  animation:ivSpin 1.05s linear infinite;}
+#ivVeil .iv-track{position:absolute;inset:-11px;border-radius:50%;border:3px solid rgba(79,195,247,.10);}
+#ivVeil .iv-logo{position:absolute;inset:0;border-radius:50%;background:#fff;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 12px 36px rgba(2,11,24,.65);}
+#ivVeil .iv-logo img{width:100%;height:100%;object-fit:contain;display:block;}
+#ivVeil .iv-logo b{font-size:30px;font-weight:900;color:#0C2461;}
+#ivVeil .iv-word{display:flex;flex-direction:column;align-items:center;gap:8px;}
+#ivVeil .iv-t{font-size:22px;font-weight:900;letter-spacing:.34em;padding-left:.34em;text-transform:uppercase;line-height:1;}
+#ivVeil .iv-t i{font-style:normal;color:#4FC3F7;}
+#ivVeil .iv-s{font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7AAECB;min-height:14px;}
+#ivVeil .iv-bar{width:132px;height:2px;border-radius:2px;background:rgba(79,195,247,.14);overflow:hidden;}
+#ivVeil .iv-bar span{display:block;width:38%;height:100%;border-radius:2px;
+  background:linear-gradient(90deg,rgba(79,195,247,0),#4FC3F7,#FCD34D);animation:ivSweep 1.15s cubic-bezier(.45,0,.55,1) infinite;}
+@keyframes ivSpin{to{transform:rotate(360deg)}}
+@keyframes ivBreathe{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes ivSweep{0%{transform:translateX(-110%)}100%{transform:translateX(290%)}}
+@keyframes ivRise{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ivFade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  #ivVeil,#ivVeil *{animation:none!important;transition:none!important;}
+  #ivVeil .iv-ring{background:none;border:3px solid rgba(79,195,247,.5);-webkit-mask:none;mask:none;}
+}
+</style>
+<div id="ivVeil" role="status" aria-live="polite" aria-label="Loading IV Hub" data-hide="load">
+  <div class="iv-in">
+    <div class="iv-mark" aria-hidden="true">
+      <div class="iv-halo"></div><div class="iv-track"></div><div class="iv-ring"></div>
+      <div class="iv-logo"><b>IV</b></div>
+    </div>
+    <div class="iv-word">
+      <div class="iv-t">IV <i>Hub</i></div>
+      <div class="iv-s">Loading</div>
+      <div class="iv-bar" aria-hidden="true"><span></span></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var v=document.getElementById('ivVeil'); if(!v) return;
+  var t0=Date.now(), done=false;
+  try{ if(window.IV_LOGO){ var box=v.querySelector('.iv-logo'), im=new Image(); im.alt=''; im.onload=function(){ box.innerHTML=''; box.appendChild(im); }; im.src=window.IV_LOGO; } }catch(e){}
+  function label(u){
+    u=String(u||'');
+    return /teama/.test(u)?'Opening Team A':/teamb/.test(u)?'Opening Team B':/(^|\/)av\.html/.test(u)?'Opening AV Team':/index\.html|^\.?\/?$/.test(u)?'Back to the Hub':'Loading';
+  }
+  /* Lifts the screen. Held for a moment at least, so a fast load still
+     shows the mark rather than a flicker. */
+  window.ivVeilOff=function(){
+    if(done) return; done=true;
+    setTimeout(function(){ v.classList.add('off'); v.classList.remove('leaving'); }, Math.max(0,520-(Date.now()-t0)));
+  };
+  /* Shows it, then goes. Anything that leaves for another IV page should
+     call this instead of setting location.href itself. */
+  window.ivGo=function(url){
+    v.querySelector('.iv-s').textContent=label(url);
+    v.classList.remove('off'); v.classList.add('leaving');
+    var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTimeout(function(){ location.href=url; }, reduce?0:280);
+  };
+  var IV_PAGE=/^(\.\/)?(index|teama|teamb|av)\.html([?#].*)?$/;
+  document.addEventListener('click',function(e){
+    if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey) return;
+    var a=e.target&&e.target.closest&&e.target.closest('a[href]'); if(!a||(a.target&&a.target!=='_self')||a.hasAttribute('download')) return;
+    var h=a.getAttribute('href'); if(!IV_PAGE.test(h)) return;
+    e.preventDefault(); window.ivGo(h);
+  },true);
+  /* Coming back with the browser's Back button can restore the page as it
+     was left — with the screen up. Take it down. */
+  window.addEventListener('pageshow',function(e){ if(e.persisted){ done=false; v.classList.add('off'); v.classList.remove('leaving'); } });
+  if(v.getAttribute('data-hide')==='load'){
+    if(document.readyState==='complete') window.ivVeilOff(); else window.addEventListener('load',window.ivVeilOff);
+  }
+  setTimeout(function(){ v.classList.add('off'); v.classList.remove('leaving'); },9000);   // never trap anybody behind it
+})();
+</script>
+<!-- ── end IV HUB LOADING SCREEN ── -->
 <header class="topnav" id="topnav" aria-label="Main navigation"></header>
 
 <!-- LOGIN SCREEN -->
@@ -2691,7 +2791,7 @@ function refreshSessionPerms(){
 }
 function doLogin(){
   // Sign-in is centralised at the hub so there is one Auth flow, not two.
-  location.href = 'index.html';
+  (window.ivGo||function(u){location.href=u;})('index.html');
 }
 function doLoginLegacy(){
   const u = document.getElementById('lu').value.trim().toLowerCase();
@@ -6110,7 +6210,7 @@ async function fontsSettled(ms){
     b.addEventListener('click',function(ev){
       ev.stopPropagation(); closeAll();
       // Fire the real sidebar element so its own handler runs.
-      if(src.tagName==='A'&&src.getAttribute('href')) location.href=src.getAttribute('href');
+      if(src.tagName==='A'&&src.getAttribute('href')) (window.ivGo||function(u){location.href=u;})(src.getAttribute('href'));
       else src.click();
     });
     return b;

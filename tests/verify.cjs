@@ -38,6 +38,9 @@ const srv=await serve(); const BASE='http://127.0.0.1:'+srv.address().port;
 const b=await chromium.launch({args:['--no-sandbox']});
 const open=async(file,vp,touch)=>{
   const ctx=await b.newContext({viewport:vp,isMobile:!!touch,hasTouch:!!touch}); const p=await ctx.newPage();
+  // The suite runs the pages offline. Where the CDN is reachable, Supabase
+  // loads, finds no session and redirects to the Hub mid-test, so block it.
+  await ctx.route(u=>!String(u).startsWith(BASE),r=>r.abort());
   p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
   await p.goto(BASE+'/'+file,{waitUntil:'domcontentloaded'});
   await p.addStyleTag({content:'.noaccess{display:none!important}#loginScreen{display:none!important}'});
@@ -87,16 +90,103 @@ const open=async(file,vp,touch)=>{
   chk(r.volPage==='dashboard'&&r.volMenu===0,'access  a volunteer gets no leader pages or menu');
   chk(p.errs.length===0,'switch  no page errors'); await p.context().close(); }
 
+// ── roster: cycles → a cycle with its days opening in place ──
+{ const p=await open('teama.html',{width:1300,height:950});
+  await p.evaluate(`(${SEED})(['tl_a'])`);
+  const r=await p.evaluate(async()=>{
+    const o={}, q=s=>document.querySelector('#body-roster '+s);
+    /* A cycle this team owns, whatever today is: a hidden draft (11), a day
+       on the calendar (12), one not built (13), another hidden one (14). */
+    const k=CYCLES.find(c=>c.status!=='historic').k, d0=cyStart(k), d=n=>addDaysLocal(d0,n);
+    const mk=(id,n,name,type,conf)=>EVENTS.push({id,team:PAGE_TEAM,date:d(n),name,type,uniform:'Casual',youth:type==='friday',confirmed:conf});
+    mk(11,1,'Draft one','friday',false); mk(12,2,'Live one','pbs',true); mk(13,3,'Not built','friday',false); mk(14,4,'Hidden one','friday',false);
+    for(const id of [11,12,14]) ROSTERS[id]=generateEventData(EVENTS.find(e=>e.id===id));
+    /* No database here: stand in for the two writes and count them. */
+    let pubs=[]; const realSet=setOnCalendar, realSave=saveRoster;
+    setOnCalendar=async(ev,w)=>{pubs.push((w?'+':'-')+ev.id);ev.confirmed=w;return true;};
+    saveRoster=async()=>true;
+    nav('calendar'); nav('roster'); renderRoster();   // seeded without LOADED, so nav alone draws the skeleton
+    o.home=ROSTER_VIEW==='cycles'&&document.querySelectorAll('#body-roster .cy-card').length===CYCLES.length;
+    openCycle(k);
+    o.layout=!!q('.cv-layout .cv-side')&&!!q('.cv-layout .cv-main');
+    o.days=document.querySelectorAll('#body-roster .cv-day').length===eventsInCycle(k).length;
+    o.sideList=document.querySelectorAll('#body-roster .cv-ev').length===eventsInCycle(k).length;
+    o.noSummaryYet=!q('.cv-sum');
+    openDay(11);
+    o.inPlace=ROSTER_VIEW==='cycle'&&!!q('#day-11.open .duty')&&selEventId===11;
+    o.blankSlots=!!q('#day-11 .chip.blank')&&!q('.chip.un');
+    /* Generate: new days go up, gaps and all; built days keep their state. */
+    const r12=JSON.stringify(ROSTERS[12]);
+    pubs=[]; await runGenerate(k,false);
+    o.pubs=pubs.join();
+    o.newDayUp=pubs.join()==='+13'&&EVENTS.find(e=>e.id===13).confirmed===true;
+    o.hiddenStayHidden=!EVENTS.find(e=>e.id===11).confirmed&&!EVENTS.find(e=>e.id===14).confirmed;
+    o.liveUntouched=JSON.stringify(ROSTERS[12])===r12;
+    o.summary=!!q('.cv-sum .gp.receipt')&&/Cycle summary/.test(q('.cv-sum').textContent);
+    /* Mid-cycle: one new day built on its own, straight onto the calendar. */
+    mk(15,6,'Added late','friday',false);
+    const before=JSON.stringify([ROSTERS[11],ROSTERS[12],ROSTERS[13],ROSTERS[14]]);
+    pubs=[]; await generateDay(15,{midCycle:4});
+    o.midOnlyNew=ROSTER_PLAN.scope==='event'&&ROSTER_PLAN.events.length===1&&pubs.join()==='+15';
+    o.midOthersSame=JSON.stringify([ROSTERS[11],ROSTERS[12],ROSTERS[13],ROSTERS[14]])===before;
+    o.midNote=/mid-cycle/i.test((q('.cv-sum .gp-sub')||{}).textContent||'');
+    o.midOpen=ROSTER_OPEN===15&&!!q('#day-15.open .duty');
+    /* Hiding is the manual act. */
+    pubs=[]; await toggleDayCalendar(12); o.hide=pubs.join()==='-12';
+    /* Manual edit: any slot opens the name search; a filled one can be left blank. */
+    openDay(11,true);
+    const filled=q('#day-11 .cellwrap button.chip:not(.blank):not(.add)'); filled.click();
+    o.pickFilled=!!document.querySelector('#dcard #pickSearch')&&/Leave blank/.test(document.getElementById('dcard').textContent);
+    cM();
+    q('#day-11 .chip.blank').click();
+    o.pickBlank=!!document.querySelector('#dcard #pickSearch')&&!/Leave blank/.test(document.getElementById('dcard').textContent)&&
+      document.querySelectorAll('#dcard .pick-row').length>0;
+    pubs=[]; document.querySelector('#dcard .pick-row').click(); await new Promise(res=>setTimeout(res,50));
+    o.editNoPublish=pubs.length===0&&!EVENTS.find(e=>e.id===11).confirmed;
+    setOnCalendar=realSet; saveRoster=realSave;
+    /* Links that name an event open its cycle with that day expanded. */
+    nav('calendar'); selectEvent(12); o.jump=curPage==='roster'&&ROSTER_VIEW==='cycle'&&ROSTER_OPEN===12;
+    openFullRoster(11); o.full=ROSTER_VIEW==='event'&&!!q('.ro-crumbs [onclick^="openCycle"]')&&!!q('.duty');
+    nav('calendar'); nav('roster'); o.menuHome=ROSTER_VIEW==='cycles';
+    return o; });
+  chk(r.home,'roster  opens on the list of cycles');
+  chk(r.layout&&r.sideList,'cycle   side column with the event days, days in the middle');
+  chk(r.days,'cycle   every event day is listed in the middle');
+  chk(r.noSummaryYet,'cycle   no Cycle summary until something is generated');
+  chk(r.inPlace,'cycle   clicking a day opens its roster in place');
+  chk(r.blankSlots,'cycle   unfilled slots show blank, not UNASSIGNED');
+  chk(r.newDayUp,'generate new days go on the calendar, gaps and all',r.pubs);
+  chk(r.hiddenStayHidden,'generate a day a lead hid stays hidden');
+  chk(r.liveUntouched,'generate days on the calendar are not re-rolled unless asked');
+  chk(r.summary,'generate the Cycle summary appears after a generate');
+  chk(r.midOnlyNew&&r.midOthersSame,'midcycle only the new day is built; nothing else changes');
+  chk(r.midNote&&r.midOpen,'midcycle the summary says so and the new day is opened');
+  chk(r.hide,'calendar hiding a day takes it off the calendar');
+  chk(r.pickFilled,'edit    a filled slot opens the name search, with Leave blank');
+  chk(r.pickBlank,'edit    a blank slot opens the name search');
+  chk(r.editNoPublish,'edit    a hand edit does not put a hidden day back up');
+  chk(r.jump,'roster  links that name an event open its day in the cycle');
+  chk(r.full,'roster  the full roster page has a way back to its cycle');
+  chk(r.menuHome,'roster  the menu item returns to the list of cycles');
+  chk(p.errs.length===0,'roster  no page errors',p.errs.slice(0,1).join('')); await p.context().close(); }
+
 // ── layout ──
 for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   const p=await open('teama.html',{width:vp.w,height:vp.h},vp.t);
   await p.evaluate(`(${SEED})(['tl_a'])`);
-  const r=await p.evaluate(()=>{ nav('roster'); selEventId=1; renderRoster(); return new Promise(res=>setTimeout(()=>{
-    const de=document.documentElement;
-    const taps=[...document.querySelectorAll('#page-roster button,#page-roster .btn,#page-roster .chip')].filter(e=>{const q=e.getBoundingClientRect();return q.width>0&&q.height>0;});
-    res({ovf:de.scrollWidth>de.clientWidth+2,small:taps.filter(e=>e.getBoundingClientRect().height<44).length});},900)); });
-  chk(!r.ovf,vp.w+'px no horizontal overflow');
-  if(vp.t) chk(r.small===0,vp.w+'px every roster target is at least 44px',r.small+' too small');
+  /* Each of the roster's three screens: the cycle list, one cycle, one event. */
+  const r=await p.evaluate(async()=>{
+    const wait=()=>new Promise(res=>setTimeout(res,900)), de=document.documentElement, o={ovf:[],small:[]};
+    const k=CYCLES.find(c=>c.status!=='historic').k;
+    for(const [name,go] of [['cycles',()=>nav('roster')],['cycle',()=>openCycle(k)],['day',()=>{ EVENTS.push({id:21,team:PAGE_TEAM,date:addDaysLocal(cyStart(k),1),name:'Day',type:'friday',uniform:'Casual',youth:true,confirmed:true}); ROSTERS[21]=generateEventData(EVENTS[EVENTS.length-1]); openDay(21,true); }],['event',()=>openFullRoster(1)]]){
+      go(); await wait();
+      const taps=[...document.querySelectorAll('#page-roster button,#page-roster .btn,#page-roster .chip')].filter(e=>{const q=e.getBoundingClientRect();return q.width>0&&q.height>0;});
+      if(de.scrollWidth>de.clientWidth+2) o.ovf.push(name);
+      const n=taps.filter(e=>e.getBoundingClientRect().height<44).length; if(n) o.small.push(name+':'+n);
+    }
+    return o; });
+  chk(!r.ovf.length,vp.w+'px no horizontal overflow',r.ovf.join(' '));
+  if(vp.t) chk(!r.small.length,vp.w+'px every roster target is at least 44px',r.small.join(' '));
   chk(p.errs.length===0,vp.w+'px no page errors'); await p.context().close(); }
 
 // ── Hub ──

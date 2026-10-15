@@ -466,9 +466,211 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   body.tn-hidden .main{padding-top:26px!important;}
   body.tn-hidden .tn-show{display:inline-flex;}
 }
+/* ═══════════════ MOTION LAYER ═══════════════
+   The same curves and durations as the team pages, so moving between the
+   Hub and a team page feels like one app. It sits at the end of the sheet
+   and only overrides; delete it and the Hub goes back to its earlier
+   motion, nothing else changes. Overlays and menus leave the way they
+   arrived (@starting-style and display transitions; a browser without them
+   opens and closes as before). The reduced-motion rule above still
+   switches all of it off. */
+:root{
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-in:cubic-bezier(.55,0,.75,.2);
+  --ease-spring:cubic-bezier(.34,1.45,.64,1);
+  --t-fast:.16s;--t:.26s;--t-slow:.42s;
+}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.97);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes barGrow{from{transform:scaleX(0)}to{transform:none}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+@keyframes toastTime{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@keyframes iconPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.25);opacity:1}100%{transform:none}}
+
+/* Sign-in: the card settles in, and a failed attempt gives it a shake.
+   The error line is emptied before each try, so every failure replays it. */
+.lbox{animation:cardIn .7s var(--ease-out) backwards;}
+#loginErr:not(:empty){animation:shake .45s var(--ease-out);}
+
+/* Page change: header, stat strip and panels arrive one after another. */
+.sg{animation:none;}
+.hero,.panel{animation-name:riseIn;animation-duration:var(--t-slow);animation-timing-function:var(--ease-out);}
+.page.active>:is(.hero,.panel):nth-child(2){animation-delay:.05s}
+.page.active>:is(.hero,.panel):nth-child(3){animation-delay:.1s}
+.page.active>:is(.hero,.panel):nth-child(4){animation-delay:.15s}
+.page.active>:is(.hero,.panel):nth-child(n+5){animation-delay:.2s}
+.sg .scard{animation:riseIn var(--t-slow) var(--ease-out) backwards;}
+.sg .scard:nth-child(2){animation-delay:.05s}.sg .scard:nth-child(3){animation-delay:.1s}
+.sg .scard:nth-child(n+4){animation-delay:.15s}
+.um-form.show{animation:riseIn .32s var(--ease-out);}
+
+/* Duty Stats: each bar grows out from the left, a beat after the last. */
+.st-fill{transform-origin:left;animation:barGrow .8s var(--ease-out) backwards;}
+.st-row:nth-child(2) .st-fill{animation-delay:.03s}.st-row:nth-child(3) .st-fill{animation-delay:.06s}
+.st-row:nth-child(4) .st-fill{animation-delay:.09s}.st-row:nth-child(5) .st-fill{animation-delay:.12s}
+.st-row:nth-child(n+6) .st-fill{animation-delay:.15s}
+
+/* Phone sidebar: the dimmed backdrop fades, and the drawer eases rather
+   than slides at a constant speed. */
+#sideOverlay{opacity:0;transition-property:opacity,display;transition-duration:var(--t);
+  transition-timing-function:var(--ease-out);transition-behavior:allow-discrete;}
+#sideOverlay.show{opacity:1;}
+@starting-style{#sideOverlay.show{opacity:0;}}
+#sideOverlay:not(.show){pointer-events:none;}
+@media(max-width:900px){ .sidebar{transition:transform .34s var(--ease-out);} }
+
+/* Top-bar menus open from their button and fade away. */
+.tn-menu{transition-property:opacity,transform,display;transition-duration:var(--t-fast);
+  transition-timing-function:var(--ease-out);transition-behavior:allow-discrete;
+  opacity:0;transform-origin:top left;transform:translateY(-6px) scale(.98);}
+.tn-group.open .tn-menu{opacity:1;transform:none;}
+@starting-style{.tn-group.open .tn-menu{opacity:0;transform:translateY(-6px) scale(.98);}}
+.tn-group:not(.open) .tn-menu{pointer-events:none;}
+.tn-b{transition:background-color var(--t-fast),color var(--t-fast),box-shadow var(--t-fast);}
+.tn-b.on{box-shadow:0 4px 16px rgba(21,101,192,.35);}
+
+/* Toast: springs in, fades out, and a hairline drains along the bottom
+   for as long as it will stay. toast() restarts it for each message. */
+.toast{opacity:0;overflow:hidden;transition:transform .44s var(--ease-spring),opacity var(--t) var(--ease-out);}
+.toast.show{opacity:1;}
+.toast::before{display:inline-block;}
+.toast.show::before{animation:iconPop .45s var(--ease-out) .12s backwards;}
+.toast::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;transform-origin:left;opacity:.7;
+  background:linear-gradient(90deg,var(--blue2),var(--blue-lt));transform:scaleX(0);}
+.toast.ok::after{background:linear-gradient(90deg,#00A344,#4ADE80);}
+.toast.err::after{background:linear-gradient(90deg,#B91C1C,#F87171);}
+.toast.show::after{animation:toastTime 3.2s linear forwards;}
+
+/* Buttons spring back when released. */
+.btn,.lbtn{transition:transform .32s var(--ease-spring),box-shadow var(--t) var(--ease-out),background-color var(--t),border-color var(--t),color var(--t);}
+.btn:active,.lbtn:active{transform:scale(.96);transition-duration:.08s;}
+
+/* Precise pointers only: hover effects that touch would never show, and
+   none of them carries meaning. */
+@media (hover:hover) and (pointer:fine){
+  .btn-bl,.lbtn{position:relative;overflow:hidden;isolation:isolate;}
+  .btn-bl::after,.lbtn::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);
+    transform:translateX(-130%);}
+  .btn-bl:hover::after,.lbtn:hover::after{transform:translateX(130%);transition:transform .7s var(--ease-out);}
+  /* A soft light follows the pointer across cards; --mx/--my come from
+     the one pointermove listener at the foot of the page. */
+  .scard,.dcard{position:relative;isolation:isolate;}
+  .scard::after,.dcard::after{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(240px circle at var(--mx,50%) var(--my,0%),rgba(79,195,247,.13),transparent 70%);
+    opacity:0;transition:opacity .35s var(--ease-out);}
+  .scard:hover::after,.dcard:hover::after{opacity:1;}
+}
+
+/* Phones and tablets: shorter, unstaggered, no blur. */
+@media(hover:none){
+  .lbox{animation:riseIn .35s var(--ease-out) backwards;}
+  .hero,.panel,.sg .scard{animation-duration:.24s;}
+  .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
+}
 </style>
 </head>
 <body>
+<!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
+     The same block sits at the top of index.html, teama.html (and so
+     teamb.html) and av.html; change it in all of them together.
+     It covers the page while it loads, and again on the way out when you
+     move between the Hub, a team page and the AV page, so the jump between
+     them reads as one app rather than a blank flash. data-hide="load"
+     lifts it when the page has loaded; "manual" waits for the page to call
+     ivVeilOff() once its data is in. It never stays more than 9 seconds. -->
+<style>
+#ivVeil{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(120% 90% at 50% 38%,#0E2448 0%,#06142B 46%,#020B18 78%);
+  font-family:'Archivo',system-ui,sans-serif;color:#E8F4FD;
+  transition:opacity .45s cubic-bezier(.16,1,.3,1),visibility .45s;}
+#ivVeil.off{opacity:0;visibility:hidden;pointer-events:none;}
+#ivVeil.leaving{animation:ivFade .26s ease both;}
+#ivVeil .iv-in{display:flex;flex-direction:column;align-items:center;gap:22px;animation:ivRise .6s cubic-bezier(.16,1,.3,1) both;}
+#ivVeil.off .iv-in{transform:scale(1.05);filter:blur(4px);transition:transform .45s cubic-bezier(.55,0,.75,.2),filter .45s;}
+#ivVeil .iv-mark{position:relative;width:92px;height:92px;}
+#ivVeil .iv-halo{position:absolute;inset:-34px;border-radius:50%;
+  background:radial-gradient(circle,rgba(79,195,247,.24) 0%,rgba(79,195,247,0) 64%);animation:ivBreathe 2.4s ease-in-out infinite;}
+#ivVeil .iv-ring{position:absolute;inset:-11px;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(79,195,247,0) 0deg,rgba(79,195,247,0) 150deg,rgba(79,195,247,.85) 290deg,#FCD34D 356deg,rgba(252,211,77,0) 360deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+          mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+  animation:ivSpin 1.05s linear infinite;}
+#ivVeil .iv-track{position:absolute;inset:-11px;border-radius:50%;border:3px solid rgba(79,195,247,.10);}
+#ivVeil .iv-logo{position:absolute;inset:0;border-radius:50%;background:#fff;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 12px 36px rgba(2,11,24,.65);}
+#ivVeil .iv-logo img{width:100%;height:100%;object-fit:contain;display:block;}
+#ivVeil .iv-logo b{font-size:30px;font-weight:900;color:#0C2461;}
+#ivVeil .iv-word{display:flex;flex-direction:column;align-items:center;gap:8px;}
+#ivVeil .iv-t{font-size:22px;font-weight:900;letter-spacing:.34em;padding-left:.34em;text-transform:uppercase;line-height:1;}
+#ivVeil .iv-t i{font-style:normal;color:#4FC3F7;}
+#ivVeil .iv-s{font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7AAECB;min-height:14px;}
+#ivVeil .iv-bar{width:132px;height:2px;border-radius:2px;background:rgba(79,195,247,.14);overflow:hidden;}
+#ivVeil .iv-bar span{display:block;width:38%;height:100%;border-radius:2px;
+  background:linear-gradient(90deg,rgba(79,195,247,0),#4FC3F7,#FCD34D);animation:ivSweep 1.15s cubic-bezier(.45,0,.55,1) infinite;}
+@keyframes ivSpin{to{transform:rotate(360deg)}}
+@keyframes ivBreathe{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes ivSweep{0%{transform:translateX(-110%)}100%{transform:translateX(290%)}}
+@keyframes ivRise{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ivFade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  #ivVeil,#ivVeil *{animation:none!important;transition:none!important;}
+  #ivVeil .iv-ring{background:none;border:3px solid rgba(79,195,247,.5);-webkit-mask:none;mask:none;}
+}
+</style>
+<div id="ivVeil" role="status" aria-live="polite" aria-label="Loading IV Hub" data-hide="load">
+  <div class="iv-in">
+    <div class="iv-mark" aria-hidden="true">
+      <div class="iv-halo"></div><div class="iv-track"></div><div class="iv-ring"></div>
+      <div class="iv-logo"><b>IV</b></div>
+    </div>
+    <div class="iv-word">
+      <div class="iv-t">IV <i>Hub</i></div>
+      <div class="iv-s">Loading</div>
+      <div class="iv-bar" aria-hidden="true"><span></span></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var v=document.getElementById('ivVeil'); if(!v) return;
+  var t0=Date.now(), done=false;
+  try{ if(window.IV_LOGO){ var box=v.querySelector('.iv-logo'), im=new Image(); im.alt=''; im.onload=function(){ box.innerHTML=''; box.appendChild(im); }; im.src=window.IV_LOGO; } }catch(e){}
+  function label(u){
+    u=String(u||'');
+    return /teama/.test(u)?'Opening Team A':/teamb/.test(u)?'Opening Team B':/(^|\/)av\.html/.test(u)?'Opening AV Team':/index\.html|^\.?\/?$/.test(u)?'Back to the Hub':'Loading';
+  }
+  /* Lifts the screen. Held for a moment at least, so a fast load still
+     shows the mark rather than a flicker. */
+  window.ivVeilOff=function(){
+    if(done) return; done=true;
+    setTimeout(function(){ v.classList.add('off'); v.classList.remove('leaving'); }, Math.max(0,520-(Date.now()-t0)));
+  };
+  /* Shows it, then goes. Anything that leaves for another IV page should
+     call this instead of setting location.href itself. */
+  window.ivGo=function(url){
+    v.querySelector('.iv-s').textContent=label(url);
+    v.classList.remove('off'); v.classList.add('leaving');
+    var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTimeout(function(){ location.href=url; }, reduce?0:280);
+  };
+  var IV_PAGE=/^(\.\/)?(index|teama|teamb|av)\.html([?#].*)?$/;
+  document.addEventListener('click',function(e){
+    if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey) return;
+    var a=e.target&&e.target.closest&&e.target.closest('a[href]'); if(!a||(a.target&&a.target!=='_self')||a.hasAttribute('download')) return;
+    var h=a.getAttribute('href'); if(!IV_PAGE.test(h)) return;
+    e.preventDefault(); window.ivGo(h);
+  },true);
+  /* Coming back with the browser's Back button can restore the page as it
+     was left — with the screen up. Take it down. */
+  window.addEventListener('pageshow',function(e){ if(e.persisted){ done=false; v.classList.add('off'); v.classList.remove('leaving'); } });
+  if(v.getAttribute('data-hide')==='load'){
+    if(document.readyState==='complete') window.ivVeilOff(); else window.addEventListener('load',window.ivVeilOff);
+  }
+  setTimeout(function(){ v.classList.add('off'); v.classList.remove('leaving'); },9000);   // never trap anybody behind it
+})();
+</script>
+<!-- ── end IV HUB LOADING SCREEN ── -->
 <header class="topnav" id="topnav" aria-label="Main navigation"></header>
 
 
@@ -1186,6 +1388,8 @@ function toast(msg, type){
   toastErrAt = type === 'err' ? now : 0;
   const t = $('toast');
   t.textContent = msg;
+  // Drop .show for one reflow so a second message restarts the timer line.
+  t.className = 'toast'; void t.offsetWidth;
   t.className = 'toast show' + (type ? ' ' + type : ' ok');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
@@ -4042,7 +4246,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     b.addEventListener('click',function(ev){
       ev.stopPropagation(); closeAll();
       // Fire the real sidebar element so its own handler runs.
-      if(src.tagName==='A'&&src.getAttribute('href')) location.href=src.getAttribute('href');
+      if(src.tagName==='A'&&src.getAttribute('href')) (window.ivGo||function(u){location.href=u;})(src.getAttribute('href'));
       else src.click();
     });
     return b;
@@ -4183,6 +4387,25 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start);
   else start();
+})();
+</script>
+<script>
+/* Pointer light for cards (see the motion layer). One listener, at most one
+   style write per frame, and only for a precise pointer with motion
+   allowed; otherwise it never attaches. */
+(function(){
+  if(!window.matchMedia||!matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var SEL='.scard,.dcard', ev=null, raf=0;
+  document.addEventListener('pointermove',function(e){
+    ev=e; if(raf) return;
+    raf=requestAnimationFrame(function(){
+      raf=0; var el=ev.target&&ev.target.closest&&ev.target.closest(SEL); if(!el) return;
+      var r=el.getBoundingClientRect();
+      el.style.setProperty('--mx',(ev.clientX-r.left).toFixed(0)+'px');
+      el.style.setProperty('--my',(ev.clientY-r.top).toFixed(0)+'px');
+    });
+  },{passive:true});
 })();
 </script>
 </body>
