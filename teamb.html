@@ -667,17 +667,7 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4FC3F7
   td.dn2 .warns{margin-top:6px;}
 }
 /* ── MOTION: splash, skeletons, roster ───────────────────────────── */
-#splash{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;
   background:radial-gradient(circle at 50% 40%,#0D2040,#020B18 70%);transition:opacity .45s ease,visibility .45s;}
-#splash.gone{opacity:0;visibility:hidden;pointer-events:none;}
-#splash .sp-in{display:flex;flex-direction:column;align-items:center;gap:14px;animation:spIn .6s cubic-bezier(.16,1,.3,1) both;}
-#splash img{width:84px;height:84px;border-radius:50%;background:#fff;object-fit:contain;animation:spPulse 1.8s ease-in-out infinite;}
-#splash .sp-t{font-size:15px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--dm);}
-#splash .sp-bar{width:150px;height:3px;border-radius:3px;background:rgba(79,195,247,.16);overflow:hidden;}
-#splash .sp-bar i{display:block;height:100%;width:40%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--blue-lt));animation:spBar 1.1s ease-in-out infinite;}
-@keyframes spIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
-@keyframes spPulse{0%,100%{box-shadow:0 0 0 0 rgba(79,195,247,.35)}50%{box-shadow:0 0 0 16px rgba(79,195,247,0)}}
-@keyframes spBar{0%{transform:translateX(-110%)}100%{transform:translateX(300%)}}
 .skel-wrap{display:grid;gap:12px;}
 .skel-b{height:64px;border-radius:12px;background:linear-gradient(90deg,var(--ds) 25%,var(--ds2) 37%,var(--ds) 63%);background-size:400% 100%;animation:skShimmer 1.3s ease infinite;}
 .skel-b.t{height:26px;width:42%;}
@@ -691,7 +681,6 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4FC3F7
 .gp-ev.open .gp-mv{animation:riseIn .3s ease both;}
 /* Phones and tablets: shorter, no stagger, so older devices stay smooth. */
 @media(hover:none){
-  #splash .sp-in,#splash img{animation-duration:.35s;}
   .page.active.from-right,.page.active.from-left{animation-duration:.24s;}
   .page.enter .sc,.page.enter .next-row,.page.enter .mem-card,.page.enter .att-row,.page.enter .ev-card,
   .page.enter .cyc-group,.page.enter .gp-n,.page.enter .pnl{animation-duration:.22s;animation-delay:0s!important;}
@@ -924,6 +913,82 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.enter :is(.cy-card,.cy-ev,.gen-cta,.pub-bar,.cy-hero){animation-duration:.22s;animation-delay:0s!important;}
 }
 
+/* ─── CYCLE VIEW: side column + event days opening in place ─── */
+.cv-layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start;}
+.cv-side{position:sticky;top:14px;max-height:calc(100vh - 28px);overflow-y:auto;display:flex;flex-direction:column;gap:12px;
+  scrollbar-width:thin;padding-bottom:4px;}
+/* Above 1101px a fixed 60px top bar covers the top of the page. */
+@media(min-width:1101px){ body:not(.tn-hidden) .cv-side{top:74px;max-height:calc(100vh - 88px);} body:not(.tn-hidden) .cv-day{scroll-margin-top:76px;} }
+.cv-card{background:linear-gradient(160deg,var(--navy),#0F2E6E);border:1px solid rgba(79,195,247,.22);border-radius:var(--r-lg);padding:16px 16px 14px;box-shadow:var(--sh-1);}
+.cv-name{font-size:22px;font-weight:900;color:#fff;margin-top:9px;line-height:1.1;}
+.cv-dates{font-size:12.5px;font-weight:700;color:rgba(232,244,253,.78);margin-top:4px;}
+.cv-stat{font-size:12.5px;font-weight:700;color:rgba(232,244,253,.82);margin-top:10px;}
+.cv-stat b{color:var(--gold-lt);}
+.cv-acts{display:flex;flex-direction:column;gap:7px;margin-top:14px;}
+.cv-acts .btn{justify-content:center;}
+.cv-card .btn-ol{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.24);color:#E8F4FD;}
+.cv-card .btn-ol:hover{background:rgba(255,255,255,.14);border-color:#fff;color:#fff;}
+.cv-evs{background:var(--ds);border:var(--hairline);border-radius:var(--r-lg);padding:6px;display:flex;flex-direction:column;gap:2px;}
+.cv-ev{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:1px solid transparent;border-radius:10px;
+  padding:8px 9px;cursor:pointer;color:var(--dt);transition:background-color .15s,border-color .15s;}
+.cv-ev:hover{background:var(--ds2);}
+.cv-ev.on{background:rgba(79,195,247,.10);border-color:rgba(79,195,247,.32);}
+.cv-d{display:flex;flex-direction:column;align-items:center;min-width:32px;line-height:1.05;}
+.cv-d b{font-size:17px;font-weight:900;}
+.cv-d span{font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--blue-lt);}
+.cv-t{flex:1;min-width:0;display:flex;flex-direction:column;}
+.cv-t .nm{font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cv-t .st{font-size:12px;font-weight:700;}
+.st-lv{color:var(--green-lt);}.st-gp{color:var(--gold-lt);}.st-hd{color:#9FC6DF;}.st-nb{color:var(--dm2);}
+.cv-sum .gp{box-shadow:var(--sh-1);}
+.cv-sum .gp-list{max-height:300px;}
+.cv-main{min-width:0;}
+.cv-hint{font-size:12.5px;font-weight:700;color:var(--dm2);}
+.cv-days{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.cv-day{background:var(--ds);border:var(--hairline);border-radius:14px;overflow:hidden;transition:border-color .2s,box-shadow .2s;scroll-margin-top:90px;}
+.cv-day.open{border-color:rgba(79,195,247,.42);box-shadow:var(--sh-1);}
+.cv-dh{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:transparent;border:0;padding:12px 16px;cursor:pointer;color:var(--dt);}
+.cv-dh:hover{background:rgba(79,195,247,.04);}
+.cv-dh .ce-main{display:flex;flex-direction:column;}
+.cv-sub{font-size:12.5px;font-weight:700;color:var(--dm);margin-top:3px;}
+.cv-sub b{color:var(--gold-lt);}
+.cv-pill{font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:99px;white-space:nowrap;flex:none;}
+.cv-pill.lv{background:var(--gold-bg);color:var(--gold-lt);border:1px solid var(--gold-bd);}
+.cv-pill.hd{background:rgba(122,174,203,.10);color:#9FC6DF;border:1px solid rgba(122,174,203,.35);}
+.cv-pill.nb{background:transparent;color:var(--dm);border:1px dashed var(--db2);}
+.cv-car{font-size:22px;line-height:1;color:var(--dm);flex:none;transition:transform .25s var(--ease-out,ease);}
+.cv-day.open .cv-car{transform:rotate(90deg);color:var(--blue-lt);}
+.cv-db{border-top:var(--hairline);padding:12px 16px 16px;animation:riseIn .32s cubic-bezier(.16,1,.3,1) both;}
+.cv-dacts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.cv-db .tw{margin:0;}
+.cv-empty{padding:18px;border:1.5px dashed var(--db);border-radius:12px;text-align:center;}
+.cv-empty p{font-size:13px;color:var(--dm);line-height:1.55;margin-bottom:12px;}
+/* A slot nobody fills shows as an empty, dashed place to put someone —
+   blank on the calendar, an obvious target for the lead. */
+.chip.blank{background:transparent;border:1.5px dashed var(--db2);color:var(--dm);font-weight:800;cursor:pointer;}
+.chip.blank:hover{color:var(--blue-lt);border-color:var(--blue-lt);}
+span.chip.blank{cursor:default;}
+.pick-cur{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--dm);margin:-6px 0 10px;}
+.pick-cur b{color:var(--dt);}
+@media(max-width:900px){
+  .cv-layout{grid-template-columns:minmax(0,1fr);}
+  .cv-side{position:static;max-height:none;overflow:visible;}
+  .cv-evs{display:none;}
+  .cv-acts{flex-direction:row;flex-wrap:wrap;}
+}
+@media(max-width:640px){
+  .cv-dh{flex-wrap:wrap;gap:10px;}
+  .cv-dh .ce-main{flex:1;min-width:150px;}
+}
+.page.enter .cv-card,.page.enter .cv-evs,.page.enter .cv-day{animation:riseIn .46s cubic-bezier(.16,1,.3,1) both;}
+.page.enter .cv-day:nth-child(2){animation-delay:.04s;}.page.enter .cv-day:nth-child(3){animation-delay:.08s;}
+.page.enter .cv-day:nth-child(n+4){animation-delay:.12s;}
+@media(hover:none){
+  .cv-ev,.cv-dh{min-height:44px;}
+  .cv-dh:active,.cv-ev:active{background:var(--ds2);}
+  .page.enter :is(.cv-card,.cv-evs,.cv-day){animation-duration:.22s;animation-delay:0s!important;}
+}
+
 /* ═══════════════ MOTION LAYER ═══════════════
    One set of curves and durations for everything that moves, so the page
    feels like one thing rather than a dozen rules timed by hand. It sits at
@@ -942,7 +1007,6 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 @keyframes dlgIn{from{opacity:0;transform:translateY(14px) scale(.95)}to{opacity:1;transform:none}}
 @keyframes calInL{from{opacity:0;transform:translateX(30px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
 @keyframes calInR{from{opacity:0;transform:translateX(-30px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
-@keyframes spOut{to{opacity:0;transform:scale(1.08);filter:blur(6px)}}
 @keyframes toastTime{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @keyframes iconPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.25);opacity:1}100%{transform:none}}
 
@@ -999,8 +1063,6 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .toast.err::after{background:linear-gradient(90deg,#B91C1C,var(--red-lt));}
 .toast.show::after{animation:toastTime 3.2s linear forwards;}
 
-/* Splash lifts away instead of only fading. */
-#splash.gone .sp-in{animation:spOut .45s var(--ease-in) forwards;}
 
 /* Calendar month change: a short slide with a touch of motion blur. */
 .cal-grid.anim-l{animation:calInL .36s var(--ease-out) both;}
@@ -1039,12 +1101,110 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .mo.opening .mbox>*{animation-duration:.22s;animation-delay:0s!important;}
   .cal-grid.anim-l{animation:slideInL .26s var(--ease-out) both;}
   .cal-grid.anim-r{animation:slideInR .26s var(--ease-out) both;}
-  #splash.gone .sp-in{animation-name:fadeIn;animation-direction:reverse;}
 }
 </style>
 </head>
 <body>
-<div id="splash" aria-hidden="true"><div class="sp-in"><img alt="" id="spLogo"><div class="sp-t">IV Roster</div><div class="sp-bar"><i></i></div></div></div>
+<!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
+     The same block sits at the top of index.html, teama.html (and so
+     teamb.html) and av.html; change it in all of them together.
+     It covers the page while it loads, and again on the way out when you
+     move between the Hub, a team page and the AV page, so the jump between
+     them reads as one app rather than a blank flash. data-hide="load"
+     lifts it when the page has loaded; "manual" waits for the page to call
+     ivVeilOff() once its data is in. It never stays more than 9 seconds. -->
+<style>
+#ivVeil{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(120% 90% at 50% 38%,#0E2448 0%,#06142B 46%,#020B18 78%);
+  font-family:'Archivo',system-ui,sans-serif;color:#E8F4FD;
+  transition:opacity .45s cubic-bezier(.16,1,.3,1),visibility .45s;}
+#ivVeil.off{opacity:0;visibility:hidden;pointer-events:none;}
+#ivVeil.leaving{animation:ivFade .26s ease both;}
+#ivVeil .iv-in{display:flex;flex-direction:column;align-items:center;gap:22px;animation:ivRise .6s cubic-bezier(.16,1,.3,1) both;}
+#ivVeil.off .iv-in{transform:scale(1.05);filter:blur(4px);transition:transform .45s cubic-bezier(.55,0,.75,.2),filter .45s;}
+#ivVeil .iv-mark{position:relative;width:92px;height:92px;}
+#ivVeil .iv-halo{position:absolute;inset:-34px;border-radius:50%;
+  background:radial-gradient(circle,rgba(79,195,247,.24) 0%,rgba(79,195,247,0) 64%);animation:ivBreathe 2.4s ease-in-out infinite;}
+#ivVeil .iv-ring{position:absolute;inset:-11px;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(79,195,247,0) 0deg,rgba(79,195,247,0) 150deg,rgba(79,195,247,.85) 290deg,#FCD34D 356deg,rgba(252,211,77,0) 360deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+          mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+  animation:ivSpin 1.05s linear infinite;}
+#ivVeil .iv-track{position:absolute;inset:-11px;border-radius:50%;border:3px solid rgba(79,195,247,.10);}
+#ivVeil .iv-logo{position:absolute;inset:0;border-radius:50%;background:#fff;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 12px 36px rgba(2,11,24,.65);}
+#ivVeil .iv-logo img{width:100%;height:100%;object-fit:contain;display:block;}
+#ivVeil .iv-logo b{font-size:30px;font-weight:900;color:#0C2461;}
+#ivVeil .iv-word{display:flex;flex-direction:column;align-items:center;gap:8px;}
+#ivVeil .iv-t{font-size:22px;font-weight:900;letter-spacing:.34em;padding-left:.34em;text-transform:uppercase;line-height:1;}
+#ivVeil .iv-t i{font-style:normal;color:#4FC3F7;}
+#ivVeil .iv-s{font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7AAECB;min-height:14px;}
+#ivVeil .iv-bar{width:132px;height:2px;border-radius:2px;background:rgba(79,195,247,.14);overflow:hidden;}
+#ivVeil .iv-bar span{display:block;width:38%;height:100%;border-radius:2px;
+  background:linear-gradient(90deg,rgba(79,195,247,0),#4FC3F7,#FCD34D);animation:ivSweep 1.15s cubic-bezier(.45,0,.55,1) infinite;}
+@keyframes ivSpin{to{transform:rotate(360deg)}}
+@keyframes ivBreathe{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes ivSweep{0%{transform:translateX(-110%)}100%{transform:translateX(290%)}}
+@keyframes ivRise{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ivFade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  #ivVeil,#ivVeil *{animation:none!important;transition:none!important;}
+  #ivVeil .iv-ring{background:none;border:3px solid rgba(79,195,247,.5);-webkit-mask:none;mask:none;}
+}
+</style>
+<div id="ivVeil" role="status" aria-live="polite" aria-label="Loading IV Hub" data-hide="manual">
+  <div class="iv-in">
+    <div class="iv-mark" aria-hidden="true">
+      <div class="iv-halo"></div><div class="iv-track"></div><div class="iv-ring"></div>
+      <div class="iv-logo"><b>IV</b></div>
+    </div>
+    <div class="iv-word">
+      <div class="iv-t">IV <i>Hub</i></div>
+      <div class="iv-s">Loading</div>
+      <div class="iv-bar" aria-hidden="true"><span></span></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var v=document.getElementById('ivVeil'); if(!v) return;
+  var t0=Date.now(), done=false;
+  try{ if(window.IV_LOGO){ var box=v.querySelector('.iv-logo'), im=new Image(); im.alt=''; im.onload=function(){ box.innerHTML=''; box.appendChild(im); }; im.src=window.IV_LOGO; } }catch(e){}
+  function label(u){
+    u=String(u||'');
+    return /teama/.test(u)?'Opening Team A':/teamb/.test(u)?'Opening Team B':/(^|\/)av\.html/.test(u)?'Opening AV Team':/index\.html|^\.?\/?$/.test(u)?'Back to the Hub':'Loading';
+  }
+  /* Lifts the screen. Held for a moment at least, so a fast load still
+     shows the mark rather than a flicker. */
+  window.ivVeilOff=function(){
+    if(done) return; done=true;
+    setTimeout(function(){ v.classList.add('off'); v.classList.remove('leaving'); }, Math.max(0,520-(Date.now()-t0)));
+  };
+  /* Shows it, then goes. Anything that leaves for another IV page should
+     call this instead of setting location.href itself. */
+  window.ivGo=function(url){
+    v.querySelector('.iv-s').textContent=label(url);
+    v.classList.remove('off'); v.classList.add('leaving');
+    var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTimeout(function(){ location.href=url; }, reduce?0:280);
+  };
+  var IV_PAGE=/^(\.\/)?(index|teama|teamb|av)\.html([?#].*)?$/;
+  document.addEventListener('click',function(e){
+    if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey) return;
+    var a=e.target&&e.target.closest&&e.target.closest('a[href]'); if(!a||(a.target&&a.target!=='_self')||a.hasAttribute('download')) return;
+    var h=a.getAttribute('href'); if(!IV_PAGE.test(h)) return;
+    e.preventDefault(); window.ivGo(h);
+  },true);
+  /* Coming back with the browser's Back button can restore the page as it
+     was left — with the screen up. Take it down. */
+  window.addEventListener('pageshow',function(e){ if(e.persisted){ done=false; v.classList.add('off'); v.classList.remove('leaving'); } });
+  if(v.getAttribute('data-hide')==='load'){
+    if(document.readyState==='complete') window.ivVeilOff(); else window.addEventListener('load',window.ivVeilOff);
+  }
+  setTimeout(function(){ v.classList.add('off'); v.classList.remove('leaving'); },9000);   // never trap anybody behind it
+})();
+</script>
+<!-- ── end IV HUB LOADING SCREEN ── -->
 <header class="topnav" id="topnav" aria-label="Main navigation"></header>
 
 
@@ -1148,12 +1308,12 @@ window.CAN_SWITCH_TEAM=()=>hasPerm(...IV_TOP,'facilitator');
 function openTeamSwitch(){
   if(!window.CAN_SWITCH_TEAM()) return;
   const other=PAGE_TEAM==='A'?'B':'A';
-  const go=t=>"location.href='team"+t.toLowerCase()+".html?p="+curPage+"'";
+  const go=t=>"ivGo('team"+t.toLowerCase()+".html?p="+curPage+"')";
   oM('<h3>Switch team</h3>'+
     '<div class="macts" style="flex-direction:column;align-items:stretch;justify-content:flex-start">'+
     '<button class="btn btn-ol" disabled style="opacity:.6">\u2713 Team '+PAGE_TEAM+' \u2014 you are here</button>'+
     '<button class="btn btn-bl" onclick="'+go(other)+'">Switch to Team '+other+' \u2192</button>'+
-    '<button class="btn btn-ol" onclick="location.href=\'index.html\'">\u2190 Back to the Hub</button>'+
+    '<button class="btn btn-ol" onclick="ivGo(\'index.html\')">\u2190 Back to the Hub</button>'+
     '<button class="btn btn-ol" onclick="cM()">Cancel</button></div>');
 }
 function applyNavScope(){
@@ -1221,7 +1381,7 @@ async function signOut(){
   try{ await auditLog('Signed out','login',(CU&&(CU.display||CU.user)||'Someone')+' signed out of '+TEAM_NAME); }catch(e){}
   try{ if(sb) await sb.auth.signOut(); }catch(e){}
   try{ localStorage.removeItem('ivhub_session'); }catch(e){}
-  location.href='index.html';
+  ivGo('index.html');
 }
 
 /* ── SUPABASE ── */
@@ -2467,7 +2627,7 @@ function volunteerCards(){
               'nav(\'calendar\')', 'font-size:20px;line-height:1.2')
     + card(away.length?'':'ok-green', 'My away dates', away.length,
            away.length ? 'next: ' + esc(fmtShort(away[0])) : 'available for every event',
-           'location.href=\'index.html\'')
+           'ivGo(\'index.html\')')
     + card('', 'My attendance', rel && rel.rate!=null ? rel.rate+'%' : '—',
            rel && rel.total ? rel.total + ' duties marked' : 'nothing marked yet')
     + card('', 'Who to ask', leads.length ? esc(leads[0].split(' ')[0]) : '—',
@@ -2500,12 +2660,10 @@ function refreshBadges(){
   const b=document.getElementById('navUnfilled');
   if(b){ if(unfilled>0&&IS_EDIT){ b.textContent=unfilled; b.style.display=''; } else b.style.display='none'; }
 }
-function hideSplash(){
-  const sp=document.getElementById('splash'); if(!sp||sp.classList.contains('gone')) return;
-  sp.classList.add('gone'); setTimeout(()=>{ try{sp.remove();}catch(e){} },700);
-}
+/* The IV Hub loading screen at the top of the page stands in for the old
+   splash; this lifts it once the page's data is in. */
+function hideSplash(){ if(window.ivVeilOff) ivVeilOff(); }
 (function(){
-  const im=document.getElementById('spLogo'); if(im&&window.IV_LOGO) im.src=window.IV_LOGO;
   // never trap anyone behind it: a failed sign-in or a slow network still gets out
   setTimeout(hideSplash,9000);
 })();
@@ -2595,7 +2753,7 @@ function renderDashboard(){
   const nextFill=nextEv?slotCounts(nextEv):null;
   let h='<div class="ph"><div><h1>Dashboard</h1><p>'+esc(TEAM_NAME)+' roster overview · Auckland Jamatkhana</p></div>'+
     '<div class="ha"><button class="btn btn-ol btn-sm" onclick="nav(\'roster\')">📋 Roster</button>'+
-    (IS_EDIT&&nextEv&&!evLocked(nextEv)?'<button class="btn btn-bl btn-sm" onclick="previewEvent('+nextEv.id+')">↻ Regenerate next</button>':'')+
+    (IS_EDIT&&nextEv&&!evLocked(nextEv)?'<button class="btn btn-bl btn-sm" onclick="askRegenerateDay('+nextEv.id+')">↻ Regenerate next</button>':'')+
     (nextEv?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+(nextEv.id)+');setTimeout(exportPNG,300)">📷 Export</button>':'')+'</div></div>';
   // hero
   h+='<div class="hero"><div style="position:relative;z-index:1;min-width:0"><div class="dash-greet">Ya Ali Madad</div>'+
@@ -2664,9 +2822,11 @@ function selectEvent(id){
   /* A staged build belongs to one cycle. Navigating out of that cycle
      leaves a panel describing work you can no longer see, so it goes. */
   if(ev&&ROSTER_PLAN&&ROSTER_PLAN.k!==cycleForDate(ev.date)){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }
-  if(ev){ ROSTER_BAR_K=ROSTER_K=cycleForDate(ev.date); ROSTER_VIEW='event';
-          CAL={y:+ev.date.slice(0,4),m:+ev.date.slice(5,7)-1}; }
-  rosterGo();
+  if(!ev) return rosterGo();
+  CAL={y:+ev.date.slice(0,4),m:+ev.date.slice(5,7)-1};
+  /* The roster lives inside its cycle now: open the cycle with this day
+     expanded, rather than a separate screen. */
+  openDay(id,true);
 }
 
 /* ── THE PLAN PANEL ──────────────────────────────────────────────────
@@ -2827,6 +2987,11 @@ async function applyPlan(plan,opts){
   /* publish:false stores the rosters as drafts for the publish bar. The
      default is unchanged: complete rosters go on the calendar as they save. */
   const publish=!(opts&&opts.publish===false);
+  /* 'new' is how generating works now: a day that had no roster goes on
+     the calendar, unfilled slots and all (they show blank). A day that was
+     already built keeps whatever the lead last chose, so a regenerate never
+     puts back a day somebody hid on purpose. */
+  const pubNew=!!(opts&&opts.publish==='new');
   /* Rows the plan deliberately left alone are not written, are not
      counted, and are not mentioned in the audit line — otherwise the
      receipt would claim credit for rosters this run never touched. */
@@ -2839,7 +3004,8 @@ async function applyPlan(plan,opts){
     ROSTERS[e.id]=plan.staged[e.id];
     if(await saveRoster(e.id,{quiet:true})){
       stored++;
-      if(publish ? await publishIfComplete(e,{quiet:true}) : e.confirmed) live++;
+      if(pubNew){ if(e.confirmed||(!row.wasBuilt&&await publishIfComplete(e,{force:true,quiet:true}))) live++; }
+      else if(publish ? await publishIfComplete(e,{quiet:true}) : e.confirmed) live++;
     }
   }
   const n=build.length;
@@ -2848,29 +3014,23 @@ async function applyPlan(plan,opts){
     (plan.skippedCount?', '+plan.skippedCount+' left as '+(plan.skippedCount===1?'it was':'they were')+' (on the calendar)':''));
   plan.applied=true; plan.at=new Date(); plan.stored=stored; plan.live=live;
   renderRoster(); refreshBadges();
-  if(!publish&&stored===n) toast('Saved '+n+' as draft'+(n===1?'':'s')+' — publish from the bar when ready');
+  if(pubNew&&stored===n){
+    const blanks=build.reduce((t,r)=>t+(r.missing||0),0);
+    toast((n===1?'Built '+esc(build[0].name):'Generated '+n+' days')+' \u2014 '+live+' on the calendar'+
+      (blanks?', '+blanks+' slot'+(blanks===1?'':'s')+' blank':''));
+  }
+  else if(!publish&&stored===n) toast('Saved '+n+' as draft'+(n===1?'':'s')+' — publish from the bar when ready');
   else if(live===n) toast('Built '+n+' event'+(n===1?'':'s')+' — all saved and on the calendar');
   else if(stored===n) toast('Built and saved '+n+' — '+live+' went on the calendar, the rest still have unfilled slots','err');
   else toast('Built '+n+', but only '+stored+' saved — see the warning above','err');
   return stored===n;
 }
-function previewCycle(k){
-  if(!IS_EDIT) return;
-  const plan=buildPlan(k);
-  if(!plan) return toast('No events in this cycle to build','err');
-  PLAN_OPEN.clear(); ROSTER_PLAN=plan; plan.fresh=true; setTimeout(()=>{ if(ROSTER_PLAN===plan) plan.fresh=false; },900);
-  ROSTER_VIEW='cycle'; ROSTER_K=k; ROSTER_BAR_K=k; rosterGo();
-}
-function previewEvent(id){
-  if(!IS_EDIT) return;
-  const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
-  if(evLocked(ev)) return toast('This event is locked','err');
-  if(!MEMBERS.filter(m=>m.status==='active').length) return toast('No active members','err');
-  selectEvent(id);
-  const plan=buildPlan(cycleForDate(ev.date),id);
-  if(!plan) return toast('This event cannot be rebuilt','err');
-  PLAN_OPEN.clear(); PLAN_OPEN.add(id); ROSTER_PLAN=plan; renderRoster();
-}
+/* Generating no longer stops at a preview: it saves and publishes, and the
+   Cycle summary shows what it did. These two names are kept so anything
+   still calling them gets the new behaviour rather than a preview nobody
+   would see. */
+function previewCycle(k){ askGenerateCycle(k); }
+function previewEvent(id){ askRegenerateDay(id); }
 function commitPlan(publish){ if(ROSTER_PLAN&&!ROSTER_PLAN.applied) applyPlan(ROSTER_PLAN,{publish:publish!==false}); }
 /* Rebuilds the plan with the published rosters in or out. Generating is
    cheap and nothing has been stored yet, so flipping the box simply
@@ -2943,11 +3103,14 @@ function renderPlanPanel(){
                   :'<button class="btn btn-bl btn-sm" onclick="commitPlan(false)">Save '+n+' event'+(n===1?'':'s')+'</button>'):'')+
          '<button class="btn btn-ol btn-sm" onclick="discardPlan()">Discard</button>';
   } else if(receipt){
-    const n=plan.events.length;
-    tag='Built '+(plan.at?esc(plan.at.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})):'');
-    ttl=plan.scope==='event'?esc(plan.events[0].name):esc(plan.label);
-    sub=n+' event'+(n===1?'':'s')+' · '+plan.stored+' saved · '+plan.live+' on the calendar'+
-      (plan.stored<n?'. The rest are not stored — see the warning above the roster.':'.');
+    const n=plan.events.filter(e=>!e.skipped).length;
+    tag='Cycle summary \u00b7 '+(plan.at?esc(plan.at.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})):'');
+    ttl=plan.scope==='event'?esc(plan.events[0].name)+' built':'Cycle generated';
+    sub=(plan.scope==='event'?'1 day':n+' day'+(n===1?'':'s'))+' \u00b7 '+plan.stored+' saved \u00b7 '+plan.live+' on the calendar'+
+      (st.missing?' \u00b7 '+st.missing+' slot'+(st.missing===1?'':'s')+' blank across the cycle':'')+
+      (plan.stored<n?'. The rest are not stored \u2014 see the warning on the page.':'.')+
+      (plan.midCycle?' Added mid-cycle, so it was filled using everyone\u2019s duties across the other '+plan.midCycle+
+        ' event'+(plan.midCycle===1?'':'s')+'. Those rosters did not change.':'');
     acts='<button class="btn btn-ol btn-sm" onclick="discardPlan()">Done</button>';
   } else {
     tag='This cycle';
@@ -3161,85 +3324,167 @@ function renderCyclePicker(){
   return h;
 }
 
-/* ── 2. ONE CYCLE ── */
+/* ── 2. ONE CYCLE ──
+   Left: the cycle, its event days, and — after a generate — the Cycle
+   summary of what that run did. Middle: the event days themselves; click
+   one and its roster opens right there, editable in place.
+
+   Generating saves and puts every day on the calendar at once, unfilled
+   slots and all; they simply show blank. Taking a day down is the
+   deliberate act now (Hide from calendar), not putting it up. */
+let ROSTER_OPEN=null;           // the event day expanded in the cycle view
 function renderCycleView(k){
   const meta=CYCLES.find(c=>c.k===k)||{status:'upcoming'};
   const hist=meta.status==='historic', s=cycleSummary(k);
-  const plan=ROSTER_PLAN&&ROSTER_PLAN.k===k?ROSTER_PLAN:null, preview=!!plan&&!plan.applied;
   const edit=IS_EDIT&&!hist;
-  let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openRosterHome()">← All cycles</button></div>';
-  h+='<div class="cy-hero st-'+meta.status+'"><div class="cy-hero-t">'+
-       '<span class="cyc-tag '+meta.status+'">'+meta.status.toUpperCase()+'</span>'+
-       '<h1>'+esc(cyclePretty(k))+'</h1>'+
-       '<div class="cy-hero-s">'+esc(cycleDates(k))+' · '+s.n+' event'+(s.n===1?'':'s')+(hist?' · 🔒 read only':'')+'</div></div>'+
-     (edit?'<div class="cy-hero-a"><button class="btn btn-ol" onclick="openAddEvent()">+ Add event</button>'+
-           '<button class="btn btn-ol btn-sm" title="Chandraat overrides" aria-label="Cycle settings" onclick="openCycleSettings()">⚙</button></div>':'')+
-     '</div>';
+  const plan=ROSTER_PLAN&&ROSTER_PLAN.k===k&&ROSTER_PLAN.applied?ROSTER_PLAN:null;
+  const hidden=s.evs.filter(e=>slotCounts(e).generated&&!e.confirmed).length;
 
-  /* Generate: offered while anything in the cycle is unbuilt. Once all of
-     it is built, rebuilding the drafts is still a button, just a quieter
-     one, because it re-rolls work that may already have been checked. */
-  if(edit&&!preview){
-    if(!s.n){
-      h+='<div class="empty-gen"><div class="zap">📅</div><h3>No events in this cycle</h3><p>Add the first one to start building.</p>'+
-         '<div class="btns"><button class="btn btn-bl" onclick="openAddEvent()">+ Add event</button></div></div>';
-    } else if(s.unbuilt){
-      const all=s.unbuilt===s.n;
-      h+='<div class="gen-cta"><div class="gc-ic" aria-hidden="true">⚡</div><div class="gc-t">'+
-           '<h3>'+(all?'This cycle has not been generated':s.unbuilt+' of '+s.n+' events not generated yet')+'</h3>'+
-           '<p>Generates every draft in one go and shows you the result here before anything is saved. '+
-           (s.live?'The '+s.live+' already on the calendar '+(s.live===1?'is':'are')+' left alone.':'Nothing goes on the calendar until you say so.')+'</p></div>'+
-           '<button class="btn btn-bl gc-btn" onclick="previewCycle('+k+')">⚡ Generate '+(all?'entire cycle':'cycle')+'</button></div>';
-    }
+  let side='<div class="cv-card">'+
+    '<span class="cyc-tag '+meta.status+'">'+meta.status.toUpperCase()+'</span>'+
+    '<div class="cv-name">'+esc(cyclePretty(k))+'</div>'+
+    '<div class="cv-dates">'+esc(cycleDates(k))+'</div>'+
+    '<div class="cv-stat">'+(s.n
+      ? '<b>'+s.live+'</b> of '+s.n+' on the calendar'+(hidden?' · '+hidden+' hidden':'')+(s.unbuilt?' · '+s.unbuilt+' not built':'')
+      : 'No events yet')+'</div>';
+  if(edit){
+    side+='<div class="cv-acts">';
+    if(s.n) side+='<button class="btn btn-bl" onclick="askGenerateCycle('+k+')">⚡ '+(s.built?'Regenerate cycle':'Generate entire cycle')+'</button>';
+    side+='<button class="btn btn-ol" onclick="openAddEvent()">+ Add event</button>'+
+          '<button class="btn btn-ol btn-sm" title="Chandraat overrides" aria-label="Cycle settings" onclick="openCycleSettings()">⚙ Cycle settings</button></div>';
   }
-  if(plan) h+='<div class="gp-wide">'+renderPlanPanel()+'</div>';
-
-  /* Publish: what is ready goes up in one press. Drafts with gaps are a
-     second, deliberate press that names what is missing — the same gate
-     as a single event, applied to the cycle. */
-  if(edit&&!preview&&s.built){
-    const bits=[];
-    if(s.live) bits.push('<b class="lv">'+s.live+'</b> on the calendar');
-    if(s.ready.length) bits.push('<b class="ok">'+s.ready.length+'</b> ready');
-    if(s.gapDrafts.length) bits.push('<b class="gp">'+s.gapDrafts.length+'</b> with gaps');
-    if(s.unbuilt) bits.push('<b>'+s.unbuilt+'</b> not built');
-    let acts='';
-    if(s.ready.length) acts+='<button class="btn btn-gd" onclick="publishCycle('+k+')">📅 Publish '+s.ready.length+' complete</button>';
-    if(s.gapDrafts.length) acts+='<button class="btn btn-ol" onclick="confirmPublishCycleGaps('+k+')">Publish '+s.gapDrafts.length+' with gaps…</button>';
-    if(!acts) acts='<span class="pb-done">✓ Everything built is on the calendar</span>';
-    h+='<div class="pub-bar"><div class="pb-t"><div class="pb-k">Publish to calendar</div><div class="pb-s">'+bits.join(' · ')+'</div></div>'+
-       '<div class="pb-a">'+acts+'</div></div>';
-  }
-
-  /* The events. Opening one is how you edit it; an unbuilt one can also be
-     built on its own, against the rest of the cycle. */
+  if(hist) side+='<div class="cv-stat">🔒 Read only</div>';
+  side+='</div>';
   if(s.n){
-    h+='<div class="cy-evs-h"><h2>Events</h2>'+
-       (edit&&!s.unbuilt&&!preview&&s.drafts?'<button class="btn btn-ol btn-sm" onclick="previewCycle('+k+')">↻ Rebuild drafts</button>':'')+'</div>';
-    h+='<div class="cy-evs">';
+    side+='<div class="cv-evs" role="list">';
     for(const e of s.evs){
-      const tm=TYPE_META[e.type]||TYPE_META.custom, sc=slotCounts(e), d=new Date(e.date+'T12:00:00');
-      h+='<div class="cy-ev st-'+(e.confirmed?'lv':sc.generated?'dr':'nb')+'">'+
-         '<div class="ce-date"><b>'+d.getDate()+'</b><span>'+MON_UP[d.getMonth()]+'</span><small>'+esc(fmtDowLong(e.date).slice(0,3))+'</small></div>'+
-         '<div class="ce-main"><div class="ce-nm">'+esc(e.name)+'<span class="ev-badge" style="background:'+tm.color+'">'+esc(tm.label)+'</span></div>'+
-         '<div class="ce-st">'+evStateHTML(e)+'<span class="ce-meta">'+esc(e.uniform||'Casual')+(e.cover_name?' · cover: '+esc(e.cover_name):'')+'</span></div></div>'+
-         '<div class="ce-acts">'+
-           (edit&&!sc.generated&&!preview?'<button class="btn btn-ol btn-sm" onclick="previewEventInCycle('+e.id+')">⚡ Build</button>':'')+
-           '<button class="btn btn-bl btn-sm" onclick="selectEvent('+e.id+')">'+(edit?'Edit':'Open')+' →</button></div></div>';
+      const sc=slotCounts(e), d=new Date(e.date+'T12:00:00');
+      const note=!sc.generated?'Not built':e.confirmed?(sc.missing?'On the calendar · '+sc.missing+' blank':'On the calendar'):'Hidden';
+      const cls=!sc.generated?'nb':e.confirmed?(sc.missing?'gp':'lv'):'hd';
+      side+='<button role="listitem" class="cv-ev'+(ROSTER_OPEN===e.id?' on':'')+'" onclick="openDay('+e.id+',true)">'+
+        '<span class="cv-d"><b>'+d.getDate()+'</b><span>'+MON_UP[d.getMonth()]+'</span></span>'+
+        '<span class="cv-t"><span class="nm">'+esc(e.name)+'</span><span class="st st-'+cls+'">'+note+'</span></span></button>';
     }
+    side+='</div>';
+  }
+  if(plan) side+='<div class="cv-sum">'+renderPlanPanel()+'</div>';
+
+  let main='';
+  if(!s.n){
+    main='<div class="empty-gen"><div class="zap">📅</div><h3>No events in this cycle</h3><p>'+
+      (edit?'Add the first one to start building.':'Nothing has been added yet.')+'</p>'+
+      (edit?'<div class="btns"><button class="btn btn-bl" onclick="openAddEvent()">+ Add event</button></div>':'')+'</div>';
+  } else {
+    if(edit&&s.unbuilt===s.n)
+      main+='<div class="gen-cta"><div class="gc-ic" aria-hidden="true">⚡</div><div class="gc-t">'+
+        '<h3>This cycle has not been generated</h3>'+
+        '<p>Fills every duty for all '+s.n+' event'+(s.n===1?'':'s')+' and puts them on the calendar. Anything that cannot be filled shows blank; you can fill it or hide the day afterwards.</p></div>'+
+        '<button class="btn btn-bl gc-btn" onclick="askGenerateCycle('+k+')">⚡ Generate entire cycle</button></div>';
+    main+='<div class="cy-evs-h"><h2>Event days</h2><span class="cv-hint">Click a day to see who is on</span></div><div class="cv-days">';
+    for(const e of s.evs) main+=dayCardHTML(e,edit);
+    main+='</div>';
+  }
+  return '<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openRosterHome()">← All cycles</button></div>'+
+    '<div class="cv-layout"><aside class="cv-side" aria-label="This cycle">'+side+'</aside>'+
+    '<section class="cv-main" aria-label="Event days">'+main+'</section></div>';
+}
+function dayCardHTML(e,edit){
+  const tm=TYPE_META[e.type]||TYPE_META.custom, sc=slotCounts(e), d=new Date(e.date+'T12:00:00');
+  const open=ROSTER_OPEN===e.id, built=!!sc.generated;
+  const pill=!built?'<span class="cv-pill nb">Not built</span>'
+    :e.confirmed?'<span class="cv-pill lv">On the calendar</span>':'<span class="cv-pill hd">Hidden</span>';
+  const sum=!built?'No roster yet':sc.assigned+' filled'+(sc.missing?' · <b>'+sc.missing+' blank</b>':' · every slot filled');
+  let h='<div class="cv-day'+(open?' open':'')+'" id="day-'+e.id+'">'+
+    '<button class="cv-dh" aria-expanded="'+(open?'true':'false')+'" onclick="openDay('+e.id+')">'+
+      '<span class="ce-date"><b>'+d.getDate()+'</b><span>'+MON_UP[d.getMonth()]+'</span><small>'+esc(fmtDowLong(e.date).slice(0,3))+'</small></span>'+
+      '<span class="ce-main"><span class="ce-nm">'+esc(e.name)+'<span class="ev-badge" style="background:'+tm.color+'">'+esc(tm.label)+'</span></span>'+
+        '<span class="cv-sub">'+sum+' · '+esc(e.uniform||'Casual')+(e.cover_name?' · cover: '+esc(e.cover_name):'')+'</span></span>'+
+      pill+'<span class="cv-car" aria-hidden="true">›</span></button>';
+  if(open){
+    h+='<div class="cv-db">';
+    const hist=isHistoricEvent(e);
+    if(edit){
+      h+='<div class="cv-dacts">';
+      if(built) h+='<button class="btn btn-ol btn-sm" onclick="toggleDayCalendar('+e.id+')">'+(e.confirmed?'Hide from calendar':'Put back on the calendar')+'</button>'+
+                   '<button class="btn btn-ol btn-sm" onclick="askRegenerateDay('+e.id+')">↻ Regenerate day</button>';
+      h+='<button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster →</button></div>';
+    } else if(!hist||built) h+='<div class="cv-dacts"><button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster →</button></div>';
+    if(!built){
+      h+=edit?'<div class="cv-empty"><p>This day has no roster yet. Building it fills every duty using everyone’s duties across the rest of the cycle, and puts it on the calendar.</p>'+
+                '<button class="btn btn-bl" onclick="generateDay('+e.id+')">⚡ Build this day</button></div>'
+             :'<div class="cv-empty"><p>No roster has been built for this day.</p></div>';
+    } else h+=dutyTableHTML(e);
     h+='</div>';
   }
-
-  /* The standing numbers for the cycle, where the preview was before. */
-  /* Closed by default: the member list runs to forty-odd rows on a phone. */
-  if(!plan&&IS_EDIT&&s.built) h+='<details class="cy-more"><summary>Cycle overview \u00b7 who has how many duties</summary><div class="gp-wide">'+renderPlanPanel()+'</div></details>';
-  return h;
+  return h+'</div>';
 }
-/* Builds one event against the rest of its cycle and shows the preview in
-   the cycle view. computeCounts reads every other roster in the cycle, so
-   the fairness rules see what everybody already has; nothing else is
-   regenerated. */
-function previewEventInCycle(id,opts){
+/* Expanding a day also selects it, so the slot picker and chip menu —
+   which work on the selected event — edit the day you are looking at. */
+function openDay(id,fromSide){
+  const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
+  const k=cycleForDate(ev.date);
+  if(ROSTER_K!==k){ ROSTER_K=ROSTER_BAR_K=k; }
+  ROSTER_OPEN=(ROSTER_OPEN===id&&!fromSide)?null:id;
+  selEventId=id; ROSTER_VIEW='cycle';
+  if(curPage!=='roster'){ _rosterJump=true; nav('roster'); }
+  else renderRoster();
+  if(ROSTER_OPEN===id) setTimeout(()=>{
+    const el=document.getElementById('day-'+id);
+    if(el&&el.scrollIntoView){ try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){ el.scrollIntoView(); } }
+  },fromSide?30:0);
+}
+function openFullRoster(id){
+  selEventId=id; ROSTER_VIEW='event';
+  const ev=selEvent(); if(ev) ROSTER_K=ROSTER_BAR_K=cycleForDate(ev.date);
+  rosterGo();
+}
+async function toggleDayCalendar(id){
+  const ev=EVENTS.find(e=>e.id===id); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
+  selEventId=id; await toggleConfirm();
+}
+
+/* Generating. A cycle with nothing built goes straight through. Once
+   anything is built, a regenerate asks first: what is on the calendar is
+   left alone unless the lead ticks the box, because those are the days
+   people have already been told about. Duties set by hand always survive. */
+function askGenerateCycle(k){
+  if(!IS_EDIT) return;
+  const s=cycleSummary(k);
+  if(!s.n) return toast('No events in this cycle to build','err');
+  if(!s.built) return runGenerate(k,false);
+  const liveBuilt=s.evs.filter(e=>e.confirmed&&slotCounts(e).generated).length;
+  const rest=s.n-liveBuilt;
+  oM('<h3>Regenerate this cycle?</h3>'+
+    '<p style="font-size:14px;color:var(--dm);line-height:1.6;margin-bottom:12px">'+
+      (rest?'<b style="color:var(--dt)">'+rest+'</b> day'+(rest===1?'':'s')+' not on the calendar will be rebuilt. ':'')+
+      (liveBuilt?'The <b style="color:var(--gold-lt)">'+liveBuilt+'</b> on the calendar stay exactly as they are unless you tick the box below. ':'')+
+      'Duties set by hand are kept either way.</p>'+
+    (liveBuilt?'<label class="gp-live" style="padding:0 0 6px"><input type="checkbox" id="genLive"><span>Also re-roll the <b>'+liveBuilt+'</b> on the calendar — people already told their duty will move</span></label>':'')+
+    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
+    '<button class="btn btn-bl" onclick="const c=document.getElementById(\'genLive\');cM();runGenerate('+k+',!!(c&&c.checked))">⚡ Regenerate</button></div>');
+}
+async function runGenerate(k,includeLive){
+  if(!IS_EDIT) return;
+  if(!MEMBERS.some(m=>m.status==='active')) return toast('No active members','err');
+  const plan=buildPlan(k,null,{includeLive:!!includeLive});
+  if(!plan) return toast('No events in this cycle to build','err');
+  if(!plan.buildCount) return toast('Every day is on the calendar — tick the box to re-roll them','err');
+  PLAN_OPEN.clear(); ROSTER_VIEW='cycle'; ROSTER_K=ROSTER_BAR_K=k;
+  await applyPlan(plan,{publish:'new'});
+}
+function askRegenerateDay(id){
+  const ev=EVENTS.find(e=>e.id===id); if(!ev||!IS_EDIT||evLocked(ev)) return;
+  oM('<h3>Regenerate this day?</h3><p style="font-size:14px;color:var(--dm);line-height:1.6">'+
+    esc(ev.name)+' on '+esc(fmtShort(ev.date))+' is rebuilt from scratch'+(ev.confirmed?', and it is on the calendar, so people already told their duty may move':'')+
+    '. Duties set by hand are kept.</p>'+
+    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
+    '<button class="btn btn-bl" onclick="cM();generateDay('+id+')">↻ Regenerate</button></div>');
+}
+/* One day, built on its own against everyone's duties in the rest of the
+   cycle (computeCounts reads every other roster). Nothing else is touched.
+   A day that had no roster goes on the calendar; one that had a roster
+   keeps whatever visibility the lead gave it. */
+async function generateDay(id,opts){
   if(!IS_EDIT) return;
   const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
   if(evLocked(ev)) return toast('This event is locked','err');
@@ -3248,43 +3493,9 @@ function previewEventInCycle(id,opts){
   const plan=buildPlan(k,id);
   if(!plan) return toast('This event cannot be built','err');
   if(opts&&opts.midCycle) plan.midCycle=opts.midCycle;
-  PLAN_OPEN.clear(); PLAN_OPEN.add(id); ROSTER_PLAN=plan;
-  plan.fresh=true; setTimeout(()=>{ if(ROSTER_PLAN===plan) plan.fresh=false; },900);
-  ROSTER_VIEW='cycle'; ROSTER_K=k; ROSTER_BAR_K=k;
-  rosterGo();
-}
-async function publishCycle(k){
-  if(!IS_EDIT||_publishing) return;
-  const ready=cycleSummary(k).ready; if(!ready.length) return;
-  _publishing=true; let ok=0;
-  try{ for(const e of ready) if(await publishIfComplete(e,{quiet:true})) ok++; }
-  finally{ _publishing=false; }
-  renderRoster(); refreshBadges();
-  if(ok===ready.length) toast(ok+' event'+(ok===1?'':'s')+' on the calendar — everyone can see '+(ok===1?'it':'them')+' now');
-  else toast('Only '+ok+' of '+ready.length+' went on the calendar — see the warning above','err');
-}
-function confirmPublishCycleGaps(k){
-  const list=cycleSummary(k).gapDrafts; if(!list.length) return;
-  const rows=list.map(e=>{
-    const g=gapsFor(e,ROSTERS[e.id]||{}), n=slotCounts(e).missing;
-    return '<li><b style="color:var(--dt)">'+esc(fmtShort(e.date))+' · '+esc(e.name)+'</b> — '+n+' short'+
-      (g.length?'<br><span style="font-size:12px">'+g.slice(0,3).map(x=>esc(x.duty)+' ('+esc(x.why)+')').join('; ')+(g.length>3?'; …':'')+'</span>':'')+'</li>';
-  }).join('');
-  oM('<h3>Publish '+list.length+' with gaps?</h3>'+
-    '<p style="font-size:14px;color:var(--dm);line-height:1.6">Everyone will see '+(list.length===1?'this roster':'these rosters')+', and the unfilled slots will simply show nobody.</p>'+
-    '<ul style="font-size:13px;color:var(--dm);line-height:1.6;margin:0 0 14px;padding-left:20px">'+rows+'</ul>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
-    '<button class="btn btn-gd" onclick="cM();doPublishCycleGaps('+k+')">Publish them anyway</button></div>');
-}
-async function doPublishCycleGaps(k){
-  if(!IS_EDIT||_publishing) return;
-  const list=cycleSummary(k).gapDrafts; if(!list.length) return;
-  _publishing=true; let ok=0;
-  try{ for(const e of list) if(await publishIfComplete(e,{force:true,quiet:true})) ok++; }
-  finally{ _publishing=false; }
-  renderRoster(); refreshBadges();
-  if(ok===list.length) toast(ok+' event'+(ok===1?'':'s')+' on the calendar, with slots still open');
-  else toast('Only '+ok+' of '+list.length+' went on the calendar','err');
+  PLAN_OPEN.clear(); PLAN_OPEN.add(id);
+  ROSTER_VIEW='cycle'; ROSTER_K=ROSTER_BAR_K=k; ROSTER_OPEN=id; selEventId=id;
+  await applyPlan(plan,{publish:'new'});
 }
 
 /* ── 3. ONE EVENT ── */
@@ -3294,10 +3505,9 @@ function renderEventPage(ev){
   let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openCycle('+k+')">← '+esc(cyclePretty(k))+'</button>'+
     '<span class="rc-here">'+esc(ev.name)+' · '+esc(fmtShort(ev.date))+'</span>'+
     '<span class="rc-nav">'+
-      (prev?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+prev.id+')" aria-label="Previous event: '+esc(prev.name)+'">‹</button>':'')+
-      (next?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+next.id+')" aria-label="Next event: '+esc(next.name)+'">›</button>':'')+
+      (prev?'<button class="btn btn-ol btn-sm" onclick="openFullRoster('+prev.id+')" aria-label="Previous event: '+esc(prev.name)+'">‹</button>':'')+
+      (next?'<button class="btn btn-ol btn-sm" onclick="openFullRoster('+next.id+')" aria-label="Next event: '+esc(next.name)+'">›</button>':'')+
     '</span></div>';
-  if(IS_EDIT&&ROSTER_PLAN&&ROSTER_PLAN.k===k) h+='<div class="gp-wide">'+renderPlanPanel()+'</div>';
   return h+renderEventView(ev);
 }
 
@@ -3332,7 +3542,7 @@ function renderEventView(ev){
     /* Still available on a live roster. Somebody drops out on the
        Thursday and the duty has to move; freezing the roster the moment
        it went on the calendar would mean unpublishing it to fix it. */
-    h+='<button class="btn btn-ol" onclick="previewEvent('+ev.id+')">↻ Regenerate</button>';
+    h+='<button class="btn btn-ol" onclick="askRegenerateDay('+ev.id+')">↻ Regenerate</button>';
     h+='<button class="btn btn-gd'+(ev.confirmed?' on':'')+'" onclick="toggleConfirm()">'+(ev.confirmed?'On the calendar ✓ (Hide)':'Put on the calendar')+'</button>';
   }
   h+='<button class="btn btn-ol" onclick="exportPNG()">📷 Export PNG</button>'+(CAN_ASSIGN_COVER()&&ev?'<button class="btn btn-ol btn-sm" onclick="openCoverDialog('+ev.id+')" title="Hand this event to someone else">\u{1F91D} '+(ev.cover_name?('Cover: '+esc(ev.cover_name)):'Assign cover')+'</button>':'')+'';
@@ -3347,29 +3557,28 @@ function renderEventView(ev){
      generate failed. Either way it is worth saying, because a hidden
      roster looks from here exactly like a visible one. */
   else if(IS_EDIT && hasRoster){
-    const _gaps=slotCounts(ev).missing;
-    h+='<div class="ib ib-warn" style="display:flex;align-items:center;gap:10px;">'+
-      '<span>👁️</span><span><b>This roster is not on the calendar — nobody else can see it.</b> '+
-      (_gaps>0
-        ? _gaps+' slot'+(_gaps===1?'':'s')+' still unfilled. Fill '+(_gaps===1?'it':'them')+
-          ' and it goes on the calendar by itself — or put it up as it is.'
-        : 'Every slot is filled, so it is ready to go.')+'</span>'+
-      /* This used to hide the button whenever there were gaps, so the one
-         place that explained the problem also removed the way out of it. */
-      '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">'+
-        (_gaps>0?'Put on the calendar with '+_gaps+' gap'+(_gaps===1?'':'s'):'Put on the calendar')+'</button>'+
+    h+='<div class="ib" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'+
+      '<span><b>Hidden from the calendar</b> \u2014 only the leads can see this roster.</span>'+
+      '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">Put back on the calendar</button>'+
       '</div>';
   }
   if(!IS_EDIT&&!ev.confirmed) return h+'<div class="empty-gen"><div class="zap">⏳</div><h3>Roster not published yet</h3><p>The '+esc(TEAM_NAME)+' leaders have not put this one on the calendar. It appears here as soon as they do.</p></div>';
   if(!hasRoster){
     if(!IS_EDIT||hist) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster</h3><p>No duty assignments were recorded.</p></div>';
     return h+'<div class="empty-gen"><div class="zap">⚡</div><h3>Ready to Generate</h3><p>Automatically assign all duties for this event.</p>'+
-      '<div class="btns"><button class="btn btn-bl" onclick="previewEvent('+ev.id+')">⚡ Generate</button>'+
-      '<button class="btn btn-ol" onclick="previewCycle('+cycleForDate(ev.date)+')">Generate All (cycle)</button></div>'+
+      '<div class="btns"><button class="btn btn-bl" onclick="generateDay('+ev.id+')">⚡ Generate</button>'+
+      '<button class="btn btn-ol" onclick="askGenerateCycle('+cycleForDate(ev.date)+')">Generate All (cycle)</button></div>'+
       '<div class="rules-line">Rules: cycle fairness carried across three cycles · no duty repeats within a cycle · Nandi requires certification · children only at entrances &amp; Nandi Passing · away-dates skipped · age groups step up when a pool runs out · duty preferences honoured on ties · Seating &amp; Discipline is 1 adult + 1 youth per gender · Prayer Hall Entrance takes children then youth, never adults</div></div>';
   }
-  const duties=dutiesForEvent(ev);
   h+='<div class="num-link"><button class="btn btn-ol btn-sm" onclick="repMode=\'fairness\';repMember=null;nav(\'reports\')">📊 See fairness and counts in Numbers →</button></div>';
+  return h+dutyTableHTML(ev);
+}
+/* The roster table for one event. Shared by the full roster page and the
+   day cards in the cycle view, so both edit the same way. */
+function dutyTableHTML(ev){
+  const data=ROSTERS[ev.id]||{assign:{}}, locked=evLocked(ev);
+  const duties=dutiesForEvent(ev);
+  let h='';
   const core=duties.filter(d=>d.section!=='mph'),mph=duties.filter(d=>d.section==='mph');
   h+='<div class="tw"><div class="tw-scroll"><table class="duty"><thead><tr><th style="width:230px">Duty</th><th>Male</th><th>Female</th></tr></thead><tbody>';
   if(core.length) h+='<tr class="sec"><td colspan="3">ADULTS &amp; YOUTH</td></tr>';
@@ -3399,7 +3608,7 @@ function chipHTML(ev,dutyKey,arrName,idx,p,locked){
   const nm=esc(p.name||'?');
   if(locked) return '<span class="chip'+(away?' away':'')+'">'+nm+note+'</span>';
   return '<button class="chip'+(away?' away':'')+'" aria-label="'+nm+' — change or remove" '+
-    'onclick="openChipMenu(\''+escJs(dutyKey)+'\',\''+escJs(arrName)+'\','+idx+')">'+
+    'onclick="openPicker(\''+escJs(dutyKey)+'\',\''+escJs(arrName)+'\','+idx+')">'+
     nm+note+'<span class="chip-more" aria-hidden="true">⋯</span></button>';
 }
 /* One tap on a person opens this. It carries the two actions that used to
@@ -3458,19 +3667,22 @@ function renderDutyRow(ev,d,data,locked){
      events — a lead looking back should still see where the team was short.
      A volunteer gets an empty space instead: UNASSIGNED is a job for whoever
      builds the roster, not a message for whoever reads it. */
+  /* An unfilled slot is a blank, dashed place to put somebody. It shows
+     blank on the calendar too; volunteers see nothing there at all. */
   const un=col=>!IS_EDIT ? ''
     : locked
-    ? '<span class="chip un">UNASSIGNED</span>'
-    : '<button class="chip un" aria-label="Unfilled '+esc(d.name)+' slot — assign somebody" '+
-      'onclick="addToSlot(\''+escJs(d.key)+'\',\''+col+'\')">UNASSIGNED</button>';
+    ? '<span class="chip blank">Blank</span>'
+    : '<button class="chip blank" aria-label="Blank '+esc(d.name)+' slot — assign somebody" '+
+      'onclick="addToSlot(\''+escJs(d.key)+'\',\''+col+'\')">+ Assign</button>';
   for(let i=0;i<missM;i++) maleChips.push(un('m'));
   for(let i=0;i<missF;i++) femaleChips.push(un('f'));
   for(let i=0;i<missX;i++) (maleChips.length<=femaleChips.length?maleChips:femaleChips).push(
     un(maleChips.length<=femaleChips.length?'m':'f'));
-  if(!locked){
-    maleChips.push('<button class="chip add" onclick="addToSlot(\''+escJs(d.key)+'\',\'m\')">+ Add</button>');
-    femaleChips.push('<button class="chip add" onclick="addToSlot(\''+escJs(d.key)+'\',\'f\')">+ Add</button>');
-  }
+  /* + Add only where there is no blank already: it is for an extra pair
+     of hands beyond what the duty needs. */
+  const hasBlank=list=>list.some(c=>c.indexOf('chip blank')>=0);
+  if(!locked&&!hasBlank(maleChips)) maleChips.push('<button class="chip add" onclick="addToSlot(\''+escJs(d.key)+'\',\'m\')">+ Add</button>');
+  if(!locked&&!hasBlank(femaleChips)) femaleChips.push('<button class="chip add" onclick="addToSlot(\''+escJs(d.key)+'\',\'f\')">+ Add</button>');
   const warnHtml=warns.length?'<div class="warns">'+warns.map(w=>'<span class="warn-chip">⚠ '+esc(w)+'</span>').join('')+'</div>':'';
   return '<tr><td class="dn2">'+esc(d.name)+(manual?'<span class="lock-badge">🔒 Set by hand</span>':'')+warnHtml+'</td>'+
     '<td data-col="Male"><div class="cellwrap">'+maleChips.join('')+'</div></td>'+
@@ -3486,11 +3698,22 @@ function openPicker(dutyKey,arrName,idx){ const ev=selEvent(); if(!ev||evLocked(
 function openPickerModal(){
   const ev=selEvent(); if(!ev||!PICKER_CTX) return;
   const d=dutyDef(ev,PICKER_CTX.dutyKey); if(!d) return;
-  oM('<h3>'+(PICKER_CTX.idx==null?'Assign to':'Swap in')+' — '+esc(d.name)+'</h3>'+
-    '<label class="sr-only" for="pickSearch">Search members</label>'+
-    '<input type="text" id="pickSearch" placeholder="Search members…" style="width:100%" oninput="renderPickList()">'+
+  /* Clicking any slot, filled or blank, lands here: type a name, pick them.
+     A filled slot also shows who is there now and can be left blank. */
+  const r=ROSTERS[ev.id], a=r&&r.assign&&r.assign[PICKER_CTX.dutyKey];
+  const cur=PICKER_CTX.idx!=null&&a&&a[PICKER_CTX.arr]?a[PICKER_CTX.arr][PICKER_CTX.idx]:null;
+  const curMem=cur&&memById(cur.id);
+  const q=x=>"'"+escJs(x)+"'";
+  oM('<h3>'+(cur?'Change':'Assign')+' \u2014 '+esc(d.name)+'</h3>'+
+    '<div class="pick-cur">'+esc(fmtShort(ev.date))+' \u00b7 '+(PICKER_CTX.gender||'Any')+
+      (cur?' \u00b7 now <b>'+esc(cur.name||'?')+'</b>'+(curMem&&isAway(curMem,ev.date)?' <span class="pick-flag" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:var(--red-lt)">away</span>':''):'')+
+      (r&&r.manual&&r.manual[PICKER_CTX.dutyKey]?' \u00b7 set by hand, kept on rebuilds':'')+'</div>'+
+    '<label class="sr-only" for="pickSearch">Search a name</label>'+
+    '<input type="search" id="pickSearch" placeholder="Search a name\u2026" autocomplete="off" style="width:100%" oninput="renderPickList()" '+
+      'onkeydown="if(event.key===\'Enter\'){const b=document.querySelector(\'#pickList .pick-row\');if(b){event.preventDefault();b.click();}}">'+
     '<div class="pick-list" id="pickList"></div>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button></div>');
+    '<div class="macts">'+(cur?'<button class="btn btn-da" style="margin-right:auto" onclick="cM();removeSlot('+q(PICKER_CTX.dutyKey)+','+q(PICKER_CTX.arr)+','+PICKER_CTX.idx+')">Leave blank</button>':'')+
+    '<button class="btn btn-ol" onclick="cM()">Cancel</button></div>');
   renderPickList();
   const s=document.getElementById('pickSearch'); if(s) s.focus();
 }
@@ -3536,16 +3759,14 @@ async function applyPick(memberId){
   invalidatePlan();      // a staged build predates this edit and would overwrite it
   cM(); PICKER_CTX=null;
   await saveRoster(ev.id);
-  /* Filling the last empty slot is what makes a roster ready, so that is
-     the moment it goes on the calendar — without anybody having to notice
-     that it just became complete and press something. */
-  const wasLive=!!ev.confirmed;
-  const nowLive=await publishIfComplete(ev, {quiet:true});
+  /* A hand edit leaves the day where it is. Days go on the calendar when
+     they are generated and come off only when a lead hides them, so filling
+     a slot on a hidden day must not quietly put it back. */
   auditLog('manual-assign','roster',ev.name+' '+ev.date+' \u2014 '+_duty+': '+
     (_replaced ? _replaced+' \u2192 '+m.name : 'added '+m.name));
   renderRoster(); refreshBadges();
   flashChip(m.name);
-  toast(m.name+' assigned'+(!wasLive && nowLive ? ' — the roster is complete and now on the calendar' : ''));
+  toast(m.name+' assigned');
 }
 async function removeSlot(dutyKey,arrName,idx){
   const ev=selEvent(); if(!ev||evLocked(ev)) return;
@@ -3663,9 +3884,9 @@ async function toggleConfirm(){
   if(!ev.confirmed){
     /* Publishing with holes in it is a real decision, so it gets made once,
        with the duties named, rather than guessed at from a slot count. */
-    const gaps=slotCounts(ev).missing;
-    if(gaps>0) return confirmPublishWithGaps(ev,gaps);
-    const ok=await publishIfComplete(ev);
+    /* Unfilled slots simply show blank on the calendar now, so putting a
+       day back up needs no second question. */
+    const ok=await publishIfComplete(ev,{force:true});
     renderRoster();
     if(ok) toast('On the calendar — everyone can see it now');
     return;
@@ -3773,8 +3994,8 @@ async function submitAddEvent(){
      already built is touched. Otherwise it simply joins its cycle's list. */
   const others=eventsInCycle(k).filter(e=>e.id!==ev.id&&slotCounts(e).generated).length;
   if(others&&MEMBERS.some(m=>m.status==='active')){
-    previewEventInCycle(ev.id,{midCycle:others});
-    toast('Event added and built against the rest of the cycle — check it, then save');
+    toast('Event added \u2014 building it against the rest of the cycle');
+    generateDay(ev.id,{midCycle:others});
   } else { openCycle(k); toast('Event added'); }
 }
 function confirmDeleteEvent(){
@@ -3891,7 +4112,7 @@ function openEventDrawer(id){
   }
   h+='<div class="dp-actions">'+
     (IS_EDIT?'<button class="btn btn-bl btn-sm" onclick="selectEvent('+ev.id+')">Open in Roster →</button>':'')+
-    (IS_EDIT&&!evLocked(ev)?'<button class="btn btn-ol btn-sm" onclick="previewEvent('+ev.id+')">↻ Regenerate</button>':'')+
+    (IS_EDIT&&!evLocked(ev)?'<button class="btn btn-ol btn-sm" onclick="closeDrawer();askRegenerateDay('+ev.id+')">↻ Regenerate</button>':'')+
     '<button class="btn btn-ol btn-sm" onclick="selEventId='+ev.id+';copyRoster()">⧉ Copy</button></div>';
   openDrawer(h);
 }
@@ -5104,7 +5325,7 @@ async function fontsSettled(ms){
     b.addEventListener('click',function(ev){
       ev.stopPropagation(); closeAll();
       // Fire the real sidebar element so its own handler runs.
-      if(src.tagName==='A'&&src.getAttribute('href')) location.href=src.getAttribute('href');
+      if(src.tagName==='A'&&src.getAttribute('href')) (window.ivGo||function(u){location.href=u;})(src.getAttribute('href'));
       else src.click();
     });
     return b;
