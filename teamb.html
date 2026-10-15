@@ -2299,7 +2299,11 @@ async function saveRoster(eventId, opts){
   let err = null;
   for(let attempt = 0; attempt < 2; attempt++){
     try{
-      const {error} = await sb.from('iv_roster').upsert({event_id:eventId, data:body});
+      /* iv_roster has a required date column. The page never sent one, so
+         every save was refused with 23502 (null value in column "date").
+         The date is the event's own, which is what the column is for. */
+      const evForDate = EVENTS.find(e=>e.id===eventId);
+      const {error} = await sb.from('iv_roster').upsert({event_id:eventId, date:evForDate?evForDate.date:null, data:body});
       if(!error){ err = null; break; }
       err = error;
     }catch(e){ err = e; }
