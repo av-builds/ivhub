@@ -199,6 +199,15 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(r.cover===true&&r.lead===true,'hub     a stand-in and a lead still do');
   chk(p.errs.length===0,'hub     no page errors'); await p.context().close(); }
 
+// ── saving: the payload must carry the event's date (the column is NOT NULL) ──
+{ const p=await open('teama.html',{width:1300,height:900});
+  const r=await p.evaluate(`(async()=>{ await (${SEED})(['tl_a']); let sent=null;
+    sb={from:t=>({upsert:async row=>{ if(t==='iv_roster') sent=row; return {error:null}; },
+      select:()=>({eq:async()=>({data:[{event_id:1,data:ROSTERS[1]}],error:null})})})};
+    DB_MISSING=false; await saveRoster(1,{quiet:true}); return {sent, date:EVENTS[0].date}; })()`);
+  chk(r.sent&&r.sent.date===r.date&&r.sent.event_id===1,'save    the roster is saved with its event date',r.sent?String(r.sent.date):'nothing sent');
+  await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);
