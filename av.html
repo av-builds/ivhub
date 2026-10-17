@@ -240,18 +240,28 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
    same value, and the colour sits behind the content rather than under it.
    The exported sheet uses the same shape with heavier stops — see
    AV_SKINS.export, which is where the printed weights live. */
+/* Eased ramp: the tint used to fade in a straight line and stop at 130px, which
+   left a visible step near the bottom of every coloured cell. Stops now follow a
+   smoothstep over 175px so it dissolves, and a faint glow along the top edge
+   gives the colour somewhere to come from. */
 .cell.ev-jk{
-  background:linear-gradient(180deg,#0C3A1B 0px,#060F1E 130px);
+  background:
+    radial-gradient(120% 120px at 50% 0,rgba(34,197,94,.20),transparent 75%),
+    linear-gradient(180deg,#0F4D29 0px,#0F4B29 21px,#0E4327 44px,#0C3725 70px,#0A2923 96px,#081C20 122px,#07131F 149px,#060F1E 175px);
   border-color:rgba(16,185,100,0.5)!important;
 }
 /* Day with BOTH majalis and training */
 .cell.ev-jk.ev-training{
-  background:linear-gradient(180deg,#3A0C12 0px,#060F1E 130px);
+  background:
+    radial-gradient(120% 120px at 50% 0,rgba(244,63,94,.20),transparent 75%),
+    linear-gradient(180deg,#4D1220 0px,#4A1220 21px,#421220 44px,#34111F 70px,#24101F 96px,#15101E 122px,#0A0F1E 149px,#060F1E 175px);
   border-color:rgba(220,38,80,0.6)!important;
 }
 /* Training */
 .cell.ev-training{
-  background:linear-gradient(180deg,#33210A 0px,#060F1E 130px);
+  background:
+    radial-gradient(120% 120px at 50% 0,rgba(251,191,36,.20),transparent 75%),
+    linear-gradient(180deg,#4A3009 0px,#472F0A 21px,#3F2B0C 44px,#322410 70px,#231D15 96px,#151619 122px,#0A111D 149px,#060F1E 175px);
   border-color:rgba(200,140,30,0.4)!important;
 }
 .cell.today{
@@ -3325,6 +3335,18 @@ const AV_SKINS={
   },
 };
 function avCellKind(mj,tr){ return mj&&tr?'both':mj?'mj':tr?'tr':'plain'; }
+/* The same smoothstep fade the site uses, between a skin's own two colours, so
+   the printed sheet dissolves instead of stepping. */
+function avEasedRamp(top,end,ramp){
+  const rgb=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
+  const a=rgb(top), z=rgb(end);
+  const stops=[0,.12,.25,.4,.55,.7,.85,1].map(t=>{
+    const w=1-(3*t*t-2*t*t*t);
+    const c=a.map((x,i)=>Math.round(x*w+z[i]*(1-w)));
+    return `rgb(${c[0]},${c[1]},${c[2]}) ${Math.round(t*ramp)}px`;
+  });
+  return `linear-gradient(180deg,${stops.join(',')})`;
+}
 function avCellBG(kind,S,isOther){
   /* A day from the previous or next month is dimmed by its date colour and a
      flatter ground, never by opacity — fading the whole cell was making the
@@ -3332,7 +3354,7 @@ function avCellBG(kind,S,isOther){
      carries a majalis or a training still gets its full tint, because it is a
      real duty day for whoever is on it. */
   if(kind==='plain') return isOther ? S.bgOther : S.bgPlain;
-  return `linear-gradient(180deg,${S.tint[kind]} 0px,${S.tintEnd[kind]} ${S.ramp}px)`;
+  return avEasedRamp(S.tint[kind],S.tintEnd[kind],S.ramp);
 }
 /* Badges sit inline in the band rather than floating in the corner, so they
    can never overlap the content beneath them and the exporter has nothing to
