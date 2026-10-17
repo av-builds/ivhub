@@ -560,6 +560,43 @@ tr:hover td{background:var(--ds2);}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .mo.show{display:flex;}
 .mbox{background:var(--ds);border:1px solid var(--db);border-radius:14px;padding:26px;width:500px;max-width:92vw;max-height:88vh;overflow-y:auto;animation:fadeUp .3s ease;}
+/* ── Day card (calendar cell click) ── */
+.mbox.daycard{width:min(560px,94vw);padding:0;overflow-x:hidden;}
+.mo.show .mbox.daycard{animation:none;}
+.dc-top{position:sticky;top:0;z-index:2;background:var(--ds);}
+.dc-head{display:flex;align-items:center;gap:8px;padding:16px 16px 6px;}
+.dc-title{flex:1;text-align:center;min-width:0;}
+.mbox .dc-title h3{margin:0;font-size:20px;}
+.dc-sub{font-size:12px;color:var(--dm);margin-top:2px;}
+.dc-nav{width:44px;height:44px;border-radius:50%;border:1px solid var(--db);background:var(--ds2);color:var(--blue-lt);font-size:26px;line-height:1;cursor:pointer;flex-shrink:0;}
+.dc-nav:hover{background:var(--db);}
+.dc-bar{display:flex;align-items:center;gap:8px;padding:6px 16px 10px;border-bottom:1px solid var(--db);}
+#dc-body{padding:14px 16px 18px;}
+.dc-chip{border:1px solid transparent;background:none;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:800;color:var(--dm);font-family:inherit;}
+.dc-chip:empty{display:none;}
+.dc-chip.busy{color:#90CAF9;}
+.dc-chip.ok{color:#34D399;}
+.dc-chip.fail{color:#FCA5A5;background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.4);cursor:pointer;}
+.dc-sec{background:var(--ds2);border:1px solid var(--db);border-radius:10px;padding:12px 14px;margin-bottom:12px;}
+.dc-sech{font-size:12px;font-weight:800;color:#A78BFA;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.dc-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px;}
+.dc-req{color:var(--dm);font-weight:600;text-transform:none;letter-spacing:0;}
+.dc-hint{font-size:12px;color:#F59E0B;margin-top:8px;}
+.dc-hint:empty{display:none;}
+.dc-note{font-size:12px;color:var(--dm);font-style:italic;margin-top:6px;}
+.dc-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.dc-two{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.dc-ev{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-weight:700;color:#67E8F9;}
+.dc-ev small{color:var(--dm);font-weight:600;}
+.dc-sec select:disabled{opacity:.5;}
+@media (max-width:600px){
+  .mbox.daycard{width:90vw;max-height:84vh;}
+  #dc-body{padding:12px;}
+  .dc-head{padding:12px 10px 4px;}
+  .dc-bar{padding:6px 10px 8px;}
+  .dc-two{grid-template-columns:1fr;}
+}
+.page.ap-limited>*:not(.ph):not(.ap-reset){display:none!important;}
 .mbox h3{font-family:'Archivo',sans-serif;font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:18px;color:var(--blue-lt);}
 .mfg{margin-bottom:14px;}
 .mfg label{display:block;font-size:11px;font-weight:800;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
@@ -1243,11 +1280,10 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="nav-sec nav-admin">AV Management</div>
       <div class="nav-item nav-admin" data-page="volunteers" onclick="nav(this)"><span class="ni">👥</span> User Management</div>
       <div class="nav-item nav-admin" data-page="events" onclick="nav(this)"><span class="ni">🕌</span> Add-ons</div>
-      <div class="nav-item nav-admin" data-page="override" onclick="nav(this)"><span class="ni">✏️</span> Manual Override</div>
       <!-- ── MANAGEMENT ── -->
       <div class="nav-sec nav-any-admin">Management</div>
       <div class="nav-item nav-any-admin" data-page="audit" onclick="nav(this)"><span class="ni">🔍</span> Audit Logs</div>
-      <div class="nav-item nav-owner" data-page="adminpanel" onclick="nav(this)"><span class="ni">⚙️</span> Admin Panel</div>
+      <div class="nav-item nav-admin" data-page="adminpanel" onclick="nav(this)"><span class="ni">⚙️</span> Admin Panel</div>
     </nav>
     <div class="sb-bot">
       <div class="uchip">
@@ -1658,141 +1694,24 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div id="auditList" style="max-height:600px;overflow-y:auto;"></div>
       </div>
     </div>
-    <!-- ── MANUAL OVERRIDE PAGE (all AV admins) ── -->
-    <div class="page admin-page" id="page-override">
-      <div class="ph">
-        <div><h1>✏️ Manual Override</h1><p>Override roster assignments for specific dates</p></div>
-      </div>
-      <div style="padding:20px 24px;">
-        <!-- ── RESET MONTH TO AUTO ── -->
-        <div class="iv-panel" style="margin-bottom:20px;">
-          <div class="iv-ph" style="background:linear-gradient(135deg,#7F1D1D,#B91C1C);">
-            <span>♻️</span> Reset Month to Auto
-          </div>
-          <div class="iv-pb">
-            <div class="add-form" style="background:linear-gradient(160deg,#1A0606,#2D0A0A);border:1px solid rgba(239,68,68,0.25);">
-              <div style="font-size:12px;color:#FCA5A5;line-height:1.7;margin-bottom:12px;">
-                Clears <b>every</b> saved assignment for <b id="or-reset-label">the current roster month</b> — including manual overrides and days locked by older data — and regenerates the whole month automatically. Use this after changing someone's availability so the engine can re-seat everyone.
-              </div>
-              <button class="btn btn-da" style="font-size:14px;padding:9px 20px;" onclick="orResetMonth()">♻️ Reset Month &amp; Regenerate</button>
-            </div>
-          </div>
-        </div>
-        <div class="iv-panel" style="margin-bottom:20px;">
-          <div class="iv-ph" style="background:linear-gradient(135deg,#3B1A6B,#6D28D9);">
-            <span>✏️</span> Edit Specific Day
-          </div>
-          <div class="iv-pb">
-            <!-- Date picker -->
-            <div style="margin-bottom:16px;">
-              <div style="font-size:11px;font-weight:800;color:#A78BFA;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Date</div>
-              <input type="date" id="or-edit-date" class="wi" style="max-width:220px;border-color:rgba(109,40,217,0.4);" onchange="orLoadFields()">
-              <div id="or-edit-notes" style="font-size:12px;color:#6D4BA0;margin-top:6px;font-style:italic;min-height:16px;"></div>
-            </div>
-            <!-- ── ROSTER OVERRIDE ── -->
-            <div class="add-form" style="background:linear-gradient(160deg,#0D0618,#1A0A38);border:1px solid rgba(109,40,217,0.35);margin-bottom:12px;">
-              <div style="font-size:12px;font-weight:800;color:#A78BFA;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;">📅 Roster Override</div>
-              <!-- DUTIES dropdown -->
-              <div style="margin-bottom:14px;">
-                <div style="font-size:11px;font-weight:800;color:#A78BFA;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Duties</div>
-                <select id="or-duty-mode" class="ws" style="background:#0D0820;color:#E8F4FD;border:1px solid rgba(109,40,217,0.4);" onchange="orToggleDutyMode()">
-                  <option value="jk">Jamatkhana Duty Only — cancels MPH for this day</option>
-                  <option value="jk_mph">JK and MPH Duty — pick MPH volunteers</option>
-                </select>
-              </div>
-              <!-- VOLUNTEER DUTY -->
-              <div style="margin-bottom:14px;">
-                <div style="font-size:11px;font-weight:800;color:#A78BFA;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Volunteer Duty</div>
-                <select id="or-edit-primary" class="ws" style="background:#0D0820;color:#E8F4FD;border:1px solid rgba(109,40,217,0.4);">
-                  <option value="">— Select volunteer —</option>
-                </select>
-              </div>
-              <!-- SUPERVISOR DUTY -->
-              <div style="margin-bottom:14px;">
-                <div style="font-size:11px;font-weight:800;color:#A78BFA;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Supervisor Duty</div>
-                <select id="or-edit-sup" class="ws" style="background:#0D0820;color:#E8F4FD;border:1px solid rgba(109,40,217,0.4);">
-                  <option value="">No Supervisor</option>
-                </select>
-              </div>
-              <!-- MPH FIELDS — only shown when JK and MPH Duty selected -->
-              <div id="or-mph-fields" style="display:none;">
-                <!-- MPH Duty 1 -->
-                <div style="margin-bottom:14px;">
-                  <div style="font-size:11px;font-weight:800;color:#F59E0B;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">MPH Duty 1 <span style="color:#6D4BA0;font-weight:600;">(required)</span></div>
-                  <select id="or-edit-mph" class="ws" style="background:#0D0820;color:#E8F4FD;border:1px solid rgba(245,158,11,0.4);">
-                    <option value="">— Select volunteer —</option>
-                  </select>
-                </div>
-                <!-- MPH Training -->
-                <div style="margin-bottom:14px;">
-                  <div style="font-size:11px;font-weight:800;color:#F59E0B;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">MPH Training <span style="color:#6D4BA0;font-weight:600;">(optional)</span></div>
-                  <select id="or-edit-mph2" class="ws" style="background:#0D0820;color:#E8F4FD;border:1px solid rgba(245,158,11,0.25);">
-                    <option value="">— None —</option>
-                  </select>
-                </div>
-              </div>
-              <!-- MAJALIS for this day -->
-              <div style="margin-bottom:14px;">
-                <div style="font-size:11px;font-weight:800;color:#4FC3F7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Majalis / Event</div>
-                <select id="or-majalis-sel" class="ws" style="background:#0D0820;color:#E8F4FD;border:1px solid rgba(79,195,247,0.3);" onchange="orMajalisSelChange()">
-                  <option value="">— No change —</option>
-                  <option value="__none__" style="color:#f88;">✕ No Majalis / Event</option>
-                  <option value="Chandraat">Chandraat</option>
-                  <option value="Student">Student</option>
-                  <option value="Paanch Baar Saal">Paanch Baar Saal</option>
-                  <option value="Bait-ul Khayal">Bait-ul Khayal</option>
-                  <option value="Chandraat (K)">Chandraat (K)</option>
-                  <option value="Student (K)">Student (K)</option>
-                  <option value="Paanch Baar Saal (K)">Paanch Baar Saal (K)</option>
-                  <option value="Bait-ul Khayal (K)">Bait-ul Khayal (K)</option>
-                  <option value="__custom__">✏️ Custom…</option>
-                </select>
-                <input type="text" id="or-majalis-custom" placeholder="Custom majalis name…" class="wi" style="display:none;margin-top:6px;border-color:rgba(79,195,247,0.3);">
-                <div style="font-size:11px;font-weight:800;color:#4FC3F7;text-transform:uppercase;letter-spacing:0.06em;margin:10px 0 5px;">Uniform Status</div>
-                <select id="or-majalis-uniform" class="ws" style="background:#0D0820;color:#E8F4FD;border:1px solid rgba(79,195,247,0.3);">
-                  <option value="">— None —</option>
-                  <option value="Formal Uniform">Formal Uniform</option>
-                  <option value="Casual Uniform">Casual Uniform</option>
-                </select>
-                <div id="or-majalis-current" style="font-size:12px;color:#4A8AAE;margin-top:6px;font-style:italic;"></div>
-              </div>
-              <!-- Buttons -->
-              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-                <button class="btn btn-bl" style="background:linear-gradient(135deg,#4C1D95,#6D28D9);" onclick="orSaveDay()">💾 Save Roster</button>
-                <button class="btn btn-ol" onclick="orClearDay()">✕ Clear Override</button>
-              </div>
-            </div>
-            <!-- ── TRAINING SECTION ── -->
-            <div class="add-form" style="background:linear-gradient(160deg,#0E100A,#1C1505);border:1px solid rgba(200,150,40,0.25);">
-              <div style="font-size:12px;font-weight:800;color:#FCD34D;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">🎓 Training for this Day</div>
-              <div id="or-tr-current" style="font-size:12px;color:#4A6A80;margin-bottom:10px;font-style:italic;">No training on this day.</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:flex-end;">
-                <div>
-                  <div style="font-size:11px;font-weight:800;color:#FCD34D;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Trainee <span style="color:rgba(252,211,77,0.45);font-weight:600;text-transform:none;letter-spacing:0;">(Junior)</span></div>
-                  <select id="or-tr-trainee" class="ws" style="background:#0E100A;color:#E8F4FD;border:1px solid rgba(200,150,40,0.3);">
-                    <option value="">— Select trainee —</option>
-                  </select>
-                </div>
-                <div>
-                  <div style="font-size:11px;font-weight:800;color:#FCD34D;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Trainer <span style="color:rgba(252,211,77,0.45);font-weight:600;text-transform:none;letter-spacing:0;">(Supervisor)</span></div>
-                  <select id="or-tr-trainer" class="ws" style="background:#0E100A;color:#E8F4FD;border:1px solid rgba(200,150,40,0.3);">
-                    <option value="">— Select trainer —</option>
-                  </select>
-                </div>
-                <button onclick="orAddTraining()" style="height:38px;padding:0 14px;background:linear-gradient(135deg,#92400E,#B45309);color:#FCD34D;border:none;border-radius:var(--r);font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;">+ Add</button>
-              </div>
-              <div id="or-tr-delete-wrap" style="margin-top:8px;display:none;">
-                <button onclick="orRemoveTraining()" style="background:rgba(192,57,43,.12);color:#f88;border:1px solid rgba(192,57,43,.3);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">🗑 Remove Training from this Day</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
     <!-- ADMIN PANEL — Owner only -->
     <div class="page owner-page ep-only" id="page-adminpanel">
       <div class="ph">
         <div><h1>⚙️ Admin Panel</h1><p>System administration — restricted access</p></div>
+      </div>
+      <!-- Reset Month — also open to AV admins (limited view) -->
+      <div class="iv-panel ap-reset" style="margin-bottom:20px;">
+        <div class="iv-ph" style="background:linear-gradient(135deg,#7F1D1D,#B91C1C);">
+          <span>♻️</span> Reset Month to Auto
+        </div>
+        <div class="iv-pb">
+          <div class="add-form" style="background:linear-gradient(160deg,#1A0606,#2D0A0A);border:1px solid rgba(239,68,68,0.25);">
+            <div style="font-size:12px;color:#FCA5A5;line-height:1.7;margin-bottom:12px;">
+              Clears <b>every</b> saved assignment for <b id="or-reset-label">the current roster month</b> — including manual overrides and days locked by older data — and regenerates the whole month automatically. Use this after changing someone's availability so the engine can re-seat everyone.
+            </div>
+            <button class="btn btn-da" style="font-size:14px;padding:9px 20px;" onclick="orResetMonth()">♻️ Reset Month &amp; Regenerate</button>
+          </div>
+        </div>
       </div>
       <!-- Set Roster Month -->
       <div class="iv-panel" style="margin-bottom:20px;">
@@ -2344,6 +2263,7 @@ async function dbSaveMajalis(mj){
     await dbStored(sb.from('majalis').upsert(payload, {onConflict:'id'}));
     console.log('Majalis saved OK:', mj.name, mj.date);
     setSyncStatus('ok');
+    return true;
   }catch(e){
     console.error('dbSaveMajalis error:', JSON.stringify(e));
     setSyncStatus('error');
@@ -2927,7 +2847,7 @@ function applySession(){
   });
   // ── Pages: hide ep-only pages for non-owners ──
   document.querySelectorAll('.ep-only').forEach(e => {
-    if(!isOwner){
+    if(!isAvAdmin){
       e.style.display = 'none';
       e.classList.remove('ep-visible');
     }
@@ -3495,7 +3415,7 @@ function renderCal(){
     /* today class removed — no highlight needed */
     div.className=cls;
     div.dataset.ds=ds;
-    div.onclick=()=>openDayModal(ds,c.d);
+    div.onclick=()=>openDayModal(ds,c.d,div);
     /* The cell itself is drawn by the shared renderer — see avCellHTML().
        Everything that used to be built inline here is now built once and
        handed a skin, so the exported sheet cannot drift away from it. */
@@ -3540,24 +3460,163 @@ function chMo(d){
   autoRoster();
 }
 /* ═══════════════════════════════════
-   DAY MODAL
+   DAY CARD
+   Click a date and its card zooms open: read-only for everyone, with an
+   Edit button for AV admins. Each change in edit mode saves by itself and
+   the chip in the header says whether it landed. A refused save keeps what
+   was entered and offers a retry rather than quietly reverting.
 ═══════════════════════════════════ */
-function openDayModal(ds,day){
+let _dc=null;
+const DC_MAJALIS=['Chandraat','Student','Paanch Baar Saal','Bait-ul Khayal','Chandraat (K)','Student (K)','Paanch Baar Saal (K)','Bait-ul Khayal (K)'];
+const DC_DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function dcReduce(){ return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches); }
+function dcShift(ds,n){ const d=new Date(ds+'T12:00'); d.setDate(d.getDate()+n); return localDS(d); }
+function dcV(id){ const e=document.getElementById(id); return e?e.value:''; }
+function dcIsSup(v){ return (v.roles||[]).includes('Supervisor')||v.type==='Supervisor'; }
+function dcSteps(jobs){
+  const done=jobs.map(()=>false);
+  return async()=>{
+    for(let i=0;i<jobs.length;i++){
+      if(done[i]) continue;
+      if(!(await jobs[i]())) return false;
+      done[i]=true;
+    }
+    return true;
+  };
+}
+function openDayModal(ds,day,cell){
+  const mo=document.getElementById('mo'), mb=document.getElementById('mbox');
+  dcCleanup();
+  _dc={ds,edit:false,pending:{},busy:0,saved:false};
+  mb.className='mbox daycard';
+  mo.onclick=e=>{ if(e.target===mo) dcClose(); };
+  let x0=null,y0=0;
+  mb.ontouchstart=e=>{ const t=e.changedTouches[0]; x0=t.clientX; y0=t.clientY; };
+  mb.ontouchend=e=>{
+    if(x0==null||!_dc||_dc.edit) { x0=null; return; }
+    const t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0; x0=null;
+    if(Math.abs(dx)>70&&Math.abs(dy)<45) dcStep(dx<0?1:-1);
+  };
+  document.addEventListener('keydown',dcKey);
+  dcRender();
+  mo.classList.add('show');
+  dcZoomIn(cell);
+}
+function dcCleanup(){
+  if(!_dc) return;
+  document.removeEventListener('keydown',dcKey);
+  const mo=document.getElementById('mo'), mb=document.getElementById('mbox');
+  mo.onclick=null; mb.ontouchstart=null; mb.ontouchend=null; mb.className='mbox';
+  _dc=null;
+}
+function dcClose(){
+  if(_dc&&Object.keys(_dc.pending).length&&!confirm('Some changes on this day have not saved. Close anyway?')) return;
+  cM();
+}
+function dcKey(e){
+  if(!_dc) return;
+  if(e.key==='Escape'){ e.preventDefault(); dcClose(); return; }
+  const tag=e.target&&e.target.tagName;
+  if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') return;
+  if(e.key==='ArrowLeft') dcStep(-1); else if(e.key==='ArrowRight') dcStep(1);
+}
+function dcZoomIn(cell){
+  const mb=document.getElementById('mbox');
+  if(dcReduce()||!cell||!cell.getBoundingClientRect||!mb.animate) return;
+  const r=cell.getBoundingClientRect(), b=mb.getBoundingClientRect();
+  if(!b.width||!b.height) return;
+  const dx=(r.left+r.width/2)-(b.left+b.width/2), dy=(r.top+r.height/2)-(b.top+b.height/2);
+  const s=Math.max(.12,Math.min(r.width/b.width,r.height/b.height));
+  const touch=window.matchMedia&&matchMedia('(hover: none)').matches;
+  mb.animate([{transform:`translate(${dx}px,${dy}px) scale(${s})`,opacity:.15},{transform:'none',opacity:1}],
+             {duration:touch?220:320,easing:'cubic-bezier(.16,1,.3,1)'});
+}
+function dcStep(n){
+  if(!_dc) return;
+  const ds=dcShift(_dc.ds,n); _dc.ds=ds;
+  const d=new Date(ds+'T12:00');
+  if(d.getMonth()!==calMo||d.getFullYear()!==calYr){
+    calMo=d.getMonth(); calYr=d.getFullYear();
+    sessionStorage.setItem('jk_calMo',calMo); sessionStorage.setItem('jk_calYr',calYr);
+    autoRoster(); renderAll();
+  }
+  dcRender();
+  const body=document.getElementById('dc-body');
+  if(!dcReduce()&&body&&body.animate) body.animate([{opacity:0,transform:`translateX(${n*18}px)`},{opacity:1,transform:'none'}],{duration:180,easing:'ease-out'});
+}
+function dcToggleEdit(){ _dc.edit=!_dc.edit; dcRender(); }
+function dcRender(){
+  const ds=_dc.ds, d=new Date(ds+'T12:00');
+  const dow=d.toLocaleDateString('en-NZ',{weekday:'long'});
+  const admin=isAvAdminUser();
+  if(!admin) _dc.edit=false;
+  document.getElementById('mbox').innerHTML=
+   `<div class="dc-top"><div class="dc-head">
+      <button type="button" class="dc-nav" onclick="dcStep(-1)" aria-label="Previous day">‹</button>
+      <div class="dc-title"><h3>${String(d.getDate()).padStart(2,'0')} ${MO[d.getMonth()]} ${d.getFullYear()}</h3><div class="dc-sub">${dow}</div></div>
+      <button type="button" class="dc-nav" onclick="dcStep(1)" aria-label="Next day">›</button>
+    </div>
+    <div class="dc-bar">
+      <button type="button" class="dc-chip" id="dc-chip"></button>
+      <span style="flex:1"></span>
+      ${admin?`<button type="button" class="btn ${_dc.edit?'btn-bl':'btn-ol'} btn-sm" onclick="dcToggleEdit()">${_dc.edit?'✓ Done':'✏️ Edit'}</button>`:''}
+      <button type="button" class="btn btn-ol btn-sm" onclick="dcClose()">Close</button>
+    </div>
+    </div>
+    <div id="dc-body">${_dc.edit?dcEditHTML(ds):dcViewHTML(ds)}</div>`;
+  dcChip();
+}
+function dcBody(){
+  const b=document.getElementById('dc-body'); if(!b||!_dc) return;
+  b.innerHTML=_dc.edit?dcEditHTML(_dc.ds):dcViewHTML(_dc.ds);
+}
+function dcChip(){
+  const e=document.getElementById('dc-chip'); if(!e||!_dc) return;
+  const n=Object.keys(_dc.pending).length;
+  if(_dc.busy>0){ e.className='dc-chip busy'; e.textContent='Saving…'; e.onclick=null; }
+  else if(n){ e.className='dc-chip fail'; e.textContent='Not saved · Retry'; e.onclick=dcRetry; }
+  else if(_dc.saved){ e.className='dc-chip ok'; e.textContent='Saved ✓'; e.onclick=null; }
+  else { e.className='dc-chip'; e.textContent=''; e.onclick=null; }
+}
+/* Runs one save. The closure stays in `pending` until it reports success, so
+   Retry can run it again; a newer edit to the same field replaces it. */
+function dcRun(key,fn){
+  const me=_dc; if(!me) return;
+  me.pending[key]=fn; me.busy++; dcChip();
+  (async()=>{
+    let ok=false;
+    try{ ok=!!(await fn()); }catch(e){ console.error('day card save:',e); toast('Could not save: '+(e.message||e),'err'); }
+    me.busy--;
+    if(me.pending[key]===fn){ if(ok){ delete me.pending[key]; me.saved=true; } }
+    if(_dc===me) dcChip();
+  })();
+}
+function dcRetry(){ if(!_dc) return; Object.entries(_dc.pending).forEach(([k,fn])=>dcRun(k,fn)); }
+function dcHint(id,msg){ const e=document.getElementById('dc-h-'+id); if(e) e.textContent=msg||''; }
+
+/* ── View mode ── */
+function dcViewHTML(ds){
   const mj=majalisEvs.find(e=>e.date===ds);
   const ro=roster[ds]||{};
   const dt=new Date(ds+'T12:00');
   const dow=dt.toLocaleDateString('en-NZ',{weekday:'long'});
-  let h=`<h3>${String(day).padStart(2,'0')} ${MO[calMo]} ${calYr}</h3>`;
+  const evs=avEvents.filter(e=>e.date===ds);
+  let h='';
   if(mj){
     h+=`<div style="background:rgba(21,101,192,.12);border:1px solid rgba(79,195,247,.25);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
       <div style="font-family:'Archivo',sans-serif;font-size:16px;font-weight:900;color:#E8F4FD;">🕌 ${esc(mj.name)}</div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;">
         <span style="background:rgba(79,195,247,.15);color:#4FC3F7;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:2px 8px;border-radius:4px;">${esc(mj.type)}</span>
-        <span style="font-size:12px;color:var(--dm);">⏰ ${esc(mj.time)} · ${dow}</span>
+        <span style="font-size:12px;color:var(--dm);">${mj.time?'⏰ '+esc(mj.time)+' · ':''}${dow}${mj.uniform?' · 👔 '+esc(mj.uniform):''}</span>
       </div>
     </div>`;
   }
-  // Training info
+  evs.forEach(e=>{
+    h+=`<div style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+      <div style="font-family:'Archivo',sans-serif;font-size:15px;font-weight:900;color:#67E8F9;">📌 ${esc(e.name)}</div>
+      ${e.evcat?`<div style="font-size:12px;color:var(--dm);margin-top:3px;">${esc(e.evcat)}</div>`:''}
+    </div>`;
+  });
   const tr2=trainings.find(e=>e.date===ds);
   if(tr2){
     h+=`<div style="background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
@@ -3580,105 +3639,271 @@ function openDayModal(ds,day){
     <div>
       <div style="font-size:11px;font-weight:800;${tr2?'color:#F59E0B;border-left:2px solid #F59E0B;':'color:var(--dm);border-left:2px solid #1A3A5C;'}padding-left:5px;margin-bottom:4px;">JAM&#256;TKHANA</div>
       ${assigned
-        ?`<div style="font-family:'Archivo',sans-serif;font-size:17px;font-weight:900;color:${tr2?'#FCD34D':'#E8F4FD'};">${esc(assigned)} <span style="color:${tr2?'#F59E0B':'#4FC3F7'};"></span></div>
+        ?`<div style="font-family:'Archivo',sans-serif;font-size:17px;font-weight:900;color:${tr2?'#FCD34D':'#E8F4FD'};">${esc(assigned)}</div>
           ${tr2?`<div style="font-size:12px;color:#D97706;margin-top:4px;">🎓 Trainee: <strong style="color:#FCD34D;">${esc(tr2.trainee)}</strong></div>`:''}
           ${!tr2&&ro._sup?`<div style="font-size:11px;font-weight:800;background:rgba(21,101,192,.2);color:#90CAF9;border:1px solid rgba(21,101,192,.3);padding:2px 7px;border-radius:4px;display:inline-block;margin-top:4px;">SUP: ${esc(ro._sup)}</div>`:''}`
         :`<div style="font-family:'Archivo',sans-serif;font-size:16px;font-weight:800;font-style:italic;color:#3A5878;">Unassigned</div>`}
     </div>
   </div>`;
-  // MPH duty block (Fridays)
-  const isFri2=new Date(ds+'T12:00').getDay()===5;
-  if(isFri2){
+  if(dt.getDay()===5){
     const mphAssigned=ro._mph_primary||null;
     h+=`<div style="font-size:11px;font-weight:800;color:#F59E0B;text-transform:uppercase;letter-spacing:0.06em;margin:12px 0 8px;">MPH Congregation Duty</div>
     <div style="background:var(--ds2);border:1px solid var(--gold-bd);border-radius:7px;padding:11px 14px;">
       <div style="font-size:11px;font-weight:800;color:#F59E0B;text-transform:uppercase;letter-spacing:0.06em;border-left:2px solid #F59E0B;padding-left:5px;margin-bottom:4px;">MPH CONGREGATION</div>
       ${mphAssigned
-        ?`<div style="font-family:'Archivo',sans-serif;font-size:17px;font-weight:900;color:#FCD34D;">${esc(mphAssigned)} <span style="color:#F59E0B;"></span></div>`
+        ?`<div style="font-family:'Archivo',sans-serif;font-size:17px;font-weight:900;color:#FCD34D;">${esc(mphAssigned)}</div>${ro._mph_primary2?`<div style="font-size:12px;color:#D97706;margin-top:4px;">🎓 Training: <strong style="color:#FCD34D;">${esc(ro._mph_primary2)}</strong></div>`:''}`
         :`<div style="font-family:'Archivo',sans-serif;font-size:16px;font-weight:800;font-style:italic;color:#4A3000;">Unassigned</div>`}
     </div>`;
   }
-  if(!mj&&!tr2&&!assigned) h+=`<p style="color:var(--dm);font-size:13px;margin-top:12px;">No events or assignments for this day.</p>`;
-  // ── Admin quick actions — assign/lock/unlock/mark-busy without leaving the roster ──
-  if(isAvAdminUser()){
-    const dowName=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
-    const act=vols.filter(v=>v.status==='active').sort((a,b)=>a.name.localeCompare(b.name));
-    const avail=act.filter(v=>(v.days||[]).includes(dowName)&&!(v.bds||'').split(',').map(s=>s.trim()).includes(ds));
-    const others=act.filter(v=>!avail.includes(v));
-    const sups=act.filter(v=>(v.roles||[]).includes('Supervisor')||v.type==='Supervisor');
-    h+=`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--db);">
-      <div style="font-size:11px;font-weight:800;color:#A78BFA;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">⚡ Quick Assign — Admins</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-        <select id="qa-vol" class="ws">
-          <option value="">— Select volunteer —</option>
-          ${avail.length?`<optgroup label="Available on ${dowName}">`+avail.map(v=>`<option value="${esc(v.name)}"${ro._primary===v.name?' selected':''}>${esc(v.name)}</option>`).join('')+`</optgroup>`:''}
-          ${others.length?`<optgroup label="Not usually available">`+others.map(v=>`<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('')+`</optgroup>`:''}
-        </select>
-        <select id="qa-sup" class="ws">
-          <option value="">No supervisor</option>
-          ${sups.map(v=>`<option value="${esc(v.name)}"${ro._sup===v.name?' selected':''}>${esc(v.name)}</option>`).join('')}
-        </select>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="btn btn-bl btn-sm" onclick="qaAssign('${ds}')">🔒 Assign &amp; Lock</button>
-        ${ro._manual?`<button class="btn btn-ol btn-sm" onclick="qaUnlock('${ds}')">🔓 Unlock — back to auto</button>`:''}
-        ${(ro._primary&&!tr2)?`<button class="btn btn-da btn-sm" onclick="qaBusy('${ds}')">🚫 ${esc(ro._primary)} can't make it</button>`:''}
-      </div>
-      <div style="font-size:12px;color:#4A6A80;margin-top:7px;font-style:italic;">"Can't make it" marks them busy for this date and instantly re-rosters cover from their weekday partner.</div>
-    </div>`;
-  }
-  h+=`<div class="mfoot"><button class="btn btn-ol btn-sm" onclick="cM()">Close</button></div>`;
-  oM(h);
+  if(!mj&&!tr2&&!assigned&&!evs.length) h+=`<p style="color:var(--dm);font-size:13px;margin-top:12px;">No events or assignments for this day.</p>`;
+  return h;
 }
-/* ── Quick-assign actions (roster page day modal) ── */
-function qaAssign(ds){
-  const sel=document.getElementById('qa-vol');
-  const sup=document.getElementById('qa-sup');
-  if(!sel||!sel.value){ toast('Select a volunteer first','err'); return; }
-  const prev=roster[ds]||{};
-  const entry={_primary:sel.value,_sup:(sup&&sup.value)||'',_manual:true,_auto:false};
-  // Preserve MPH state exactly as Manual Override does
-  if(prev._mph_primary)  entry._mph_primary  = prev._mph_primary;
-  if(prev._mph_primary2) entry._mph_primary2 = prev._mph_primary2;
-  if(prev._mph_manual)   entry._mph_manual   = prev._mph_manual;
-  if(prev._mph_removed)  entry._mph_removed  = prev._mph_removed;
+
+/* ── Edit mode ── */
+function dcEditHTML(ds){
+  const ro=roster[ds]||{};
+  const dt=new Date(ds+'T12:00');
+  const dowName=DC_DOW[dt.getDay()];
+  const byName=(a,b)=>a.name.localeCompare(b.name);
+  const act=vols.filter(v=>v.status==='active').sort(byName);
+  const busyOn=v=>(v.bds||'').split(',').map(s=>s.trim()).includes(ds);
+  const avail=act.filter(v=>(v.days||[]).includes(dowName)&&!busyOn(v));
+  const others=act.filter(v=>!avail.includes(v));
+  const sups=act.filter(dcIsSup);
+  const o=(n,cur)=>`<option value="${esc(n)}"${cur===n?' selected':''}>${esc(n)}</option>`;
+  const stray=(list,cur)=>(cur&&!list.some(v=>v.name===cur))?o(cur,cur):'';
+  const mode=(!ro._mph_removed&&(ro._mph_primary||ro._mph_manual))?'jk_mph':'jk';
+  const mj=majalisEvs.find(e=>e.date===ds);
+  const tr=trainings.find(e=>e.date===ds);
+  const evs=avEvents.filter(e=>e.date===ds);
+  const juniors=act.filter(v=>(v.roles||[]).includes('Junior Team Member')||v.type==='Junior Team Member');
+  const mjKnown=mj&&DC_MAJALIS.includes(mj.name);
+  const evSel=document.getElementById('evNameSelect'), evCat=document.getElementById('evCat');
+  const L=(t,c)=>`<div class="dc-lbl" style="color:${c||'#A78BFA'}">${t}</div>`;
+  let h=`<div class="dc-sec">
+    <div class="dc-sech">📅 Roster</div>
+    ${L('Duties')}
+    <select id="dc-mode" class="ws" onchange="dcRoster()">
+      <option value="jk"${mode==='jk'?' selected':''}>Jamātkhana duty only — cancels MPH for this day</option>
+      <option value="jk_mph"${mode==='jk_mph'?' selected':''}>JK and MPH duty — pick MPH volunteers</option>
+    </select>
+    ${L('Volunteer duty')}
+    <select id="dc-primary" class="ws" onchange="dcRoster()">
+      <option value="">— Select volunteer —</option>
+      ${stray(act,ro._primary)}
+      ${avail.length?`<optgroup label="Available on ${dowName}">`+avail.map(v=>o(v.name,ro._primary)).join('')+`</optgroup>`:''}
+      ${others.length?`<optgroup label="Not usually available">`+others.map(v=>o(v.name,ro._primary)).join('')+`</optgroup>`:''}
+    </select>
+    ${L('Supervisor duty')}
+    <select id="dc-sup" class="ws" onchange="dcRoster()">
+      <option value="">No supervisor</option>
+      ${stray(sups,ro._sup)}
+      ${sups.map(v=>o(v.name,ro._sup)).join('')}
+    </select>
+    <div id="dc-mph-fields" style="display:${mode==='jk_mph'?'block':'none'}">
+      ${L('MPH duty 1 <span class="dc-req">(required)</span>','#F59E0B')}
+      <select id="dc-mph1" class="ws" onchange="dcRoster()">
+        <option value="">— Select volunteer —</option>${stray(act,ro._mph_primary)}${act.map(v=>o(v.name,ro._mph_primary)).join('')}
+      </select>
+      ${L('MPH training <span class="dc-req">(optional)</span>','#F59E0B')}
+      <select id="dc-mph2" class="ws" onchange="dcRoster()">
+        <option value="">— None —</option>${stray(act,ro._mph_primary2)}${act.map(v=>o(v.name,ro._mph_primary2)).join('')}
+      </select>
+    </div>
+    <div class="dc-hint" id="dc-h-roster"></div>
+    <div class="dc-row">
+      ${(ro._primary&&!tr)?`<button type="button" class="btn btn-da btn-sm" onclick="dcBusy()">🚫 ${esc(ro._primary)} can't make it</button>`:''}
+      ${(roster[ds])?`<button type="button" class="btn btn-ol btn-sm" onclick="dcResetDay()">↺ Reset this day</button>`:''}
+    </div>
+  </div>
+  <div class="dc-sec">
+    <div class="dc-sech" style="color:#4FC3F7">🕌 Majalis &amp; uniform</div>
+    <select id="dc-mj" class="ws" onchange="dcMajalis()">
+      <option value="__none__"${!mj?' selected':''}>✕ No majalis</option>
+      ${mj&&!mjKnown?o(mj.name,mj.name):''}
+      ${DC_MAJALIS.map(n=>o(n,mj&&mj.name)).join('')}
+      <option value="__custom__">✏️ Custom…</option>
+    </select>
+    <input type="text" id="dc-mj-custom" class="wi" placeholder="Custom majalis name, then Enter" style="display:none;margin-top:6px"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" onblur="dcMajalisCustom()">
+    ${L('Uniform','#4FC3F7')}
+    <select id="dc-uni" class="ws" onchange="dcUniform()"${mj?'':' disabled'}>
+      <option value="">— None —</option>
+      <option value="Formal Uniform"${mj&&mj.uniform==='Formal Uniform'?' selected':''}>Formal Uniform</option>
+      <option value="Casual Uniform"${mj&&mj.uniform==='Casual Uniform'?' selected':''}>Casual Uniform</option>
+    </select>
+    ${mj?'':`<div class="dc-note">Pick a majalis first to set its uniform.</div>`}
+  </div>
+  <div class="dc-sec">
+    <div class="dc-sech" style="color:#FCD34D">🎓 Training day</div>
+    <div class="dc-two">
+      <div>${L('Trainee <span class="dc-req">(Junior)</span>','#FCD34D')}
+        <select id="dc-tr-trainee" class="ws" onchange="dcTraining()"><option value="">— Select —</option>${stray(juniors,tr&&tr.trainee)}${juniors.map(v=>o(v.name,tr&&tr.trainee)).join('')}</select></div>
+      <div>${L('Trainer <span class="dc-req">(Supervisor)</span>','#FCD34D')}
+        <select id="dc-tr-trainer" class="ws" onchange="dcTraining()"><option value="">— Select —</option>${stray(sups,tr&&tr.trainer)}${sups.map(v=>o(v.name,tr&&tr.trainer)).join('')}</select></div>
+    </div>
+    <div class="dc-hint" id="dc-h-training"></div>
+    ${tr?`<div class="dc-row"><button type="button" class="btn btn-da btn-sm" onclick="dcTrainingRemove()">🗑 Remove training</button></div>`:''}
+  </div>
+  <div class="dc-sec">
+    <div class="dc-sech" style="color:#67E8F9">📌 Additional events</div>
+    ${evs.length?evs.map(e=>`<div class="dc-ev"><span>${esc(e.name)}${e.evcat?` <small>· ${esc(e.evcat)}</small>`:''}</span>
+      <button type="button" class="ev-del" onclick="dcEvDel(${e.id})" title="Remove" aria-label="Remove ${esc(e.name)}">🗑</button></div>`).join(''):`<div class="dc-note">None on this day.</div>`}
+    ${evs.length>=3?`<div class="dc-note">Three is the most a day holds — remove one to add another.</div>`:`
+    <div class="dc-two" style="margin-top:8px">
+      <select id="dc-ev-sel" class="ws" onchange="dcEvSel()">${evSel?evSel.innerHTML:'<option value="">— Event —</option><option value="__custom__">Custom…</option>'}</select>
+      <select id="dc-ev-cat" class="ws">${evCat?evCat.innerHTML:'<option value="">—</option>'}</select>
+    </div>
+    <input type="text" id="dc-ev-name" class="wi" placeholder="Event name…" style="display:none;margin-top:6px">
+    <div class="dc-row"><button type="button" class="btn btn-bl btn-sm" onclick="dcEvAdd()">+ Add event</button></div>
+    <div class="dc-hint" id="dc-h-ev"></div>`}
+  </div>`;
+  return h;
+}
+
+function dcRoster(){
+  const ds=_dc.ds, hadDay=!!roster[ds], prevPrimary=(roster[ds]||{})._primary;
+  const mode=dcV('dc-mode');
+  const f=document.getElementById('dc-mph-fields'); if(f) f.style.display=mode==='jk_mph'?'block':'none';
+  const primary=dcV('dc-primary');
+  if(!primary){ dcHint('roster','Pick a volunteer for Jamātkhana duty and this day will save.'); return; }
+  const mph1=mode==='jk_mph'?dcV('dc-mph1'):'', mph2=mode==='jk_mph'?dcV('dc-mph2'):'';
+  if(mode==='jk_mph'&&!mph1){ dcHint('roster','Pick MPH duty 1 and this day will save.'); return; }
+  dcHint('roster','');
+  const sup=dcV('dc-sup');
+  const entry={_primary:primary,_sup:sup||'',_manual:true,_auto:false};
+  if(mode==='jk_mph'){ entry._mph_primary=mph1; entry._mph_primary2=mph2||''; entry._mph_manual=true; }
+  else { entry._mph_removed=true; entry._mph_manual=true; }
   roster[ds]=entry;
   pauseRealtime(5000);
-  dbSaveRosterDay(ds,entry);
-  auditLog('Quick assign: '+ds,'roster','JK: '+entry._primary+(entry._sup?' · SUP: '+entry._sup:'')+' — locked via roster page');
-  autoRoster();
-  cM();
-  toast('✓ '+entry._primary+' locked on '+fd(ds));
+  dcRun('roster',()=>dbSaveRosterDay(ds,entry));
+  auditLog('Manual override: '+ds,'roster','JK: '+primary+(sup?' SUP: '+sup:'')+
+    (mode==='jk_mph'?' MPH1: '+mph1+(mph2?' MPH2: '+mph2:''):' MPH: cancelled'));
+  autoRoster(); renderAll();
+  if(!hadDay||prevPrimary!==primary) dcBody();
 }
-function qaUnlock(ds){
+function dcResetDay(){
+  const ds=_dc.ds;
+  if(!confirm('Reset '+fd(ds)+' to automatic?\n\nThe saved assignment for this day is removed and the roster picks someone again.')) return;
   delete roster[ds];
   pauseRealtime(3000);
-  dbSaveRosterDay(ds,null);
-  auditLog('Unlocked '+ds,'roster','Reverted to auto via roster page');
-  autoRoster();
-  cM();
-  toast('🔓 '+fd(ds)+' back to automatic rotation');
+  dcRun('roster',()=>dbSaveRosterDay(ds,null));
+  auditLog('Cleared override for '+ds,'roster','Reverted to auto-roster');
+  autoRoster(); renderAll();
+  dcBody();
 }
-function qaBusy(ds){
-  const ro=roster[ds]||{};
-  const name=ro._primary; if(!name) return;
+function dcBusy(){
+  const ds=_dc.ds, ro=roster[ds]||{}, name=ro._primary; if(!name) return;
   const v=vols.find(x=>x.name===name);
   if(!v){ toast('Volunteer not found in User Management','err'); return; }
   const busy=(v.bds||'').split(',').map(s=>s.trim()).filter(Boolean);
   if(!busy.includes(ds)) busy.push(ds);
   v.bds=busy.join(',');
-  // If the day was locked to this person, unlock so cover can be assigned
+  const jobs=[];
   if(ro._manual&&ro._primary===name){
     delete roster[ds];
     pauseRealtime(3000);
-    dbSaveRosterDay(ds,null);
+    jobs.push(()=>dbSaveRosterDay(ds,null));
   }
-  dbSaveVol(v);
-  auditLog('Marked busy: '+name,'volunteer','Busy on '+fd(ds)+' via roster page — cover auto-assigned');
-  autoRoster();
-  renderVolCards();
-  cM();
+  jobs.push(()=>dbSaveVol(v));
+  dcRun('busy',dcSteps(jobs));
+  auditLog('Marked busy: '+name,'volunteer','Busy on '+fd(ds)+' via day card — cover auto-assigned');
+  autoRoster(); renderAll();
+  dcBody();
   toast('✓ '+name+' marked busy — cover assigned for '+fd(ds));
+}
+function dcMajalis(){
+  const v=dcV('dc-mj'), c=document.getElementById('dc-mj-custom');
+  if(c) c.style.display=v==='__custom__'?'block':'none';
+  if(v==='__custom__'){ if(c) c.focus(); return; }
+  dcSetMajalis(v==='__none__'?null:v);
+}
+function dcMajalisCustom(){
+  if(!_dc||dcV('dc-mj')!=='__custom__') return;
+  const n=dcV('dc-mj-custom').trim();
+  if(n) dcSetMajalis(n);
+}
+function dcSetMajalis(name){
+  const ds=_dc.ds, existing=majalisEvs.find(e=>e.date===ds);
+  if(!name){
+    if(!existing) return;
+    majalisEvs=majalisEvs.filter(e=>e.date!==ds);
+    dcRun('majalis',()=>dbDeleteMajalis(existing.id));
+    auditLog('Removed majalis from '+ds,'majalis','Via day card');
+  } else {
+    if(existing&&existing.name===name) return;
+    const mj={id:existing?existing.id:uid(),name,type:'Majalis',date:ds,time:existing?existing.time||'':'',category:'',uniform:existing?existing.uniform||'':''};
+    majalisEvs=majalisEvs.filter(e=>e.date!==ds); majalisEvs.push(mj);
+    const jobs=[()=>dbSaveMajalis(mj)];
+    auditLog('Set majalis for '+ds+' to '+name,'majalis','Via day card');
+    if(name.toLowerCase().includes('chandraat')){
+      const pbsD=new Date(ds+'T12:00'); pbsD.setDate(pbsD.getDate()+8);
+      const pbsDate=localDS(pbsD);
+      if(!majalisEvs.find(e=>e.date===pbsDate&&e.name==='Paanch Baar Saal')){
+        const pbs={id:uid(),name:'Paanch Baar Saal',type:'Majalis',date:pbsDate,time:'',category:''};
+        majalisEvs.push(pbs); jobs.push(()=>dbSaveMajalis(pbs));
+        auditLog('Auto-added PBS 8 days after Chandraat','majalis',pbsDate);
+      }
+    }
+    dcRun('majalis',dcSteps(jobs));
+  }
+  autoRoster(); renderAll();
+  dcBody();
+}
+function dcUniform(){
+  const ds=_dc.ds, mj=majalisEvs.find(e=>e.date===ds); if(!mj) return;
+  mj.uniform=dcV('dc-uni');
+  dcRun('majalis',()=>dbSaveMajalis(mj));
+  auditLog('Set uniform for '+ds,'majalis',(mj.uniform||'none')+' · '+mj.name);
+  renderAll();
+}
+function dcTraining(){
+  const ds=_dc.ds, trainee=dcV('dc-tr-trainee'), trainer=dcV('dc-tr-trainer');
+  if(!trainee||!trainer){ dcHint('training','Pick both a trainee and a trainer and the training day will save.'); return; }
+  dcHint('training','');
+  const ex=trainings.find(e=>e.date===ds);
+  if(ex&&ex.trainee===trainee&&ex.trainer===trainer) return;
+  const tr={id:ex?ex.id:uid(),name:trainee,type:'Training',trainee,trainer,date:ds,time:'',category:'training'};
+  trainings=trainings.filter(e=>e.date!==ds); trainings.push(tr);
+  dcRun('training',()=>dbSaveTraining(tr));
+  auditLog(`Admin added Training: ${trainee} with ${trainer}`,'training',`Date: ${ds} via day card`);
+  autoRoster(); renderAll();
+  if(!ex) dcBody();
+}
+function dcTrainingRemove(){
+  const ds=_dc.ds, tr=trainings.find(e=>e.date===ds); if(!tr) return;
+  trainings=trainings.filter(e=>e.id!==tr.id);
+  dcRun('training',()=>dbDeleteTraining(tr.id));
+  auditLog(`Admin removed Training: ${tr.trainee}`,'training',`Date: ${ds} via day card`);
+  autoRoster(); renderAll();
+  dcBody();
+}
+function dcEvSel(){
+  const c=document.getElementById('dc-ev-name'); if(!c) return;
+  const custom=dcV('dc-ev-sel')==='__custom__';
+  c.style.display=custom?'block':'none';
+  if(custom) c.focus();
+}
+function dcEvAdd(){
+  const ds=_dc.ds, sv=dcV('dc-ev-sel');
+  const name=(sv==='__custom__'?dcV('dc-ev-name'):sv).trim();
+  if(!name){ dcHint('ev','Pick an event or type a name.'); return; }
+  if(avEvents.filter(e=>e.date===ds).length>=3){ dcHint('ev','That day already has three events.'); return; }
+  const evcat=dcV('dc-ev-cat');
+  const ev={id:uid(),name,type:'Event',date:ds,time:'',evcat,category:'event'};
+  avEvents.push(ev);
+  dcRun('ev'+ev.id,()=>dbSaveEvent(ev));
+  auditLog(`Added Event: ${name}`,'event',`Date: ${ds}${evcat?' · '+evcat:''}`);
+  renderEventCards(); renderCal(); renderUpcoming();
+  dcBody();
+}
+function dcEvDel(id){
+  const de=avEvents.find(e=>e.id===id); if(!de) return;
+  avEvents=avEvents.filter(e=>e.id!==id);
+  dcRun('ev'+id,()=>dbDeleteEvent(id));
+  auditLog(`Deleted Event: ${de.name}`,'event',`Date: ${de.date}`);
+  renderEventCards(); renderCal(); renderUpcoming();
+  dcBody();
 }
 /* Jump from roster page to a volunteer's card in User Management */
 function vmJump(name){
@@ -4032,7 +4257,7 @@ function renderRosterIssues(){
           <span style="font-size:13px;flex-shrink:0;margin-top:1px;">${icons[i.type]||'•'}</span>
           <span style="font-size:13px;color:#FECACA;line-height:1.6;">${esc(i.text)}</span>
         </div>`).join('')}
-      <div style="font-size:12px;color:#7A4A4A;margin-top:8px;font-style:italic;">Only AV Admins and the Owner can see this banner. Fix via User Management (availability) or Manual Override (specific days).</div>
+      <div style="font-size:12px;color:#7A4A4A;margin-top:8px;font-style:italic;">Only AV Admins and the Owner can see this banner. Fix via User Management (availability) or by clicking the day on the calendar (specific days).</div>
     </div>`;
 }
 /* ═══════════════════════════════════════════════════════
@@ -4208,7 +4433,7 @@ function autoRoster(){
   unseated.forEach(x=>{
     _rosterIssues.push({
       type:'unseated',
-      text:`${x.v.name} could not be given a duty day — all of their available weekdays (${(x.v.days||[]).join(', ')}) are already at their configured pool size. Increase a pool size in the Admin Panel, adjust availability, or assign manually via Manual Override.`
+      text:`${x.v.name} could not be given a duty day — all of their available weekdays (${(x.v.days||[]).join(', ')}) are already at their configured pool size. Increase a pool size in the Admin Panel, adjust availability, or assign the day by hand from the calendar.`
     });
   });
   DAY_NAMES.forEach((day,i)=>{
@@ -4551,12 +4776,11 @@ function populateTrainingDropdowns(){
   const supervisors = vols.filter(v=>v.status==='active' && ((v.roles||[]).includes('Supervisor') || v.type==='Supervisor')).sort((a,b)=>a.name.localeCompare(b.name));
   const traineeOpts = '<option value="">— Select trainee —</option>' + juniors.map(v=>`<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('');
   const trainerOpts = '<option value="">— Select trainer —</option>' + supervisors.map(v=>`<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('');
-  // Populate both training forms (Add-ons page + Manual Override page)
-  ['trTrainee','or-tr-trainee'].forEach(id=>{
+  ['trTrainee'].forEach(id=>{
     const el = document.getElementById(id);
     if(el){ el.innerHTML = traineeOpts; }
   });
-  ['trTrainer','or-tr-trainer'].forEach(id=>{
+  ['trTrainer'].forEach(id=>{
     const el = document.getElementById(id);
     if(el){ el.innerHTML = trainerOpts; }
   });
@@ -4984,7 +5208,7 @@ let _auditBroken = false;
    table with a three-month life. */
 const LOGGED_SECTIONS = {
   volunteers:'User Management', events:'Add-ons', stats:'Duty Stats',
-  override:'Manual Override', audit:'Audit Logs', adminpanel:'Admin Panel'
+  audit:'Audit Logs', adminpanel:'Admin Panel'
 };
 let _lastView = null;
 async function logView(section){
@@ -5190,8 +5414,8 @@ async function confirmClearAllLogs(){
 /* ═══════════════════════════════════
    UTILITY FUNCTIONS
 ═══════════════════════════════════ */
-function oM(h){ document.getElementById('mbox').innerHTML=h; document.getElementById('mo').classList.add('show'); }
-function cM(){ document.getElementById('mo').classList.remove('show'); }
+function oM(h){ dcCleanup(); document.getElementById('mbox').innerHTML=h; document.getElementById('mo').classList.add('show'); }
+function cM(){ document.getElementById('mo').classList.remove('show'); dcCleanup(); }
 document.getElementById('mo').addEventListener('click', function(e){ if(e.target===this) cM(); });
 let _toastTimer=null, _toastErrAt=0;
 /* A success message that lands on top of a failure is worse than no
@@ -5438,6 +5662,8 @@ function toggleUserEdit(safeId){
 // Nav — handles all page switching
 function nav(el){
   if(!el) return;
+  // The old Manual Override page now lives on the calendar's day card.
+  if(el.dataset && el.dataset.page === 'override') el = document.querySelector('[data-page=calendar]') || el;
   if(!window.CU) return;
   // Permission checks — must mirror applySession() exactly.
   const _perms    = CU.perms || [CU.role];
@@ -5452,8 +5678,8 @@ function nav(el){
   // Enforce page access per section (AV-only build)
   const pg = el.dataset.page;
   const _avTeamPages  = ['calendar','myduties'];              // volunteers: roster + own duties
-  const _avAdminPages = ['override','volunteers','events','stats'];
-  if(pg === 'adminpanel' && !_isOwner) return;
+  const _avAdminPages = ['volunteers','events','stats'];
+  if(pg === 'adminpanel' && !_isAvAdmin) return;
   if(pg === 'audit' && !_canReadLog) return;
   if(_avAdminPages.includes(pg) && !_isAvAdmin) return;
   if(_avTeamPages.includes(pg) && !_isAvTeam) return;
@@ -5470,10 +5696,11 @@ function nav(el){
   if(el.dataset.page === 'myduties') mdInit();
   if(el.dataset.page === 'stats') renderStats();
   if(el.dataset.page === 'dashboard' && typeof renderDashboard==='function') renderDashboard();
-  if(el.dataset.page === 'override'){
-    const orDate = document.getElementById('or-edit-date');
-    if(orDate && !orDate.value){ orDate.value = todayDS(); }
-    orLoadFields();
+  if(el.dataset.page === 'adminpanel'){
+    // AV admins get the Reset Month panel only; the owner gets everything.
+    _pg.classList.toggle('ap-limited', !_isOwner);
+    const _rl = document.getElementById('or-reset-label');
+    if(_rl) _rl.textContent = MO[calMo]+' '+calYr;
   }
   if(el.dataset.page === 'adminpanel' && _isOwner){
     document.getElementById('ap-month').value = calMo;
@@ -5803,9 +6030,9 @@ function handleUserChange(payload){
           const isAnyAdmin = isAvAdmin || isIvAdmin;
           const canReadLog = LOG_READ_KEYS.some(k => perms.includes(k));
           const ok = pg==='dashboard'
-            || (pg==='adminpanel' && isOwner)
+            || (pg==='adminpanel' && isAvAdmin)
             || (pg==='audit' && canReadLog)
-            || (['override','volunteers','events','stats'].includes(pg) && isAvAdmin)
+            || (['volunteers','events','stats'].includes(pg) && isAvAdmin)
             || (['calendar','myduties'].includes(pg) && isAvTeam);
           if(!ok) nav(document.querySelector('[data-page=dashboard]'));
         }
@@ -5955,217 +6182,8 @@ function showSyncPulse(icon){
   _pulseTimer = setTimeout(()=>{ dot.style.background='#00C853'; dot.title='Saved'; }, 1200);
 }
 /* ═══════════════════════════════════
-   MANUAL OVERRIDE PAGE
+   RESET MONTH (Admin Panel)
 ═══════════════════════════════════ */
-function orToggleDutyMode(){
-  const mode = document.getElementById('or-duty-mode').value;
-  const fields = document.getElementById('or-mph-fields');
-  if(fields) fields.style.display = (mode === 'jk_mph') ? 'block' : 'none';
-}
-function orMajalisSelChange(){
-  const sel = document.getElementById('or-majalis-sel');
-  const custom = document.getElementById('or-majalis-custom');
-  if(!sel || !custom) return;
-  custom.style.display = sel.value === '__custom__' ? 'block' : 'none';
-}
-function orLoadFields(){
-  populateTrainingDropdowns();
-  const _rl = document.getElementById('or-reset-label');
-  if(_rl) _rl.textContent = MO[calMo]+' '+calYr;
-  const ds = document.getElementById('or-edit-date').value;
-  if(!ds) return;
-  const ro = roster[ds] || {};
-  const active = vols.filter(v => v.status === 'active');
-  // Notes line
-  const notesEl = document.getElementById('or-edit-notes');
-  if(notesEl){
-    const dow = new Date(ds+'T12:00').getDay();
-    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    const mj = majalisEvs.find(e => e.date === ds);
-    const tr = trainings.find(e => e.date === ds);
-    notesEl.textContent = dayNames[dow] + (mj ? ' · ' + mj.name : '') + (tr ? ' · Training Day' : '') + (ro._mph_removed ? ' · MPH cancelled for this day' : '');
-  }
-  // Duty mode
-  const dutyMode = document.getElementById('or-duty-mode');
-  const hasManualMph = ro._mph_primary && !ro._mph_removed;
-  if(dutyMode){
-    // A day saved as "JK only" carries _mph_removed — it must stay in 'jk'
-    // mode on reload. Only a day with an actual manual MPH assignment
-    // (and MPH not cancelled) should show the MPH fields.
-    dutyMode.value = (hasManualMph || (ro._mph_manual && !ro._mph_removed)) ? 'jk_mph' : 'jk';
-    orToggleDutyMode();
-  }
-  // Volunteer Duty dropdown
-  const primarySel = document.getElementById('or-edit-primary');
-  if(primarySel){
-    primarySel.innerHTML = '<option value="">— Auto-assigned —</option>' +
-      active.map(v => `<option value="${esc(v.name)}" ${ro._primary===v.name?'selected':''}>${esc(v.name)}</option>`).join('');
-  }
-  // Supervisor dropdown — all supervisors + No Supervisor
-  const supSel = document.getElementById('or-edit-sup');
-  if(supSel){
-    const sups = active.filter(v => (v.roles||[]).includes('Supervisor') || v.type==='Supervisor');
-    supSel.innerHTML = '<option value="">No Supervisor</option>' +
-      sups.map(v => `<option value="${esc(v.name)}" ${ro._sup===v.name?'selected':''}>${esc(v.name)}</option>`).join('');
-  }
-  // MPH Duty 1
-  const mph1Sel = document.getElementById('or-edit-mph');
-  if(mph1Sel){
-    mph1Sel.innerHTML = '<option value="">— Select volunteer —</option>' +
-      active.map(v => `<option value="${esc(v.name)}" ${ro._mph_primary===v.name?'selected':''}>${esc(v.name)}</option>`).join('');
-  }
-  // MPH Training
-  const mph2Sel = document.getElementById('or-edit-mph2');
-  if(mph2Sel){
-    mph2Sel.innerHTML = '<option value="">— None —</option>' +
-      active.map(v => `<option value="${esc(v.name)}" ${ro._mph_primary2===v.name?'selected':''}>${esc(v.name)}</option>`).join('');
-  }
-  // Majalis dropdown — show current, pre-select it
-  const mjSel = document.getElementById('or-majalis-sel');
-  const mjCurrent = document.getElementById('or-majalis-current');
-  const mj = majalisEvs.find(e => e.date === ds);
-  if(mjSel) mjSel.value = '';
-  const mjUni = document.getElementById('or-majalis-uniform');
-  if(mjUni) mjUni.value = (mj && mj.uniform) || '';
-  if(mjCurrent){
-    if(mj) mjCurrent.innerHTML = `<span style="color:#90CAF9;">Current: <b>${esc(mj.name)}</b>${mj.uniform?' · 👔 '+esc(mj.uniform):''}</span>`;
-    else mjCurrent.textContent = 'No majalis on this day.';
-  }
-  // Training section
-  const tr = trainings.find(e => e.date === ds);
-  const trCurrent = document.getElementById('or-tr-current');
-  const trDelWrap = document.getElementById('or-tr-delete-wrap');
-  if(trCurrent) trCurrent.innerHTML = tr
-    ? `<span style="color:#FCD34D;">Trainer: <b>${esc(tr.trainer)}</b> · Trainee: <b>${esc(tr.trainee)}</b></span>`
-    : 'No training on this day.';
-  if(trDelWrap) trDelWrap.style.display = tr ? 'block' : 'none';
-  if(tr){
-    document.getElementById('or-tr-trainee').value = tr.trainee||'';
-    document.getElementById('or-tr-trainer').value = tr.trainer||'';
-  }
-}
-function orAddTraining(){
-  const ds = document.getElementById('or-edit-date').value;
-  if(!ds){ toast('Pick a date first','err'); return; }
-  const trainee = document.getElementById('or-tr-trainee').value.trim();
-  const trainer = document.getElementById('or-tr-trainer').value.trim();
-  if(!trainee){ toast('Select a trainee (Junior Team Member)','err'); return; }
-  if(!trainer){ toast('Select a trainer (Supervisor)','err'); return; }
-  // Remove existing training on this day first
-  const existing = trainings.find(e=>e.date===ds);
-  if(existing){ trainings=trainings.filter(e=>e.id!==existing.id); dbDeleteTraining(existing.id); }
-  const newTr = {id:uid(), name:trainee, type:'Training', trainee, trainer, date:ds, time:'', category:'training'};
-  trainings.push(newTr);
-  dbSaveTraining(newTr);
-  auditLog(`Admin added Training: ${trainee} with ${trainer}`, 'training', `Date: ${ds} via Manual Override`);
-  renderTrainingCards(); autoRoster();
-  orLoadFields();
-  toast(`Training added to ${fd(ds)}`);
-}
-function orRemoveTraining(){
-  const ds = document.getElementById('or-edit-date').value;
-  if(!ds) return;
-  const tr = trainings.find(e=>e.date===ds);
-  if(!tr){ toast('No training on this day','err'); return; }
-  trainings = trainings.filter(e=>e.id!==tr.id);
-  dbDeleteTraining(tr.id);
-  auditLog(`Admin removed Training: ${tr.trainee}`, 'training', `Date: ${ds} via Manual Override`);
-  renderTrainingCards(); autoRoster();
-  orLoadFields();
-  toast('Training removed.');
-}
-function orSaveDay(){
-  const ds = document.getElementById('or-edit-date').value;
-  if(!ds){ toast('Select a date first','err'); return; }
-  const primary = document.getElementById('or-edit-primary').value;
-  if(!primary){ toast('Select a volunteer for JK Duty','err'); return; }
-  const sup      = document.getElementById('or-edit-sup').value;
-  const dutyMode = document.getElementById('or-duty-mode').value;
-  const mph1     = dutyMode === 'jk_mph' ? document.getElementById('or-edit-mph').value : '';
-  const mph2     = dutyMode === 'jk_mph' ? document.getElementById('or-edit-mph2').value : '';
-  if(dutyMode === 'jk_mph' && !mph1){ toast('MPH Duty 1 must have a volunteer selected','err'); return; }
-  // Build roster entry
-  const entry = {
-    _primary:  primary,
-    _sup:      sup || '',
-    _manual:   true,
-    _auto:     false,
-  };
-  if(dutyMode === 'jk_mph'){
-    entry._mph_primary  = mph1;
-    entry._mph_primary2 = mph2 || '';
-    entry._mph_manual   = true;
-    delete entry._mph_removed;
-  } else {
-    // JK Only — explicitly remove MPH
-    entry._mph_removed  = true;
-    entry._mph_manual   = true;
-    delete entry._mph_primary;
-    delete entry._mph_primary2;
-  }
-  // Handle majalis change
-  const mjVal    = document.getElementById('or-majalis-sel').value;
-  const mjCustom = document.getElementById('or-majalis-custom').value.trim();
-  if(mjVal === '__none__'){
-    // Remove any existing majalis for this date
-    const existing = majalisEvs.find(e => e.date === ds);
-    if(existing){
-      majalisEvs = majalisEvs.filter(e => e.date !== ds);
-      dbDeleteMajalis(existing.id);
-      auditLog('Removed majalis from '+ds, 'majalis', 'Via Manual Override');
-    }
-  } else if(mjVal && mjVal !== ''){
-    const name = mjVal === '__custom__' ? mjCustom : mjVal;
-    if(!name){ toast('Enter a custom majalis name','err'); return; }
-    // Remove existing then add new
-    const existing = majalisEvs.find(e => e.date === ds);
-    if(existing){
-      majalisEvs = majalisEvs.filter(e => e.date !== ds);
-      dbDeleteMajalis(existing.id);
-    }
-    const _uniEl = document.getElementById('or-majalis-uniform');
-    const newMj = {id: uid(), name, type:'Majalis', date:ds, time:'', category:'', uniform:(_uniEl?_uniEl.value:'')};
-    majalisEvs.push(newMj);
-    dbSaveMajalis(newMj);
-    auditLog('Set majalis for '+ds+' to '+name, 'majalis', 'Via Manual Override');
-    // Auto-add PBS for Chandraat
-    if(name.toLowerCase().includes('chandraat')){
-      const pbsD = new Date(ds+'T12:00'); pbsD.setDate(pbsD.getDate()+8);
-      const pbsDate = localDS(pbsD);
-      if(!majalisEvs.find(e => e.date===pbsDate && e.name==='Paanch Baar Saal')){
-        const pbsMj = {id:uid(), name:'Paanch Baar Saal', type:'Majalis', date:pbsDate, time:'', category:''};
-        majalisEvs.push(pbsMj); dbSaveMajalis(pbsMj);
-        auditLog('Auto-added PBS 8 days after Chandraat', 'majalis', pbsDate);
-      }
-    }
-  }
-  // Navigate to correct month
-  const dateObj = new Date(ds+'T12:00');
-  calMo = dateObj.getMonth(); calYr = dateObj.getFullYear();
-  sessionStorage.setItem('jk_calMo', calMo);
-  sessionStorage.setItem('jk_calYr', calYr);
-  roster[ds] = entry;
-  pauseRealtime(5000);
-  dbSaveRosterDay(ds, entry);
-  auditLog('Manual override: '+ds, 'roster',
-    'JK: '+primary + (sup?' SUP: '+sup:'') +
-    (dutyMode==='jk_mph' ? ' MPH1: '+mph1+(mph2?' MPH2: '+mph2:'') : ' MPH: cancelled'));
-  autoRoster();
-  renderAll();
-  orLoadFields();
-  toast('✓ Override saved for '+fd(ds));
-}
-function orClearDay(){
-  const ds = document.getElementById('or-edit-date').value;
-  if(!ds){ toast('Select a date first','err'); return; }
-  delete roster[ds];
-  pauseRealtime(3000);
-  dbSaveRosterDay(ds, null);
-  auditLog('Cleared override for '+ds, 'roster', 'Reverted to auto-roster');
-  autoRoster();
-  orLoadFields();
-  toast('Override cleared — '+fd(ds)+' is back to auto');
-}
 async function orResetMonth(){
   const monthName = MO[calMo]+' '+calYr;
   if(!confirm('Reset ALL of '+monthName+' to automatic assignment?\n\nEvery manual override, MPH change and locked day in this month will be permanently removed and the engine will reassign the whole month. This cannot be undone.')) return;
@@ -6200,7 +6218,6 @@ async function orResetMonth(){
   auditLog('Reset '+monthName+' to auto-roster', 'roster', cleared+' saved day(s) cleared, month regenerated');
   autoRoster();
   renderAll();
-  orLoadFields();
   toast('✓ '+monthName+' reset — roster regenerated');
 }
 
