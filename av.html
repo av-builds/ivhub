@@ -5136,12 +5136,15 @@ async function downloadRosterPNG(){
 ═══════════════════════════════════════════════════════ */
 /* How event names are spelled in the CSV. Left = name stored in the app,
    right = text written to the file. Anything not listed exports as-is. */
+/* The one spelling used for the second MPH volunteer, in every row. */
+const CSV_MPH_TRAINING = 'MPH Training';
 const CSV_MJ_NAMES = {
   'Chandraat': 'Chaandraat',
   'Student':   'Student Majalis',
 };
 /* Splits a majalis name into its display text and whether it is a
-   Khushiyali "(K)" event, which belongs in column 6 instead of column 5. */
+   Khushiyali "(K)" event. The name always stays in the Majalis column; a
+   Khushiyali event is additionally flagged "Yes" in the Khushiyali column. */
 function csvMjParts(name){
   const raw   = (name||'').trim();
   const isK   = /\(\s*K\s*\)\s*$/i.test(raw);
@@ -5176,9 +5179,13 @@ function buildRosterCSV(){
     let mjCol = '', khCol = '';
     if(mj){
       const p = csvMjParts(mj.name);
-      if(p.isK) khCol = p.text; else mjCol = p.text;
+      mjCol = p.text;
+      if(p.isK) khCol = 'Yes';
     }
-    const uniCol = (mj && mj.uniform) || '';
+    /* Casual is the default, so it is left blank; only a formal uniform is
+       written out. Matches "Casual" and "Casual Uniform" alike. */
+    const uniRaw = ((mj && mj.uniform) || '').trim();
+    const uniCol = /^casual\b/i.test(uniRaw) ? '' : uniRaw;
     /* The 'Other Events' column has been in the header since the CSV was
        written and has always gone out empty — there was nothing to put in it.
        Additional events are that thing. Category in brackets where one is set,
@@ -5200,7 +5207,7 @@ function buildRosterCSV(){
     // ── MPH congregation
     if(!ro._mph_removed){
       add(ro._mph_primary,  'MPH');
-      add(ro._mph_primary2, 'MPH Training');
+      add(ro._mph_primary2, CSV_MPH_TRAINING);
     }
   }
   return {rows, missing, start, end};
