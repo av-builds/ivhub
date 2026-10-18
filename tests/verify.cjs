@@ -199,28 +199,47 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(r.cover===true&&r.lead===true,'hub     a stand-in and a lead still do');
   chk(p.errs.length===0,'hub     no page errors'); await p.context().close(); }
 
-// ── Specialized teams ──
+// ── Divisions and teams ──
 { const p=await open('index.html',{width:1200,height:900});
   const r=await p.evaluate(()=>{ const o={};
     const menu=perms=>{ CU={user:'x',display:'X',perms,uid:'u'}; applyNavVisibility(); return document.getElementById('specNav').innerText.replace(/\s+/g,' ').trim(); };
-    o.vol=menu(['sf_team']); o.lead=menu(['ck_lead']); o.director=menu(['director']); o.tl=menu(['tl_a']);
-    o.rank=[PERM_RANK.cl_lead,PERM_RANK.cl_alead,PERM_RANK.cl_team];
-    CU={user:'x',display:'X',perms:['director'],uid:'u'}; o.grant=grantableRoles().filter(r=>/^(cl|sf|ck|ab|sk|an)_/.test(r)).length;
-    CU={user:'x',display:'X',perms:['facilitator'],uid:'u'}; o.facGrant=grantableRoles().filter(r=>/^(cl|sf|ck|ab|sk|an)_/.test(r)).length;
+    o.cook=menu(['ck_team']); o.head=menu(['an_lead']); o.director=menu(['director']); o.tl=menu(['tl_a']); o.safety=menu(['ss_alead']);
+    o.rank=[PERM_RANK.an_lead,PERM_RANK.an_alead,PERM_RANK.mt_team];
+    CU={user:'x',display:'X',perms:['director'],uid:'u'}; o.grant=grantableRoles().filter(r=>/^(an|pt|ss|td|mt|ck|cl|ab|sk)_/.test(r)).length;
+    CU={user:'x',display:'X',perms:['facilitator'],uid:'u'}; o.facGrant=grantableRoles().filter(r=>/^(an|pt|ss|td|mt|ck|cl|ab|sk)_/.test(r)).length;
     CU={user:'x',display:'X',perms:['an_alead'],uid:'u'}; o.leadTeams=myLeadTeams().join();
+    CU={user:'x',display:'X',perms:['an_lead'],uid:'u'}; renderQuickAccess(); o.quick=document.getElementById('quickPanel').innerText.replace(/\s+/g,' ');
+    CU={user:'x',display:'X',perms:['an_lead'],uid:'u'}; o.noAdmin=[USERS_ADMIN(),STATS_VIEW(),canManageAccounts()].join();
     return o; });
-  chk(r.vol==='🦺 Safety Team'&&r.lead==='🍳 Cooking Team','teams   members see only their own team in the menu',r.vol+' / '+r.lead);
-  chk(r.director.split('🧹').length===2&&/Ancillary/.test(r.director),'teams   a director sees all six');
+  chk(/Ancillary Services/.test(r.cook)&&/Cooking/.test(r.cook)&&!/Maintenance|Cleaning|Paat/.test(r.cook),'teams   a cooking volunteer sees only Cooking, under Ancillary Services',r.cook);
+  chk(/🛠️ Ancillary Services/.test(r.head)&&/Maintenance/.test(r.head)&&/Cooking/.test(r.head)&&/Cleaning/.test(r.head)&&!/Paat|Safety/.test(r.head),'teams   a division head sees the division and its teams only',r.head);
+  chk(/Paat/.test(r.director)&&/Safety/.test(r.director)&&/Training/.test(r.director)&&/Abeshafa/.test(r.director)&&/Maintenance/.test(r.director),'teams   a director sees every division and team');
   chk(r.tl==='','teams   a Team A lead sees none of them');
-  chk(r.rank.join()==='6,7,9','teams   ranked like AV (lead 6, assistant 7, volunteer 9)',r.rank.join());
-  chk(r.grant===18&&r.facGrant===0,'teams   directors grant all 18 roles, facilitators none',r.grant+' / '+r.facGrant);
-  chk(r.leadTeams==='AN','teams   an assistant lead is treated as a lead for landing');
+  chk(/Safety & Security/.test(r.safety),'teams   a Safety & Security assistant lead sees their division',r.safety);
+  chk(r.rank.join()==='6,7,9','teams   leads rank 6, assistants 7, volunteers 9',r.rank.join());
+  chk(r.grant===23&&r.facGrant===0,'teams   directors grant all 23 roles, facilitators none',r.grant+' / '+r.facGrant);
+  chk(r.leadTeams==='AN','teams   a division assistant lead is treated as a lead for landing');
+  chk(/Division page/.test(r.quick)&&/Maintenance/.test(r.quick)&&/Cooking/.test(r.quick),'teams   a division head gets tiles for the division and each team',r.quick);
+  chk(r.noAdmin==='false,false,false','teams   a division head gets no Hub admin powers',r.noAdmin);
   chk(p.errs.length===0,'teams   hub no page errors'); await p.context().close(); }
-for(const f of ['cleaning','safety','cooking','abeshafa','sukreet','ancillary']){
-  const p=await open(f+'.html',{width:390,height:800},true);
-  const r=await p.evaluate(()=>{ show('stOk'); return {t:document.querySelector('.badge').innerText, h:document.querySelector('#stOk h1').innerText, key:TEAM_KEY}; });
-  chk(/under construction/i.test(r.t)&&r.h.length>3,'teams   '+f+'.html shows the under-construction page',r.h);
-  chk(p.errs.length===0,'teams   '+f+'.html no page errors'); await p.context().close(); }
+{ const cases=[
+    ['ancillary.html',['an_lead'],true,3,'division head opens their division, 3 team tiles'],
+    ['ancillary.html',['ck_lead'],false,0,'a team lead cannot open the division page'],
+    ['cooking.html',['an_alead'],true,0,'a division head opens a team beneath'],
+    ['cooking.html',['ck_team'],true,0,'a team volunteer opens their own team'],
+    ['cooking.html',['pt_lead'],false,0,'another division head cannot open it'],
+    ['paat.html',['pt_lead'],true,2,'Paat Team Lead sees both groups'],
+    ['abeshafa.html',['sk_lead'],false,0,'Sukreet lead cannot open Abeshafa'],
+    ['safety.html',['ss_lead'],true,0,'Safety & Security Lead opens their page'],
+    ['training.html',['director'],true,0,'a director opens Training & Development'],
+    ['maintenance.html',['tl_a'],false,0,'a Team A lead cannot open Maintenance'],
+  ];
+  for(const [f,perms,ok,tiles,label] of cases){
+    const p=await open(f,{width:390,height:800},true);
+    const r=await p.evaluate(perms=>{ render(perms); return {ok:!document.getElementById('stOk').classList.contains('hide'), tiles:document.querySelectorAll('#tiles a').length}; },perms);
+    chk(r.ok===ok&&r.tiles===tiles,'pages   '+f+' — '+label,JSON.stringify(r));
+    chk(p.errs.length===0,'pages   '+f+' no page errors'); await p.context().close(); }
+}
 
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});

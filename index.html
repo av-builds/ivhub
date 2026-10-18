@@ -149,6 +149,8 @@ html{scroll-behavior:smooth;}
 
 /* ─── PANELS ─── */
 /* ── Team Lead quick access: thumb-sized tiles straight to team pages ── */
+.nav-cap{margin:8px 14px 2px;font:800 10px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);opacity:.8;}
+.nav-sub{padding-left:30px;font-size:.94em;}
 .qa-team{margin-top:14px;}
 .qa-tl{font:800 11px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);margin:0 2px 8px;}
 .qa-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
@@ -1301,32 +1303,52 @@ const ROLE_DEFS = [
   { id:'av_team',          label:'AV Team Volunteer',         perms:['av_team'] },
 ];
 const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead','facilitator','tl_a','ytl_a','tl_b','ytl_b','av_admin','av_atl','av_coord','team_a','team_b','av_team'];
-/* ═══ SPECIALIZED TEAMS ═══
-   Each has its own page and three roles — Lead, Assistant Lead, Volunteer —
-   ranked like AV's (6, 7, 9). Their rosters are still to be designed; until
-   then the pages are "under construction" behind the same role checks.
-   Mirrored by tools/make-specialty.cjs, which generates the pages. The
-   backend (invite-user + profiles) must accept these role keys before they
-   can be granted — see docs/new-team-roles.md. */
-const SPECIALTY = [
-  { key:'cl', name:'Cleaning Volunteers', role:'Cleaning Team',      icon:'🧹', url:'cleaning.html' },
-  { key:'sf', name:'Safety Team',         role:'Safety Team',        icon:'🦺', url:'safety.html' },
-  { key:'ck', name:'Cooking Team',        role:'Cooking Team',       icon:'🍳', url:'cooking.html' },
-  { key:'ab', name:'Abeshafa Paat Group', role:'Abeshafa Paat',      icon:'📖', url:'abeshafa.html' },
-  { key:'sk', name:'Sukreet Paat Group',  role:'Sukreet Paat',       icon:'📜', url:'sukreet.html' },
-  { key:'an', name:'Ancillary Services',  role:'Ancillary Services', icon:'🛠️', url:'ancillary.html' },
+/* ═══ DIVISIONS AND TEAMS ═══
+   Follows the IV chart. A division (Ancillary Services, Paat, Safety &
+   Security, Training & Development) has a Lead and an Assistant Lead; its
+   teams each have a Lead, Assistant Lead and Volunteer. Division and team
+   Leads rank like AV's (6, 7) and volunteers 9. A division head can open
+   their division and every team beneath it; they get no other Hub powers.
+   The rosters are still to be designed, so the pages are "under
+   construction". Mirrored by tools/make-specialty.cjs, which generates the
+   pages. The backend (invite-user + profiles) must accept these role keys
+   before they can be granted — see docs/new-team-roles.md. */
+const DIVISIONS = [
+  { key:'an', name:'Ancillary Services', icon:'🛠️', url:'ancillary.html',
+    lead:'Ancillary Services Lead', alead:'Ancillary Services Assistant Lead',
+    teams:[
+      { key:'mt', name:'Maintenance',         role:'Maintenance',   icon:'🔧', url:'maintenance.html' },
+      { key:'ck', name:'Cooking Team',        role:'Cooking Team',  icon:'🍳', url:'cooking.html' },
+      { key:'cl', name:'Cleaning Volunteers', role:'Cleaning Team', icon:'🧹', url:'cleaning.html' },
+    ] },
+  { key:'pt', name:'Paat', icon:'📚', url:'paat.html',
+    lead:'Paat Team Lead', alead:'Paat Assistant Team Lead',
+    teams:[
+      { key:'ab', name:'Abeshafa Paat Group', role:'Abeshafa Paat', icon:'📖', url:'abeshafa.html' },
+      { key:'sk', name:'Sukreet Paat Group',  role:'Sukreet Paat',  icon:'📜', url:'sukreet.html' },
+    ] },
+  { key:'ss', name:'Safety & Security', icon:'🦺', url:'safety.html',
+    lead:'Safety & Security Lead', alead:'Assistant Safety & Security Lead', teams:[] },
+  { key:'td', name:'Training & Development', icon:'🎓', url:'training.html',
+    lead:'Training & Development Lead', alead:'Assistant Training & Development Lead', teams:[] },
 ];
-SPECIALTY.forEach(t=>{
-  [['lead',6,'Lead'],['alead',7,'Assistant Lead'],['team',9,'Volunteer']].forEach(([suffix,rank,label])=>{
-    const k = t.key + '_' + suffix;
-    PERM_RANK[k] = rank;
-    ROLE_LABELS[k] = t.role + ' ' + label;
-    ROLE_DEFS.push({ id:k, label:ROLE_LABELS[k], perms:[k] });
-    PERMS_VOCAB.push(k);
+const defRole = (k, rank, label)=>{
+  PERM_RANK[k] = rank; ROLE_LABELS[k] = label;
+  ROLE_DEFS.push({ id:k, label:label, perms:[k] }); PERMS_VOCAB.push(k);
+};
+DIVISIONS.forEach(d=>{
+  defRole(d.key+'_lead',  6, d.lead);
+  defRole(d.key+'_alead', 7, d.alead);
+  d.teams.forEach(t=>{
+    defRole(t.key+'_lead',  6, t.role + ' Lead');
+    defRole(t.key+'_alead', 7, t.role + ' Assistant Lead');
+    defRole(t.key+'_team',  9, t.role + ' Volunteer');
   });
 });
-const specPerms   = t=>[t.key+'_lead', t.key+'_alead', t.key+'_team'];
-const specVisible = t=>hasPerm(...IV_TOP, ...specPerms(t));
+const divPerms    = d=>[d.key+'_lead', d.key+'_alead'];
+const teamPerms   = t=>[t.key+'_lead', t.key+'_alead', t.key+'_team'];
+const divVisible  = d=>hasPerm(...IV_TOP, ...divPerms(d));
+const teamVisible = (d,t)=>divVisible(d) || hasPerm(...teamPerms(t));
 /* Roles/perms the current actor may grant (contract) */
 function grantableRoles(){
   const mine = myRank();
@@ -2004,9 +2026,14 @@ const LEAD_TEAMS = {
   B:  { label:'Team B',  url:'teamb.html', pages:[['calendar','📅','Calendar'],['roster','📋','Roster'],['attendance','✅','Attendance'],['reports','📊','Numbers'],['members','👥','People'],['announce','📣','Announcements']] },
   AV: { label:'AV Team', url:'av.html',    pages:[['calendar','📅','Roster'],['myduties','🗓️','My Duties'],['volunteers','👥','People'],['events','🕌','Add-ons'],['stats','📊','Duty Stats']] },
 };
-SPECIALTY.forEach(t=>{
-  LEAD_KEYS[t.key.toUpperCase()] = [t.key+'_lead', t.key+'_alead'];
-  LEAD_TEAMS[t.key.toUpperCase()] = { label:t.name, url:t.url, land:'', pages:[['', t.icon, 'Open team page']] };
+DIVISIONS.forEach(d=>{
+  LEAD_KEYS[d.key.toUpperCase()] = divPerms(d);
+  LEAD_TEAMS[d.key.toUpperCase()] = { label:d.name, url:d.url, land:'',
+    pages:[['', d.icon, 'Division page']].concat(d.teams.map(t=>['', t.icon, t.name, t.url])) };
+  d.teams.forEach(t=>{
+    LEAD_KEYS[t.key.toUpperCase()] = [t.key+'_lead', t.key+'_alead'];
+    LEAD_TEAMS[t.key.toUpperCase()] = { label:t.name, url:t.url, land:'', pages:[['', t.icon, 'Open team page']] };
+  });
 });
 function myLeadTeams(){
   if(!CU || myRank() < 6) return [];
@@ -2044,7 +2071,7 @@ function renderQuickAccess(){
   order.forEach(k=>{
     const T = LEAD_TEAMS[k];
     h += '<div class="qa-team"><div class="qa-tl">' + T.label + '</div><div class="qa-grid">' +
-      T.pages.map(p=>'<a class="qa-tile" href="' + T.url + (p[0] ? '?p=' + p[0] : '') + '" onclick="rememberTeam(\'' + k + '\')">' +
+      T.pages.map(p=>'<a class="qa-tile" href="' + (p[3] || (T.url + (p[0] ? '?p=' + p[0] : ''))) + '" onclick="rememberTeam(\'' + k + '\')">' +
         '<span class="qa-i">' + p[1] + '</span><span class="qa-t">' + p[2] + '</span></a>').join('') + '</div></div>';
   });
   const hub = [];
@@ -2066,11 +2093,22 @@ function applyNavVisibility(){
      stand in for an event, in which case the page is how they do it. */
   item('navTeamA', ADMIN_A() || (VIEW_A() && COVER_TEAMS.has('A')));
   item('navTeamB', ADMIN_B() || (VIEW_B() && COVER_TEAMS.has('B')));
-  const specShown = SPECIALTY.filter(specVisible);
-  sec('secSpec', AV_VIEW() || specShown.length > 0);
+  /* Grouped by division: a head sees the division and its teams; a team
+     member sees only their own team, under the division's name. */
+  let specHtml = '', specAny = false;
+  DIVISIONS.forEach(d=>{
+    const vt = d.teams.filter(t=>teamVisible(d,t));
+    const dv = divVisible(d);
+    if(!dv && !vt.length) return;
+    specAny = true;
+    specHtml += dv
+      ? '<a class="nav-item" href="' + d.url + '" style="display:flex"><span class="ni">' + d.icon + '</span> ' + d.name + '</a>'
+      : '<div class="nav-cap">' + d.name + '</div>';
+    vt.forEach(t=>{ specHtml += '<a class="nav-item nav-sub" href="' + t.url + '" style="display:flex"><span class="ni">' + t.icon + '</span> ' + t.name + '</a>'; });
+  });
+  sec('secSpec', AV_VIEW() || specAny);
   item('navAV', AV_VIEW());
-  const sn = $('specNav');
-  if(sn) sn.innerHTML = specShown.map(t=>'<a class="nav-item" href="' + t.url + '" style="display:flex"><span class="ni">' + t.icon + '</span> ' + t.name + '</a>').join('');
+  const sn = $('specNav'); if(sn) sn.innerHTML = specHtml;
   const mm = USERS_ADMIN(), st = STATS_VIEW(), ow = hasPerm('owner','developer'), au = AUDIT_VIEW();
   const sub = CAN_SUBMIT(), apv = CAN_APPROVE();
   sec('secMgmt', mm || st || ow || au || sub || apv);
@@ -2084,7 +2122,7 @@ function applyNavVisibility(){
   item('navAudit', au);
   [['navTeamA','A'],['navTeamB','B'],['navAV','AV']].forEach(x=>{ const l=$(x[0]); if(l) l.onclick=()=>rememberTeam(x[1]); });
   renderQuickAccess();
-  const nothing = !(IV_ANY() || AV_VIEW() || specShown.length || mm || st || au || sub || apv);
+  const nothing = !(IV_ANY() || AV_VIEW() || specAny || mm || st || au || sub || apv);
   $('dashEmpty').style.display = nothing ? 'block' : 'none';
 }
 function showApp(){

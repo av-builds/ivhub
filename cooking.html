@@ -19,11 +19,12 @@ body{font-family:'Archivo',sans-serif;font-weight:700;background:var(--dp);color
 .top .t{flex:1;min-width:0;}
 .top .t b{display:block;font-size:17px;font-weight:900;color:var(--blue-lt);text-transform:uppercase;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .top .t span{font-size:12px;color:var(--dm);}
+.top .t span a{color:var(--blue-lt);text-decoration:none;}
 .hub{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--db);
   color:var(--dt);text-decoration:none;font-size:14px;font-weight:800;white-space:nowrap;transition:all .18s;}
 .hub:hover{border-color:var(--blue-lt);background:rgba(79,195,247,.1);}
 main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 16px;}
-.card{width:560px;max-width:100%;background:var(--ds);border:1px solid var(--db);border-radius:22px;overflow:hidden;
+.card{width:620px;max-width:100%;background:var(--ds);border:1px solid var(--db);border-radius:22px;overflow:hidden;
   box-shadow:0 30px 80px rgba(0,0,0,.6);animation:up .5s cubic-bezier(.16,1,.3,1);}
 @keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .tape{height:26px;background:repeating-linear-gradient(-45deg,#F59E0B 0 18px,#111 18px 36px);}
@@ -35,8 +36,14 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 
 h1{font-size:28px;font-weight:900;line-height:1.15;margin-bottom:10px;}
 p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
 .role{display:inline-flex;align-items:center;gap:8px;font-size:13px;padding:8px 14px;border-radius:999px;background:rgba(79,195,247,.1);border:1px solid var(--db);color:#BFE6FA;}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:6px 0 22px;}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:104px;padding:12px;border-radius:16px;
+  border:1px solid var(--db);background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.015));color:var(--dt);text-decoration:none;
+  font-size:14px;font-weight:800;text-align:center;transition:all .15s;}
+.tile:hover{border-color:var(--blue-lt);background:rgba(79,195,247,.1);transform:translateY(-2px);}
+.tile:active{transform:scale(.96);}
+.tile i{font-style:normal;font-size:30px;line-height:1;}
 .msg{font-size:15px;line-height:1.6;color:var(--dm);}
-.msg.err{color:var(--red);}
 .spin{width:30px;height:30px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--blue-lt);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 14px;}
 @keyframes sp{to{transform:rotate(360deg)}}
 .hide{display:none!important;}
@@ -46,7 +53,7 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
 <body>
 <header class="top">
   <img src="logo.png" alt="Ismaili Volunteers" onerror="this.style.display='none'">
-  <div class="t"><b>Cooking Team</b><span>IV Hub · Auckland Jamatkhana</span></div>
+  <div class="t"><b>Cooking Team</b><span id="crumb">IV Hub · Auckland Jamatkhana</span></div>
   <a class="hub" href="index.html?hub=1">← Hub</a>
 </header>
 <main>
@@ -56,14 +63,15 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
       <div id="stLoad"><div class="spin"></div><div class="msg">Checking your access…</div></div>
       <div id="stDeny" class="hide">
         <h1>No access</h1>
-        <p class="lede" id="denyMsg">This page is for the Cooking Team. Ask a Director if you should be on it.</p>
+        <p class="lede" id="denyMsg">This page is for Cooking Team. Ask a Director if you should be on it.</p>
         <a class="hub" href="index.html?hub=1">← Back to the Hub</a>
       </div>
       <div id="stOk" class="hide">
         <div class="ico" aria-hidden="true">🍳</div>
         <div class="badge">Under construction</div>
         <h1>Cooking Team</h1>
-        <p class="lede">This team's roster page is being built. When it's ready it will appear here — nothing for you to do in the meantime.</p>
+        <p class="lede" id="okLede">This page is being built. When it's ready it will appear here — nothing for you to do in the meantime.</p>
+        <div id="tileWrap" class="hide"><div class="tiles" id="tiles"></div></div>
         <div class="role" id="roleChip"></div>
       </div>
     </div>
@@ -73,20 +81,9 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
 <script>
 const SB_URL = 'https://ysmkqvceezrjcrlixlii.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzbWtxdmNlZXpyamNybGl4bGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjk4NzcsImV4cCI6MjA5Mzg0NTg3N30.YHx-q-nR8qfFvk2dZnEg5knK6eDK-zCbPlyxPDknK4w';
-const TEAM_KEY = 'ck';
-const TEAM_NAME = 'Cooking Team';
-const TEAM_ROLE = 'Cooking Team';
-/* Who may open this page: the team's own roles, and the IV leadership who
-   can open any team. The database decides what anyone can actually change;
-   this only decides what to show. */
-const TEAM_PERMS = [TEAM_KEY+'_lead', TEAM_KEY+'_alead', TEAM_KEY+'_team'];
-const IV_TOP = ['owner','developer','director','deputy_director','phmu_lead','iv_admin'];
-const ROLE_LABEL = {};
-ROLE_LABEL[TEAM_KEY+'_lead']  = TEAM_ROLE + ' Lead';
-ROLE_LABEL[TEAM_KEY+'_alead'] = TEAM_ROLE + ' Assistant Lead';
-ROLE_LABEL[TEAM_KEY+'_team']  = TEAM_ROLE + ' Volunteer';
-const TOP_LABEL = {owner:'Owner',developer:'Developer',director:'Director',deputy_director:'Deputy Director',phmu_lead:'PHMU Lead',iv_admin:'Director'};
+const PAGE = {"kind":"team","name":"Cooking Team","icon":"🍳","parent":{"name":"Ancillary Services","file":"ancillary.html"},"teams":[],"roles":[["ck_lead","Cooking Team Lead"],["ck_alead","Cooking Team Assistant Lead"],["ck_team","Cooking Team Volunteer"],["an_lead","Ancillary Services Lead"],["an_alead","Ancillary Services Assistant Lead"]],"divPerms":["an_lead","an_alead"],"top":["owner","developer","director","deputy_director","phmu_lead","iv_admin"],"topLabel":{"owner":"Owner","developer":"Developer","director":"Director","deputy_director":"Deputy Director","phmu_lead":"PHMU Lead","iv_admin":"Director"}};
 const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const show = id => ['stLoad','stDeny','stOk'].forEach(s=>$(s).classList.toggle('hide', s!==id));
 
 function permList(p){
@@ -94,6 +91,8 @@ function permList(p){
   if(typeof p === 'string'){ try{ const j = JSON.parse(p); if(Array.isArray(j)) return j; }catch(e){} }
   return [];
 }
+/* Who may open this page. The database decides what anyone can actually
+   change; this only decides what to show. */
 async function start(){
   const lib = window.supabase;
   if(!lib || !lib.createClient){
@@ -105,11 +104,23 @@ async function start(){
   if(!sess || !sess.user){ location.replace('index.html'); return; }
   const { data: prof } = await sb.from('profiles').select('perms').eq('id', sess.user.id).maybeSingle();
   const perms = permList(prof && prof.perms);
-  const mine  = TEAM_PERMS.filter(p=>perms.indexOf(p) >= 0);
-  const top   = IV_TOP.filter(p=>perms.indexOf(p) >= 0);
-  if(!mine.length && !top.length){ show('stDeny'); return; }
-  const label = mine.length ? ROLE_LABEL[mine[0]] : (TOP_LABEL[top[0]] || 'Leadership');
-  $('roleChip').textContent = 'Signed in as ' + label;
+  render(perms);
+}
+function render(perms){
+  const mine = PAGE.roles.find(r=>perms.indexOf(r[0]) >= 0);
+  const top  = PAGE.top.find(p=>perms.indexOf(p) >= 0);
+  if(!mine && !top){ show('stDeny'); return; }
+  $('roleChip').textContent = 'Signed in as ' + (mine ? mine[1] : (PAGE.topLabel[top] || 'Leadership'));
+  if(PAGE.parent){
+    const canDiv = !!top || PAGE.divPerms.some(p=>perms.indexOf(p) >= 0);
+    $('crumb').innerHTML = canDiv ? '<a href="' + esc(PAGE.parent.file) + '">' + esc(PAGE.parent.name) + '</a> › IV Hub' : esc(PAGE.parent.name) + ' · IV Hub';
+    $('okLede').textContent = "This team's roster page is being built. When it's ready it will appear here — nothing for you to do in the meantime.";
+  }
+  if(PAGE.kind === 'division' && PAGE.teams.length){
+    $('tiles').innerHTML = PAGE.teams.map(t=>'<a class="tile" href="' + esc(t.file) + '"><i>' + t.icon + '</i>' + esc(t.name) + '</a>').join('');
+    $('tileWrap').classList.remove('hide');
+    $('okLede').textContent = 'Open a team below. The division overview is still being built.';
+  }
   show('stOk');
 }
 document.addEventListener('DOMContentLoaded', start);
