@@ -199,6 +199,29 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(r.cover===true&&r.lead===true,'hub     a stand-in and a lead still do');
   chk(p.errs.length===0,'hub     no page errors'); await p.context().close(); }
 
+// ── Specialized teams ──
+{ const p=await open('index.html',{width:1200,height:900});
+  const r=await p.evaluate(()=>{ const o={};
+    const menu=perms=>{ CU={user:'x',display:'X',perms,uid:'u'}; applyNavVisibility(); return document.getElementById('specNav').innerText.replace(/\s+/g,' ').trim(); };
+    o.vol=menu(['sf_team']); o.lead=menu(['ck_lead']); o.director=menu(['director']); o.tl=menu(['tl_a']);
+    o.rank=[PERM_RANK.cl_lead,PERM_RANK.cl_alead,PERM_RANK.cl_team];
+    CU={user:'x',display:'X',perms:['director'],uid:'u'}; o.grant=grantableRoles().filter(r=>/^(cl|sf|ck|ab|sk|an)_/.test(r)).length;
+    CU={user:'x',display:'X',perms:['facilitator'],uid:'u'}; o.facGrant=grantableRoles().filter(r=>/^(cl|sf|ck|ab|sk|an)_/.test(r)).length;
+    CU={user:'x',display:'X',perms:['an_alead'],uid:'u'}; o.leadTeams=myLeadTeams().join();
+    return o; });
+  chk(r.vol==='🦺 Safety Team'&&r.lead==='🍳 Cooking Team','teams   members see only their own team in the menu',r.vol+' / '+r.lead);
+  chk(r.director.split('🧹').length===2&&/Ancillary/.test(r.director),'teams   a director sees all six');
+  chk(r.tl==='','teams   a Team A lead sees none of them');
+  chk(r.rank.join()==='6,7,9','teams   ranked like AV (lead 6, assistant 7, volunteer 9)',r.rank.join());
+  chk(r.grant===18&&r.facGrant===0,'teams   directors grant all 18 roles, facilitators none',r.grant+' / '+r.facGrant);
+  chk(r.leadTeams==='AN','teams   an assistant lead is treated as a lead for landing');
+  chk(p.errs.length===0,'teams   hub no page errors'); await p.context().close(); }
+for(const f of ['cleaning','safety','cooking','abeshafa','sukreet','ancillary']){
+  const p=await open(f+'.html',{width:390,height:800},true);
+  const r=await p.evaluate(()=>{ show('stOk'); return {t:document.querySelector('.badge').innerText, h:document.querySelector('#stOk h1').innerText, key:TEAM_KEY}; });
+  chk(/under construction/i.test(r.t)&&r.h.length>3,'teams   '+f+'.html shows the under-construction page',r.h);
+  chk(p.errs.length===0,'teams   '+f+'.html no page errors'); await p.context().close(); }
+
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});
   const r=await p.evaluate(`(async()=>{ await (${SEED})(['tl_a']); let sent=null;

@@ -3,9 +3,9 @@
 name: Verify pages
 on:
   push:
-    paths: ['*.html', 'tests/**', 'package.json', '.github/workflows/verify.yml']
+    paths: ['*.html', 'tools/**', 'tests/**', 'package.json', '.github/workflows/verify.yml']
   pull_request:
-    paths: ['*.html', 'tests/**', 'package.json', '.github/workflows/verify.yml']
+    paths: ['*.html', 'tools/**', 'tests/**', 'package.json', '.github/workflows/verify.yml']
   workflow_dispatch:
 jobs:
   verify:
