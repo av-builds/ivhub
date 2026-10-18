@@ -2854,6 +2854,16 @@ function refreshSessionPerms(){
   try{ localStorage.setItem('ivhub_session', JSON.stringify(window.CU)); }catch(e){}
   applySession();
 }
+/* Opens on a requested page (?p=calendar) — what the Hub's shortcut tiles use.
+   nav() still applies its own permission checks, so a bad value just does nothing. */
+function avDeepLink(){
+  try{
+    const p = new URLSearchParams(location.search).get('p');
+    if(!p || !/^[a-z]+$/.test(p)) return;
+    const el = document.querySelector('[data-page="'+p+'"]');
+    if(el) nav(el);
+  }catch(e){}
+}
 function doLogin(){
   // Sign-in is centralised at the hub so there is one Auth flow, not two.
   (window.ivGo||function(u){location.href=u;})('index.html');
@@ -2998,6 +3008,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if(await verifyAuth()){
     applySession();
     if(!window.CU) return;
+    avDeepLink();
     const b0 = document.getElementById('calBody');
     if(b0) b0.innerHTML = calSkeletonHTML();
     loadFromDB().then(()=>{ autoRoster(); renderAll(); loadAuditLogs(); startRealtime(); })
