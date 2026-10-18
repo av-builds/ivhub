@@ -1,56 +1,85 @@
-# New specialized-team roles — backend checklist
+# Divisions, teams and roles — backend checklist
 
 The site side is done (pages, Hub menu, roles in Login Management). **Granting
 these roles will fail until the backend accepts the new role keys.** Nothing
 below can be applied from the website; it is Supabase work (SQL editor / Edge
 Function deploy). No credentials belong in this file.
 
-## The 18 role keys
+## Structure (from the IV chart)
 
-| Team | Lead (rank 6) | Assistant Lead (rank 7) | Volunteer (rank 9) |
+| Division (page) | Teams (pages) |
+|---|---|
+| Ancillary Services `ancillary.html` | Maintenance `maintenance.html`, Cooking Team `cooking.html`, Cleaning Volunteers `cleaning.html` |
+| Paat `paat.html` | Abeshafa Paat Group `abeshafa.html`, Sukreet Paat Group `sukreet.html` |
+| Safety & Security `safety.html` | none yet (its four support areas are not built) |
+| Training & Development `training.html` | none |
+
+Flute/Pipe Band is not on the site. All pages are "Under construction".
+
+## The 23 role keys
+
+Division roles (Lead rank 6, Assistant Lead rank 7):
+
+| Division | Lead | Assistant Lead |
+|---|---|---|
+| Ancillary Services | `an_lead` | `an_alead` |
+| Paat | `pt_lead` | `pt_alead` |
+| Safety & Security | `ss_lead` | `ss_alead` |
+| Training & Development | `td_lead` | `td_alead` |
+
+Team roles (Lead 6, Assistant Lead 7, Volunteer 9):
+
+| Team | Lead | Assistant Lead | Volunteer |
 |---|---|---|---|
-| Cleaning Volunteers | `cl_lead` | `cl_alead` | `cl_team` |
-| Safety Team | `sf_lead` | `sf_alead` | `sf_team` |
+| Maintenance | `mt_lead` | `mt_alead` | `mt_team` |
 | Cooking Team | `ck_lead` | `ck_alead` | `ck_team` |
+| Cleaning Volunteers | `cl_lead` | `cl_alead` | `cl_team` |
 | Abeshafa Paat Group | `ab_lead` | `ab_alead` | `ab_team` |
 | Sukreet Paat Group | `sk_lead` | `sk_alead` | `sk_team` |
-| Ancillary Services | `an_lead` | `an_alead` | `an_team` |
 
-Display labels: "Cleaning Team Lead", "Cleaning Team Assistant Lead",
-"Cleaning Team Volunteer", and likewise for the others (`Safety Team …`,
-`Cooking Team …`, `Abeshafa Paat …`, `Sukreet Paat …`, `Ancillary Services …`).
+Labels: "Ancillary Services Lead", "Paat Team Lead", "Paat Assistant Team Lead",
+"Safety & Security Lead", "Assistant Safety & Security Lead",
+"Training & Development Lead"; team roles read "Cooking Team Lead",
+"Cooking Team Assistant Lead", "Cooking Team Volunteer", and so on.
 
-Rank follows AV: lead 6, assistant 7, volunteer 9 (lower outranks higher).
-Granting rule is unchanged: only Director, Deputy Director, PHMU Lead and above
-(strictly outranking the role granted). Facilitators still manage Team A/B only.
+## Access rules (enforced in the site; the database decides what can change)
+
+- A team's own roles open that team's page.
+- A division Lead or Assistant Lead opens their division page **and every team
+  page under it**. They get no other Hub powers (no Login Management, no
+  user management, no other divisions).
+- Owner, Developer, Director, Deputy Director and PHMU Lead open everything.
+- Granting these roles: Director, Deputy Director, PHMU Lead and above only.
+  Facilitators still manage Teams A and B only.
 
 ## What to change
 
-1. **`invite-user` Edge Function** — add the 18 keys wherever it lists valid
-   roles/permissions and wherever it maps a role to a rank. Keep the existing
-   rule that an actor may only grant roles ranking strictly below their own.
-2. **`profiles.perms`** — if there is a CHECK constraint, enum or trigger that
-   restricts the allowed values, add the 18 keys.
-3. **Any SQL function that lists roles** (for example rank helpers used by
-   row-level security) — add the 18 keys at the ranks above. The existing
-   `my_prepare_teams()`, `my_approve_teams()` and `member_invite_team()` do
-   **not** need changing: these teams have no invitation or approval flow yet.
+1. **`invite-user` Edge Function** — add the 23 keys wherever it lists valid
+   roles/permissions and wherever it maps a role to a rank (ranks above).
+   Keep the rule that an actor may only grant roles ranking strictly below
+   their own.
+2. **`profiles.perms`** — if there is a CHECK constraint, enum or trigger
+   restricting the allowed values, add the 23 keys.
+3. **Any SQL function that lists roles** (rank helpers used by row-level
+   security) — add the 23 keys at the ranks above. `my_prepare_teams()`,
+   `my_approve_teams()` and `member_invite_team()` need no change: these teams
+   have no invitation or approval flow yet.
 4. **Row-level security** — nothing is required for the placeholder pages; they
    read only the viewer's own `profiles` row. When a team's roster is built,
-   its tables and policies are designed then.
+   its tables and policies are designed then, and a division head's reach
+   beneath them should be written into those policies too.
 
 ## Checking it worked
 
-1. As a Director, open Login Management → Invite a user (or edit someone) and
-   confirm the new roles appear in the dropdown. Grant one, e.g. Safety Team
-   Volunteer, to a test account.
-2. Sign in as that account: the menu shows **Specialized Teams → Safety Team**
-   and the page shows the Under Construction sign.
-3. Grant a Lead role and sign in again: the account lands on its team page and
-   the Hub has an "Open team page" tile.
+1. As a Director, grant a test account **Cooking Team Volunteer**. Signing in
+   shows **Specialized Teams → Ancillary Services › Cooking Team** in the menu
+   and the Under Construction page.
+2. Grant another **Ancillary Services Lead**. They land on the Ancillary
+   Services page, which lists Maintenance, Cooking and Cleaning; they can open
+   each, and cannot open Paat.
 
-## Changing a team's name or adding a team
+## Changing names or adding a team
 
-Edit `SPECIALTY` in `index.html` and `TEAMS` in `tools/make-specialty.cjs` (they
-mirror each other), then run `node tools/make-specialty.cjs` to regenerate the
-page files. A new team also needs its role keys added in the backend as above.
+Edit `DIVISIONS` in `index.html` and in `tools/make-specialty.cjs` (they mirror
+each other), then run `node tools/make-specialty.cjs` to regenerate the pages.
+New role keys must also be added in the backend as above.
