@@ -1012,6 +1012,53 @@ html{scroll-behavior:smooth;}
 .md-drop-item:hover,.md-drop-item.selected{background:rgba(79,195,247,0.1);color:#4FC3F7;}
 /* Results area */
 #mdResults{display:none;}
+/* ── My Duties: unified list + poster ── */
+.mdl-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;}
+.mdl-chip{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--db);background:transparent;color:var(--dm);font:800 12px 'Archivo',sans-serif;cursor:pointer;transition:all .18s;}
+.mdl-chip:hover{border-color:var(--blue-lt);color:var(--blue-lt);}
+.mdl-chip.on{background:rgba(79,195,247,.16);border-color:var(--blue-lt);color:#fff;}
+.mdl-toggle{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font:700 12px 'Archivo',sans-serif;color:var(--dm);cursor:pointer;min-height:36px;}
+.mdl-toggle input{width:18px;height:18px;accent-color:#4FC3F7;}
+.mdl{display:flex;flex-direction:column;gap:10px;}
+.mdl-row{--c:#4FC3F7;font-size:14px;display:flex;gap:1.1em;align-items:stretch;padding:.85em 1.1em .85em .85em;border-radius:1em;
+  background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.08);position:relative;overflow:hidden;}
+.mdl-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.3em;background:var(--c);}
+.mdl-row.past{opacity:.5;}
+.mdl-date{flex:0 0 4.4em;text-align:center;display:flex;flex-direction:column;justify-content:center;padding-left:.35em;}
+.mdl-dow{font:800 .72em 'Archivo',sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--c);}
+.mdl-day{font:900 2.2em/1 'Archivo',sans-serif;color:#fff;margin:.05em 0;}
+.mdl-mo{font:800 .72em 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);}
+.mdl-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.4em;}
+.mdl-top{display:flex;align-items:center;gap:.6em;flex-wrap:wrap;}
+.mdl-div{font:900 .7em 'Archivo',sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:.3em .7em;border-radius:999px;background:var(--c);color:#04121f;}
+.mdl-title{font:900 1.2em/1.2 'Archivo',sans-serif;color:#F2F9FF;overflow-wrap:anywhere;}
+.mdl-sub{font-size:.92em;color:#A9C9DD;overflow-wrap:anywhere;}
+.mdl-sub b{color:#E8F4FD;}
+.mdl-tags{display:flex;flex-wrap:wrap;gap:.45em;}
+.mdl-tag{font:800 .76em 'Archivo',sans-serif;letter-spacing:.04em;padding:.28em .75em;border-radius:999px;background:rgba(255,255,255,.08);color:#CFE8F7;}
+.mdl-tag.today{background:rgba(52,211,153,.18);color:#6EE7B7;}
+.md-sum-card{--c:#4FC3F7;}
+.md-sum-card::before{background:var(--c)!important;}
+.md-sum-card .md-sum-val{color:var(--c)!important;}
+.md-sum-sub{font-size:11px;color:var(--dm);margin-top:4px;font-weight:700;}
+#mdNotes .mdl-note{font-size:12.5px;font-weight:700;color:#FBBF24;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:8px 12px;margin-bottom:10px;}
+#mdPosterHost{position:fixed;left:-20000px;top:0;pointer-events:none;}
+.mdposter{width:1080px;box-sizing:border-box;padding:56px 56px 44px;font-size:20px;background:radial-gradient(900px 500px at 85% -5%,rgba(21,101,192,.35),transparent 60%),#020B18;color:#E8F4FD;font-family:'Archivo',sans-serif;}
+.mdposter .mdl-row{font-size:20px;}
+.mdp-head{display:flex;align-items:center;gap:24px;margin-bottom:26px;}
+.mdp-head img{width:92px;height:92px;border-radius:50%;background:#fff;flex-shrink:0;}
+.mdp-kick{font:800 15px 'Archivo',sans-serif;letter-spacing:.3em;text-transform:uppercase;color:#4FC3F7;}
+.mdp-name{font:900 52px/1.05 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.02em;color:#fff;margin:6px 0;overflow-wrap:anywhere;}
+.mdp-range{font:700 18px 'Archivo',sans-serif;color:#9FC4DB;}
+.mdp-key{display:flex;flex-wrap:wrap;gap:12px 28px;padding:18px 22px;margin-bottom:26px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);}
+.mdp-key span{display:inline-flex;align-items:center;gap:10px;font:800 17px 'Archivo',sans-serif;color:#E8F4FD;}
+.mdp-key i{width:14px;height:14px;border-radius:50%;background:var(--c);display:inline-block;}
+.mdp-key b{color:var(--c);font-size:22px;}
+.mdposter .mdl{gap:14px;}
+.mdp-foot{margin-top:34px;padding-top:20px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;gap:20px;font:700 15px/1.5 'Archivo',sans-serif;color:#7AAECB;}
+.mdp-empty{text-align:center;padding:60px 0;font:700 22px 'Archivo',sans-serif;color:#7AAECB;}
+@media (max-width:600px){.mdl-row{font-size:13px;}.mdl-toggle{margin-left:0;}}
+
 .md-results-hdr{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:16px;flex-wrap:wrap;gap:10px;
@@ -1489,7 +1536,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <!-- MY DUTIES -->
     <div class="page" id="page-myduties">
       <div class="ph">
-        <div><h1>My Duties</h1><p>Search your name to see your assigned duties for the current roster month</p></div>
+        <div><h1>My Duties</h1><p>Search a name to see every upcoming duty across Ismaili Volunteers</p></div>
       </div>
       <!-- Search hero -->
       <div class="md-hero">
@@ -1513,36 +1560,27 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
             <div class="md-vol-name" id="mdVolName">—</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <div class="md-month-badge" id="mdMonthBadge">—</div>
-            <button class="md-screenshot-btn" onclick="mdScreenshot()">📷 Save / Print</button>
+            <div class="md-month-badge" id="mdRangeBadge">—</div>
+            <button class="md-screenshot-btn" id="mdSaveBtn" onclick="mdSaveImage(false)">📷 Save image</button>
+            <button class="md-screenshot-btn md-share" id="mdShareBtn" onclick="mdSaveImage(true)" style="display:none">↗ Share</button>
           </div>
         </div>
-        <!-- Summary cards -->
-        <div class="md-summary">
-          <div class="md-sum-card jk"><div class="md-sum-label">JK Duties</div><div class="md-sum-val" id="mdCntJK">0</div></div>
-          <div class="md-sum-card mph"><div class="md-sum-label">MPH Duties</div><div class="md-sum-val" id="mdCntMPH">0</div></div>
-          <div class="md-sum-card sup"><div class="md-sum-label">Supervision</div><div class="md-sum-val" id="mdCntSup">0</div></div>
-          <div class="md-sum-card tr"><div class="md-sum-label">Training</div><div class="md-sum-val" id="mdCntTr">0</div></div>
+        <div class="mdl-chips" role="group" aria-label="How far ahead">
+          <button type="button" class="mdl-chip" data-r="3" onclick="mdSetRange(3)">Next 3 months</button>
+          <button type="button" class="mdl-chip" data-r="6" onclick="mdSetRange(6)">Next 6 months</button>
+          <button type="button" class="mdl-chip" data-r="12" onclick="mdSetRange(12)">Next 12 months</button>
+          <label class="mdl-toggle"><input type="checkbox" id="mdPast" onchange="mdSetPast(this.checked)"> Include earlier this month</label>
         </div>
-        <!-- Duty cards -->
-        <div id="mdCapture">
-          <div class="md-cap-hdr" id="mdCapHdr" style="display:none;">
-            <div style="display:flex;align-items:center;gap:14px;">
-              <img class="app-logo" src="logo.png" alt="Ismaili Volunteers" style="width:46px;height:46px;border-radius:50%;background:#fff;flex-shrink:0;" onerror="this.onerror=null;this.src=window.IV_LOGO">
-              <div>
-                <div class="md-cap-title" id="mdCapTitle">MY DUTIES</div>
-                <div class="md-cap-sub" id="mdCapSub"></div>
-              </div>
-            </div>
-          </div>
-          <div id="mdGrid" class="md-grid"></div>
-          <div id="mdEmpty" class="md-empty" style="display:none;">
-            <div class="md-empty-icon">🔍</div>
-            <div>No duties found for <b id="mdEmptyName"></b> in <b id="mdEmptyMonth"></b>.</div>
-            <div style="margin-top:8px;font-size:13px;">Check the Monthly Roster for the full schedule, or ask your administrator.</div>
-          </div>
+        <div class="md-summary" id="mdSummary"></div>
+        <div id="mdNotes"></div>
+        <div id="mdList" class="mdl"></div>
+        <div id="mdEmpty" class="md-empty" style="display:none;">
+          <div class="md-empty-icon">🔍</div>
+          <div>No duties found for <b id="mdEmptyName"></b> between <b id="mdEmptyRange"></b>.</div>
+          <div style="margin-top:8px;font-size:13px;">Try a longer range, or check the Monthly Roster for the full schedule.</div>
         </div>
       </div>
+      <div id="mdPosterHost" aria-hidden="true"></div>
     </div>
     <!-- USER MANAGEMENT -->
     <div class="page admin-page" id="page-volunteers">
@@ -5786,246 +5824,262 @@ function nav(el){
 }
 /* ═══════════════════════════════════
    MY DUTIES
+   One list for a person across every division: the AV roster plus every
+   IV team's published events. Divisions are not hard-coded — any team that
+   appears on an IV event gets its own colour and its own line in the key,
+   so a newly rolled-out team shows up without a change here.
 ═══════════════════════════════════ */
-// State
-let _mdCurrentName = '';
-let _mdDropSelected = -1;
-function mdInit(){
-  // Nothing to auto-run — wait for user input
+let _md={name:'',range:3,past:false,items:[],notes:[]};
+let _mdIV=null, _mdDrop=-1;
+const MD_DIV_COLOURS={av:'#4FC3F7',A:'#34D399',B:'#F472B6'};
+const MD_SPARE=['#FB923C','#A78BFA','#FACC15','#2DD4BF','#E879F9','#A3E635'];
+function mdColour(div){
+  if(MD_DIV_COLOURS[div]) return MD_DIV_COLOURS[div];
+  let h=0; String(div).split('').forEach(c=>{ h=(h*31+c.charCodeAt(0))>>>0; });
+  return MD_DIV_COLOURS[div]=MD_SPARE[h%MD_SPARE.length];
 }
-// Build the list of all names to search across:
-// volunteers list + anyone appearing in roster as _primary, _sup, _mph_primary, trainer/trainee
+function mdDivLabel(div){ return div==='av'?'AV':'Team '+div; }
+function mdNorm(s){ return String(s||'').trim().replace(/\s+/g,' ').toLowerCase(); }
+function mdAddMonths(ds,n){ const d=new Date(ds+'T12:00'); d.setMonth(d.getMonth()+n); return localDS(d); }
+function mdWindow(){
+  const t=todayDS();
+  return {start:_md.past?t.slice(0,8)+'01':t, end:mdAddMonths(t,_md.range)};
+}
+function mdInit(){
+  const sh=document.getElementById('mdShareBtn');
+  if(sh&&typeof navigator.canShare==='function'&&typeof navigator.share==='function') sh.style.display='';
+  mdLoadIV().then(()=>{ if(_md.name) mdRender(); });   // also fills the name list
+  if(_md.name) mdRender();
+}
+/* The IV side. Only published events (`confirmed`) — a draft roster is a
+   work in progress and should not reach a volunteer's picture. A refused or
+   missing table is reported on the page rather than failing the whole list. */
+async function mdLoadIV(force){
+  if(_mdIV&&!force&&Date.now()-_mdIV.t<60000) return _mdIV;
+  const out={t:Date.now(),events:[],rosters:{},members:[],notes:[]};
+  _mdIV=out;
+  if(!sb){ out.notes.push('Offline — IV team duties could not be loaded.'); return out; }
+  const t=todayDS(), from=t.slice(0,8)+'01', to=mdAddMonths(t,12);
+  try{
+    const ev=await sb.from('iv_events').select('*').eq('confirmed',true).gte('date',from).lte('date',to).order('date');
+    if(ev.error) throw ev.error;
+    out.events=ev.data||[];
+    const ids=out.events.map(e=>e.id);
+    for(let i=0;i<ids.length;i+=200){
+      const r=await sb.from('iv_roster').select('event_id,data').in('event_id',ids.slice(i,i+200));
+      if(r.error) throw r.error;
+      (r.data||[]).forEach(x=>{ out.rosters[x.event_id]=x.data; });
+    }
+  }catch(e){
+    console.warn('My Duties: IV events:',e);
+    out.events=[]; out.rosters={};
+    out.notes.push('IV team duties could not be loaded ('+((e&&e.message)||'no access')+').');
+  }
+  try{
+    const m=await sb.from('iv_members').select('id,name,team,status');
+    if(!m.error) out.members=m.data||[];
+  }catch(e){}
+  return out;
+}
+function mdPeople(a){ return [].concat(a&&a.m||[],a&&a.f||[],a&&a.x||[]); }
+function mdDutyLabel(key){
+  const k=String(key).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const map={nandi_labelling:'Nandi Labelling',number_1:'Number 1',ph_entrance:'Prayer Hall Entrance',shoe_entrance:'Shoe Entrance',seating:'Seating & Discipline',sukreet:'Sukreet',ghatpaat_closing:'Ghatpaat Closing',safety_exit:'Safety Exit Door/Discipline',nandi:'Nandi',nandi_setup:'Nandi Set-up',nandi_centre:'Nandi Centre',nandi_trolley:'Nandi Trolley',nandi_distribution:'Nandi Distribution',chai:'Chai Station',chai_packup:'Chai Station Pack-up',water_station:'Water Station',nandi_line:'Nandi Line',nandi_passing:'Nandi Passing',mph_paat_windup:'MPH Paat Windup',mph_entrance:'MPH Hall Entrance',mph_seating:'Seating & Discipline',mph_sukreet:'Sukreet & Ghatpaat Closing'};
+  return map[key]||k;
+}
 function mdAllNames(){
-  const set = new Set();
+  const set=new Set();
   vols.forEach(v=>{ if(v.name) set.add(v.name.trim()); });
   Object.values(roster).forEach(ro=>{
-    if(ro._primary)      set.add(ro._primary.trim());
-    if(ro._sup)          set.add(ro._sup.trim());
-    if(ro._mph_primary)  set.add(ro._mph_primary.trim());
-    if(ro._mph_primary2) set.add(ro._mph_primary2.trim());
+    [ro._primary,ro._sup,ro._mph_primary,ro._mph_primary2].forEach(n=>{ if(n) set.add(String(n).trim()); });
   });
-  trainings.forEach(t=>{
-    if(t.trainer) set.add(t.trainer.trim());
-    if(t.trainee) set.add(t.trainee.trim());
-  });
+  trainings.forEach(t=>{ if(t.trainer) set.add(t.trainer.trim()); if(t.trainee) set.add(t.trainee.trim()); });
+  if(_mdIV){
+    _mdIV.members.forEach(m=>{ if(m.name&&m.status!=='inactive') set.add(m.name.trim()); });
+    Object.values(_mdIV.rosters).forEach(r=>{ Object.values((r&&r.assign)||{}).forEach(a=>mdPeople(a).forEach(p=>{ if(p&&p.name) set.add(String(p.name).trim()); })); });
+  }
   return [...set].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
 }
+function mdCollect(name,win){
+  const target=mdNorm(name), items=[];
+  const is=n=>mdNorm(n)===target;
+  /* ── AV ── */
+  const dates=new Set(Object.keys(roster)); trainings.forEach(t=>dates.add(t.date));
+  [...dates].filter(ds=>ds>=win.start&&ds<=win.end).forEach(ds=>{
+    const ro=roster[ds]||{}, tr=trainings.find(e=>e.date===ds), mj=majalisEvs.find(e=>e.date===ds);
+    const trainer=tr&&is(tr.trainer), trainee=tr&&is(tr.trainee);
+    const tag=mj?['🕌 '+mj.name]:[];
+    const push=(title,subs)=>items.push({ds,div:'av',title,subs:subs||[],tags:tag.slice()});
+    const jk=ro._primary||getJKP(ro);
+    if(jk&&is(jk)&&!trainer) push('Jamātkhana duty',ro._sup?['Supervised by <b>'+esc(ro._sup)+'</b>']:[]);
+    if(ro._sup&&is(ro._sup)) push('Supervising',jk&&!is(jk)?['On duty with <b>'+esc(jk)+'</b>']:[]);
+    if(!ro._mph_removed&&(is(ro._mph_primary)||is(ro._mph_primary2))){
+      const partner=is(ro._mph_primary)?ro._mph_primary2:ro._mph_primary;
+      push('MPH congregation duty',partner?['With <b>'+esc(partner)+'</b>']:[]);
+    }
+    if(trainer) push('Training · Trainer',['Trainee: <b>'+esc(tr.trainee)+'</b>']);
+    if(trainee) push('Training · Trainee',['Trainer: <b>'+esc(tr.trainer)+'</b>']);
+  });
+  /* ── IV teams ── */
+  if(_mdIV){
+    const ids=new Set(_mdIV.members.filter(m=>is(m.name)).map(m=>m.id));
+    _mdIV.events.filter(e=>e.date>=win.start&&e.date<=win.end).forEach(e=>{
+      const div=String(e.team||'?');
+      const assign=(_mdIV.rosters[e.id]||{}).assign||{};
+      const duties=[];
+      Object.keys(assign).forEach(k=>{
+        if(mdPeople(assign[k]).some(p=>p&&((p.id!=null&&ids.has(p.id))||is(p.name)))) duties.push(mdDutyLabel(k));
+      });
+      const tags=[]; if(e.uniform) tags.push('👔 '+e.uniform);
+      if(duties.length) items.push({ds:e.date,div,title:[...new Set(duties)].join(' · '),subs:['<b>'+esc(e.name)+'</b>'],tags});
+      if(e.cover_name&&is(e.cover_name)) items.push({ds:e.date,div,title:'Covering the event',subs:['<b>'+esc(e.name)+'</b>'],tags:tags.slice()});
+    });
+  }
+  items.sort((a,b)=>a.ds.localeCompare(b.ds)||(a.div==='av'?-1:1)-(b.div==='av'?-1:1));
+  return items;
+}
+function mdRowHTML(it){
+  const d=new Date(it.ds+'T12:00'), today=todayDS();
+  const tags=it.tags.concat(it.ds===today?['TODAY']:[]).map(t=>`<span class="mdl-tag${t==='TODAY'?' today':''}">${esc(t)}</span>`).join('');
+  return `<div class="mdl-row${it.ds<today?' past':''}" style="--c:${mdColour(it.div)}">
+    <div class="mdl-date"><span class="mdl-dow">${d.toLocaleDateString('en-NZ',{weekday:'short'})}</span><span class="mdl-day">${d.getDate()}</span><span class="mdl-mo">${MOS[d.getMonth()]}</span></div>
+    <div class="mdl-body">
+      <div class="mdl-top"><span class="mdl-div">${esc(mdDivLabel(it.div))}</span><span class="mdl-title">${esc(it.title)}</span></div>
+      ${it.subs.map(x=>`<div class="mdl-sub">${x}</div>`).join('')}
+      ${tags?`<div class="mdl-tags">${tags}</div>`:''}
+    </div></div>`;
+}
+function mdDivCounts(items){
+  const m={}; items.forEach(i=>{ m[i.div]=(m[i.div]||0)+1; });
+  return Object.keys(m).sort((a,b)=>a==='av'?-1:b==='av'?1:a.localeCompare(b)).map(d=>({div:d,n:m[d]}));
+}
+function mdRangeText(win){
+  const f=ds=>new Date(ds+'T12:00').toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});
+  return f(win.start)+' – '+f(win.end);
+}
+function mdRender(){
+  if(!_md.name) return;
+  const win=mdWindow();
+  _md.items=mdCollect(_md.name,win);
+  _md.notes=(_mdIV&&_mdIV.notes)||[];
+  document.querySelectorAll('.mdl-chip').forEach(b=>b.classList.toggle('on',+b.dataset.r===_md.range));
+  const pc=document.getElementById('mdPast'); if(pc) pc.checked=_md.past;
+  document.getElementById('mdVolName').textContent=_md.name;
+  document.getElementById('mdRangeBadge').textContent=mdRangeText(win);
+  const counts=mdDivCounts(_md.items);
+  const av=_md.items.filter(i=>i.div==='av');
+  const avBits=[['JK',/^Jamātkhana/],['MPH',/^MPH/],['Sup',/^Supervising/],['Training',/^Training/]]
+    .map(([l,re])=>[l,av.filter(i=>re.test(i.title)).length]).filter(x=>x[1]).map(x=>x[0]+' '+x[1]).join(' · ');
+  document.getElementById('mdSummary').innerHTML=
+    `<div class="md-sum-card" style="--c:#fff"><div class="md-sum-label">Total duties</div><div class="md-sum-val">${_md.items.length}</div></div>`+
+    counts.map(c=>`<div class="md-sum-card" style="--c:${mdColour(c.div)}"><div class="md-sum-label">${esc(mdDivLabel(c.div))}</div><div class="md-sum-val">${c.n}</div>${c.div==='av'&&avBits?`<div class="md-sum-sub">${avBits}</div>`:''}</div>`).join('');
+  document.getElementById('mdNotes').innerHTML=_md.notes.map(n=>`<div class="mdl-note">⚠️ ${esc(n)}</div>`).join('');
+  const list=document.getElementById('mdList'), empty=document.getElementById('mdEmpty');
+  if(!_md.items.length){
+    list.innerHTML=''; empty.style.display='block';
+    document.getElementById('mdEmptyName').textContent=_md.name;
+    document.getElementById('mdEmptyRange').textContent=mdRangeText(win);
+  } else { empty.style.display='none'; list.innerHTML=_md.items.map(mdRowHTML).join(''); }
+  document.getElementById('mdResults').style.display='block';
+}
+async function mdRunSearch(name){
+  _md.name=name;
+  await mdLoadIV(true);
+  mdRender();
+}
+function mdSetRange(n){ _md.range=n; mdRender(); }
+function mdSetPast(v){ _md.past=!!v; mdRender(); }
+/* ── search box ── */
 function mdOnInput(){
-  _mdDropSelected = -1;
-  const q = document.getElementById('mdSearch').value.trim().toLowerCase();
+  _mdDrop=-1;
+  const q=document.getElementById('mdSearch').value.trim().toLowerCase();
   if(!q){ mdHideDrop(); return; }
-  const matches = mdAllNames().filter(n=>n.toLowerCase().includes(q));
-  const dd = document.getElementById('mdDropdown');
+  const matches=mdAllNames().filter(n=>n.toLowerCase().includes(q));
+  const dd=document.getElementById('mdDropdown');
   if(!matches.length){ dd.innerHTML='<div class="md-drop-item" style="color:var(--dm);cursor:default;">No matches found</div>'; dd.classList.add('open'); return; }
-  dd.innerHTML = matches.slice(0,10).map((n,i)=>
-    `<div class="md-drop-item" data-name="${esc(n)}" onmousedown="mdPickName(this.dataset.name)">${esc(n)}</div>`
-  ).join('');
+  dd.innerHTML=matches.slice(0,10).map(n=>`<div class="md-drop-item" data-name="${esc(n)}" onmousedown="mdPickName(this.dataset.name)">${esc(n)}</div>`).join('');
   dd.classList.add('open');
 }
 function mdOnKey(e){
-  const dd = document.getElementById('mdDropdown');
-  const items = dd.querySelectorAll('.md-drop-item[data-name]');
-  if(e.key==='ArrowDown'){ e.preventDefault(); _mdDropSelected=Math.min(_mdDropSelected+1,items.length-1); mdHighlightDrop(items); }
-  else if(e.key==='ArrowUp'){ e.preventDefault(); _mdDropSelected=Math.max(_mdDropSelected-1,0); mdHighlightDrop(items); }
-  else if(e.key==='Enter'){
-    e.preventDefault();
-    if(_mdDropSelected>=0 && items[_mdDropSelected]){ mdPickName(items[_mdDropSelected].dataset.name); }
-    else { mdSearch(); }
-  }
-  else if(e.key==='Escape'){ mdHideDrop(); }
+  const items=document.getElementById('mdDropdown').querySelectorAll('.md-drop-item[data-name]');
+  if(e.key==='ArrowDown'){ e.preventDefault(); _mdDrop=Math.min(_mdDrop+1,items.length-1); mdHighlightDrop(items); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); _mdDrop=Math.max(_mdDrop-1,0); mdHighlightDrop(items); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(_mdDrop>=0&&items[_mdDrop]) mdPickName(items[_mdDrop].dataset.name); else mdSearch(); }
+  else if(e.key==='Escape') mdHideDrop();
 }
 function mdHighlightDrop(items){
-  items.forEach((it,i)=>it.classList.toggle('selected',i===_mdDropSelected));
-  if(items[_mdDropSelected]) items[_mdDropSelected].scrollIntoView({block:'nearest'});
+  items.forEach((it,i)=>it.classList.toggle('selected',i===_mdDrop));
+  if(items[_mdDrop]) items[_mdDrop].scrollIntoView({block:'nearest'});
 }
-function mdShowDrop(){
-  if(document.getElementById('mdSearch').value.trim()) mdOnInput();
-}
-function mdHideDrop(){
-  document.getElementById('mdDropdown').classList.remove('open');
-}
-function mdPickName(name){
-  document.getElementById('mdSearch').value = name;
-  mdHideDrop();
-  mdRunSearch(name);
-}
+function mdShowDrop(){ if(document.getElementById('mdSearch').value.trim()) mdOnInput(); }
+function mdHideDrop(){ document.getElementById('mdDropdown').classList.remove('open'); }
+function mdPickName(name){ document.getElementById('mdSearch').value=name; mdHideDrop(); mdRunSearch(name); }
 function mdSearch(){
-  const q = document.getElementById('mdSearch').value.trim();
+  const q=document.getElementById('mdSearch').value.trim();
   if(!q){ toast('Type a name to search','err'); return; }
-  // Try exact match first, then partial
-  const all = mdAllNames();
-  const exact = all.find(n=>n.toLowerCase()===q.toLowerCase());
-  const partial = all.filter(n=>n.toLowerCase().includes(q.toLowerCase()));
-  const name = exact || (partial.length===1 ? partial[0] : null);
+  const all=mdAllNames();
+  const exact=all.find(n=>n.toLowerCase()===q.toLowerCase());
+  const partial=all.filter(n=>n.toLowerCase().includes(q.toLowerCase()));
+  const name=exact||(partial.length===1?partial[0]:null);
   if(!name){
     if(partial.length>1){ toast('Multiple matches — please select from the list','err'); mdOnInput(); return; }
-    toast('Name not found in roster','err'); return;
+    toast('Name not found','err'); return;
   }
-  document.getElementById('mdSearch').value = name;
-  mdHideDrop();
-  mdRunSearch(name);
+  mdPickName(name);
 }
-function mdRunSearch(name){
-  _mdCurrentName = name;
-  const mo = MO[calMo]; const yr = calYr;
-  // Normalise names for comparison — trim, collapse spaces, lowercase
-  function normName(s){ return (s||'').trim().replace(/\s+/g,' ').toLowerCase(); }
-  const normTarget = normName(name);
-  function matchesName(s){ return normName(s) === normTarget; }
-  // Collect all duties for this person in calMo/calYr
-  const duties = [];
-  // Build date range for the current roster month
-  const dim = new Date(calYr, calMo+1, 0).getDate();
-  for(let d=1; d<=dim; d++){
-    const ds = `${calYr}-${String(calMo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const ro = roster[ds] || {};
-    const tr = trainings.find(e=>e.date===ds);
-    const mj = majalisEvs.find(e=>e.date===ds);
-    const dt = new Date(ds+'T12:00');
-    const isFri = dt.getDay()===5;
-    const dow = dt.toLocaleDateString('en-NZ',{weekday:'long'});
-    // Is this person the trainer/trainee on this specific training day?
-    const isThisPersonTrainer  = tr && matchesName(tr.trainer);
-    const isThisPersonTrainee  = tr && matchesName(tr.trainee);
-    // JK Duty — use _primary (set by autoRoster or manual override)
-    // Only skip if this person IS the trainer on a training day
-    const jkP = ro._primary || getJKP(ro);
-    if(jkP && matchesName(jkP) && !isThisPersonTrainer){
-      duties.push({ds, d, dow, type:'jk', mj, ro});
-    }
-    // Supervisor (SUP tag)
-    if(ro._sup && matchesName(ro._sup)){
-      duties.push({ds, d, dow, type:'sup', mj, ro});
-    }
-    // MPH duty (Fridays auto, or any day if manually set)
-    if(!ro._mph_removed && (matchesName(ro._mph_primary) || matchesName(ro._mph_primary2))){
-      duties.push({ds, d, dow, type:'mph', mj, ro, isFri});
-    }
-    // Training — as trainer
-    if(isThisPersonTrainer){
-      duties.push({ds, d, dow, type:'tr-trainer', mj, ro, tr});
-    }
-    // Training — as trainee
-    if(isThisPersonTrainee){
-      duties.push({ds, d, dow, type:'tr-trainee', mj, ro, tr});
-    }
-  }
-  // Remove duplicates (same date+type)
-  const seen = new Set();
-  const unique = duties.filter(du=>{ const k=du.ds+du.type; if(seen.has(k)) return false; seen.add(k); return true; });
-  unique.sort((a,b)=>a.ds.localeCompare(b.ds));
-  // Summary counts
-  const cntJK  = unique.filter(du=>du.type==='jk').length;
-  const cntMPH = unique.filter(du=>du.type==='mph').length;
-  const cntSup = unique.filter(du=>du.type==='sup').length;
-  const cntTr  = unique.filter(du=>du.type==='tr-trainer'||du.type==='tr-trainee').length;
-  document.getElementById('mdCntJK').textContent  = cntJK;
-  document.getElementById('mdCntMPH').textContent = cntMPH;
-  document.getElementById('mdCntSup').textContent = cntSup;
-  document.getElementById('mdCntTr').textContent  = cntTr;
-  document.getElementById('mdVolName').textContent = name;
-  document.getElementById('mdMonthBadge').textContent = `${mo} ${yr}`;
-  // Render cards
-  const grid = document.getElementById('mdGrid');
-  const empty = document.getElementById('mdEmpty');
-  if(!unique.length){
-    grid.innerHTML='';
-    empty.style.display='block';
-    document.getElementById('mdEmptyName').textContent = name;
-    document.getElementById('mdEmptyMonth').textContent = `${mo} ${yr}`;
-  } else {
-    empty.style.display='none';
-    grid.innerHTML = unique.map(du=>mdDutyCard(du, mo, yr)).join('');
-  }
-  document.getElementById('mdResults').style.display='block';
-  document.getElementById('mdCapHdr').style.display='none'; // only show during screenshot
-}
-function mdDutyCard(du, mo, yr){
-  const {ds, d, dow, type, mj, ro, tr, isFri} = du;
-  const dayStr = String(d).padStart(2,'0');
-  // Type label config
-  const typeConf = {
-    'jk':         { label:'JK Duty',       cls:'jk',         icon:'🏛️' },
-    'mph':        { label:'MPH Duty',       cls:'mph',        icon:'🕌' },
-    'sup':        { label:'Supervision',    cls:'sup',        icon:'👁️' },
-    'tr-trainer': { label:'Training (Trainer)', cls:'tr-trainer', icon:'🎓' },
-    'tr-trainee': { label:'Training (Trainee)', cls:'tr-trainee', icon:'📘' },
-  };
-  const tc = typeConf[type] || {label:type, cls:'jk', icon:'📋'};
-  // Build detail lines
-  let details = '';
-  if(type==='jk'){
-    if(ro._sup) details += `<div class="md-card-detail">Supervised by <b>${esc(ro._sup)}</b></div>`;
-  }
-  if(type==='sup'){
-    const jkP = ro._primary || getJKP(ro);
-    const normC = (_mdCurrentName||'').trim().replace(/\s+/g,' ').toLowerCase();
-    if(jkP && (jkP||'').trim().replace(/\s+/g,' ').toLowerCase()!==normC) details += `<div class="md-card-detail">On duty with <b>${esc(jkP)}</b></div>`;
-  }
-  if(type==='mph'){
-    const normC2 = (_mdCurrentName||'').trim().replace(/\s+/g,' ').toLowerCase();
-    const isPrimary = (ro._mph_primary||'').trim().replace(/\s+/g,' ').toLowerCase()===normC2;
-    const partner = isPrimary ? ro._mph_primary2 : ro._mph_primary;
-    if(partner) details += `<div class="md-card-detail">With <b>${esc(partner)}</b></div>`;
-  }
-  if(type==='tr-trainer'){
-    details += `<div class="md-card-detail">Trainee: <b>${esc(tr.trainee)}</b></div>`;
-  }
-  if(type==='tr-trainee'){
-    details += `<div class="md-card-detail">Trainer: <b>${esc(tr.trainer)}</b></div>`;
-  }
-  // Majalis tag
-  const mjTag = mj ? `<div class="md-mj-tag">🕌 ${esc(mj.name)}</div>` : '';
-  return `<div class="md-duty-card type-${tc.cls}">
-    <div class="md-card-date">${dayStr}</div>
-    <div class="md-card-dow">${dow} · ${mo} ${yr}</div>
-    <div class="md-card-type ${tc.cls}">${tc.icon} ${tc.label}</div>
-    ${details}
-    ${mjTag}
+/* ── the picture ──
+   A fixed 1080px-wide poster built off-screen from the same rows as the
+   page, so what is saved is exactly what is listed. Rendered as large as
+   the browser's canvas allows (phones cap the pixel count) — about 3x on a
+   normal list, which is what keeps it sharp when zoomed or printed. */
+function mdPosterHTML(){
+  const win=mdWindow(), counts=mdDivCounts(_md.items);
+  const upd=new Date().toLocaleString('en-NZ',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'});
+  return `<div class="mdposter" id="mdPoster">
+    <div class="mdp-head">
+      <img src="${window.IV_LOGO}" alt="">
+      <div><div class="mdp-kick">Ismaili Volunteers · My Duties</div>
+        <div class="mdp-name">${esc(_md.name)}</div>
+        <div class="mdp-range">${esc(mdRangeText(win))}</div></div>
+    </div>
+    <div class="mdp-key"><span style="--c:#fff"><i></i>Total <b>${_md.items.length}</b></span>${counts.map(c=>`<span style="--c:${mdColour(c.div)}"><i></i>${esc(mdDivLabel(c.div))} <b>${c.n}</b></span>`).join('')}</div>
+    ${_md.items.length?`<div class="mdl">${_md.items.map(mdRowHTML).join('')}</div>`:`<div class="mdp-empty">No duties in this period.</div>`}
+    <div class="mdp-foot"><span>Rosters may change — check IV Hub for the latest.</span><span style="white-space:nowrap">Updated ${esc(upd)}</span></div>
   </div>`;
 }
-function mdFd(ds){
-  const dt=new Date(ds+'T12:00');
-  return dt.toLocaleDateString('en-NZ',{weekday:'short',day:'numeric',month:'short'});
-}
-async function mdScreenshot(){
-  if(!_mdCurrentName){ toast('Search for a name first','err'); return; }
-  if(typeof html2canvas === 'undefined'){ toast('Screenshot library not loaded','err'); return; }
-  // Show capture header temporarily
-  const capHdr = document.getElementById('mdCapHdr');
-  const capTitle = document.getElementById('mdCapTitle');
-  const capSub   = document.getElementById('mdCapSub');
-  capTitle.textContent = `${_mdCurrentName.toUpperCase()} — MY DUTIES`;
-  capSub.textContent   = `${MO[calMo]} ${calYr}  ·  Auckland Jamatkhana · AV Roster`;
-  capHdr.style.display='block';
-  const el = document.getElementById('mdCapture');
-  /* Same html2canvas trap as the calendar export above: font-stretch never
-     reaches the canvas, so a page laid out at 85% is painted at 100% and
-     every name comes out with its words run together. This element is on
-     screen, so the stretch is normalised only for the length of the capture
-     and put back in the finally — the same shape as the capture header. */
-  const prevStretch = el.style.fontStretch;
+async function mdMakeCanvas(){
+  const host=document.getElementById('mdPosterHost');
+  host.innerHTML=mdPosterHTML();
+  const el=document.getElementById('mdPoster');
   try{
-    el.style.fontStretch = 'normal';
     await fontsSettled();
-    const canvas = await html2canvas(el, {
-      backgroundColor: '#020B18',
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    });
-    const link = document.createElement('a');
-    link.download = `my-duties-${_mdCurrentName.replace(/\s+/g,'-')}-${MO[calMo]}-${calYr}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    toast('✓ Screenshot saved!');
-  } catch(e){
-    console.error(e);
-    toast('Screenshot failed — try again','err');
-  } finally {
-    el.style.fontStretch = prevStretch;
-    capHdr.style.display='none';
-  }
+    await Promise.all([...el.querySelectorAll('img')].map(i=>i.decode?i.decode().catch(()=>{}):1));
+    const h=el.offsetHeight, w=el.offsetWidth;
+    const scale=Math.max(1,Math.min(3,Math.sqrt(16e6/(w*h))));
+    return await html2canvas(el,{backgroundColor:'#020B18',scale,useCORS:true,logging:false});
+  } finally { host.innerHTML=''; }
+}
+async function mdSaveImage(share){
+  if(!_md.name){ toast('Search for a name first','err'); return; }
+  if(typeof html2canvas==='undefined'){ toast('Image library not loaded','err'); return; }
+  const btn=document.getElementById(share?'mdShareBtn':'mdSaveBtn'), label=btn.textContent;
+  btn.disabled=true; btn.textContent='Preparing…';
+  try{
+    const canvas=await mdMakeCanvas();
+    const fname=`my-duties-${_md.name.replace(/\s+/g,'-')}-${todayDS()}.png`;
+    const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+    if(share&&blob){
+      const f=new File([blob],fname,{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){
+        try{ await navigator.share({files:[f],title:_md.name+' — My Duties'}); return; }
+        catch(e){ if(e&&e.name==='AbortError') return; }
+      }
+    }
+    const link=document.createElement('a');
+    link.download=fname; link.href=blob?URL.createObjectURL(blob):canvas.toDataURL('image/png'); link.click();
+    toast('✓ Image saved');
+  }catch(e){ console.error(e); toast('Could not make the image — try again','err'); }
+  finally{ btn.disabled=false; btn.textContent=label; }
 }
 /* ═══════════════════════════════════
    REALTIME SYNC
