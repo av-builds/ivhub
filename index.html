@@ -1737,7 +1737,7 @@ async function doSetPassword(){
     if(error){
       // The link is single-use and time-limited
       if(/expired|invalid|not authenticated|session/i.test(error.message||'')){
-        return fail('That link has expired — ask for a new invitation.');
+        return fail('This invitation has expired — message an admin to send you another link.');
       }
       return fail(error.message || 'Could not save your password.');
     }

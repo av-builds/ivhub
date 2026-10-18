@@ -190,6 +190,28 @@ const LINK_KIND = (function(){
   }catch(e){ return null; }
 })();
 
+/* An expired or already-used link comes back from Supabase as
+   #error=access_denied&error_code=otp_expired&... with no token at all, so
+   it has to be recognised here or it would look like someone opening the
+   page with no link. */
+const LINK_ERROR = (function(){
+  try{
+    const h = (location.hash || '') + '&' + (location.search || '');
+    return /error_code=otp_expired|error=access_denied|error_description=[^&]*(expired|invalid)/i.test(h);
+  }catch(e){ return false; }
+})();
+const EXPIRED_TITLE = 'This invitation has expired';
+const EXPIRED_LEDE  = 'Invitation links are valid for 1 day, and this one is no longer active.';
+const EXPIRED_ASK   = 'Please message an admin (a Director or Facilitator) and ask them to send you another link.';
+function showExpired(){
+  show('stepRequest');
+  $('reqTitle').textContent = EXPIRED_TITLE;
+  $('reqLede').textContent  = EXPIRED_LEDE;
+  $('reqAsk').innerHTML     = EXPIRED_ASK.replace('(a Director or Facilitator)','(a <b>Director</b> or <b>Facilitator</b>)');
+  say('reqMsg','');
+  try{ history.replaceState(null, '', location.pathname); }catch(e){}
+}
+
 let sb = null, ACCOUNT_EMAIL = '';
 
 function initClient(){
@@ -210,6 +232,7 @@ function waitForLib(){
 }
 
 async function start(){
+  if(LINK_ERROR){ showExpired(); return; }
   const ok = await waitForLib();
   if(!ok){
     show('stepRequest');
@@ -221,11 +244,8 @@ async function start(){
   const session = data && data.session;
 
   if(!session || !session.user){
+    if(LINK_KIND){ showExpired(); return; }
     show('stepRequest');
-    if(LINK_KIND){
-      $('reqTitle').textContent = 'That link has expired';
-      $('reqLede').innerHTML = 'Invitation links can only be used once, and they time out.';
-    }
     return;
   }
 
@@ -260,9 +280,7 @@ async function savePassword(){
     const { error } = await sb.auth.updateUser({ password: a });
     if(error){
       if(/expired|invalid|session|not authenticated/i.test(error.message||'')){
-        show('stepRequest');
-        $('reqTitle').textContent = 'That link has expired';
-        say('reqMsg','Ask a Director or Facilitator to send you a new one.','warn');
+        showExpired();
         return;
       }
       if(/should be different|same as/i.test(error.message||'')){
