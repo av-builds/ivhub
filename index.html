@@ -148,6 +148,20 @@ html{scroll-behavior:smooth;}
 .scard.b{border-left:3px solid var(--pur);}
 
 /* ─── PANELS ─── */
+/* ── Team Lead quick access: thumb-sized tiles straight to team pages ── */
+.qa-team{margin-top:14px;}
+.qa-tl{font:800 11px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);margin:0 2px 8px;}
+.qa-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.qa-tile{box-sizing:border-box;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:88px;padding:10px 6px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid var(--db);color:var(--dt);text-decoration:none;cursor:pointer;
+  font-family:inherit;transition:transform .15s,border-color .15s,background .15s;-webkit-tap-highlight-color:transparent;}
+.qa-tile:hover{border-color:var(--blue-lt);background:rgba(79,195,247,.1);transform:translateY(-2px);}
+.qa-tile:active{transform:scale(.96);}
+.qa-i{font-size:26px;line-height:1;}
+.qa-t{font-size:13px;font-weight:800;text-align:center;line-height:1.2;}
+.qa-hub .qa-tile{border-color:rgba(167,139,250,.35);}
+.qa-tile .nbadge{position:static;margin-left:4px;}
+@media (min-width:760px){.qa-grid{grid-template-columns:repeat(6,minmax(0,1fr));}}
 .panel{background:var(--ds);border:1px solid var(--db);border-radius:16px;padding:24px 26px;margin-bottom:22px;animation:fadeUp .5s ease backwards;}
 .panel h2{font-size:16px;font-weight:900;color:var(--blue-lt);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
 .panel .sub{font-size:13px;color:var(--dm);margin-bottom:16px;line-height:1.55;}
@@ -794,6 +808,9 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           </div>
         </div>
       </section>
+
+      <!-- Team Leads and Assistant Leads: one tap to anything on their team page. -->
+      <section class="panel" id="quickPanel" style="display:none;"></section>
 
       <div class="empty-note" id="dashEmpty" style="display:none;">Your account doesn't have access to any sections yet.<br>Contact your team leader to have your access updated.</div>
 
@@ -1809,6 +1826,7 @@ function loadSession(){
 }
 function startSession(sess){
   CU = sess;
+  try{ sessionStorage.removeItem('ivhub_landed'); }catch(e){}   // a fresh sign-in lands the lead on their team again
   try{ localStorage.setItem('ivhub_session', JSON.stringify(sess)); }catch(e){ console.warn(e.message); }
   auditLog('Signed in', 'login', 'Logged in as ' + sess.display);
   showApp();
@@ -1947,6 +1965,67 @@ async function loadCoverTeams(){
     applyNavVisibility();
   }catch(e){ console.warn('loadCoverTeams:', e.message||e); }
 }
+/* ═══ TEAM LEAD SHORTCUTS ═══
+   Team Leads and Assistant Leads spend their time on their team's page, so
+   signing in lands them there, and the Hub shows tiles that go straight to
+   each page inside it. This is only navigation: the team pages already open
+   on a requested page (?p=) and nothing inside them is touched.
+   Facilitators and above keep the Hub dashboard as their home. */
+const LEAD_KEYS = { A:['tl_a','ytl_a'], B:['tl_b','ytl_b'], AV:['av_admin','av_atl'] };
+const LEAD_TEAMS = {
+  A:  { label:'Team A',  url:'teama.html', pages:[['calendar','📅','Calendar'],['roster','📋','Roster'],['attendance','✅','Attendance'],['reports','📊','Numbers'],['members','👥','People'],['announce','📣','Announcements']] },
+  B:  { label:'Team B',  url:'teamb.html', pages:[['calendar','📅','Calendar'],['roster','📋','Roster'],['attendance','✅','Attendance'],['reports','📊','Numbers'],['members','👥','People'],['announce','📣','Announcements']] },
+  AV: { label:'AV Team', url:'av.html',    pages:[['calendar','📅','Roster'],['myduties','🗓️','My Duties'],['volunteers','👥','People'],['events','🕌','Add-ons'],['stats','📊','Duty Stats']] },
+};
+function myLeadTeams(){
+  if(!CU || myRank() < 6) return [];
+  return Object.keys(LEAD_KEYS).filter(k=>hasPerm(...LEAD_KEYS[k]));
+}
+function rememberTeam(k){ try{ localStorage.setItem('ivhub_last_team', k); }catch(e){} }
+function preferredLeadTeam(teams){
+  let last = null; try{ last = localStorage.getItem('ivhub_last_team'); }catch(e){}
+  return teams.indexOf(last) >= 0 ? last : teams[0];
+}
+/* Once per sign-in, and never when they have just come back from a team
+   page on purpose — otherwise "Back to Hub" would bounce them straight out
+   again. */
+function leadLanding(){
+  const teams = myLeadTeams();
+  if(!teams.length) return false;
+  try{
+    if(sessionStorage.getItem('ivhub_landed')) return false;
+    sessionStorage.setItem('ivhub_landed', '1');
+    if(/\/(teama|teamb|av)\.html/.test(document.referrer)) return false;
+    if(/[?&]hub\b/.test(location.search) || location.hash === '#hub') return false;
+  }catch(e){ return false; }
+  const k = preferredLeadTeam(teams);
+  rememberTeam(k);
+  location.replace(LEAD_TEAMS[k].url + '?p=calendar');
+  return true;
+}
+function renderQuickAccess(){
+  const el = $('quickPanel'); if(!el) return;
+  const teams = myLeadTeams();
+  if(!teams.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  const first = preferredLeadTeam(teams);
+  const order = [first].concat(teams.filter(t=>t !== first));
+  let h = '<h2 style="margin:0;">Quick access</h2>';
+  order.forEach(k=>{
+    const T = LEAD_TEAMS[k];
+    h += '<div class="qa-team"><div class="qa-tl">' + T.label + '</div><div class="qa-grid">' +
+      T.pages.map(p=>'<a class="qa-tile" href="' + T.url + '?p=' + p[0] + '" onclick="rememberTeam(\'' + k + '\')">' +
+        '<span class="qa-i">' + p[1] + '</span><span class="qa-t">' + p[2] + '</span></a>').join('') + '</div></div>';
+  });
+  const hub = [];
+  if(CAN_SUBMIT())  hub.push(['submit','✉️','Invite My Team']);
+  if(CAN_APPROVE()) hub.push(['approve','✅','Invitations']);
+  if(STATS_VIEW())  hub.push(['stats','📊','Duty Stats']);
+  hub.push(['myduties','🗓️','My Duties']);
+  h += '<div class="qa-team qa-hub"><div class="qa-tl">Hub</div><div class="qa-grid">' +
+    hub.map(p=>'<button type="button" class="qa-tile" onclick="nav(\'' + p[0] + '\')"><span class="qa-i">' + p[1] + '</span><span class="qa-t">' + p[2] + '</span></button>').join('') + '</div></div>';
+  el.innerHTML = h;
+  el.style.display = 'block';
+}
 function applyNavVisibility(){
   const item = (id,on)=>{ const el=$(id); if(el) el.style.display = on ? 'flex' : 'none'; };
   const sec  = (id,on)=>{ const el=$(id); if(el) el.style.display = on ? 'block' : 'none'; };
@@ -1969,10 +2048,13 @@ function applyNavVisibility(){
   item('navStats', st);
   item('navAdmin', ow);
   item('navAudit', au);
+  [['navTeamA','A'],['navTeamB','B'],['navAV','AV']].forEach(x=>{ const l=$(x[0]); if(l) l.onclick=()=>rememberTeam(x[1]); });
+  renderQuickAccess();
   const nothing = !(IV_ANY() || AV_VIEW() || mm || st || au || sub || apv);
   $('dashEmpty').style.display = nothing ? 'block' : 'none';
 }
 function showApp(){
+  if(leadLanding()) return;
   $('loginScreen').style.display = 'none';
   $('app').style.display = 'block';
   const name = CU.display || CU.user || '';
