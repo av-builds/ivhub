@@ -83,3 +83,19 @@ Labels: "Ancillary Services Lead", "Paat Team Lead", "Paat Assistant Team Lead",
 Edit `DIVISIONS` in `index.html` and in `tools/make-specialty.cjs` (they mirror
 each other), then run `node tools/make-specialty.cjs` to regenerate the pages.
 New role keys must also be added in the backend as above.
+
+## Team assignment (User Management) — one more backend check
+
+User Management now lets you assign a person to the new teams as well as AV,
+grouped under the four menu categories. These are stored in `iv_members.spec`
+as these values: `AV`, `ABESHAFA`, `SUKREET`, `TD`, `SAFETY`, `MAINTENANCE`,
+`COOKING`, `CLEANING`. If `iv_members.spec` has a CHECK constraint or trigger
+that only allows certain values, add these. (If it is unconstrained nothing is
+needed.) Assigning a team does not grant access; roles are still granted in
+Login Management, which now offers a **team**, then a **level**.
+
+## Menu categories
+
+PHMU (Team A, Team B, AV Team, Paat Team and its two groups), Training &
+Development and Safety & Security (standalone), Ancillary Services
+(Maintenance, Cooking, Cleaning).

@@ -12,6 +12,16 @@
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..');
 const DIVISIONS = [
+  { key:'pt', name:'Paat Team', file:'paat.html', icon:'📚',
+    lead:'Paat Team Lead', alead:'Paat Assistant Team Lead',
+    teams:[
+      { key:'ab', name:'Abeshafa Paat Group', role:'Abeshafa Paat', file:'abeshafa.html', icon:'📖' },
+      { key:'sk', name:'Sukreet Paat Group',  role:'Sukreet Paat',  file:'sukreet.html',  icon:'📜' },
+    ] },
+  { key:'td', name:'Training & Development', file:'training.html', icon:'🎓',
+    lead:'Training & Development Lead', alead:'Assistant Training & Development Lead', teams:[] },
+  { key:'ss', name:'Safety & Security', file:'safety.html', icon:'🦺',
+    lead:'Safety & Security Lead', alead:'Assistant Safety & Security Lead', teams:[] },
   { key:'an', name:'Ancillary Services', file:'ancillary.html', icon:'🛠️',
     lead:'Ancillary Services Lead', alead:'Ancillary Services Assistant Lead',
     teams:[
@@ -19,16 +29,6 @@ const DIVISIONS = [
       { key:'ck', name:'Cooking Team',        role:'Cooking Team', file:'cooking.html',     icon:'🍳' },
       { key:'cl', name:'Cleaning Volunteers', role:'Cleaning Team',file:'cleaning.html',    icon:'🧹' },
     ] },
-  { key:'pt', name:'Paat', file:'paat.html', icon:'📚',
-    lead:'Paat Team Lead', alead:'Paat Assistant Team Lead',
-    teams:[
-      { key:'ab', name:'Abeshafa Paat Group', role:'Abeshafa Paat', file:'abeshafa.html', icon:'📖' },
-      { key:'sk', name:'Sukreet Paat Group',  role:'Sukreet Paat',  file:'sukreet.html',  icon:'📜' },
-    ] },
-  { key:'ss', name:'Safety & Security', file:'safety.html', icon:'🦺',
-    lead:'Safety & Security Lead', alead:'Assistant Safety & Security Lead', teams:[] },
-  { key:'td', name:'Training & Development', file:'training.html', icon:'🎓',
-    lead:'Training & Development Lead', alead:'Assistant Training & Development Lead', teams:[] },
 ];
 const IV_TOP = ['owner','developer','director','deputy_director','phmu_lead','iv_admin'];
 const TOP_LABEL = {owner:'Owner',developer:'Developer',director:'Director',deputy_director:'Deputy Director',phmu_lead:'PHMU Lead',iv_admin:'Director'};

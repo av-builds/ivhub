@@ -202,7 +202,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
 // ── Divisions and teams ──
 { const p=await open('index.html',{width:1200,height:900});
   const r=await p.evaluate(()=>{ const o={};
-    const menu=perms=>{ CU={user:'x',display:'X',perms,uid:'u'}; applyNavVisibility(); return document.getElementById('specNav').innerText.replace(/\s+/g,' ').trim(); };
+    const menu=perms=>{ CU={user:'x',display:'X',perms,uid:'u'}; applyNavVisibility(); return ['phmuNav','soloNav','ancNav'].map(i=>document.getElementById(i).innerText).join(' ').replace(/\s+/g,' ').trim(); };
     o.cook=menu(['ck_team']); o.head=menu(['an_lead']); o.director=menu(['director']); o.tl=menu(['tl_a']); o.safety=menu(['ss_alead']);
     o.rank=[PERM_RANK.an_lead,PERM_RANK.an_alead,PERM_RANK.mt_team];
     CU={user:'x',display:'X',perms:['director'],uid:'u'}; o.grant=grantableRoles().filter(r=>/^(an|pt|ss|td|mt|ck|cl|ab|sk)_/.test(r)).length;
@@ -211,8 +211,8 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     CU={user:'x',display:'X',perms:['an_lead'],uid:'u'}; renderQuickAccess(); o.quick=document.getElementById('quickPanel').innerText.replace(/\s+/g,' ');
     CU={user:'x',display:'X',perms:['an_lead'],uid:'u'}; o.noAdmin=[USERS_ADMIN(),STATS_VIEW(),canManageAccounts()].join();
     return o; });
-  chk(/Ancillary Services/.test(r.cook)&&/Cooking/.test(r.cook)&&!/Maintenance|Cleaning|Paat/.test(r.cook),'teams   a cooking volunteer sees only Cooking, under Ancillary Services',r.cook);
-  chk(/🛠️ Ancillary Services/.test(r.head)&&/Maintenance/.test(r.head)&&/Cooking/.test(r.head)&&/Cleaning/.test(r.head)&&!/Paat|Safety/.test(r.head),'teams   a division head sees the division and its teams only',r.head);
+  chk(/Cooking/.test(r.cook)&&!/Maintenance|Cleaning|Paat/.test(r.cook),'teams   a cooking volunteer sees only Cooking',r.cook);
+  chk(/🛠️ Overview/.test(r.head)&&/Maintenance/.test(r.head)&&/Cooking/.test(r.head)&&/Cleaning/.test(r.head)&&!/Paat|Safety/.test(r.head),'teams   a division head sees the division and its teams only',r.head);
   chk(/Paat/.test(r.director)&&/Safety/.test(r.director)&&/Training/.test(r.director)&&/Abeshafa/.test(r.director)&&/Maintenance/.test(r.director),'teams   a director sees every division and team');
   chk(r.tl==='','teams   a Team A lead sees none of them');
   chk(/Safety & Security/.test(r.safety),'teams   a Safety & Security assistant lead sees their division',r.safety);
@@ -241,18 +241,85 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     chk(p.errs.length===0,'pages   '+f+' no page errors'); await p.context().close(); }
 }
 
-// laptop: the top bar must carry the same Specialized Teams entries as the sidebar
+// laptop: the top bar carries the four categories
 { const p=await open('index.html',{width:1300,height:900});
-  const r=await p.evaluate(async perms=>{ const o={};
-    for(const [k,pm] of [['head',['an_lead']],['cook',['ck_team']],['plain',['tl_a']]]){
-      CU={user:'x',display:'X',perms:pm,uid:'u'}; applyNavVisibility(); await new Promise(r=>setTimeout(r,250));
-      const g=[...document.querySelectorAll('#topnav .tn-group')].find(x=>/Specialized/i.test(x.querySelector('.tn-b').textContent));
-      o[k]=g?g.querySelector('.tn-menu').innerText.replace(/\s+/g,' ').trim():'(no group)'; }
+  const r=await p.evaluate(async()=>{ const o={};
+    const bar=async pm=>{ CU={user:'x',display:'X',perms:pm,uid:'u'}; applyNavVisibility(); await new Promise(r=>setTimeout(r,250));
+      const groups={}; document.querySelectorAll('#topnav .tn-group').forEach(g=>{ groups[g.querySelector('.tn-b').textContent.replace('▾','').trim()]=g.querySelector('.tn-menu').innerText.replace(/\s+/g,' ').trim(); });
+      const direct=[...document.querySelectorAll('#topnav .tn-row > .tn-b')].map(b=>b.innerText.replace(/\s+/g,' ').trim());
+      return {groups,direct}; };
+    o.head=await bar(['an_lead']); o.cook=await bar(['ck_team']); o.safety=await bar(['ss_lead']); o.tl=await bar(['tl_a']); o.paat=await bar(['ab_team']); o.dir=await bar(['director']);
     return o; });
-  chk(/Ancillary Services/.test(r.head)&&/Maintenance/.test(r.head)&&/Cleaning/.test(r.head),'topbar  a division head sees their teams in the laptop menu',r.head);
-  chk(/Cooking/.test(r.cook)&&!/Maintenance/.test(r.cook),'topbar  a team volunteer sees only their team',r.cook);
-  chk(r.plain==='(no group)','topbar  nobody else gets the group',r.plain);
+  chk(/Overview/.test(r.head.groups['Ancillary Services']||'')&&/Maintenance/.test(r.head.groups['Ancillary Services']||'')&&!r.head.groups['PHMU'],'topbar  a division head sees Ancillary Services with its teams',JSON.stringify(r.head.groups));
+  chk(/Cooking/.test(r.cook.groups['Ancillary Services']||'')&&!/Maintenance/.test(r.cook.groups['Ancillary Services']||''),'topbar  a team volunteer sees only their team',JSON.stringify(r.cook.groups));
+  chk(r.safety.direct.some(x=>/Safety & Security/.test(x))&&!r.safety.groups['PHMU'],'topbar  Safety & Security stands alone on the bar',r.safety.direct.join('|'));
+  chk(/Team A/.test(r.tl.groups['PHMU']||'')&&!r.tl.groups['Ancillary Services'],'topbar  a Team A lead sees PHMU with Team A only',JSON.stringify(r.tl.groups));
+  chk(/Paat Team/.test(r.paat.groups['PHMU']||'')&&/Abeshafa/.test(r.paat.groups['PHMU']||''),'topbar  a Paat group member sees the Paat Team group under PHMU',r.paat.groups['PHMU']);
+  chk(['PHMU','Ancillary Services'].every(k=>r.dir.groups[k])&&r.dir.direct.some(x=>/Training/.test(x))&&r.dir.direct.some(x=>/Safety/.test(x)),'topbar  a director sees all four categories');
   chk(p.errs.length===0,'topbar  no page errors'); await p.context().close(); }
+
+// roles: team-then-level picker, and team assignment in User Management
+{ const p=await open('index.html',{width:1200,height:900});
+  const r=await p.evaluate(()=>{ const o={};
+    CU={user:'x',display:'X',perms:['director'],uid:'u'};
+    const all=grantableRoles(); const gs=rpGroups(all);
+    o.cats=[...new Set(gs.map(g=>g.cat))].join('|');
+    o.cooking=(gs.find(g=>g.id==='ck')||{levels:[]}).levels.map(l=>l[0]).join();
+    document.body.insertAdjacentHTML('beforeend','<div id="rpT"></div>'); document.getElementById('rpT').innerHTML=rolePickerHTML('rpT1',all,'None');
+    document.getElementById('rpT1-team').value='ck'; rpTeam('rpT1'); o.beforeLevel=rpValue('rpT1');
+    document.getElementById('rpT1-level').value='ck_lead'; o.afterLevel=rpValue('rpT1');
+    CU={user:'x',display:'X',perms:['facilitator'],uid:'u'}; o.facTeams=rpGroups(grantableRoles()).map(g=>g.id).join();
+    o.spec=SPEC_TEAMS.map(t=>t.id).join(); o.chips=(specChipsHTML(['COOKING','XYZ'],'').match(/spec-chip active/g)||[]).length;
+    return o; });
+  chk(r.cats==='Leadership|PHMU|Training & Development|Safety & Security|Ancillary Services','roles   picker groups follow the four categories',r.cats);
+  chk(r.cooking==='ck_lead,ck_alead,ck_team','roles   a team offers Team Lead, Assistant Team Lead and Volunteer',r.cooking);
+  chk(r.beforeLevel===''&&r.afterLevel==='ck_lead','roles   no role until a level is chosen',r.beforeLevel+' / '+r.afterLevel);
+  chk(r.facTeams==='A,B','roles   a facilitator is still offered Teams A and B only',r.facTeams);
+  chk(/COOKING/.test(r.spec)&&/ABESHAFA/.test(r.spec)&&r.chips===2,'roles   User Management can assign every team, and keeps unknown values',r.spec);
+  chk(p.errs.length===0,'roles   no page errors'); await p.context().close(); }
+
+// ── Who sees which category: every role against the menu and every page ──
+{ const p=await open('index.html',{width:1300,height:900});
+  const MENU={
+    'team_a':'', 'team_b':'', 'tl_a':'PHMU:Team A', 'ytl_b':'PHMU:Team B', 'facilitator':'PHMU:Team A,Team B',
+    'av_team':'PHMU:AV Team', 'av_admin':'PHMU:AV Team',
+    'pt_lead':'PHMU:Paat Team,Abeshafa Paat Group,Sukreet Paat Group', 'ab_team':'PHMU:Abeshafa Paat Group',
+    'td_lead':'+Training & Development', 'ss_alead':'+Safety & Security',
+    'an_lead':'Ancillary Services:Overview,Maintenance,Cooking Team,Cleaning Volunteers', 'mt_team':'Ancillary Services:Maintenance', 'ck_alead':'Ancillary Services:Cooking Team',
+    'phmu_lead':'ALL','director':'ALL','owner':'ALL','nobody':'' };
+  const got=await p.evaluate(async roles=>{ const o={};
+    for(const role of roles){
+      CU={user:'x',display:'X',perms:role==='nobody'?[]:[role],uid:'u'}; COVER_TEAMS.clear(); applyNavVisibility(); await new Promise(r=>setTimeout(r,220));
+      const groups={}; document.querySelectorAll('#topnav .tn-group').forEach(g=>{ const n=g.querySelector('.tn-b').textContent.replace('▾','').trim(); groups[n]=[...g.querySelectorAll('.tn-menu .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/^[AB] (?=Team)/,'').replace(/\s+/g,' ').trim()); });
+      const direct=[...document.querySelectorAll('#topnav .tn-row > .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/\s+/g,' ').trim()).filter(x=>!/^(Dashboard|My Duties)$/.test(x));
+      o[role]={groups,direct};
+    } return o; }, Object.keys(MENU));
+  for(const role of Object.keys(MENU)){
+    const g=got[role].groups, d=got[role].direct, exp=MENU[role];
+    const cats=Object.keys(g).filter(k=>k!=='Management');
+    let ok;
+    if(exp==='') ok=cats.length===0&&!d.some(x=>/Training|Safety/.test(x));
+    else if(exp==='ALL') ok=['PHMU','Ancillary Services'].every(k=>g[k])&&d.some(x=>/Training/.test(x))&&d.some(x=>/Safety/.test(x));
+    else if(exp[0]==='+') ok=cats.length===0&&d.filter(x=>!/^Management/.test(x)).join()===exp.slice(1);
+    else { const [cat,items]=exp.split(':'); ok=cats.join()===cat&&g[cat].join()===items.split(',').join()&&!d.some(x=>/Training|Safety/.test(x)); }
+    chk(ok,'access  '+role+' sees '+(exp||'no categories'),JSON.stringify({g:Object.fromEntries(cats.map(c=>[c,g[c]])),d}));
+  }
+  chk(p.errs.length===0,'access  hub no page errors'); await p.context().close(); }
+{ const ROLES=['team_a','tl_a','av_admin','facilitator','pt_lead','ab_team','sk_team','td_lead','ss_alead','an_lead','an_alead','mt_team','ck_lead','cl_team','phmu_lead','director','owner'];
+  const PAGES={ 'paat.html':{own:['pt_lead','pt_alead'],kids:[]}, 'abeshafa.html':{own:['ab_lead','ab_alead','ab_team'],kids:['pt_lead','pt_alead']},
+    'sukreet.html':{own:['sk_lead','sk_alead','sk_team'],kids:['pt_lead','pt_alead']}, 'training.html':{own:['td_lead','td_alead'],kids:[]},
+    'safety.html':{own:['ss_lead','ss_alead'],kids:[]}, 'ancillary.html':{own:['an_lead','an_alead'],kids:[]},
+    'maintenance.html':{own:['mt_lead','mt_alead','mt_team'],kids:['an_lead','an_alead']}, 'cooking.html':{own:['ck_lead','ck_alead','ck_team'],kids:['an_lead','an_alead']},
+    'cleaning.html':{own:['cl_lead','cl_alead','cl_team'],kids:['an_lead','an_alead']} };
+  const TOP=['owner','developer','director','deputy_director','phmu_lead'];
+  for(const [f,def] of Object.entries(PAGES)){
+    const p=await open(f,{width:1300,height:800});
+    const r=await p.evaluate(roles=>Object.fromEntries(roles.map(x=>{ render([x]); return [x,!document.getElementById('stOk').classList.contains('hide')]; })),ROLES);
+    const bad=ROLES.filter(x=>{ const allowed=TOP.includes(x)||def.own.includes(x)||def.kids.includes(x); return r[x]!==allowed; });
+    // the roles above that are the page's own: ensure at least the intended ones exist in ROLES list
+    chk(bad.length===0,'access  '+f+' opens only for its own roles, its division head and leadership',bad.join()||'ok');
+    await p.context().close(); }
+}
 
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});

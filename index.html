@@ -151,6 +151,7 @@ html{scroll-behavior:smooth;}
 /* ── Team Lead quick access: thumb-sized tiles straight to team pages ── */
 .nav-cap{margin:8px 14px 2px;font:800 10px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);opacity:.8;}
 .nav-sub{padding-left:30px;font-size:.94em;}
+.nav-item.nav-solo{margin-top:12px;font-weight:900;}
 .qa-team{margin-top:14px;}
 .qa-tl{font:800 11px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);margin:0 2px 8px;}
 .qa-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
@@ -307,7 +308,8 @@ table.mtab{width:100%;border-collapse:collapse;font-size:13px;}
 .tpill.active[data-t="A"]{background:rgba(21,101,192,.2);color:var(--blue-lt);border-color:rgba(79,195,247,.45);}
 .tpill.active[data-t="B"]{background:var(--pur-bg);color:#C4A5F5;border-color:var(--pur-bd);}
 .tpill:disabled{opacity:.35;cursor:not-allowed;}
-.spec-row{display:flex;gap:6px;flex-wrap:wrap;}
+.spec-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.spec-cat{font:800 10px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);margin:8px 2px 5px;}
 .spec-chip{font-size:12px;font-weight:900;padding:7px 15px;border-radius:20px;border:1px solid var(--db);background:var(--ds);color:var(--dm);cursor:pointer;font-family:'Archivo',sans-serif;transition:all .15s;}
 .spec-chip:hover:not(:disabled){color:var(--dt);border-color:var(--gold-bd);}
 .spec-chip.active{background:var(--gold-bg);color:var(--gold-lt);border-color:var(--gold-bd);}
@@ -361,6 +363,15 @@ table.mtab{width:100%;border-collapse:collapse;font-size:13px;}
 .fg input,.fg select{width:100%;background:var(--ds);border:1px solid var(--db);border-radius:var(--r);padding:9px 12px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:14px;outline:none;transition:border .2s;}
 .fg input:focus,.fg select:focus{border-color:var(--blue-lt);}
 .fg input:disabled{opacity:.5;cursor:not-allowed;}
+.rp{display:flex;gap:8px;flex-wrap:wrap;}
+.rp select{flex:1;min-width:150px;min-height:44px;}
+.rp-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.rp-row .rp{flex:1;min-width:260px;}
+.pchips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.pchip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--blue-lt);background:rgba(21,101,192,.14);border:1px solid rgba(79,195,247,.45);border-radius:999px;padding:6px 8px 6px 12px;}
+.pchip.locked{opacity:.5;padding-right:12px;}
+.pchip-x{width:26px;height:26px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:15px;line-height:1;cursor:pointer;}
+.pchip-x:hover{background:rgba(239,68,68,.5);}
 .xperm-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
 .xperm{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--dm);background:var(--ds);border:1px solid var(--db);border-radius:20px;padding:5px 11px;cursor:pointer;user-select:none;transition:all .15s;}
 .xperm input{accent-color:var(--blue2);cursor:pointer;}
@@ -453,6 +464,23 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .tn-group.open .tn-menu{display:block;}
 .tn-menu .tn-b{display:flex;width:100%;justify-content:flex-start;}
 .tn-sp{flex:1;}
+/* Four categories plus Management is a long bar: tighten it on smaller
+   laptops rather than let the right-hand controls collide with it. */
+@media(min-width:1101px) and (max-width:1600px){
+  .tn-b{padding:8px 8px;font-size:13px;gap:5px;}
+  .tn-brand{margin-right:6px;}
+  .tn-who{display:none;}
+  .tn-right{padding-left:8px;}
+}
+@media(min-width:1101px) and (max-width:1320px){
+  .tn-brand span,.tn-brand{font-size:14px;}
+  .tn-b .ni{display:none;}
+  .tn-hub .ni{display:inline;}
+}
+@media(min-width:1101px) and (max-width:1180px){
+  .tn-b{padding:8px 6px;font-size:12.5px;}
+  .tn-brand{padding:4px 4px;margin-left:-4px;}
+}
 .tn-cap{padding:9px 12px 3px;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#7AAECB;}
 .tn-menu .tn-b.tn-sub{padding-left:28px;font-size:13px;}
 /* Hiding the bar leaves a desktop with no navigation at all — the sidebar
@@ -769,13 +797,16 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="nav-item active" data-page="dashboard"><span class="ni">⊞</span> Dashboard</div>
       <div class="nav-item" data-page="myduties"><span class="ni">🗓️</span> My Duties</div>
 
-      <div class="nav-sec" id="secIV">IV Team</div>
+      <div class="nav-sec" id="secPHMU">PHMU</div>
       <a class="nav-item" id="navTeamA" href="teama.html"><span class="ni">A</span> Team A</a>
       <a class="nav-item" id="navTeamB" href="teamb.html"><span class="ni">B</span> Team B</a>
-
-      <div class="nav-sec" id="secSpec">Specialized Teams</div>
       <a class="nav-item" id="navAV" href="av.html"><span class="ni">🎛️</span> AV Team</a>
-      <div id="specNav"></div>
+      <div class="nav-wrap" id="phmuNav"></div>
+
+      <div class="nav-wrap" id="soloNav"></div>
+
+      <div class="nav-sec" id="secAnc">Ancillary Services</div>
+      <div class="nav-wrap" id="ancNav"></div>
 
       <div class="nav-sec" id="secMgmt">Management</div>
       <div class="nav-item" id="navSubmit" data-page="submit"><span class="ni">✉️</span> Invite My Team</div>
@@ -941,7 +972,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       </div>
       <section class="panel">
         <div class="um-sub">Accounts live in <b>Supabase Auth</b> — passwords are never stored here and cannot be read by anyone.
-        Grant access by ticking permissions below, and link an account to its person in User Management so duties and logins line up.</div>
+        Grant access by adding a team role below, and link an account to its person in User Management so duties and logins line up.</div>
         <div class="um-warn" id="umWarn"></div>
         <div id="umInvite" class="um-form">
           <h4>Invite a user</h4>
@@ -950,7 +981,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <div class="um-grid">
             <div class="fg"><label>Email address</label><input id="ufInviteEmail" type="email" placeholder="firstname.lastname@example.com" autocomplete="off"></div>
             <div class="fg"><label>Display name (optional)</label><input id="ufInviteName" placeholder="e.g. Ahad Lokhandwala" autocomplete="off"></div>
-            <div class="fg"><label>Access to grant</label><select id="ufInviteRole"></select></div>
+            <div class="fg"><label>Access to grant</label><div id="ufInviteRoleBox"></div></div>
           </div>
           <div id="ufInviteMsg" class="um-sub" style="margin:0 0 8px;"></div>
           <div class="um-form-acts">
@@ -1306,6 +1337,9 @@ const ROLE_DEFS = [
 ];
 const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead','facilitator','tl_a','ytl_a','tl_b','ytl_b','av_admin','av_atl','av_coord','team_a','team_b','av_team'];
 /* ═══ DIVISIONS AND TEAMS ═══
+   Menu categories (group): PHMU holds Team A, Team B, AV and the Paat Team;
+   Training & Development and Safety & Security stand alone; Ancillary
+   Services holds Maintenance, Cooking and Cleaning.
    Follows the IV chart. A division (Ancillary Services, Paat, Safety &
    Security, Training & Development) has a Lead and an Assistant Lead; its
    teams each have a Lead, Assistant Lead and Volunteer. Division and team
@@ -1316,23 +1350,23 @@ const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead
    pages. The backend (invite-user + profiles) must accept these role keys
    before they can be granted — see docs/new-team-roles.md. */
 const DIVISIONS = [
-  { key:'an', name:'Ancillary Services', icon:'🛠️', url:'ancillary.html',
+  { key:'pt', group:'phmu', name:'Paat Team', icon:'📚', url:'paat.html',
+    lead:'Paat Team Lead', alead:'Paat Assistant Team Lead',
+    teams:[
+      { key:'ab', name:'Abeshafa Paat Group', role:'Abeshafa Paat', icon:'📖', url:'abeshafa.html' },
+      { key:'sk', name:'Sukreet Paat Group',  role:'Sukreet Paat',  icon:'📜', url:'sukreet.html' },
+    ] },
+  { key:'td', group:'solo', name:'Training & Development', icon:'🎓', url:'training.html',
+    lead:'Training & Development Lead', alead:'Assistant Training & Development Lead', teams:[] },
+  { key:'ss', group:'solo', name:'Safety & Security', icon:'🦺', url:'safety.html',
+    lead:'Safety & Security Lead', alead:'Assistant Safety & Security Lead', teams:[] },
+  { key:'an', group:'anc', name:'Ancillary Services', icon:'🛠️', url:'ancillary.html',
     lead:'Ancillary Services Lead', alead:'Ancillary Services Assistant Lead',
     teams:[
       { key:'mt', name:'Maintenance',         role:'Maintenance',   icon:'🔧', url:'maintenance.html' },
       { key:'ck', name:'Cooking Team',        role:'Cooking Team',  icon:'🍳', url:'cooking.html' },
       { key:'cl', name:'Cleaning Volunteers', role:'Cleaning Team', icon:'🧹', url:'cleaning.html' },
     ] },
-  { key:'pt', name:'Paat', icon:'📚', url:'paat.html',
-    lead:'Paat Team Lead', alead:'Paat Assistant Team Lead',
-    teams:[
-      { key:'ab', name:'Abeshafa Paat Group', role:'Abeshafa Paat', icon:'📖', url:'abeshafa.html' },
-      { key:'sk', name:'Sukreet Paat Group',  role:'Sukreet Paat',  icon:'📜', url:'sukreet.html' },
-    ] },
-  { key:'ss', name:'Safety & Security', icon:'🦺', url:'safety.html',
-    lead:'Safety & Security Lead', alead:'Assistant Safety & Security Lead', teams:[] },
-  { key:'td', name:'Training & Development', icon:'🎓', url:'training.html',
-    lead:'Training & Development Lead', alead:'Assistant Training & Development Lead', teams:[] },
 ];
 const defRole = (k, rank, label)=>{
   PERM_RANK[k] = rank; ROLE_LABELS[k] = label;
@@ -1351,6 +1385,61 @@ const divPerms    = d=>[d.key+'_lead', d.key+'_alead'];
 const teamPerms   = t=>[t.key+'_lead', t.key+'_alead', t.key+'_team'];
 const divVisible  = d=>hasPerm(...IV_TOP, ...divPerms(d));
 const teamVisible = (d,t)=>divVisible(d) || hasPerm(...teamPerms(t));
+/* ═══ ROLE PICKER ═══
+   Pick a team, then a level, instead of scrolling a flat list of every role.
+   Signing in lands a Team Lead or Assistant Lead on that team's site, so
+   choosing "Cooking Team › Team Lead" is all it takes. Only roles the actor
+   may grant are offered. */
+function roleGroups(){
+  const g = [
+    {id:'iv', label:'IV Leadership', cat:'Leadership', levels:[['owner','Owner'],['developer','Developer'],['director','Director'],['deputy_director','Deputy Director'],['phmu_lead','PHMU Lead'],['facilitator','Facilitator']]},
+    {id:'A',  label:'Team A', cat:'PHMU', levels:[['tl_a','Team Lead'],['ytl_a','Assistant Team Lead'],['team_a','Volunteer']]},
+    {id:'B',  label:'Team B', cat:'PHMU', levels:[['tl_b','Team Lead'],['ytl_b','Assistant Team Lead'],['team_b','Volunteer']]},
+    {id:'AV', label:'AV Team', cat:'PHMU', levels:[['av_admin','Team Lead'],['av_atl','Assistant Team Lead'],['av_coord','Co-ordinator'],['av_team','Volunteer']]},
+  ];
+  DIVISIONS.forEach(d=>{
+    const cat = d.group === 'phmu' ? 'PHMU' : d.group === 'anc' ? 'Ancillary Services' : d.name;
+    g.push({id:d.key, label:d.teams.length ? d.name + ' — whole team' : d.name, cat:cat, levels:[[d.key+'_lead','Lead'],[d.key+'_alead','Assistant Lead']]});
+    d.teams.forEach(t=>g.push({id:t.key, label:t.name, cat:cat,
+      levels:[[t.key+'_lead','Team Lead'],[t.key+'_alead','Assistant Team Lead'],[t.key+'_team','Volunteer']]}));
+  });
+  return g;
+}
+const RP_ALLOWED = {};
+function rpGroups(allowed){
+  return roleGroups().map(g=>Object.assign({}, g, {levels:g.levels.filter(l=>allowed.includes(l[0]))})).filter(g=>g.levels.length);
+}
+function rolePickerHTML(id, allowed, blank){
+  RP_ALLOWED[id] = allowed;
+  const gs = rpGroups(allowed), cats = [...new Set(gs.map(g=>g.cat))];
+  return '<div class="rp"><select id="'+id+'-team" onchange="rpTeam(\''+id+'\')"><option value="">'+esc(blank||'Choose team…')+'</option>'+
+    cats.map(c=>'<optgroup label="'+esc(c)+'">'+gs.filter(g=>g.cat === c).map(g=>'<option value="'+g.id+'">'+esc(g.label)+'</option>').join('')+'</optgroup>').join('')+
+    '</select><select id="'+id+'-level" disabled><option value="">Level…</option></select></div>';
+}
+function rpTeam(id){
+  const g = rpGroups(RP_ALLOWED[id] || []).find(x=>x.id === $(id+'-team').value), lv = $(id+'-level');
+  if(!g){ lv.innerHTML = '<option value="">Level…</option>'; lv.disabled = true; return; }
+  lv.disabled = false;
+  lv.innerHTML = '<option value="">Choose level…</option>' + g.levels.map(l=>'<option value="'+l[0]+'">'+esc(l[1])+'</option>').join('');
+}
+const rpValue = id=>{ const l = $(id+'-level'); return (l && !l.disabled && l.value) || ''; };
+const rpTeamChosen = id=>!!(($(id+'-team')||{}).value);
+/* Roles already on an existing account, as removable chips. The hidden
+   checkboxes keep saveProfile reading them exactly as it always did. */
+function pfChip(id, pm, allowed){
+  return '<span class="pchip'+(allowed?'':' locked')+'"'+(allowed?'':' title="Above your authority to change"')+'>'+
+    '<input type="checkbox" name="pf-perm-'+id+'" value="'+pm+'" checked hidden'+(allowed?'':' disabled')+'>'+esc(ROLE_LABELS[pm]||pm)+
+    (allowed?'<button type="button" class="pchip-x" aria-label="Remove '+esc(ROLE_LABELS[pm]||pm)+'" onclick="this.parentNode.remove()">×</button>':'')+'</span>';
+}
+function pfAddRole(id){
+  const pid = 'pfRole-'+id;
+  if(rpTeamChosen(pid) && !rpValue(pid)){ toast('Choose a level for that team.','err'); return; }
+  const pm = rpValue(pid); if(!pm) return;
+  const box = $('pf-roles-'+id);
+  if(box.querySelector('input[value="'+pm+'"]')){ toast('They already have that role.','err'); return; }
+  box.insertAdjacentHTML('beforeend', pfChip(id, pm, true));
+  $(pid+'-team').value = ''; rpTeam(pid);
+}
 /* Roles/perms the current actor may grant (contract) */
 function grantableRoles(){
   const mine = myRank();
@@ -2089,28 +2178,38 @@ function renderQuickAccess(){
 function applyNavVisibility(){
   const item = (id,on)=>{ const el=$(id); if(el) el.style.display = on ? 'flex' : 'none'; };
   const sec  = (id,on)=>{ const el=$(id); if(el) el.style.display = on ? 'block' : 'none'; };
-  sec('secIV', ADMIN_A() || ADMIN_B() || COVER_TEAMS.size>0);
   /* The team pages are for leaders now. A plain volunteer's way in is the
      Hub, so the links disappear for them — unless they have been asked to
      stand in for an event, in which case the page is how they do it. */
-  item('navTeamA', ADMIN_A() || (VIEW_A() && COVER_TEAMS.has('A')));
-  item('navTeamB', ADMIN_B() || (VIEW_B() && COVER_TEAMS.has('B')));
-  /* Grouped by division: a head sees the division and its teams; a team
-     member sees only their own team, under the division's name. */
-  let specHtml = '', specAny = false;
+  const showA = ADMIN_A() || (VIEW_A() && COVER_TEAMS.has('A'));
+  const showB = ADMIN_B() || (VIEW_B() && COVER_TEAMS.has('B'));
+  item('navTeamA', showA);
+  item('navTeamB', showB);
+  item('navAV', AV_VIEW());
+  /* Four categories: PHMU (Teams A and B, AV, the Paat Team and its groups),
+     Training & Development and Safety & Security standing alone, and
+     Ancillary Services holding the rest. A division head sees the division
+     and its teams; a team member sees only their own team. */
+  const link = (u,i,n,cls)=>'<a class="nav-item ' + (cls||'') + '" href="' + u + '" style="display:flex"><span class="ni">' + i + '</span> ' + n + '</a>';
+  let phmuHtml = '', soloHtml = '', ancHtml = '';
   DIVISIONS.forEach(d=>{
     const vt = d.teams.filter(t=>teamVisible(d,t));
     const dv = divVisible(d);
     if(!dv && !vt.length) return;
-    specAny = true;
-    specHtml += dv
-      ? '<a class="nav-item" href="' + d.url + '" style="display:flex"><span class="ni">' + d.icon + '</span> ' + d.name + '</a>'
-      : '<div class="nav-cap">' + d.name + '</div>';
-    vt.forEach(t=>{ specHtml += '<a class="nav-item nav-sub" href="' + t.url + '" style="display:flex"><span class="ni">' + t.icon + '</span> ' + t.name + '</a>'; });
+    if(d.group === 'solo'){ soloHtml += link(d.url, d.icon, d.name, 'nav-solo'); return; }
+    if(d.group === 'anc'){
+      if(dv) ancHtml += link(d.url, d.icon, 'Overview');
+      vt.forEach(t=>{ ancHtml += link(t.url, t.icon, t.name); });
+      return;
+    }
+    phmuHtml += dv ? link(d.url, d.icon, d.name) : '<div class="nav-cap">' + d.name + '</div>';
+    vt.forEach(t=>{ phmuHtml += link(t.url, t.icon, t.name, 'nav-sub'); });
   });
-  sec('secSpec', AV_VIEW() || specAny);
-  item('navAV', AV_VIEW());
-  const sn = $('specNav'); if(sn) sn.innerHTML = specHtml;
+  sec('secPHMU', showA || showB || AV_VIEW() || phmuHtml !== '');
+  sec('secAnc', ancHtml !== '');
+  const wr = (id,h)=>{ const e=$(id); if(e) e.innerHTML = h; };
+  wr('phmuNav', phmuHtml); wr('soloNav', soloHtml); wr('ancNav', ancHtml);
+  const specAny = (phmuHtml + soloHtml + ancHtml) !== '';
   const mm = USERS_ADMIN(), st = STATS_VIEW(), ow = hasPerm('owner','developer'), au = AUDIT_VIEW();
   const sub = CAN_SUBMIT(), apv = CAN_APPROVE();
   sec('secMgmt', mm || st || ow || au || sub || apv);
@@ -2453,7 +2552,7 @@ async function resolveMyName(){
         const teams = [];
         if(m.team === 'A' || m.team === 'B') teams.push('Team ' + m.team);
         let spec = m.spec; if(typeof spec === 'string'){ try{ spec = JSON.parse(spec); }catch(e){ spec = []; } }
-        (Array.isArray(spec) ? spec : []).forEach(s=>teams.push(s === 'AV' ? 'AV Team' : s));
+        (Array.isArray(spec) ? spec : []).forEach(s=>teams.push(specLabel(s)));
         note = teams.length ? `Showing duties for <b>${esc(name)}</b> · ${esc(teams.join(' · '))}` : `Showing duties for <b>${esc(name)}</b>`;
       }
     }
@@ -2558,7 +2657,28 @@ async function runDutySearch(){
 /* ═══ USER MANAGEMENT (people directory — iv_members) ═══ */
 const RANKS = ['Member','Assistant Team Lead','Team Leader','Facilitator','PHMU','Deputy Director','Director'];
 const LEADERSHIP_RANKS = ['Facilitator','PHMU','Deputy Director','Director']; // ranks with NO main-team allocation
-const SPEC_TEAMS = [ {id:'AV', label:'AV Team'} ]; // additive specialized teams — extend this list to add more
+/* Additive team assignments, stored in iv_members.spec. Grouped by the same
+   four categories as the menu. Assigning someone here says who is on the
+   team; their login access is granted separately in Login Management. */
+const SPEC_TEAMS = [
+  {id:'AV',          label:'AV Team',                cat:'PHMU'},
+  {id:'ABESHAFA',    label:'Abeshafa Paat Group',    cat:'PHMU'},
+  {id:'SUKREET',     label:'Sukreet Paat Group',     cat:'PHMU'},
+  {id:'TD',          label:'Training & Development', cat:'Training & Development'},
+  {id:'SAFETY',      label:'Safety & Security',      cat:'Safety & Security'},
+  {id:'MAINTENANCE', label:'Maintenance',            cat:'Ancillary Services'},
+  {id:'COOKING',     label:'Cooking Team',           cat:'Ancillary Services'},
+  {id:'CLEANING',    label:'Cleaning Volunteers',    cat:'Ancillary Services'},
+];
+const specLabel = id=>{ const t = SPEC_TEAMS.find(x=>x.id === id); return t ? t.label : id; };
+function specChipsHTML(spec, dis){
+  const cats = [...new Set(SPEC_TEAMS.map(t=>t.cat))];
+  const known = SPEC_TEAMS.map(t=>t.id);
+  const extra = spec.filter(x=>!known.includes(x));   // unknown values stay visible
+  return cats.map(c=>'<div class="spec-cat">'+esc(c)+'</div><div class="spec-row">'+
+      SPEC_TEAMS.filter(t=>t.cat === c).map(t=>`<button type="button" class="spec-chip${spec.includes(t.id) ? ' active' : ''}" data-spec="${esc(t.id)}"${dis}>${esc(t.label)}</button>`).join('')+'</div>').join('')+
+    (extra.length ? '<div class="spec-cat">Other</div><div class="spec-row">'+extra.map(x=>`<button type="button" class="spec-chip active" data-spec="${esc(x)}"${dis}>${esc(x)}</button>`).join('')+'</div>' : '');
+}
 const AGE_OPTS = [ ['child','Child <12'], ['youth','Youth 12–17'], ['adult','Adult 18+'] ];
 let mRows = [];
 let mFilter = 'all';
@@ -2911,10 +3031,7 @@ function editPanelHTML(r){
         <div class="mem-hint" data-hint${lead ? '' : ' style="display:none;"'}>No team — leadership role</div>
       </div>
       <div class="fg"><label>Specialized Teams</label>
-        <div class="spec-row">
-          ${SPEC_TEAMS.map(s=>`<button type="button" class="spec-chip${spec.includes(s.id) ? ' active' : ''}" data-spec="${esc(s.id)}"${specDis}>${esc(s.label)}</button>`).join('')}
-          ${extraSpec.map(s=>`<button type="button" class="spec-chip active" data-spec="${esc(s)}"${specDis}>${esc(s)}</button>`).join('')}
-        </div>
+        ${specChipsHTML(spec, specDis)}
       </div>
       <div class="fg"><label>Gender</label><select data-ef="gender"><option${(r.gender || 'Male') === 'Male' ? ' selected' : ''}>Male</option><option${r.gender === 'Female' ? ' selected' : ''}>Female</option></select></div>
       <div class="fg"><label>Age Group</label><select data-ef="age_group">${AGE_OPTS.map(([v,l])=>`<option value="${v}"${v === (r.age_group || 'adult') ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
@@ -3225,14 +3342,8 @@ async function addMember(){
    the same contract as the list below, so the two cannot drift apart.
    The Edge Function re-checks it anyway; this is convenience, not security. */
 function fillInviteRoles(){
-  const sel = $('ufInviteRole');
-  if(!sel) return;
-  const keep = sel.value;
-  const allowed = grantableRoles();
-  sel.innerHTML = '<option value="">No access yet — grant it later</option>' +
-    ROLE_DEFS.filter(r=>allowed.includes(r.id))
-             .map(r=>'<option value="'+r.id+'">'+esc(r.label)+'</option>').join('');
-  if(keep && allowed.includes(keep)) sel.value = keep;
+  const box = $('ufInviteRoleBox'); if(!box) return;
+  box.innerHTML = rolePickerHTML('ufInviteRole', grantableRoles(), 'No access yet — grant it later');
 }
 
 async function sendInvite(){
@@ -3240,11 +3351,12 @@ async function sendInvite(){
   const btn = $('ufInviteSend');
   const email = ($('ufInviteEmail').value||'').trim().toLowerCase();
   const display = ($('ufInviteName').value||'').trim();
-  const roleId = ($('ufInviteRole')||{}).value || '';
+  const roleId = rpValue('ufInviteRole');
   const role = ROLE_DEFS.find(r=>r.id === roleId);
   const perms = role ? role.perms : [];
   const show = (t,bad)=>{ msg.textContent = t; msg.style.color = bad ? 'var(--red-lt, #F87171)' : 'var(--green-lt, #4ADE80)'; };
   if(!email || email.indexOf('@') < 0){ show('Enter their email address first.', true); return; }
+  if(rpTeamChosen('ufInviteRole') && !roleId){ show('Choose a level for that team.', true); return; }
   if(roleId && !grantableRoles().includes(roleId)){ show('That role is at or above your own level.', true); return; }
   if(!sb){ show('No connection to Supabase.', true); return; }
   btn.disabled = true; const label = btn.textContent; btn.textContent = 'Sending…';
@@ -3407,14 +3519,12 @@ function editProfile(id){
     '<div class="fg"><label>Linked person (User Management)</label><select id="pf-member-'+id+'">'+memberOptions(r.member_id)+'</select></div>'+
     '</div>'+
     '<div class="fg"><label>Permissions'+(self?' — you cannot change your own':'')+'</label></div>'+
-    '<div class="xperm-grid"'+(self?' style="opacity:.5;pointer-events:none;"':'')+'>'+
-      PERMS_VOCAB.map(pm=>{
-        const allowed = grantable.indexOf(pm)>=0;
-        return '<label class="xperm"'+(allowed?'':' style="opacity:.4" title="Above your authority to grant"')+'>'+
-          '<input type="checkbox" name="pf-perm-'+id+'" value="'+pm+'"'+
-          (perms.indexOf(pm)>=0?' checked':'')+(allowed?'':' disabled')+'> '+esc(ROLE_LABELS[pm]||pm)+'</label>';
-      }).join('')+
+    '<div class="pchips" id="pf-roles-'+id+'"'+(self?' style="opacity:.5;pointer-events:none;"':'')+'>'+
+      PERMS_VOCAB.filter(pm=>perms.indexOf(pm)>=0).map(pm=>pfChip(id, pm, grantable.indexOf(pm)>=0)).join('')+
+      (perms.length?'':'<span class="mem-hint">No access yet</span>')+
     '</div>'+
+    (self?'':'<div class="fg"><label>Add a role</label><div class="rp-row">'+rolePickerHTML('pfRole-'+id, grantable, 'Choose team…')+
+      '<button type="button" class="btn btn-ol" onclick="pfAddRole(\''+id+'\')">Add role</button></div></div>')+
     '<div class="um-form-acts">'+
       '<button class="btn btn-bl" onclick="saveProfile(\''+id+'\')">Save</button>'+
       '<button class="btn btn-ol" onclick="editProfile(\''+id+'\')">Cancel</button>'+
@@ -3900,8 +4010,8 @@ function renderApprove(){
     /* Roles offered are the ones this approver may actually grant. The
        Edge Function and the database both re-check, so this is only
        there to stop somebody choosing something that would be refused. */
-    const roleOpts = (sel)=>ROLE_DEFS.filter(r=>grantable.indexOf(r.id) >= 0)
-      .map(r=>`<option value="${r.id}"${r.id===sel?' selected':''}>${esc(r.label)}</option>`).join('');
+    const roleOpts = (sel)=>{ const gs = rpGroups(grantable), cats = [...new Set(gs.map(g=>g.cat))];
+      return cats.map(c=>'<optgroup label="'+esc(c)+'">'+gs.filter(g=>g.cat === c).map(g=>g.levels.map(l=>`<option value="${l[0]}"${l[0]===sel?' selected':''}>${esc(g.label+' — '+l[1])}</option>`).join('')).join('')+'</optgroup>').join(''); };
     return `<div class="bt" data-batch="${b.id}">
       <div class="bt-h">
         <b>${esc(b.submitted_name || 'A lead')}</b>
@@ -4292,7 +4402,7 @@ function bindUI(){
   $('awayPick').addEventListener('keydown', e=>{ if(e.key === 'Enter') addAway(); });
   /* members (people directory) */
   $('maRank').innerHTML = RANKS.map(r=>`<option>${esc(r)}</option>`).join('');
-  $('maSpecRow').innerHTML = SPEC_TEAMS.map(s=>`<button type="button" class="spec-chip" data-spec="${esc(s.id)}">${esc(s.label)}</button>`).join('');
+  $('maSpecRow').innerHTML = specChipsHTML([], '');
   $('mAddBtn').addEventListener('click', ()=>{ $('mAddForm').classList.toggle('show'); if($('mAddForm').classList.contains('show')){ applyRankToPanel($('mAddForm')); $('maName').focus(); } });
   $('maCancelBtn').addEventListener('click', ()=>$('mAddForm').classList.remove('show'));
   $('maSaveBtn').addEventListener('click', addMember);
@@ -4422,12 +4532,12 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       if(group&&groupHas) row.appendChild(group);
       group=null; groupBtn=null; groupMenu=null; groupHas=false;
     }
-    /* The Specialized Teams entries live inside a wrapper (#specNav) so the
+    /* The category entries live inside wrappers (.nav-wrap) so the
        menu code can rewrite them in one go; read through it, or they would
        be missing from the bar altogether. */
     var kids=[];
     Array.prototype.forEach.call(nav.children,function(c){
-      if(c.id==='specNav') Array.prototype.push.apply(kids,c.children); else kids.push(c);
+      if(c.classList.contains('nav-wrap')) Array.prototype.push.apply(kids,c.children); else kids.push(c);
     });
     for(var i=0;i<kids.length;i++){
       var el=kids[i];
@@ -4464,6 +4574,9 @@ window.addEventListener('DOMContentLoaded', async ()=>{
         // and Team pages with no way back to the Hub once the sidebar was
         // hidden — the only exit was the browser's back button.
         if(!vis(el)) continue;
+        // A standalone category (Training & Development, Safety & Security)
+        // sits on the bar itself instead of inside the group before it.
+        if(el.classList.contains('nav-solo')){ flush(); row.appendChild(entry(el)); continue; }
         if(group){ groupMenu.appendChild(entry(el)); groupHas=true;
                    if(el.classList.contains('active')) groupBtn.classList.add('on'); }
         else row.appendChild(entry(el));
