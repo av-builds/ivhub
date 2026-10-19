@@ -5855,14 +5855,14 @@ function nav(el){
 ═══════════════════════════════════ */
 let _md={name:'',range:3,past:false,items:[],notes:[]};
 let _mdIV=null, _mdDrop=-1;
-const MD_DIV_COLOURS={av:'#4FC3F7',A:'#34D399',B:'#F472B6'};
+const MD_DIV_COLOURS={av:'#4FC3F7',A:'#34D399',B:'#F472B6',SS:'#FB923C'};
 const MD_SPARE=['#FB923C','#A78BFA','#FACC15','#2DD4BF','#E879F9','#A3E635'];
 function mdColour(div){
   if(MD_DIV_COLOURS[div]) return MD_DIV_COLOURS[div];
   let h=0; String(div).split('').forEach(c=>{ h=(h*31+c.charCodeAt(0))>>>0; });
   return MD_DIV_COLOURS[div]=MD_SPARE[h%MD_SPARE.length];
 }
-function mdDivLabel(div){ return div==='av'?'AV':'Team '+div; }
+function mdDivLabel(div){ return div==='av'?'AV':div==='SS'?'Safety':'Team '+div; }
 function mdNorm(s){ return String(s||'').trim().replace(/\s+/g,' ').toLowerCase(); }
 function mdAddMonths(ds,n){ const d=new Date(ds+'T12:00'); d.setMonth(d.getMonth()+n); return localDS(d); }
 function mdWindow(){
@@ -5880,7 +5880,7 @@ function mdInit(){
    missing table is reported on the page rather than failing the whole list. */
 async function mdLoadIV(force){
   if(_mdIV&&!force&&Date.now()-_mdIV.t<60000) return _mdIV;
-  const out={t:Date.now(),events:[],rosters:{},members:[],notes:[]};
+  const out={t:Date.now(),events:[],rosters:{},members:[],safety:[],notes:[]};
   _mdIV=out;
   if(!sb){ out.notes.push('Offline — IV team duties could not be loaded.'); return out; }
   const t=todayDS(), from=t.slice(0,8)+'01', to=mdAddMonths(t,12);
@@ -5899,6 +5899,12 @@ async function mdLoadIV(force){
     out.events=[]; out.rosters={};
     out.notes.push('IV team duties could not be loaded ('+((e&&e.message)||'no access')+').');
   }
+  /* Safety & Security keeps its own roster. Quiet if the table is not there
+     or this person may not read it. */
+  try{
+    const sr=await sb.from('safety_roster').select('date,data').gte('date',from).lte('date',to);
+    if(!sr.error) out.safety=sr.data||[];
+  }catch(e){}
   try{
     const m=await sb.from('iv_members').select('id,name,team,status');
     if(!m.error) out.members=m.data||[];
@@ -5920,6 +5926,7 @@ function mdAllNames(){
   trainings.forEach(t=>{ if(t.trainer) set.add(t.trainer.trim()); if(t.trainee) set.add(t.trainee.trim()); });
   if(_mdIV){
     _mdIV.members.forEach(m=>{ if(m.name&&m.status!=='inactive') set.add(m.name.trim()); });
+    (_mdIV.safety||[]).forEach(r=>((r.data&&r.data.people)||[]).forEach(n=>{ if(n) set.add(String(n).trim()); }));
     Object.values(_mdIV.rosters).forEach(r=>{ Object.values((r&&r.assign)||{}).forEach(a=>mdPeople(a).forEach(p=>{ if(p&&p.name) set.add(String(p.name).trim()); })); });
   }
   return [...set].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
@@ -5946,6 +5953,12 @@ function mdCollect(name,win){
   });
   /* ── IV teams ── */
   if(_mdIV){
+    (_mdIV.safety||[]).filter(r=>r.date>=win.start&&r.date<=win.end).forEach(r=>{
+      const ppl=(r.data&&r.data.people)||[];
+      if(!ppl.some(n=>is(n))) return;
+      const others=ppl.filter(n=>!is(n));
+      items.push({ds:r.date,div:'SS',title:'Safety & Security duty',subs:others.length?['With <b>'+others.map(esc).join(', ')+'</b>']:[],tags:[]});
+    });
     const ids=new Set(_mdIV.members.filter(m=>is(m.name)).map(m=>m.id));
     _mdIV.events.filter(e=>e.date>=win.start&&e.date<=win.end).forEach(e=>{
       const div=String(e.team||'?');

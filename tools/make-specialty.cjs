@@ -21,7 +21,7 @@ const DIVISIONS = [
   { key:'td', name:'Training & Development', file:'training.html', icon:'🎓',
     lead:'Training & Development Lead', alead:'Assistant Training & Development Lead', teams:[] },
   { key:'ss', name:'Safety & Security', file:'safety.html', icon:'🦺',
-    lead:'Safety & Security Lead', alead:'Assistant Safety & Security Lead', teams:[] },
+    lead:'Safety & Security Lead', alead:'Assistant Safety & Security Lead', teams:[], custom:true },
   { key:'an', name:'Ancillary Services', file:'ancillary.html', icon:'🛠️',
     lead:'Ancillary Services Lead', alead:'Ancillary Services Assistant Lead',
     teams:[
@@ -185,7 +185,8 @@ document.addEventListener('DOMContentLoaded', start);
 </html>
 `;
 DIVISIONS.forEach(d => {
-  fs.writeFileSync(path.join(root, d.file), page(d, null));
+  // custom pages (Safety & Security) are written by hand and never overwritten
+  if(!d.custom) fs.writeFileSync(path.join(root, d.file), page(d, null));
   d.teams.forEach(t => fs.writeFileSync(path.join(root, t.file), page(t, d)));
 });
-console.log('wrote', DIVISIONS.flatMap(d=>[d.file].concat(d.teams.map(t=>t.file))).join(', '));
+console.log('wrote', DIVISIONS.flatMap(d=>(d.custom?[]:[d.file]).concat(d.teams.map(t=>t.file))).join(', '));
