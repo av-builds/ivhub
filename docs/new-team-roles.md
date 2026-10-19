@@ -99,3 +99,16 @@ Login Management, which now offers a **team**, then a **level**.
 PHMU (Team A, Team B, AV Team, Paat Team and its two groups), Training &
 Development and Safety & Security (standalone), Ancillary Services
 (Maintenance, Cooking, Cleaning).
+
+## Volunteer Logins — two new columns
+
+Volunteer Logins (Hub → Management) edits date of birth and phone on the
+people directory. Run this once in the Supabase SQL editor:
+
+```sql
+alter table iv_members add column if not exists dob date, add column if not exists phone text;
+```
+
+Until it is run, the page works but switches those two fields off and says so.
+Email (`iv_members.email`) and gender already exist. Age is worked out from
+the date of birth and sets the child / youth / adult group; it is not stored.

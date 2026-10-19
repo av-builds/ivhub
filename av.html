@@ -1603,7 +1603,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div class="iv-ph" style="background:linear-gradient(135deg,#0B3A6B,#1565C0);"><span>🔗</span> Membership comes from the Hub</div>
         <div class="iv-pb">
           <div class="ib" style="margin-bottom:0;">
-            People join or leave the AV Team in <b style="color:var(--dt);">Home → Management → User Management</b> —
+            People join or leave the AV Team in <b style="color:var(--dt);">Home → Management → Data Management</b> —
             tick <b style="color:var(--gold-lt);">AV Team</b> under Specialized Teams and they appear here automatically.
             Renames, gender and org-wide inactive status follow the hub record.
             Use this page to set each member's <b style="color:var(--dt);">weekdays, roles and busy dates</b>.
@@ -2163,7 +2163,7 @@ async function dbStored(q, allowNone){
    HUB AV MEMBERSHIP
    The AV roster contains EXACTLY the
    people ticked "AV Team" in the hub
-   (Home → Management → User Management).
+   (Home → Management → Data Management).
 ═══════════════════════════════════ */
 function hubHasAV(m){
   let s = m && m.spec;
@@ -4182,7 +4182,7 @@ function renderVolCards(){
   if(_vmFilter==='inactive') list=list.filter(v=>v.status==='inactive');
   if(_vmFilter==='nodays')   list=list.filter(v=>!(v.days||[]).length);
   if(_vmSearch) list=list.filter(v=>v.name.toLowerCase().includes(_vmSearch));
-  if(!list.length){c.innerHTML=`<div style="text-align:center;padding:20px;color:var(--dm);font-size:13px;">${vols.length?'No volunteers match this filter.':'No AV members yet — tick people as <b>AV Team</b> in Home → Management → User Management.'}</div>`;return;}
+  if(!list.length){c.innerHTML=`<div style="text-align:center;padding:20px;color:var(--dm);font-size:13px;">${vols.length?'No volunteers match this filter.':'No AV members yet — tick people as <b>AV Team</b> in Home → Management → Data Management.'}</div>`;return;}
   c.innerHTML=list.map(v=>{
     const roles=v.roles;
     const inactive=v.status==='inactive';

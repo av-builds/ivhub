@@ -321,6 +321,50 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     await p.context().close(); }
 }
 
+// ── Management menu: Rapid Link, Data Management, Admin / Volunteer Logins ──
+{ const p=await open('index.html',{width:1300,height:900});
+  const r=await p.evaluate(async()=>{ const o={};
+    const mgmt=async pm=>{ CU={user:'x',display:'X',perms:pm,uid:'u'}; COVER_TEAMS.clear(); applyNavVisibility(); await new Promise(r=>setTimeout(r,450));
+      const g=[...document.querySelectorAll('#topnav .tn-group')].find(x=>/Management/.test(x.querySelector('.tn-b').textContent));
+      return g?[...g.querySelectorAll('.tn-menu .tn-b')].map(b=>{ const c=b.cloneNode(true); c.querySelectorAll('[style*="display: none"]').forEach(x=>x.remove()); return c.textContent.replace(/^[^A-Za-z]+/,'').replace(/\s+/g,' ').replace(/\d+$/,'').trim(); }):[]; };
+    o.dev=await mgmt(['developer']); o.owner=await mgmt(['owner']); o.tl=await mgmt(['tl_a']); o.atl=await mgmt(['ytl_b']); o.fac=await mgmt(['facilitator']); o.vol=await mgmt(['team_a']); o.an=await mgmt(['an_alead']);
+    CU={user:'x',display:'X',perms:['tl_a'],uid:'u'}; nav('submit'); o.tlActive=document.getElementById('page-submit').classList.contains('active'); o.toast=(document.querySelector('.toast')||{}).innerText||'';
+    CU={user:'x',display:'X',perms:['developer'],uid:'u'}; nav('submit'); o.devActive=document.getElementById('page-submit').classList.contains('active');
+    CU={user:'x',display:'X',perms:['facilitator'],uid:'u'}; PROFILES=[{id:'a',email:'a@x',display:'Lead One',perms:['tl_a']},{id:'b',email:'b@x',display:'Vol One',perms:['team_a']},{id:'c',email:'c@x',display:'New Person',perms:[]}];
+    renderUserList(); o.adminRows=[...document.querySelectorAll('#umList .um-name')].map(e=>e.innerText).join(); o.profilesKept=PROFILES.length;
+    o.age=[ageFromDob('2000-01-01')>=25, groupForAge(11), groupForAge(12), groupForAge(17), groupForAge(18)].join();
+    return o; });
+  chk((['Rapid Link','Data Management','Admin Logins','Volunteer Logins'].every(x=>r.dev.includes(x))&&!r.dev.includes('Invitations')&&!r.dev.includes('Duty Stats')&&!r.dev.includes('Rapid Link ⚠ Soon')),'mgmt    a developer sees Rapid Link (no warning tag), Data Management and both logins pages, no Invitations or Duty Stats',r.dev.join('|'));
+  chk(['Rapid Link','Data Management','Admin Logins','Volunteer Logins'].every(x=>r.owner.includes(x))&&!r.owner.includes('Invitations')&&!r.owner.includes('Duty Stats'),'mgmt    the owner has the same list',r.owner.join('|'));
+  chk(r.tl.join()==='Rapid Link ⚠ Soon'&&r.atl.join()==='Rapid Link ⚠ Soon'&&r.an.join()==='Rapid Link ⚠ Soon','mgmt    assistant leads and above see only Rapid Link, with a warning tag',r.tl.join('|')+' / '+r.an.join('|'));
+  chk(/⚠/.test(await p.evaluate(()=>{CU={user:'x',display:'X',perms:['tl_a'],uid:'u'};applyNavVisibility();return document.getElementById('navSubmit').innerText;})),'mgmt    the warning tag shows beside Rapid Link for them');
+  chk(r.tlActive===false&&/Under Development/.test(r.toast),'mgmt    clicking Rapid Link as a lead says Under Development and goes nowhere',r.toast);
+  chk(r.devActive===true,'mgmt    a developer can open Rapid Link');
+  chk(r.fac.includes('Data Management')&&r.fac.includes('Admin Logins')&&r.fac.includes('Volunteer Logins'),'mgmt    a facilitator manages data and both logins pages',r.fac.join('|'));
+  chk(r.vol.length===0,'mgmt    a plain volunteer sees no Management menu');
+  chk(r.adminRows==='Lead One,New Person'&&r.profilesKept===3,'mgmt    Admin Logins lists everyone above volunteer plus new accounts, not volunteers',r.adminRows);
+  chk(r.age==='true,child,youth,youth,adult','mgmt    age comes from date of birth and sets child, youth or adult',r.age);
+  chk(p.errs.length===0,'mgmt    no page errors'); await p.context().close(); }
+{ const p=await open('index.html',{width:1000,height:900});
+  const r=await p.evaluate(async()=>{ const o={}; let sent=null;
+    CU={user:'x',display:'X',perms:['facilitator'],uid:'u'};
+    const rows=[{id:1,name:'Aly Kotadia',rank:'Member',status:'active',team:'A',spec:[],gender:'Male',dob:'2010-05-05',phone:null,email:null},{id:2,name:'Team Lead Person',rank:'Team Leader',status:'active',team:'A',spec:[]},{id:3,name:'Zahra Ali',rank:'Member',status:'active',team:null,spec:['COOKING'],gender:'Female',dob:null,phone:null,email:null}];
+    const q=(t,data)=>({select(){return q(t,data)},order(){return q(t,data)},update(patch){ sent=patch; return {eq(){return {select:async()=>({data:[{id:1}],error:null})}}}},then(f,r){return Promise.resolve({data,error:null}).then(f,r)}});
+    sb={from:t=>t==='iv_members'?q(t,rows):q(t,[{id:'p1',email:'a@x',member_id:1,perms:['team_a']}])};
+    await loadVLogins();
+    o.names=[...document.querySelectorAll('#vlList .um-name')].map(e=>e.innerText).join();
+    o.meta=document.querySelector('#vlList .um-meta').innerText;
+    VL.filter='nologin'; renderVLogins(); o.nologin=[...document.querySelectorAll('#vlList .um-name')].map(e=>e.innerText).join();
+    VL.filter='all'; vlEdit(1); const box=document.getElementById('vl-1');
+    box.querySelector('[data-vf="dob"]').value='2005-03-03'; box.querySelector('[data-vf="phone"]').value='021 555 1234'; box.querySelector('[data-vf="email"]').value='aly@example.com';
+    await vlSave(1); o.sent=sent;
+    return o; });
+  chk(r.names==='Aly Kotadia,Zahra Ali','volunteer logins list volunteers only (not leads)',r.names);
+  chk(/Team A/.test(r.meta)&&/Has a login/.test(r.meta),'volunteer logins show team and login status',r.meta);
+  chk(r.nologin==='Zahra Ali','volunteer logins "No login yet" filter works');
+  chk(r.sent&&r.sent.phone==='021 555 1234'&&r.sent.email==='aly@example.com'&&r.sent.dob==='2005-03-03'&&r.sent.age_group==='adult','volunteer logins save DOB, phone and email, and set the age group',JSON.stringify(r.sent));
+  chk(p.errs.length===0,'volunteer logins no page errors'); await p.context().close(); }
+
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});
   const r=await p.evaluate(`(async()=>{ await (${SEED})(['tl_a']); let sent=null;

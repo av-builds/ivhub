@@ -152,6 +152,8 @@ html{scroll-behavior:smooth;}
 .nav-cap{margin:8px 14px 2px;font:800 10px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);opacity:.8;}
 .nav-sub{padding-left:30px;font-size:.94em;}
 .nav-item.nav-solo{margin-top:12px;font-weight:900;}
+.vl-age{min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px dashed var(--db);color:var(--dt);font-weight:800;}
+.ntag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.5);color:#FCD34D;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
 @media (hover:none){.btn{min-height:40px;}.sb-signout{min-height:44px;}}
 .qa-team{margin-top:14px;}
 .qa-tl{font:800 11px 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);margin:0 2px 8px;}
@@ -810,12 +812,11 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="nav-wrap" id="ancNav"></div>
 
       <div class="nav-sec" id="secMgmt">Management</div>
-      <div class="nav-item" id="navSubmit" data-page="submit"><span class="ni">✉️</span> Invite My Team</div>
-      <div class="nav-item" id="navApprove" data-page="approve"><span class="ni">✅</span> Invitations<span class="nbadge" id="navApproveCount" style="display:none;"></span></div>
-      <div class="nav-item" id="navMembers" data-page="members"><span class="ni">👥</span> User Management</div>
-      <div class="nav-item" id="navLogins" data-page="logins"><span class="ni">🔑</span> Login Management</div>
+      <div class="nav-item" id="navSubmit" data-page="submit"><span class="ni">⚡</span> Rapid Link <span class="ntag" id="navRapidTag">⚠ Soon</span></div>
+      <div class="nav-item" id="navMembers" data-page="members"><span class="ni">👥</span> Data Management</div>
+      <div class="nav-item" id="navLogins" data-page="logins"><span class="ni">🔑</span> Admin Logins</div>
+      <div class="nav-item" id="navVLogins" data-page="vlogins"><span class="ni">🙋</span> Volunteer Logins</div>
       <div class="nav-item" id="navLinking" data-page="linking"><span class="ni">🔗</span> Account Linking<span class="nbadge" id="navLinkingCount" style="display:none;">0</span></div>
-      <div class="nav-item" id="navStats" data-page="stats"><span class="ni">📊</span> Duty Stats</div>
       <div class="nav-item" id="navAdmin" data-page="admin"><span class="ni">⚙️</span> Admin Panel</div>
       <div class="nav-item" id="navAudit" data-page="audit"><span class="ni">🔍</span> Audit Logs</div>
     </nav>
@@ -924,7 +925,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <!-- ═══ PAGE: USER MANAGEMENT (people directory — iv_members, NOT logins) ═══ -->
     <div class="page" id="page-members">
       <div class="ph">
-        <div><h1>User Management</h1><p>IV member directory across both teams. Manages people, not login accounts — see Login Management for accounts.</p></div>
+        <div><h1>Data Management</h1><p>IV member directory across both teams. Manages people, not login accounts — see Admin Logins for accounts.</p></div>
         <div class="ha"><button class="btn btn-bl" id="mAddBtn">+ Add Member</button></div>
       </div>
       <section class="panel">
@@ -965,15 +966,15 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       </section>
     </div>
 
-    <!-- ═══ PAGE: LOGIN MANAGEMENT (accounts — former Manage Users modal) ═══ -->
+    <!-- ═══ PAGE: ADMIN LOGINS (accounts — former Manage Users modal) ═══ -->
     <div class="page" id="page-logins">
       <div class="ph">
-        <div><h1>Login Management</h1><p>Supabase Auth accounts. Invite by email; each person sets their own password.</p></div>
+        <div><h1>Admin Logins</h1><p>Everybody above volunteer, plus new accounts waiting for access. Volunteers are in Volunteer Logins.</p></div>
         <div class="ha"><button class="btn btn-bl" id="umNewBtn">+ Invite User</button></div>
       </div>
       <section class="panel">
         <div class="um-sub">Accounts live in <b>Supabase Auth</b> — passwords are never stored here and cannot be read by anyone.
-        Grant access by adding a team role below, and link an account to its person in User Management so duties and logins line up.</div>
+        Grant access by adding a team role below, and link an account to its person in Data Management so duties and logins line up.</div>
         <div class="um-warn" id="umWarn"></div>
         <div id="umInvite" class="um-form">
           <h4>Invite a user</h4>
@@ -996,6 +997,26 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     </div>
 
     <!-- ═══ PAGE: DUTY STATS ═══ -->
+    <!-- ═══ PAGE: VOLUNTEER LOGINS ═══ -->
+    <div class="page" id="page-vlogins">
+      <div class="ph">
+        <div><h1>Volunteer Logins</h1><p>Every volunteer, whether or not they have a login yet. Fill in their details here.</p></div>
+      </div>
+      <section class="panel">
+        <div class="toolbar">
+          <div class="chips" id="vlChips">
+            <span class="chip active" data-vf="all">All</span>
+            <span class="chip" data-vf="login">Has a login</span>
+            <span class="chip" data-vf="nologin">No login yet</span>
+          </div>
+          <input type="search" id="vlSearch" placeholder="Search volunteers…" autocomplete="off">
+        </div>
+        <div class="um-warn" id="vlWarn"></div>
+        <div class="um-sub" id="vlCount" style="margin:0 0 10px;"></div>
+        <div id="vlList"></div>
+      </section>
+    </div>
+
     <div class="page" id="page-stats">
       <div class="ph">
         <div><h1>Duty Stats</h1><p>Cross-team IV assignment counts from generated rosters. Read-only.</p></div>
@@ -1039,7 +1060,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 
       <section class="panel">
         <h2>Shared Viewer Accounts</h2>
-        <div class="ap-note">The shared logins <b>team.a</b>, <b>team.b</b> and <b>av.team</b> have been retired. Everyone signs in with their own email address now, so the Hub can tell who did what — a password four hundred people know identifies nobody, and cannot be taken away from one person who leaves.<br><br>To give someone access, use <b>Login Management</b> → <b>Invite someone</b>.</div>
+        <div class="ap-note">The shared logins <b>team.a</b>, <b>team.b</b> and <b>av.team</b> have been retired. Everyone signs in with their own email address now, so the Hub can tell who did what — a password four hundred people know identifies nobody, and cannot be taken away from one person who leaves.<br><br>To give someone access, use <b>Admin Logins</b> → <b>Invite someone</b>.</div>
       </section>
     </div>
 
@@ -1105,7 +1126,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <!-- ═══ PAGE: INVITE MY TEAM (Team Leads and Assistant Leads) ═══ -->
     <div class="page" id="page-submit">
       <div class="ph">
-        <div><h1>Invite My Team</h1><p id="sbLede">Enter each person's own email address, tick who to invite, and send it for approval.</p></div>
+        <div><h1>Rapid Link</h1><p id="sbLede">Enter each person's own email address, tick who to invite, and send it for approval.</p>
+          <div class="um-warn" style="display:block;margin-top:10px;">⚠ Under development — available to developers only for now. The Invitations page has been removed, so batches submitted here cannot be approved yet.</div></div>
         <div class="ha">
           <select id="sbTeamPick" style="display:none;"></select>
           <button class="btn btn-ol" id="sbRefresh">↻ Refresh</button>
@@ -1257,7 +1279,8 @@ const ADMIN_B    = ()=>hasPerm(...IV_TOP,'facilitator','tl_b','ytl_b');
 const AV_VIEW    = ()=>hasPerm(...IV_TOP,'av_admin','av_atl','av_coord','av_team'); // facilitator NEVER sees AV
 const AV_ADMIN   = ()=>hasPerm(...IV_TOP,'av_admin','av_atl','av_coord');
 const USERS_ADMIN= ()=>hasPerm(...IV_TOP,'facilitator');
-const STATS_VIEW = ()=>hasPerm(...IV_TOP,'facilitator','tl_a','ytl_a','tl_b','ytl_b','av_admin','av_atl','av_coord');
+/* Duty Stats has been removed from the Hub, so nobody is shown it. */
+const STATS_VIEW = ()=>false;
 // Reading the log means reading everyone's activity across every team,
 // so it follows account management rather than AV administration. The
 // database enforces the same rule, and would return nothing to an AV
@@ -1289,7 +1312,12 @@ function approveTeams(){
   return t;
 }
 const CAN_SUBMIT  = ()=>prepareTeams().length > 0;
-const CAN_APPROVE = ()=>approveTeams().length > 0;
+/* The Invitations page has been removed; Rapid Link will replace it. */
+const CAN_APPROVE = ()=>false;
+/* Rapid Link is shown to Assistant Leads and above, but only the Owner and Developer can
+   open it while it is under development. */
+const rapidVisible = ()=>!!CU && myRank() <= 7;
+const rapidOpen    = ()=>hasPerm('owner','developer');
 const TEAM_LABEL  = {A:'Team A', B:'Team B', AV:'AV Team'};
 /* Which team a member counts as, for invitation purposes. Mirrors
    member_invite_team() in the database. A main team wins; otherwise AV,
@@ -1810,7 +1838,7 @@ async function auditLog(action, category, detail){
    Accounts are created by inviting from Supabase → Authentication →
    Users → Invite. The invite email lets the person set their own
    password; the DB trigger creates their profile with no permissions,
-   and an Owner grants access here in Login Management.
+   and an Owner grants access here in Admin Logins.
 ═══════════════════════════════════════════════════════════════ */
 /* Emergency hatch: set true ONLY if an Auth misconfiguration locks
    everyone out. It re-enables the old plaintext app_users login. */
@@ -2023,9 +2051,9 @@ async function doLogout(){
    Kept in its own table with a three-month life. What somebody altered is
    a permanent record; where somebody browsed is not. */
 const LOGGED_SECTIONS = {
-  members: 'User Management', logins: 'Login Management', stats: 'Duty Stats',
+  members: 'Data Management', logins: 'Admin Logins', vlogins: 'Volunteer Logins',
   admin: 'Admin Panel', audit: 'Audit Logs', linking: 'Account Linking',
-  submit: 'Invite My Team', approve: 'Invitations'
+  submit: 'Rapid Link'
 };
 let _lastView = null;
 async function logView(section){
@@ -2066,10 +2094,13 @@ const PAGES = {
   admin:     ()=>hasPerm('owner','developer'),
   audit:     ()=>AUDIT_VIEW(),
   linking:   ()=>USERS_ADMIN(),
-  submit:    ()=>CAN_SUBMIT(),
+  submit:    ()=>rapidOpen(),
+  vlogins:   ()=>USERS_ADMIN(),
   approve:   ()=>CAN_APPROVE(),
 };
 function nav(id){
+  // Visible to Assistant Leads and above, but not open to them yet.
+  if(id === 'submit' && !rapidOpen()){ toast('Under Development'); return; }
   if(!PAGES[id] || !PAGES[id]()){
     if(id !== 'dashboard') toast('You don\'t have access to that page.', 'err');
     id = 'dashboard';
@@ -2079,7 +2110,7 @@ function nav(id){
   closeSidebar();
   if(id === 'members') loadMembers();
   else if(id === 'logins'){ refreshUserRows(); }
-  else if(id === 'stats') loadStats();
+  else if(id === 'vlogins') loadVLogins();
   else if(id === 'admin') loadAdminPanel();
   else if(id === 'audit') renderAuditPage();
   else if(id === 'linking') loadLinkingPage();
@@ -2167,9 +2198,7 @@ function renderQuickAccess(){
         '<span class="qa-i">' + p[1] + '</span><span class="qa-t">' + p[2] + '</span></a>').join('') + '</div></div>';
   });
   const hub = [];
-  if(CAN_SUBMIT())  hub.push(['submit','✉️','Invite My Team']);
-  if(CAN_APPROVE()) hub.push(['approve','✅','Invitations']);
-  if(STATS_VIEW())  hub.push(['stats','📊','Duty Stats']);
+  if(rapidVisible())  hub.push(['submit','⚡','Rapid Link ⚠']);
   hub.push(['myduties','🗓️','My Duties']);
   h += '<div class="qa-team qa-hub"><div class="qa-tl">Hub</div><div class="qa-grid">' +
     hub.map(p=>'<button type="button" class="qa-tile" onclick="nav(\'' + p[0] + '\')"><span class="qa-i">' + p[1] + '</span><span class="qa-t">' + p[2] + '</span></button>').join('') + '</div></div>';
@@ -2212,14 +2241,15 @@ function applyNavVisibility(){
   wr('phmuNav', phmuHtml); wr('soloNav', soloHtml); wr('ancNav', ancHtml);
   const specAny = (phmuHtml + soloHtml + ancHtml) !== '';
   const mm = USERS_ADMIN(), st = STATS_VIEW(), ow = hasPerm('owner','developer'), au = AUDIT_VIEW();
-  const sub = CAN_SUBMIT(), apv = CAN_APPROVE();
+  const sub = rapidVisible(), apv = false;
   sec('secMgmt', mm || st || ow || au || sub || apv);
   item('navSubmit', sub);
-  item('navApprove', apv);
+  item('navVLogins', mm);
+  // The top bar holds a copy with the same id, so look inside the sidebar.
+  const tag = document.querySelector('.sb-nav .ntag'); if(tag) tag.style.display = rapidOpen() ? 'none' : '';
   item('navMembers', mm);
   item('navLogins', mm);
   item('navLinking', mm);
-  item('navStats', st);
   item('navAdmin', ow);
   item('navAudit', au);
   [['navTeamA','A'],['navTeamB','B'],['navAV','AV']].forEach(x=>{ const l=$(x[0]); if(l) l.onclick=()=>rememberTeam(x[1]); });
@@ -2660,7 +2690,7 @@ const RANKS = ['Member','Assistant Team Lead','Team Leader','Facilitator','PHMU'
 const LEADERSHIP_RANKS = ['Facilitator','PHMU','Deputy Director','Director']; // ranks with NO main-team allocation
 /* Additive team assignments, stored in iv_members.spec. Grouped by the same
    four categories as the menu. Assigning someone here says who is on the
-   team; their login access is granted separately in Login Management. */
+   team; their login access is granted separately in Admin Logins. */
 const SPEC_TEAMS = [
   {id:'AV',          label:'AV Team',                cat:'PHMU'},
   {id:'ABESHAFA',    label:'Abeshafa Paat Group',    cat:'PHMU'},
@@ -3225,7 +3255,7 @@ async function carryTeamAccess(memberId, fromTeam, toTeam){
     if(ue || !upd || !upd.length){
       showMWarn('Moved to Team ' + esc(toTeam) + ', but their login still points at Team ' +
                 esc(fromTeam || '—') + ' (' + esc(ue ? ue.message : 'the database refused the change') +
-                '). Fix it in Login Management.');
+                '). Fix it in Admin Logins.');
       return;
     }
     auditLog('Moved team', 'members',
@@ -3245,7 +3275,7 @@ async function carryDisplayName(memberId, name){
      record leaves the log naming somebody who no longer exists. */
   const {data, error} = await sb.from('profiles').update({display: name}).eq('member_id', memberId).select('id');
   if(error) showMWarn('The member was saved, but their account still shows the old name (' +
-    esc(error.message) + '). Fix it in Login Management.');
+    esc(error.message) + '). Fix it in Admin Logins.');
   else if(data && !data.length) console.warn('carryDisplayName: no account is linked to member', memberId);
 }
 
@@ -3487,9 +3517,118 @@ function memberOptions(sel){
     '<option value="'+m.id+'"'+(String(sel)===String(m.id)?' selected':'')+'>'+esc(m.name||('#'+m.id))+
     (m.team?(' · Team '+esc(m.team)):'')+'</option>').join('');
 }
+/* ═══ VOLUNTEER LOGINS ═══
+   The volunteer directory with the personal details a lead needs: date of
+   birth (age is worked out from it), gender, phone and email. Volunteers are
+   people whose rank is Member; everyone above is in Admin Logins. dob and
+   phone are new columns — until they exist the page says so and those two
+   fields stay switched off. What was changed is logged, the details
+   themselves never are. */
+let VL = {rows:[], logins:{}, filter:'all', open:null, hasDob:true, hasPhone:true};
+function ageFromDob(dob){
+  if(!dob) return null;
+  const d = new Date(dob + 'T12:00'); if(isNaN(d)) return null;
+  const n = new Date(); let a = n.getFullYear() - d.getFullYear();
+  if(n.getMonth() < d.getMonth() || (n.getMonth() === d.getMonth() && n.getDate() < d.getDate())) a--;
+  return a;
+}
+const groupForAge = a=>a < 12 ? 'child' : a < 18 ? 'youth' : 'adult';
+async function loadVLogins(){
+  if(!USERS_ADMIN()) return;
+  const list = $('vlList'); $('vlWarn').style.display = 'none';
+  list.innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+  if(!sb){ list.innerHTML = '<div class="md-empty"><div class="big">📡</div>No database connection.</div>'; return; }
+  try{
+    const m = await sb.from('iv_members').select('*').order('name');
+    if(m.error) throw m.error;
+    const r0 = (m.data||[])[0];
+    VL.hasDob = r0 ? ('dob' in r0) : true;
+    VL.hasPhone = r0 ? ('phone' in r0) : true;
+    VL.rows = (m.data||[]).filter(r=>memberRank(r) === 'Member' && (r.status || 'active') === 'active');
+    VL.logins = {};
+    try{
+      const p = await sb.from('profiles').select('id,email,member_id,perms');
+      if(!p.error) (p.data||[]).forEach(x=>{ if(x.member_id != null && permsOf(x).length) VL.logins[String(x.member_id)] = x; });
+    }catch(e){ /* the login column is best-effort */ }
+    if(!VL.hasDob || !VL.hasPhone){
+      const w = $('vlWarn');
+      w.innerHTML = 'Date of birth and phone are not set up in the database yet, so those two fields are switched off. Run this once in the Supabase SQL editor: <code>alter table iv_members add column if not exists dob date, add column if not exists phone text;</code>';
+      w.style.display = 'block';
+    }
+    renderVLogins();
+  }catch(e){
+    console.warn('loadVLogins failed:', e.message || e);
+    list.innerHTML = '<div class="md-empty"><div class="big">⚠️</div>Could not load volunteers: ' + esc(e.message || String(e)) + '</div>';
+  }
+}
+function vlTeamText(r){
+  const t = []; if(r.team === 'A' || r.team === 'B') t.push('Team ' + r.team);
+  memberSpec(r).forEach(x=>t.push(specLabel(x)));
+  return t.length ? t.join(' · ') : 'No team';
+}
+function renderVLogins(){
+  const q = ($('vlSearch').value || '').trim().toLowerCase();
+  const rows = VL.rows.filter(r=>{
+    const has = !!VL.logins[String(r.id)];
+    if(VL.filter === 'login' && !has) return false;
+    if(VL.filter === 'nologin' && has) return false;
+    return !q || (r.name||'').toLowerCase().includes(q);
+  });
+  $('vlCount').textContent = rows.length + ' of ' + VL.rows.length + ' volunteers';
+  document.querySelectorAll('#vlChips .chip').forEach(c=>c.classList.toggle('active', c.dataset.vf === VL.filter));
+  if(!rows.length){ $('vlList').innerHTML = '<div class="md-empty"><div class="big">🙋</div>No volunteers match.</div>'; return; }
+  $('vlList').innerHTML = rows.map(r=>{
+    const has = VL.logins[String(r.id)], age = ageFromDob(r.dob);
+    return '<div class="um-row" data-id="'+r.id+'"><div class="um-row-main"><div class="um-name">'+esc(r.name)+'</div>'+
+      '<div class="um-meta">'+esc(vlTeamText(r))+(age != null ? ' · Age '+age : '')+' · '+
+        (has ? '<b style="color:var(--green-lt,#4ADE80)">Has a login</b>' : '<i>No login yet</i>')+'</div></div>'+
+      '<div class="um-row-acts"><button class="btn btn-ol btn-sm" onclick="vlEdit('+r.id+')">'+(VL.open === r.id ? 'Close' : 'Details')+'</button></div>'+
+      '<div class="um-edit" id="vl-'+r.id+'" style="display:'+(VL.open === r.id ? 'block' : 'none')+';">'+(VL.open === r.id ? vlFormHTML(r) : '')+'</div></div>';
+  }).join('');
+}
+function vlFormHTML(r){
+  const age = ageFromDob(r.dob);
+  const ageTxt = age != null ? age + ' years' : (r.age_group ? ({child:'Child (under 12)',youth:'Youth (12–17)',adult:'Adult (18+)'})[r.age_group] : '—');
+  return '<div class="um-grid" style="margin-top:10px;">'+
+    '<div class="fg"><label>Date of birth</label><input type="date" data-vf="dob" value="'+esc(r.dob||'')+'"'+(VL.hasDob?'':' disabled')+' oninput="vlAge(this)"></div>'+
+    '<div class="fg"><label>Age</label><div class="vl-age" data-vage>'+esc(ageTxt)+'</div></div>'+
+    '<div class="fg"><label>Gender</label><select data-vf="gender"><option'+((r.gender||'Male')==='Male'?' selected':'')+'>Male</option><option'+(r.gender==='Female'?' selected':'')+'>Female</option></select></div>'+
+    '<div class="fg"><label>Phone number</label><input type="tel" data-vf="phone" value="'+esc(r.phone||'')+'" placeholder="e.g. 021 123 4567" autocomplete="off"'+(VL.hasPhone?'':' disabled')+'></div>'+
+    '<div class="fg"><label>Email</label><input type="email" data-vf="email" value="'+esc(r.email||'')+'" placeholder="name@example.com" autocomplete="off"></div>'+
+    '</div><div class="um-form-acts"><button class="btn btn-ol" onclick="vlEdit('+r.id+')">Cancel</button>'+
+    '<button class="btn btn-bl" onclick="vlSave('+r.id+')">Save</button></div>';
+}
+function vlAge(inp){
+  const a = ageFromDob(inp.value), el = inp.closest('.um-edit').querySelector('[data-vage]');
+  if(el) el.textContent = a != null ? a + ' years' : '—';
+}
+function vlEdit(id){ VL.open = (VL.open === id) ? null : id; renderVLogins(); }
+async function vlSave(id){
+  const r = VL.rows.find(x=>x.id === id); if(!r) return;
+  const box = $('vl-'+id), f = k=>(box.querySelector('[data-vf="'+k+'"]')||{}).value;
+  const email = (f('email')||'').trim();
+  if(email && !EMAIL_RE.test(email)){ toast('That email address does not look right.','err'); return; }
+  const patch = { gender: f('gender'), email: email || null };
+  if(VL.hasPhone) patch.phone = (f('phone')||'').trim() || null;
+  if(VL.hasDob){
+    const dob = f('dob') || null; patch.dob = dob;
+    const a = ageFromDob(dob); if(a != null) patch.age_group = groupForAge(a);
+  }
+  if(!await dbWrite('Saving the volunteer', ()=>sb.from('iv_members').update(patch).eq('id', id))) return;
+  Object.assign(r, patch);
+  auditLog('Updated volunteer details', 'members', r.name);
+  toast('Saved ✓'); VL.open = null; renderVLogins();
+}
+/* Admin Logins is everyone above volunteer, and anyone who has no role yet
+   (so a new invite can be given one). Volunteers are in Volunteer Logins. */
+const isAdminAccount = p=>{ const pm = permsOf(p); return !pm.length || rankOf(pm) < 9; };
 function renderUserList(){
+  const ALL_PROFILES = PROFILES; PROFILES = PROFILES.filter(isAdminAccount);
+  try{ renderAdminRows(); } finally { PROFILES = ALL_PROFILES; }
+}
+function renderAdminRows(){
   if(!PROFILES.length){
-    $('umList').innerHTML = '<div class="md-empty"><div class="big">👤</div>No accounts yet — invite someone from Supabase → Authentication → Users.</div>';
+    $('umList').innerHTML = '<div class="md-empty"><div class="big">👤</div>No admin accounts to show — invite someone, or see Volunteer Logins for volunteers.</div>';
     return;
   }
   $('umList').innerHTML = PROFILES.map(r=>{
@@ -3517,7 +3656,7 @@ function editProfile(id){
   const grantable = grantablePerms();
   box.innerHTML = '<div class="um-grid" style="margin-top:10px;">'+
     '<div class="fg"><label>Display name</label><input id="pf-display-'+id+'" value="'+esc(r.display||'')+'"></div>'+
-    '<div class="fg"><label>Linked person (User Management)</label><select id="pf-member-'+id+'">'+memberOptions(r.member_id)+'</select></div>'+
+    '<div class="fg"><label>Linked person (Data Management)</label><select id="pf-member-'+id+'">'+memberOptions(r.member_id)+'</select></div>'+
     '</div>'+
     '<div class="fg"><label>Permissions'+(self?' — you cannot change your own':'')+'</label></div>'+
     '<div class="pchips" id="pf-roles-'+id+'"'+(self?' style="opacity:.5;pointer-events:none;"':'')+'>'+
@@ -4439,6 +4578,8 @@ function bindUI(){
   });
   /* duty stats */
   $('stRefreshBtn').addEventListener('click', loadStats);
+  $('vlSearch').addEventListener('input', renderVLogins);
+  $('vlChips').addEventListener('click', e=>{ const c = e.target.closest('.chip'); if(c){ VL.filter = c.dataset.vf; renderVLogins(); } });
   $('stChips').querySelectorAll('.chip').forEach(c=>c.addEventListener('click', ()=>{
     stFilter = c.getAttribute('data-sf');
     $('stChips').querySelectorAll('.chip').forEach(x=>x.classList.toggle('active', x === c));
