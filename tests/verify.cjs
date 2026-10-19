@@ -365,6 +365,62 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(r.sent&&r.sent.phone==='021 555 1234'&&r.sent.email==='aly@example.com'&&r.sent.dob==='2005-03-03'&&r.sent.age_group==='adult','volunteer logins save DOB, phone and email, and set the age group',JSON.stringify(r.sent));
   chk(p.errs.length===0,'volunteer logins no page errors'); await p.context().close(); }
 
+// ── Safety & Security roster ──
+{ const p=await open('safety.html',{width:1200,height:900});
+  const r=await p.evaluate(async()=>{ const o={};
+    const dates=[]; for(let d=1;d<=31;d++) dates.push('2026-10-'+String(d).padStart(2,'0'));
+    const pool=['Ana','Ben','Cy','Dee','Eli','Fay'].map((n,i)=>({id:i+1,name:n,away:n==='Ben'?['2026-10-05']:[]}));
+    const avail={2:['Mon','Tue','Wed','Thu','Fri','Sun'], 3:['Sat','Sun']};   // Ben not Saturdays; Cy weekends only
+    const head={}; DAYS.forEach(d=>head[d]=2);
+    const plan=planMonth(dates,{},pool,avail,head);
+    o.days=Object.keys(plan).length; o.sizes=[...new Set(Object.values(plan).map(x=>x.length))].join();
+    o.dupes=Object.values(plan).filter(x=>new Set(x).size!==x.length).length;
+    const cnt={}; Object.values(plan).forEach(x=>x.forEach(n=>cnt[n]=(cnt[n]||0)+1));
+    o.benSat=dates.filter(d=>dowName(dateOf(d))==='Sat'&&plan[d].includes('Ben')).length;
+    o.cyWeekday=dates.filter(d=>!['Sat','Sun'].includes(dowName(dateOf(d)))&&plan[d].includes('Cy')).length;
+    o.benAway=plan['2026-10-05'].includes('Ben');
+    o.spread=Math.max(...Object.values(cnt))-Math.min(...Object.values(cnt));
+    const locked={'2026-10-06':{people:['Fay','Eli'],manual:true}};
+    const plan2=planMonth(dates,locked,pool,avail,head);
+    o.lockedKept=!('2026-10-06' in plan2);
+    const solo=planMonth(['2026-10-07'],{},[{id:1,name:'Ana',away:[]}],{},{Wed:3}); o.short=solo['2026-10-07'].length;
+    return o; });
+  chk(r.days===31&&r.sizes==='2'&&r.dupes===0,'safety  auto-fill puts two people on every day, nobody twice',JSON.stringify({d:r.days,s:r.sizes,x:r.dupes}));
+  chk(r.benSat===0&&r.cyWeekday===0&&r.benAway===false,'safety  it respects weekday availability and away dates');
+  chk(r.lockedKept===true,'safety  a day locked by hand is left alone');
+  chk(r.short===1,'safety  a short pool gives a short day, not a crash');
+  chk(r.spread<=3,'safety  duty is spread fairly across the pool',String(r.spread));
+  chk(p.errs.length===0,'safety  no page errors'); await p.context().close(); }
+{ const p=await open('safety.html',{width:1200,height:900});
+  const r=await p.evaluate(async()=>{ const o={};
+    const rows={}; let upserts=[], refuse=false;
+    sb={from:t=>({upsert:(rws)=>({select:async()=>{ upserts.push([t,rws]); return refuse?{data:[],error:null}:{data:Array.isArray(rws)?rws:[rws],error:null}; }}),
+                  delete:()=>({eq:()=>({select:async()=>({data:[{}],error:null})})})})};
+    S.pool=[{id:1,name:'Ana',away:[]},{id:2,name:'Ben',away:[]}];
+    render(['ss_lead']); S.y=2026; S.m=9; S.head={Mon:2,Tue:2,Wed:2,Thu:2,Fri:2,Sat:2,Sun:2};
+    renderCal(); o.cells=document.querySelectorAll('#cal .cell').length;
+    await saveDay('2026-10-07',['Ana']); o.saved=upserts.length&&upserts[0][1][0].data.manual===true&&S.roster['2026-10-07'].people.join()==='Ana';
+    const cell=document.querySelector('#cal .cell[data-ds="2026-10-07"]'); o.cell=cell.innerText.replace(/\s+/g,' ')+'|'+cell.className;
+    refuse=true; await saveDay('2026-10-08',['Ben']); o.refused=!S.roster['2026-10-08']&&/refused/.test(document.getElementById('toastHost').innerText);
+    refuse=false; await autoFill(); o.autoRows=upserts[upserts.length-1][1].length;
+    // volunteer view
+    render(['ss_team']); S.me={name:'Ana'}; S.roster={}; const d=new Date(); d.setDate(d.getDate()+3); const ds=ymd(d); S.roster[ds]={people:['Ana','Ben']}; renderMine();
+    o.mine=document.getElementById('myList').innerText.replace(/\s+/g,' '); o.volMgr=document.getElementById('mgrView').classList.contains('hide'); o.volMem=!document.getElementById('memView').classList.contains('hide');
+    return o; });
+  chk(r.cells%7===0&&r.cells>=28,'safety  the month grid is whole weeks',String(r.cells));
+  chk(r.saved===true&&/Ana/.test(r.cell)&&/1\/2/.test(r.cell),'safety  adding a person locks and saves the day',r.cell);
+  chk(r.refused===true,'safety  a save the database refuses is reported and not shown as saved');
+  chk(r.autoRows>=28,'safety  auto-fill saves a row per unlocked day',String(r.autoRows));
+  chk(/With Ben/.test(r.mine)&&r.volMgr&&r.volMem,'safety  a volunteer sees only their own duties',r.mine);
+  chk(p.errs.length===0,'safety  roster no page errors'); await p.context().close(); }
+{ const p=await open('av.html',{width:1200,height:900});
+  const r=await p.evaluate(()=>{ const T=todayDS(); const d=new Date(T+'T12:00'); d.setDate(d.getDate()+2); const ds=localDS(d);
+    _mdIV={t:Date.now(),events:[],rosters:{},members:[],notes:[],safety:[{date:ds,data:{people:['Ana Ali','Ben Khan'],manual:false}}]};
+    roster={}; trainings=[]; majalisEvs=[]; _md={name:'Ana Ali',range:3,past:false,items:[],notes:[]};
+    const items=mdCollect('Ana Ali',mdWindow()); return {n:items.length, t:items[0]&&items[0].title, div:items[0]&&items[0].div, label:mdDivLabel('SS'), sub:items[0]&&items[0].subs.join()}; });
+  chk(r.n===1&&r.div==='SS'&&/Safety/.test(r.t)&&r.label==='Safety'&&/Ben Khan/.test(r.sub),'safety  duties show in My Duties with the others on the day',JSON.stringify(r));
+  chk(p.errs.length===0,'safety  my duties no page errors'); await p.context().close(); }
+
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});
   const r=await p.evaluate(`(async()=>{ await (${SEED})(['tl_a']); let sent=null;
