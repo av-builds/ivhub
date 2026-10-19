@@ -453,6 +453,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .tn-group.open .tn-menu{display:block;}
 .tn-menu .tn-b{display:flex;width:100%;justify-content:flex-start;}
 .tn-sp{flex:1;}
+.tn-cap{padding:9px 12px 3px;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#7AAECB;}
+.tn-menu .tn-b.tn-sub{padding-left:28px;font-size:13px;}
 /* Hiding the bar leaves a desktop with no navigation at all — the sidebar
    is already hidden at this width — so the control that brings it back is
    always on screen rather than tucked into a menu. */
@@ -4395,7 +4397,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   function mk(tag,cls,html){ var e=document.createElement(tag); e.className=cls; if(html!=null) e.innerHTML=html; return e; }
 
   function entry(src){
-    var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':''),src.innerHTML);
+    var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':'')+(src.classList.contains('nav-sub')?' tn-sub':''),src.innerHTML);
     if(src.classList.contains('active')) b.classList.add('on');
     b.addEventListener('click',function(ev){
       ev.stopPropagation(); closeAll();
@@ -4420,7 +4422,13 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       if(group&&groupHas) row.appendChild(group);
       group=null; groupBtn=null; groupMenu=null; groupHas=false;
     }
-    var kids=nav.children;
+    /* The Specialized Teams entries live inside a wrapper (#specNav) so the
+       menu code can rewrite them in one go; read through it, or they would
+       be missing from the bar altogether. */
+    var kids=[];
+    Array.prototype.forEach.call(nav.children,function(c){
+      if(c.id==='specNav') Array.prototype.push.apply(kids,c.children); else kids.push(c);
+    });
     for(var i=0;i<kids.length;i++){
       var el=kids[i];
       if(el.classList.contains('nav-sec')){
@@ -4447,6 +4455,9 @@ window.addEventListener('DOMContentLoaded', async ()=>{
           });
         })(group,groupBtn);
         group.appendChild(groupBtn); group.appendChild(groupMenu);
+      } else if(el.classList.contains('nav-cap')){
+        // A division name above the teams a person can open inside it.
+        if(group) groupMenu.appendChild(mk('div','tn-cap',el.textContent));
       } else if(el.classList.contains('nav-item')||el.classList.contains('hub-link')){
         // hub-link is the cross-page "Back to Hub" anchor. It lives in the
         // same nav but carries its own class, and skipping it left the AV
