@@ -241,6 +241,19 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     chk(p.errs.length===0,'pages   '+f+' no page errors'); await p.context().close(); }
 }
 
+// laptop: the top bar must carry the same Specialized Teams entries as the sidebar
+{ const p=await open('index.html',{width:1300,height:900});
+  const r=await p.evaluate(async perms=>{ const o={};
+    for(const [k,pm] of [['head',['an_lead']],['cook',['ck_team']],['plain',['tl_a']]]){
+      CU={user:'x',display:'X',perms:pm,uid:'u'}; applyNavVisibility(); await new Promise(r=>setTimeout(r,250));
+      const g=[...document.querySelectorAll('#topnav .tn-group')].find(x=>/Specialized/i.test(x.querySelector('.tn-b').textContent));
+      o[k]=g?g.querySelector('.tn-menu').innerText.replace(/\s+/g,' ').trim():'(no group)'; }
+    return o; });
+  chk(/Ancillary Services/.test(r.head)&&/Maintenance/.test(r.head)&&/Cleaning/.test(r.head),'topbar  a division head sees their teams in the laptop menu',r.head);
+  chk(/Cooking/.test(r.cook)&&!/Maintenance/.test(r.cook),'topbar  a team volunteer sees only their team',r.cook);
+  chk(r.plain==='(no group)','topbar  nobody else gets the group',r.plain);
+  chk(p.errs.length===0,'topbar  no page errors'); await p.context().close(); }
+
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});
   const r=await p.evaluate(`(async()=>{ await (${SEED})(['tl_a']); let sent=null;
