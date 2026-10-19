@@ -6574,5 +6574,29 @@ async function fontsSettled(ms){
   else start();
 })();
 </script>
+<script>
+/* If this browser kept an old copy of the page, say so. The page is asked for
+   again without the cache; when the server's copy is newer than the one
+   running, a bar offers a refresh. Silent on any failure. */
+(function(){
+  try{
+    var mine = Date.parse(document.lastModified);
+    if(!window.fetch || !mine) return;
+    fetch(location.pathname, {method:'HEAD', cache:'no-store'}).then(function(r){
+      var theirs = Date.parse(r.headers.get('last-modified') || '');
+      if(!theirs || theirs - mine < 5000) return;
+      var bar = document.createElement('div');
+      bar.setAttribute('role','status');
+      bar.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px 14px;background:#F59E0B;color:#111;font:800 14px/1.3 Archivo,system-ui,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.4)';
+      bar.innerHTML = '<span>A newer version of this page is available.</span>';
+      var b = document.createElement('button');
+      b.textContent = 'Refresh now';
+      b.style.cssText = 'min-height:38px;padding:0 16px;border:0;border-radius:999px;background:#111;color:#FCD34D;font:inherit;cursor:pointer';
+      b.onclick = function(){ location.reload(); };
+      bar.appendChild(b); document.body.appendChild(bar);
+    }).catch(function(){});
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
