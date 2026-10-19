@@ -278,6 +278,49 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(/COOKING/.test(r.spec)&&/ABESHAFA/.test(r.spec)&&r.chips===2,'roles   User Management can assign every team, and keeps unknown values',r.spec);
   chk(p.errs.length===0,'roles   no page errors'); await p.context().close(); }
 
+// ── Who sees which category: every role against the menu and every page ──
+{ const p=await open('index.html',{width:1300,height:900});
+  const MENU={
+    'team_a':'', 'team_b':'', 'tl_a':'PHMU:Team A', 'ytl_b':'PHMU:Team B', 'facilitator':'PHMU:Team A,Team B',
+    'av_team':'PHMU:AV Team', 'av_admin':'PHMU:AV Team',
+    'pt_lead':'PHMU:Paat Team,Abeshafa Paat Group,Sukreet Paat Group', 'ab_team':'PHMU:Abeshafa Paat Group',
+    'td_lead':'+Training & Development', 'ss_alead':'+Safety & Security',
+    'an_lead':'Ancillary Services:Overview,Maintenance,Cooking Team,Cleaning Volunteers', 'mt_team':'Ancillary Services:Maintenance', 'ck_alead':'Ancillary Services:Cooking Team',
+    'phmu_lead':'ALL','director':'ALL','owner':'ALL','nobody':'' };
+  const got=await p.evaluate(async roles=>{ const o={};
+    for(const role of roles){
+      CU={user:'x',display:'X',perms:role==='nobody'?[]:[role],uid:'u'}; COVER_TEAMS.clear(); applyNavVisibility(); await new Promise(r=>setTimeout(r,220));
+      const groups={}; document.querySelectorAll('#topnav .tn-group').forEach(g=>{ const n=g.querySelector('.tn-b').textContent.replace('▾','').trim(); groups[n]=[...g.querySelectorAll('.tn-menu .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/^[AB] (?=Team)/,'').replace(/\s+/g,' ').trim()); });
+      const direct=[...document.querySelectorAll('#topnav .tn-row > .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/\s+/g,' ').trim()).filter(x=>!/^(Dashboard|My Duties)$/.test(x));
+      o[role]={groups,direct};
+    } return o; }, Object.keys(MENU));
+  for(const role of Object.keys(MENU)){
+    const g=got[role].groups, d=got[role].direct, exp=MENU[role];
+    const cats=Object.keys(g).filter(k=>k!=='Management');
+    let ok;
+    if(exp==='') ok=cats.length===0&&!d.some(x=>/Training|Safety/.test(x));
+    else if(exp==='ALL') ok=['PHMU','Ancillary Services'].every(k=>g[k])&&d.some(x=>/Training/.test(x))&&d.some(x=>/Safety/.test(x));
+    else if(exp[0]==='+') ok=cats.length===0&&d.filter(x=>!/^Management/.test(x)).join()===exp.slice(1);
+    else { const [cat,items]=exp.split(':'); ok=cats.join()===cat&&g[cat].join()===items.split(',').join()&&!d.some(x=>/Training|Safety/.test(x)); }
+    chk(ok,'access  '+role+' sees '+(exp||'no categories'),JSON.stringify({g:Object.fromEntries(cats.map(c=>[c,g[c]])),d}));
+  }
+  chk(p.errs.length===0,'access  hub no page errors'); await p.context().close(); }
+{ const ROLES=['team_a','tl_a','av_admin','facilitator','pt_lead','ab_team','sk_team','td_lead','ss_alead','an_lead','an_alead','mt_team','ck_lead','cl_team','phmu_lead','director','owner'];
+  const PAGES={ 'paat.html':{own:['pt_lead','pt_alead'],kids:[]}, 'abeshafa.html':{own:['ab_lead','ab_alead','ab_team'],kids:['pt_lead','pt_alead']},
+    'sukreet.html':{own:['sk_lead','sk_alead','sk_team'],kids:['pt_lead','pt_alead']}, 'training.html':{own:['td_lead','td_alead'],kids:[]},
+    'safety.html':{own:['ss_lead','ss_alead'],kids:[]}, 'ancillary.html':{own:['an_lead','an_alead'],kids:[]},
+    'maintenance.html':{own:['mt_lead','mt_alead','mt_team'],kids:['an_lead','an_alead']}, 'cooking.html':{own:['ck_lead','ck_alead','ck_team'],kids:['an_lead','an_alead']},
+    'cleaning.html':{own:['cl_lead','cl_alead','cl_team'],kids:['an_lead','an_alead']} };
+  const TOP=['owner','developer','director','deputy_director','phmu_lead'];
+  for(const [f,def] of Object.entries(PAGES)){
+    const p=await open(f,{width:1300,height:800});
+    const r=await p.evaluate(roles=>Object.fromEntries(roles.map(x=>{ render([x]); return [x,!document.getElementById('stOk').classList.contains('hide')]; })),ROLES);
+    const bad=ROLES.filter(x=>{ const allowed=TOP.includes(x)||def.own.includes(x)||def.kids.includes(x); return r[x]!==allowed; });
+    // the roles above that are the page's own: ensure at least the intended ones exist in ROLES list
+    chk(bad.length===0,'access  '+f+' opens only for its own roles, its division head and leadership',bad.join()||'ok');
+    await p.context().close(); }
+}
+
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});
   const r=await p.evaluate(`(async()=>{ await (${SEED})(['tl_a']); let sent=null;
