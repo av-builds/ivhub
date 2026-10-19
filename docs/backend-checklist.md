@@ -1,5 +1,7 @@
 # Backend checklist — everything Supabase needs, in order
 
+**Shortcut:** steps 2–4 below are all in one file, [supabase-setup.sql](supabase-setup.sql). Run its sections one at a time.
+
 Nothing here can be applied from the website. Run in the Supabase SQL editor /
 Edge Functions. No credentials belong in this file.
 
