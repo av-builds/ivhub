@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paat — IV Hub</title>
+<title>Paat Team — IV Hub</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
 <style>
@@ -53,7 +53,7 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
 <body>
 <header class="top">
   <img src="logo.png" alt="Ismaili Volunteers" onerror="this.style.display='none'">
-  <div class="t"><b>Paat</b><span id="crumb">IV Hub · Auckland Jamatkhana</span></div>
+  <div class="t"><b>Paat Team</b><span id="crumb">IV Hub · Auckland Jamatkhana</span></div>
   <a class="hub" href="index.html?hub=1">← Hub</a>
 </header>
 <main>
@@ -63,13 +63,13 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
       <div id="stLoad"><div class="spin"></div><div class="msg">Checking your access…</div></div>
       <div id="stDeny" class="hide">
         <h1>No access</h1>
-        <p class="lede" id="denyMsg">This page is for Paat. Ask a Director if you should be on it.</p>
+        <p class="lede" id="denyMsg">This page is for Paat Team. Ask a Director if you should be on it.</p>
         <a class="hub" href="index.html?hub=1">← Back to the Hub</a>
       </div>
       <div id="stOk" class="hide">
         <div class="ico" aria-hidden="true">📚</div>
         <div class="badge">Under construction</div>
-        <h1>Paat</h1>
+        <h1>Paat Team</h1>
         <p class="lede" id="okLede">This page is being built. When it's ready it will appear here — nothing for you to do in the meantime.</p>
         <div id="tileWrap" class="hide"><div class="tiles" id="tiles"></div></div>
         <div class="role" id="roleChip"></div>
@@ -81,7 +81,7 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
 <script>
 const SB_URL = 'https://ysmkqvceezrjcrlixlii.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzbWtxdmNlZXpyamNybGl4bGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjk4NzcsImV4cCI6MjA5Mzg0NTg3N30.YHx-q-nR8qfFvk2dZnEg5knK6eDK-zCbPlyxPDknK4w';
-const PAGE = {"kind":"division","name":"Paat","icon":"📚","parent":null,"teams":[{"key":"ab","name":"Abeshafa Paat Group","icon":"📖","file":"abeshafa.html"},{"key":"sk","name":"Sukreet Paat Group","icon":"📜","file":"sukreet.html"}],"roles":[["pt_lead","Paat Team Lead"],["pt_alead","Paat Assistant Team Lead"]],"divPerms":[],"top":["owner","developer","director","deputy_director","phmu_lead","iv_admin"],"topLabel":{"owner":"Owner","developer":"Developer","director":"Director","deputy_director":"Deputy Director","phmu_lead":"PHMU Lead","iv_admin":"Director"}};
+const PAGE = {"kind":"division","name":"Paat Team","icon":"📚","parent":null,"teams":[{"key":"ab","name":"Abeshafa Paat Group","icon":"📖","file":"abeshafa.html"},{"key":"sk","name":"Sukreet Paat Group","icon":"📜","file":"sukreet.html"}],"roles":[["pt_lead","Paat Team Lead"],["pt_alead","Paat Assistant Team Lead"]],"divPerms":[],"top":["owner","developer","director","deputy_director","phmu_lead","iv_admin"],"topLabel":{"owner":"Owner","developer":"Developer","director":"Director","deputy_director":"Deputy Director","phmu_lead":"PHMU Lead","iv_admin":"Director"}};
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const show = id => ['stLoad','stDeny','stOk'].forEach(s=>$(s).classList.toggle('hide', s!==id));
