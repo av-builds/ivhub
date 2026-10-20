@@ -43,6 +43,16 @@ grant  execute on function public.safety_roles()      to authenticated;
 grant  execute on function public.safety_can_manage() to authenticated;
 grant  execute on function public.safety_can_read()   to authenticated;
 
+-- 3. profiles was readable by anyone holding the public key ------------------
+-- Two SELECT policies were USING (true) for role public, so a signed-out
+-- visitor could list every volunteer's email, username, perms and last_seen.
+-- Every page reads profiles only after sign-in, so limit them to signed-in
+-- users. (alter policy, not drop/create: the latter hung through the SQL API.)
+alter policy "Users can read all profiles" on public.profiles to authenticated;
+alter policy "profiles readable"           on public.profiles to authenticated;
+revoke execute on function public.member_attendance_totals(text) from public, anon;
+grant  execute on function public.member_attendance_totals(text) to authenticated;
+
 -- Check: nothing below should list anon any more.
 -- select p.proname, has_function_privilege('anon', p.oid, 'execute') as anon_can
 --   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
