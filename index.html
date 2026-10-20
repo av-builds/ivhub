@@ -153,6 +153,12 @@ html{scroll-behavior:smooth;}
 .nav-sub{padding-left:30px;font-size:.94em;}
 .nav-item.nav-solo{margin-top:12px;font-weight:900;}
 .vl-age{min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px dashed var(--db);color:var(--dt);font-weight:800;}
+.ntag[data-tip]{position:relative;cursor:help;}
+.ntag[data-tip]::after{content:attr(data-tip);position:absolute;right:0;bottom:calc(100% + 7px);padding:5px 10px;border-radius:8px;background:#111;color:#FCD34D;border:1px solid rgba(245,158,11,.6);font-size:11px;font-weight:900;letter-spacing:.1em;white-space:nowrap;opacity:0;pointer-events:none;transform:translateY(3px);transition:opacity .15s,transform .15s;z-index:400;}
+.ntag[data-tip]:hover::after,.ntag[data-tip]:focus-visible::after{opacity:1;transform:none;}
+.qa-tile{position:relative;}
+.qa-wip{position:absolute;top:7px;right:7px;margin:0;padding:1px 6px;font-size:12px;}
+@media (prefers-reduced-motion:reduce){.ntag[data-tip]::after{transition:none;}}
 .ntag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.5);color:#FCD34D;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
 @media (hover:none){.btn{min-height:40px;}.sb-signout{min-height:44px;}}
 .qa-team{margin-top:14px;}
@@ -812,7 +818,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="nav-wrap" id="ancNav"></div>
 
       <div class="nav-sec" id="secMgmt">Management</div>
-      <div class="nav-item" id="navSubmit" data-page="submit"><span class="ni">⚡</span> Rapid Link <span class="ntag" id="navRapidTag">⚠ Soon</span></div>
+      <div class="nav-item" id="navSubmit" data-page="submit"><span class="ni">⚡</span> Rapid Link <span class="ntag" id="navRapidTag" data-tip="UNDER CONSTRUCTION">⚠ Soon</span></div>
       <div class="nav-item" id="navMembers" data-page="members"><span class="ni">👥</span> Data Management</div>
       <div class="nav-item" id="navLogins" data-page="logins"><span class="ni">🔑</span> Admin Logins</div>
       <div class="nav-item" id="navVLogins" data-page="vlogins"><span class="ni">🙋</span> Volunteer Logins</div>
@@ -1366,6 +1372,8 @@ const ROLE_DEFS = [
 ];
 const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead','facilitator','tl_a','ytl_a','tl_b','ytl_b','av_admin','av_atl','av_coord','team_a','team_b','av_team'];
 /* ═══ DIVISIONS AND TEAMS ═══
+   wip: the page is still Under Construction — its menu entry and Quick
+   access tile carry a warning tag. Remove the flag when the page is built.
    Menu categories (group): PHMU holds Team A, Team B, AV and the Paat Team;
    Training & Development and Safety & Security stand alone; Ancillary
    Services holds Maintenance, Cooking and Cleaning.
@@ -1379,22 +1387,22 @@ const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead
    pages. The backend (invite-user + profiles) must accept these role keys
    before they can be granted — see docs/new-team-roles.md. */
 const DIVISIONS = [
-  { key:'pt', group:'phmu', name:'Paat Team', icon:'📚', url:'paat.html',
+  { key:'pt', group:'phmu', wip:true, name:'Paat Team', icon:'📚', url:'paat.html',
     lead:'Paat Team Lead', alead:'Paat Assistant Team Lead',
     teams:[
-      { key:'ab', name:'Abeshafa Paat Group', role:'Abeshafa Paat', icon:'📖', url:'abeshafa.html' },
-      { key:'sk', name:'Sukreet Paat Group',  role:'Sukreet Paat',  icon:'📜', url:'sukreet.html' },
+      { key:'ab', wip:true, name:'Abeshafa Paat Group', role:'Abeshafa Paat', icon:'📖', url:'abeshafa.html' },
+      { key:'sk', wip:true, name:'Sukreet Paat Group',  role:'Sukreet Paat',  icon:'📜', url:'sukreet.html' },
     ] },
-  { key:'td', group:'solo', name:'Training & Development', icon:'🎓', url:'training.html',
+  { key:'td', group:'solo', wip:true, name:'Training & Development', icon:'🎓', url:'training.html',
     lead:'Training & Development Lead', alead:'Assistant Training & Development Lead', teams:[] },
   { key:'ss', group:'solo', name:'Safety & Security', icon:'🦺', url:'safety.html',
     lead:'Safety & Security Lead', alead:'Assistant Safety & Security Lead', teams:[] },
-  { key:'an', group:'anc', name:'Ancillary Services', icon:'🛠️', url:'ancillary.html',
+  { key:'an', group:'anc', wip:true, name:'Ancillary Services', icon:'🛠️', url:'ancillary.html',
     lead:'Ancillary Services Lead', alead:'Ancillary Services Assistant Lead',
     teams:[
-      { key:'mt', name:'Maintenance',         role:'Maintenance',   icon:'🔧', url:'maintenance.html' },
-      { key:'ck', name:'Cooking Team',        role:'Cooking Team',  icon:'🍳', url:'cooking.html' },
-      { key:'cl', name:'Cleaning Volunteers', role:'Cleaning Team', icon:'🧹', url:'cleaning.html' },
+      { key:'mt', wip:true, name:'Maintenance',         role:'Maintenance',   icon:'🔧', url:'maintenance.html' },
+      { key:'ck', wip:true, name:'Cooking Team',        role:'Cooking Team',  icon:'🍳', url:'cooking.html' },
+      { key:'cl', wip:true, name:'Cleaning Volunteers', role:'Cleaning Team', icon:'🧹', url:'cleaning.html' },
     ] },
 ];
 const defRole = (k, rank, label)=>{
@@ -2152,10 +2160,10 @@ const LEAD_TEAMS = {
 DIVISIONS.forEach(d=>{
   LEAD_KEYS[d.key.toUpperCase()] = divPerms(d);
   LEAD_TEAMS[d.key.toUpperCase()] = { label:d.name, url:d.url, land:'',
-    pages:[['', d.icon, 'Division page']].concat(d.teams.map(t=>['', t.icon, t.name, t.url])) };
+    pages:[['', d.icon, 'Division page', '', d.wip]].concat(d.teams.map(t=>['', t.icon, t.name, t.url, t.wip])) };
   d.teams.forEach(t=>{
     LEAD_KEYS[t.key.toUpperCase()] = [t.key+'_lead', t.key+'_alead'];
-    LEAD_TEAMS[t.key.toUpperCase()] = { label:t.name, url:t.url, land:'', pages:[['', t.icon, 'Open team page']] };
+    LEAD_TEAMS[t.key.toUpperCase()] = { label:t.name, url:t.url, land:'', pages:[['', t.icon, 'Open team page', '', t.wip]] };
   });
 });
 function myLeadTeams(){
@@ -2195,7 +2203,7 @@ function renderQuickAccess(){
     const T = LEAD_TEAMS[k];
     h += '<div class="qa-team"><div class="qa-tl">' + T.label + '</div><div class="qa-grid">' +
       T.pages.map(p=>'<a class="qa-tile" href="' + (p[3] || (T.url + (p[0] ? '?p=' + p[0] : ''))) + '" onclick="rememberTeam(\'' + k + '\')">' +
-        '<span class="qa-i">' + p[1] + '</span><span class="qa-t">' + p[2] + '</span></a>').join('') + '</div></div>';
+        '<span class="qa-i">' + p[1] + '</span><span class="qa-t">' + p[2] + '</span>' + (p[4] ? '<span class="ntag qa-wip" data-tip="UNDER CONSTRUCTION">⚠</span>' : '') + '</a>').join('') + '</div></div>';
   });
   const hub = [];
   if(rapidVisible())  hub.push(['submit','⚡','Rapid Link ⚠']);
@@ -2220,20 +2228,21 @@ function applyNavVisibility(){
      Training & Development and Safety & Security standing alone, and
      Ancillary Services holding the rest. A division head sees the division
      and its teams; a team member sees only their own team. */
-  const link = (u,i,n,cls)=>'<a class="nav-item ' + (cls||'') + '" href="' + u + '" style="display:flex"><span class="ni">' + i + '</span> ' + n + '</a>';
+  const TAG = ' <span class="ntag" data-tip="UNDER CONSTRUCTION">⚠ Soon</span>';
+  const link = (u,i,n,cls,wip)=>'<a class="nav-item ' + (cls||'') + '" href="' + u + '" style="display:flex"><span class="ni">' + i + '</span> ' + n + (wip ? TAG : '') + '</a>';
   let phmuHtml = '', soloHtml = '', ancHtml = '';
   DIVISIONS.forEach(d=>{
     const vt = d.teams.filter(t=>teamVisible(d,t));
     const dv = divVisible(d);
     if(!dv && !vt.length) return;
-    if(d.group === 'solo'){ soloHtml += link(d.url, d.icon, d.name, 'nav-solo'); return; }
+    if(d.group === 'solo'){ soloHtml += link(d.url, d.icon, d.name, 'nav-solo', d.wip); return; }
     if(d.group === 'anc'){
-      if(dv) ancHtml += link(d.url, d.icon, 'Overview');
-      vt.forEach(t=>{ ancHtml += link(t.url, t.icon, t.name); });
+      if(dv) ancHtml += link(d.url, d.icon, 'Overview', '', d.wip);
+      vt.forEach(t=>{ ancHtml += link(t.url, t.icon, t.name, '', t.wip); });
       return;
     }
-    phmuHtml += dv ? link(d.url, d.icon, d.name) : '<div class="nav-cap">' + d.name + '</div>';
-    vt.forEach(t=>{ phmuHtml += link(t.url, t.icon, t.name, 'nav-sub'); });
+    phmuHtml += dv ? link(d.url, d.icon, d.name, '', d.wip) : '<div class="nav-cap">' + d.name + '</div>';
+    vt.forEach(t=>{ phmuHtml += link(t.url, t.icon, t.name, 'nav-sub', t.wip); });
   });
   sec('secPHMU', showA || showB || AV_VIEW() || phmuHtml !== '');
   sec('secAnc', ancHtml !== '');
@@ -2246,7 +2255,7 @@ function applyNavVisibility(){
   item('navSubmit', sub);
   item('navVLogins', mm);
   // The top bar holds a copy with the same id, so look inside the sidebar.
-  const tag = document.querySelector('.sb-nav .ntag'); if(tag) tag.style.display = rapidOpen() ? 'none' : '';
+  const tag = document.querySelector('.sb-nav #navSubmit .ntag'); if(tag) tag.style.display = rapidOpen() ? 'none' : '';
   item('navMembers', mm);
   item('navLogins', mm);
   item('navLinking', mm);

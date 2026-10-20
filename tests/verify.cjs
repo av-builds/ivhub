@@ -290,8 +290,8 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   const got=await p.evaluate(async roles=>{ const o={};
     for(const role of roles){
       CU={user:'x',display:'X',perms:role==='nobody'?[]:[role],uid:'u'}; COVER_TEAMS.clear(); applyNavVisibility(); await new Promise(r=>setTimeout(r,220));
-      const groups={}; document.querySelectorAll('#topnav .tn-group').forEach(g=>{ const n=g.querySelector('.tn-b').textContent.replace('▾','').trim(); groups[n]=[...g.querySelectorAll('.tn-menu .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/^[AB] (?=Team)/,'').replace(/\s+/g,' ').trim()); });
-      const direct=[...document.querySelectorAll('#topnav .tn-row > .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/\s+/g,' ').trim()).filter(x=>!/^(Dashboard|My Duties)$/.test(x));
+      const groups={}; document.querySelectorAll('#topnav .tn-group').forEach(g=>{ const n=g.querySelector('.tn-b').textContent.replace('▾','').trim(); groups[n]=[...g.querySelectorAll('.tn-menu .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/^[AB] (?=Team)/,'').replace(/\s*⚠\s*Soon/i,'').replace(/\s+/g,' ').trim()); });
+      const direct=[...document.querySelectorAll('#topnav .tn-row > .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/\s+/g,' ').replace(/\s*⚠\s*Soon/i,'').trim()).filter(x=>!/^(Dashboard|My Duties)$/.test(x));
       o[role]={groups,direct};
     } return o; }, Object.keys(MENU));
   for(const role of Object.keys(MENU)){
@@ -420,6 +420,26 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     const items=mdCollect('Ana Ali',mdWindow()); return {n:items.length, t:items[0]&&items[0].title, div:items[0]&&items[0].div, label:mdDivLabel('SS'), sub:items[0]&&items[0].subs.join()}; });
   chk(r.n===1&&r.div==='SS'&&/Safety/.test(r.t)&&r.label==='Safety'&&/Ben Khan/.test(r.sub),'safety  duties show in My Duties with the others on the day',JSON.stringify(r));
   chk(p.errs.length===0,'safety  my duties no page errors'); await p.context().close(); }
+
+// ── Under Construction tags ──
+{ const p=await open('index.html',{width:1300,height:900});
+  const r=await p.evaluate(async()=>{ const o={};
+    const tagged=async pm=>{ CU={user:'x',display:'X',perms:pm,uid:'u'}; applyNavVisibility(); await new Promise(r=>setTimeout(r,450));
+      return [...document.querySelectorAll('.sb-nav .nav-wrap a.nav-item')].map(a=>({n:a.innerText.replace(/\s*⚠ Soon/,'').replace(/^[^A-Za-z]+/,'').trim(), tag:!!a.querySelector('.ntag[data-tip="UNDER CONSTRUCTION"]')})); };
+    o.dir=await tagged(['director']);
+    o.bar=(()=>{ const g=[...document.querySelectorAll('#topnav .tn-b')].filter(b=>/Cooking/.test(b.innerText)||/Safety/.test(b.innerText)); return g.map(b=>({n:b.innerText.replace(/\s+/g,' ').trim(), tag:!!b.querySelector('.ntag[data-tip]')})); })();
+    CU={user:'x',display:'X',perms:['an_lead'],uid:'u'}; renderQuickAccess(); o.tiles=[...document.querySelectorAll('#quickPanel .qa-tile')].filter(t=>t.tagName==='A').map(t=>({n:t.innerText.replace(/\s+/g,' ').replace('⚠','').trim(), tag:!!t.querySelector('.qa-wip[data-tip="UNDER CONSTRUCTION"]')}));
+    CU={user:'x',display:'X',perms:['ss_lead'],uid:'u'}; renderQuickAccess(); o.ss=[...document.querySelectorAll('#quickPanel .qa-tile')].filter(t=>t.tagName==='A').map(t=>t.querySelector('.qa-wip')?'tag':'clean').join();
+    o.css=getComputedStyle(document.querySelector('.ntag[data-tip]'),'::after').content;
+    return o; });
+  const by=n=>r.dir.find(x=>x.n===n)||{};
+  chk(['Paat Team','Abeshafa Paat Group','Sukreet Paat Group','Training & Development','Overview','Maintenance','Cooking Team','Cleaning Volunteers'].every(n=>by(n).tag===true),'tags    every page still under construction carries the warning tag',JSON.stringify(r.dir.filter(x=>!x.tag).map(x=>x.n)));
+  chk(by('Safety & Security').tag===false&&r.dir.some(x=>x.n==='Safety & Security'),'tags    Safety & Security, which is built, has none');
+  chk(r.bar.some(x=>/Cooking/.test(x.n)&&x.tag),'tags    the laptop bar shows them too',JSON.stringify(r.bar));
+  chk(r.tiles.length===4&&r.tiles.every(t=>t.tag),'tags    Quick access tiles for those pages carry the tag',JSON.stringify(r.tiles));
+  chk(/^"?UNDER CONSTRUCTION"?$/.test(r.css),'tags    hovering shows UNDER CONSTRUCTION',r.css);
+  chk(r.ss==='clean'||r.ss==='clean,clean','tags    Safety & Security\'s own tile is clean',r.ss);
+  chk(p.errs.length===0,'tags    no page errors'); await p.context().close(); }
 
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});
