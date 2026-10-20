@@ -5108,9 +5108,10 @@ async function downloadRosterPNG(){
       const S    = AV_SKINS.export;
       const kind = avCellKind(mjEv,trEv);
       const out=document.createElement('div');
-      const edge={plain:'rgba(21,101,192,0.16)',mj:'#9ED9BB',tr:'#F0CC7A',both:'#F1A5B1'}[kind];
-      out.style.cssText=`background:${avCellBG(kind,S,isOther)};border:1.5px solid ${edge};border-radius:18px;`+
-        `box-shadow:0 10px 22px -16px rgba(20,60,120,0.45);min-height:195px;box-sizing:border-box;overflow:hidden;`;
+      /* Tinted days carry no border — the colour is the edge; plain days get a crisp hairline. */
+      const edge=kind==='plain'?'1px solid rgba(21,101,192,0.22)':'0';
+      out.style.cssText=`background:${avCellBG(kind,S,isOther)};border:${edge};border-radius:14px;`+
+        `min-height:195px;box-sizing:border-box;overflow:hidden;`;
       out.innerHTML=avCellHTML({day:day,mj:mjEv,tr:trEv,evs:evs,ro:ro,isFri:isFri,isOther:isOther},S);
       gridWrap.appendChild(out);
     });

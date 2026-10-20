@@ -464,3 +464,28 @@ html[data-theme="light"] .dc-x:hover{color:#B3261E;}
 /* roster header: calmer weight, same content */
 .r-title .sub{font-size:11px;}
 .r-badge-logo,.app-logo.r-badge-logo{box-shadow:0 0 0 2px var(--db);}
+
+/* ═══════════════ ROSTER: CRISP LINES ═══════════════
+   Hairlines instead of soft shadows, tighter corners, and no border on the
+   tinted event days — the colour is the edge. */
+.roster-wrap{border-radius:24px;border:1px solid var(--db);box-shadow:none;}
+.r-hdr{border-bottom:1px solid var(--db);}
+.r-nav{border-bottom:1px solid var(--db);}
+.r-nav-btn{border-radius:12px;width:42px;height:42px;border:1px solid var(--db);}
+.cal-grid{gap:8px;padding:14px 16px 18px;}
+.col-hdr{border-bottom:1px solid var(--db);padding:8px 4px 10px;border-radius:0;}
+.cell{border-radius:14px;border:1px solid var(--db);box-shadow:none;}
+.cell:hover{border-color:var(--iv-ac);box-shadow:none;transform:none;}
+.cell.other,.cell.other:hover{border:1px dashed var(--db);}
+.cell.ev-jk,.cell.ev-training,.cell.ev-jk.ev-training{border:0!important;box-shadow:none!important;}
+.cell.ev-jk:hover,.cell.ev-training:hover{border:0!important;box-shadow:inset 0 0 0 2px rgba(var(--k),.9)!important;}
+.cell.today{box-shadow:inset 0 0 0 2px var(--iv-ac);}
+.cell.ev-jk.today,.cell.ev-training.today{box-shadow:none!important;}
+html[data-theme="light"] .cell{box-shadow:none;}
+html[data-theme="light"] .cell.ev-jk,html[data-theme="light"] .cell.ev-training{box-shadow:none!important;}
+.r-ftr{border-top:1px solid var(--db);}
+#page-calendar .ha .btn,#screenshotBtn,#csvBtn{border-radius:12px!important;}
+#csvBtn{border:1px solid var(--db)!important;}
+.cell:last-child,.cell:nth-child(7n){border-right:1px solid var(--db);}
+.cell.other:last-child,.cell.other:nth-child(7n){border-right:1px dashed var(--db);}
+.cell.ev-jk:last-child,.cell.ev-training:last-child,.cell.ev-jk:nth-child(7n),.cell.ev-training:nth-child(7n){border-right:0!important;}
