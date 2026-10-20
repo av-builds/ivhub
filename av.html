@@ -6575,8 +6575,8 @@ async function fontsSettled(ms){
 })();
 </script>
 <script>
-/* Opening animation. Plays once per sign-in for each of: the Hub, Team A,
-   Team B and the AV Team, then gets out of the way. Tap, click, Enter or Esc
+/* Opening animation. Plays every time the Hub, Team A, Team B or the AV Team
+   page is opened, then gets out of the way. Tap, click, Enter or Esc
    (or the Skip button) jumps straight in. Never plays for people who have
    asked their device for reduced motion. */
 (function(){
@@ -6630,8 +6630,11 @@ async function fontsSettled(ms){
   '.ivs-fast *{animation-delay:0s!important;animation-duration:.001s!important}'+
   '@media (max-height:560px){.ivs-mark{width:min(110px,30vh);height:min(110px,30vh)}.ivs-team .ivs-w{font-size:min(110px,13vw,22vh)}.ivs-hub .ivs-w{font-size:min(100px,16vw,20vh)}}';
 
-  function played(k){ try{ return sessionStorage.getItem('ivhub_splash_'+k) === '1'; }catch(e){ return false; } }
-  function mark(k){ try{ sessionStorage.setItem('ivhub_splash_'+k,'1'); }catch(e){} }
+  /* Plays every time the page is opened. This only stops it starting twice
+     within one page load (the Hub can run its sign-in code more than once). */
+  var seen = {};
+  function played(k){ return !!seen[k]; }
+  function mark(k){ seen[k] = true; }
 
   window.ivSplash = function(key){
     var c = CFG[key]; if(!c || played(key)) return;
@@ -6668,7 +6671,7 @@ async function fontsSettled(ms){
     document.addEventListener('keydown', onKey, true);
     t1 = setTimeout(end, 4900);
   };
-  window.ivSplashReset = function(){ try{ Object.keys(sessionStorage).filter(function(k){ return k.indexOf('ivhub_splash_') === 0; }).forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} };
+  window.ivSplashReset = function(){ seen = {}; };
 })();
 </script>
 <script>ivSplash('AV');</script>

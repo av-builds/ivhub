@@ -180,6 +180,15 @@ html{scroll-behavior:smooth;}
 
 /* ─── MY DUTIES ─── */
 .md-row{display:flex;gap:10px;margin-bottom:14px;}
+.md-sugwrap{position:relative;flex:1;min-width:0;}
+.md-sugwrap input{width:100%;}
+.md-sug{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:60;max-height:320px;overflow-y:auto;background:#0D2040;border:1px solid rgba(79,195,247,.3);border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.55);padding:6px;}
+.md-sug.open{display:block;}
+.md-sug-i{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:8px;font-size:15px;font-weight:700;color:var(--dt);cursor:pointer;}
+.md-sug-i mark{background:none;color:var(--blue-lt);font-weight:900;}
+.md-sug-i small{margin-left:auto;font-size:11px;color:var(--dm);font-weight:700;white-space:nowrap;}
+.md-sug-i:hover,.md-sug-i.sel{background:rgba(79,195,247,.14);}
+.md-sug-none{padding:12px;font-size:13px;color:var(--dm);}
 .md-row input{flex:1;background:var(--ds2);border:1px solid var(--db);border-radius:var(--r);padding:11px 14px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:15px;outline:none;transition:border .2s,box-shadow .2s;min-width:0;}
 .md-row input:focus{border-color:var(--blue-lt);box-shadow:0 0 0 3px rgba(79,195,247,.12);}
 .md-warns{font-size:12px;color:var(--gold-lt);margin-bottom:10px;line-height:1.6;}
@@ -917,7 +926,10 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <section class="panel">
         <div class="sub" id="mdWhoNote" style="margin-bottom:10px;"></div>
         <div class="md-row">
-          <input id="mdName" placeholder="Type your name — e.g. Aly Kotadia" autocomplete="off">
+          <div class="md-sugwrap">
+            <input id="mdName" placeholder="Type your name — e.g. Aly Kotadia" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mdSug" aria-haspopup="listbox">
+            <div class="md-sug" id="mdSug" role="listbox" aria-label="Matching names"></div>
+          </div>
           <button class="btn btn-bl" id="mdSearchBtn">Search</button>
         </div>
         <div class="md-warns" id="mdWarns" style="display:none;"></div>
@@ -2003,7 +2015,6 @@ function loadSession(){
 }
 function startSession(sess){
   CU = sess;
-  if(window.ivSplashReset) ivSplashReset();    // a fresh sign-in plays the openings again
   try{ sessionStorage.removeItem('ivhub_landed'); }catch(e){}   // a fresh sign-in lands the lead on their team again
   try{ localStorage.setItem('ivhub_session', JSON.stringify(sess)); }catch(e){ console.warn(e.message); }
   auditLog('Signed in', 'login', 'Logged in as ' + sess.display);
@@ -2284,7 +2295,7 @@ function showApp(){
   clearInterval(clockTimer);
   clockTimer = setInterval(tickClock, 1000);
   _myNameResolved = null;   // re-resolve identity for this session
-  dutyCache = null;
+  dutyCache = null; _mdNames = null;
   nav('dashboard');         // → loadDashStats → loadMyDutiesDash (auto-resolves identity)
   subscribeRealtime();
   touchLastSeen();
@@ -2604,6 +2615,52 @@ async function resolveMyName(){
   if(!name) name = localStorage.getItem('ivhub_myname') || '';
   _myNameResolved = { name, note };
   return _myNameResolved;
+}
+/* Name suggestions under the My Duties search box. Fills from everyone who
+   appears in the duties the Hub can read (so it works for volunteers too),
+   plus the member directory where this account may read it. Picking a name
+   searches straight away. */
+let _mdNames = null, _mdSel = -1;
+async function mdLoadNames(){
+  if(_mdNames) return _mdNames;
+  const set = new Map();    // lower → display
+  const add = n=>{ n = String(n||'').trim(); if(n && !set.has(n.toLowerCase())) set.set(n.toLowerCase(), n); };
+  try{ const d = await fetchDutyData(); d.entries.forEach(e=>add(e.person)); }catch(e){}
+  try{ (mRows||[]).forEach(m=>{ if((m.status||'active') === 'active') add(m.name); }); }catch(e){}
+  if(sb){
+    try{ const m = await sb.from('iv_members').select('name,status'); if(!m.error) (m.data||[]).forEach(r=>{ if((r.status||'active') === 'active') add(r.name); }); }catch(e){}
+  }
+  try{ add(CU && CU.display); }catch(e){}
+  _mdNames = [...set.values()].sort((a,b)=>a.localeCompare(b));
+  return _mdNames;
+}
+function mdHighlight(name, q){
+  const i = name.toLowerCase().indexOf(q.toLowerCase());
+  return i < 0 ? esc(name) : esc(name.slice(0,i)) + '<mark>' + esc(name.slice(i, i+q.length)) + '</mark>' + esc(name.slice(i+q.length));
+}
+async function mdShowSug(){
+  const input = $('mdName'), box = $('mdSug'), q = (input.value||'').trim();
+  const names = await mdLoadNames();
+  const hits = (q ? names.filter(n=>n.toLowerCase().includes(q.toLowerCase())) : names).slice(0, 12);
+  _mdSel = -1;
+  box.innerHTML = hits.length
+    ? hits.map((n,i)=>'<div class="md-sug-i" role="option" id="mdSug'+i+'" data-name="'+esc(n)+'">'+mdHighlight(n,q)+'</div>').join('')
+    : '<div class="md-sug-none">No matching names — press Search to try anyway.</div>';
+  box.classList.add('open'); input.setAttribute('aria-expanded','true');
+}
+function mdHideSug(){ const b = $('mdSug'); if(b){ b.classList.remove('open'); } const i = $('mdName'); if(i){ i.setAttribute('aria-expanded','false'); i.removeAttribute('aria-activedescendant'); } }
+function mdPickSug(name){ $('mdName').value = name; mdHideSug(); runDutySearch(); }
+function mdSugKey(e){
+  const box = $('mdSug'), items = [...box.querySelectorAll('.md-sug-i')], open = box.classList.contains('open');
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault(); if(!open){ mdShowSug(); return; }
+    if(!items.length) return;
+    _mdSel = e.key === 'ArrowDown' ? Math.min(_mdSel+1, items.length-1) : Math.max(_mdSel-1, 0);
+    items.forEach((it,i)=>it.classList.toggle('sel', i === _mdSel));
+    const cur = items[_mdSel]; if(cur){ cur.scrollIntoView({block:'nearest'}); $('mdName').setAttribute('aria-activedescendant', cur.id); }
+  } else if(e.key === 'Enter'){
+    if(open && _mdSel >= 0 && items[_mdSel]){ e.preventDefault(); mdPickSug(items[_mdSel].dataset.name); }
+  } else if(e.key === 'Escape'){ mdHideSug(); }
 }
 async function openMyDuties(){
   const input = $('mdName'), noteEl = $('mdWhoNote');
@@ -4547,7 +4604,11 @@ function bindUI(){
   $('sideOverlay').addEventListener('click', closeSidebar);
   /* my duties */
   $('mdSearchBtn').addEventListener('click', runDutySearch);
-  $('mdName').addEventListener('keydown', e=>{ if(e.key === 'Enter') runDutySearch(); });
+  $('mdName').addEventListener('keydown', e=>{ mdSugKey(e); if(e.key === 'Enter' && !e.defaultPrevented){ mdHideSug(); runDutySearch(); } });
+  $('mdName').addEventListener('input', mdShowSug);
+  $('mdName').addEventListener('focus', mdShowSug);
+  $('mdName').addEventListener('blur', ()=>setTimeout(mdHideSug, 180));
+  $('mdSug').addEventListener('mousedown', e=>{ const it = e.target.closest('.md-sug-i'); if(it){ e.preventDefault(); mdPickSug(it.dataset.name); } });
   $('mdName').addEventListener('change', ()=>localStorage.setItem('ivhub_myname', $('mdName').value || ''));
   $('mdGoBtn').addEventListener('click', ()=>nav('myduties'));
   /* away dates */
@@ -4842,8 +4903,8 @@ window.addEventListener('DOMContentLoaded', async ()=>{
 })();
 </script>
 <script>
-/* Opening animation. Plays once per sign-in for each of: the Hub, Team A,
-   Team B and the AV Team, then gets out of the way. Tap, click, Enter or Esc
+/* Opening animation. Plays every time the Hub, Team A, Team B or the AV Team
+   page is opened, then gets out of the way. Tap, click, Enter or Esc
    (or the Skip button) jumps straight in. Never plays for people who have
    asked their device for reduced motion. */
 (function(){
@@ -4897,8 +4958,11 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   '.ivs-fast *{animation-delay:0s!important;animation-duration:.001s!important}'+
   '@media (max-height:560px){.ivs-mark{width:min(110px,30vh);height:min(110px,30vh)}.ivs-team .ivs-w{font-size:min(110px,13vw,22vh)}.ivs-hub .ivs-w{font-size:min(100px,16vw,20vh)}}';
 
-  function played(k){ try{ return sessionStorage.getItem('ivhub_splash_'+k) === '1'; }catch(e){ return false; } }
-  function mark(k){ try{ sessionStorage.setItem('ivhub_splash_'+k,'1'); }catch(e){} }
+  /* Plays every time the page is opened. This only stops it starting twice
+     within one page load (the Hub can run its sign-in code more than once). */
+  var seen = {};
+  function played(k){ return !!seen[k]; }
+  function mark(k){ seen[k] = true; }
 
   window.ivSplash = function(key){
     var c = CFG[key]; if(!c || played(key)) return;
@@ -4935,7 +4999,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     document.addEventListener('keydown', onKey, true);
     t1 = setTimeout(end, 4900);
   };
-  window.ivSplashReset = function(){ try{ Object.keys(sessionStorage).filter(function(k){ return k.indexOf('ivhub_splash_') === 0; }).forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} };
+  window.ivSplashReset = function(){ seen = {}; };
 })();
 </script>
 <script>

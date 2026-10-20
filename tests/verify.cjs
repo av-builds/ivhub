@@ -451,15 +451,43 @@ for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.htm
     o.acc=el?getComputedStyle(el).getPropertyValue('--acc').trim():''; o.skip=!!(el&&el.querySelector('.ivs-skip'));
     document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})); await new Promise(r=>setTimeout(r,350));
     o.closed=!document.getElementById('ivs');
-    ivSplash(key); o.noReplay=!document.getElementById('ivs');
-    ivSplashReset(); ivSplash(key); o.replaysAfterReset=!!document.getElementById('ivs'); document.getElementById('ivs')&&document.getElementById('ivs').remove();
+    ivSplash(key); o.noReplay=!document.getElementById('ivs');     // not twice in one load
+    o.replaysAfterReset=(()=>{ ivSplashReset(); ivSplash(key); return !!document.getElementById('ivs'); })();   // a fresh load plays it again document.getElementById('ivs')&&document.getElementById('ivs').remove();
     return o; }, key);
   chk(r.automated===true,'opening '+file+' is skipped for automated browsers');
   chk(r.shown&&words.test(r.text),'opening '+file+' says the right words',r.text);
   chk(r.skip&&r.closed,'opening '+file+' can be skipped with Esc');
-  chk(r.noReplay&&r.replaysAfterReset,'opening '+file+' plays once per sign-in');
+  chk(r.noReplay&&r.replaysAfterReset,'opening '+file+' plays every time the page opens (once per load)');
   if(key!=='hub') chk(/#(34D399|F472B6|4FC3F7)/i.test(r.acc)||/rgb/.test(r.acc)||r.acc.length>0,'opening '+file+' has its team accent',r.acc);
   chk(p.errs.length===0,'opening '+file+' no page errors'); await p.context().close(); }
+
+// ── My Duties name suggestions (Hub) ──
+{ const p=await open('index.html',{width:1100,height:900});
+  const r=await p.evaluate(async()=>{ const o={};
+    CU={user:'x',display:'Sam Lead',perms:['team_a'],uid:'u'}; sb=null; _mdNames=null;
+    dutyCache={entries:['Aly Kotadia','Aly Khan','Zahra Ali','Ben Noor'].map(n=>({person:n,date:'2026-12-01',source:'IV',title:'x'})),warns:[]};
+    let searched=null; window.runDutySearch=async function(){ searched=document.getElementById('mdName').value; };
+    document.getElementById('app').style.display='block'; nav('myduties'); const input=document.getElementById('mdName');
+    input.value=''; input.dispatchEvent(new Event('focus')); await new Promise(r=>setTimeout(r,200));
+    o.all=[...document.querySelectorAll('#mdSug .md-sug-i')].map(e=>e.innerText).join('|'); o.open=document.getElementById('mdSug').classList.contains('open'); o.expanded=input.getAttribute('aria-expanded');
+    input.value='aly'; input.dispatchEvent(new Event('input')); await new Promise(r=>setTimeout(r,200));
+    o.filtered=[...document.querySelectorAll('#mdSug .md-sug-i')].map(e=>e.innerText).join('|'); o.mark=document.querySelector('#mdSug mark')&&document.querySelector('#mdSug mark').innerText;
+    input.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true})); input.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+    o.sel=((document.querySelector('#mdSug .md-sug-i.sel')||{}).innerText||'').replace(/\s+/g,' ').trim();
+    input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})); await new Promise(r=>setTimeout(r,100));
+    o.picked=input.value; o.searched=searched; o.closed=!document.getElementById('mdSug').classList.contains('open');
+    input.value='zzz'; input.dispatchEvent(new Event('input')); await new Promise(r=>setTimeout(r,200)); o.none=document.getElementById('mdSug').innerText;
+    input.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})); o.esc=!document.getElementById('mdSug').classList.contains('open');
+    input.value='ben'; input.dispatchEvent(new Event('input')); await new Promise(r=>setTimeout(r,200)); searched=null; o.height=Math.round(document.querySelector('#mdSug .md-sug-i').getBoundingClientRect().height);
+    document.querySelector('#mdSug .md-sug-i').dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true})); await new Promise(r=>setTimeout(r,50)); o.clicked=searched;
+    return o; });
+  chk(r.open&&r.expanded==='true'&&/Aly Kotadia/.test(r.all)&&/Zahra Ali/.test(r.all)&&/Sam Lead/.test(r.all),'dropdown My Duties lists every name when the box is focused',r.all);
+  chk(r.filtered==='Aly Khan|Aly Kotadia'&&r.mark==='aly'.replace('a','A')||r.mark==='Aly','dropdown typing narrows the list and highlights the match',r.filtered+' / '+r.mark);
+  chk(r.sel==='Aly Kotadia'&&r.picked==='Aly Kotadia'&&r.searched==='Aly Kotadia'&&r.closed,'dropdown arrow keys and Enter pick a name and search straight away',r.sel+' → '+r.picked);
+  chk(/No matching names/.test(r.none)&&r.esc,'dropdown says so when nothing matches, and Esc closes it');
+  chk(r.clicked==='Ben Noor','dropdown clicking a name searches for it',r.clicked);
+  chk(r.height>=40,'dropdown rows are a comfortable tap size',String(r.height));
+  chk(p.errs.length===0,'dropdown no page errors'); await p.context().close(); }
 
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});
