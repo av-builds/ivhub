@@ -224,7 +224,7 @@ html[data-theme="light"] #sideOverlay{background:rgba(11,27,51,.35);}
 .ph{margin-bottom:26px;}
 .ph h1{font-size:clamp(32px,4.4vw,52px);text-transform:none;letter-spacing:-.035em;line-height:1;font-weight:900;}
 .ph p{font-size:15px;margin-top:10px;color:var(--dm);max-width:640px;}
-.chip{padding:9px 16px;min-height:40px;display:inline-flex;align-items:center;border-radius:999px;background:var(--ds);transition:background-color .2s,color .2s,border-color .2s,transform .15s;}
+.chip{padding:9px 16px;min-height:44px;display:inline-flex;align-items:center;border-radius:999px;background:var(--ds);transition:background-color .2s,color .2s,border-color .2s,transform .15s;}
 .chip:hover{border-color:var(--iv-ac);}
 .chip:active{transform:scale(.95);}
 .chip.active{background:var(--iv-ac);color:var(--iv-oa);border-color:transparent;}
