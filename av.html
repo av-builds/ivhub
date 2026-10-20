@@ -3408,6 +3408,20 @@ const AV_SKINS={
     trFg:'#5A3A00', unassigned:'#B91C1C', dash:'#A0B8CC', supBg:'rgba(21,101,192,0.10)', supFg:'#1258B0',
   },
 };
+/* The site draws the roster in whichever theme the Hub is in. Backgrounds come
+   from the stylesheet; this skin carries the colours of the text and rules the
+   renderer writes inline, so the light site gets the printed palette at screen
+   sizes. The exported image always uses AV_SKINS.export, never this. */
+AV_SKINS.siteLight=Object.assign({},AV_SKINS.export,{
+  pad:'10px 12px', padTop:8, ramp:130, badge:32, bpill:10, ruleH:2,
+  dn:26, lbl:11, nm:16, tnm:13, evSize:12, mphA:14, mphB:12,
+  dnC:{plain:'#5B7189', mj:'#0B6B47', tr:'#8A5200', both:'#B3261E'}, dnOther:'#A3B6C9',
+  nameSh:'none', jkFg:'#2B6A97', jkRule:'#7DB2D6', mphFg:'#6D3FD0', mphRule:'#B79CFF', mphAc:'#3A1F8A', mphBc:'#5B4A9A',
+});
+AV_SKINS.site.dn=26; AV_SKINS.site.pad='10px 12px';
+function avSiteSkin(){ return document.documentElement.getAttribute('data-theme')==='light' ? AV_SKINS.siteLight : AV_SKINS.site; }
+/* The shared theme button announces a change; the grid is drawn by script, so it redraws. */
+document.addEventListener('ivthemechange',function(){ try{ if(typeof renderCal==='function'&&document.getElementById('calBody')) renderCal(); }catch(e){} });
 function avCellKind(mj,tr){ return mj&&tr?'both':mj?'mj':tr?'tr':'plain'; }
 /* The same smoothstep fade the site uses, between a skin's own two colours, so
    the printed sheet dissolves instead of stepping. */
@@ -3554,12 +3568,13 @@ function renderCal(){
     /* today class removed — no highlight needed */
     div.className=cls;
     div.dataset.ds=ds;
+    div.dataset.dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(ds+'T12:00').getDay()];
     div.onclick=()=>openDayModal(ds,c.d,div);
     /* The cell itself is drawn by the shared renderer — see avCellHTML().
        Everything that used to be built inline here is now built once and
        handed a skin, so the exported sheet cannot drift away from it. */
     const evs=avEvents.filter(e=>e.date===ds);
-    div.innerHTML=avCellHTML({day:c.d,mj:mj,tr:tr,evs:evs,ro:ro,isFri:isFri,isOther:!!c.pad},AV_SKINS.site);
+    div.innerHTML=avCellHTML({day:c.d,mj:mj,tr:tr,evs:evs,ro:ro,isFri:isFri,isOther:!!c.pad},avSiteSkin());
     body.appendChild(div);
   });
   // Month-slide animation (set by chMo). Class lives on the grid only —
@@ -5064,12 +5079,12 @@ async function downloadRosterPNG(){
     container.appendChild(titleEl);
     // ── Day headers ──
     const gridWrap=document.createElement('div');
-    gridWrap.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);width:100%;';
+    gridWrap.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:10px;width:100%;padding:24px 36px 0;box-sizing:border-box;';
     const days=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
     days.forEach((d,i)=>{
       const hdr=document.createElement('div');
       const isFri=d==='Friday';
-      hdr.style.cssText=`background:linear-gradient(180deg,#1258B0,#0E4A9A);padding:13px 8px 12px;text-align:center;font-family:'Archivo',sans-serif;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:${isFri?'#90CAFF':'rgba(210,230,255,0.85)'};border-right:${i<6?'1px solid rgba(255,255,255,0.08)':'none'};border-bottom:${isFri?'3px solid rgba(100,180,255,0.7)':'2px solid rgba(255,255,255,0.12)'};box-sizing:border-box;`;
+      hdr.style.cssText=`background:linear-gradient(180deg,#1258B0,#0E4A9A);padding:13px 8px 12px;text-align:center;font-family:'Archivo',sans-serif;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${isFri?'#BFE0FF':'rgba(222,236,255,0.9)'};border-radius:12px;box-sizing:border-box;${isFri?'box-shadow:0 0 0 2px rgba(100,180,255,0.75);':''}`;
       hdr.textContent=d;
       gridWrap.appendChild(hdr);
     });
@@ -5093,13 +5108,18 @@ async function downloadRosterPNG(){
       const S    = AV_SKINS.export;
       const kind = avCellKind(mjEv,trEv);
       const out=document.createElement('div');
-      out.style.cssText=`background:${avCellBG(kind,S,isOther)};border-right:1px solid rgba(21,101,192,0.15);`+
-        `border-bottom:1px solid rgba(21,101,192,0.15);min-height:195px;box-sizing:border-box;overflow:hidden;`+
-        (kind!=='plain'?'margin:3px;border:none;border-radius:12px;':'');
+      const edge={plain:'rgba(21,101,192,0.16)',mj:'#9ED9BB',tr:'#F0CC7A',both:'#F1A5B1'}[kind];
+      out.style.cssText=`background:${avCellBG(kind,S,isOther)};border:1.5px solid ${edge};border-radius:18px;`+
+        `box-shadow:0 10px 22px -16px rgba(20,60,120,0.45);min-height:195px;box-sizing:border-box;overflow:hidden;`;
       out.innerHTML=avCellHTML({day:day,mj:mjEv,tr:trEv,evs:evs,ro:ro,isFri:isFri,isOther:isOther},S);
       gridWrap.appendChild(out);
     });
     container.appendChild(gridWrap);
+    /* The sheet closes with the same two lines the site shows under the grid. */
+    const ftr=document.createElement('div');
+    ftr.style.cssText="display:flex;justify-content:space-between;padding:22px 44px 30px;font-family:'Archivo',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:#4A6580;";
+    ftr.innerHTML='<span>'+esc(document.getElementById('rFtrL').textContent)+'</span><span>'+esc(document.getElementById('rFtrR').textContent)+'</span>';
+    container.appendChild(ftr);
     document.body.appendChild(container);
     await fontsSettled();
     const canvas = await html2canvas(container,{

@@ -27,6 +27,7 @@
     b.addEventListener('click',function(){
       var next = root.getAttribute('data-theme')==='light' ? 'dark' : 'light';
       put(next); apply(next);
+      try{ document.dispatchEvent(new CustomEvent('ivthemechange',{detail:next})); }catch(e){}
     });
     document.body.appendChild(b);
     apply(root.getAttribute('data-theme'));
