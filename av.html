@@ -3565,7 +3565,7 @@ function renderCal(){
     if(tr && mj)  cls+=' ev-jk ev-training';
     else if(tr)   cls+=' ev-training';
     else if(mj)   cls+=' ev-jk';
-    /* today class removed — no highlight needed */
+    if(isToday) cls+=' today';   /* a quiet marker, so the current day can be found at a glance */
     div.className=cls;
     div.dataset.ds=ds;
     div.dataset.dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(ds+'T12:00').getDay()];
