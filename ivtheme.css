@@ -1,0 +1,175 @@
+/* ═══════════════ IV HUB — DESIGN LAYER ═══════════════
+   One shared look for every page. It is loaded after each page's own
+   styles and only changes how things look: colours, type, radii, shadows
+   and motion. No element, id, class or script is added, removed or renamed,
+   so every function behaves exactly as before. Delete the <link> and the
+   page goes back to its earlier look.
+
+   Dark is the default. Light switches on html[data-theme="light"]
+   (the button in ivtheme.js). */
+
+/* ── tokens ─────────────────────────────────────────── */
+:root{
+  --dp:#050B16;--ds:#0B1526;--ds2:#111F36;
+  --dt:#EAF2FB;--dm:#9DB2C9;--db:rgba(255,255,255,.09);
+  --blue-lt:#4FC3F7;--blue2:#1E88E5;--blue:#1565C0;--navy:#0C3B8C;
+  --r:12px;
+  --iv-ac:#4FC3F7;--iv-acs:rgba(79,195,247,.14);--iv-oa:#04121F;
+  --iv-glass:rgba(11,21,38,.78);
+  --iv-sh:0 24px 60px -28px rgba(0,0,0,.75);
+  --iv-g1:rgba(79,195,247,.16);--iv-g2:rgba(244,114,182,.08);
+  --iv-field:#111F36;
+  color-scheme:dark;
+}
+html[data-theme="light"]{
+  --dp:#F3F6FB;--ds:#FFFFFF;--ds2:#E9EFF8;
+  --dt:#0B1B33;--dm:#516782;--db:rgba(11,27,51,.11);
+  --blue-lt:#1565C0;--blue2:#1976D2;--blue:#1565C0;--navy:#0C2461;
+  --gold:#B45309;--gold-lt:#8A5A00;--gold-bg:rgba(245,158,11,.14);--gold-bd:rgba(180,83,9,.35);
+  --pur:#6D3FD0;
+  --iv-ac:#1565C0;--iv-acs:rgba(21,101,192,.10);--iv-oa:#FFFFFF;
+  --iv-glass:rgba(255,255,255,.82);
+  --iv-sh:0 22px 50px -28px rgba(20,50,100,.38);
+  --iv-g1:rgba(21,101,192,.12);--iv-g2:rgba(244,114,182,.12);
+  --iv-field:#FFFFFF;
+  color-scheme:light;
+}
+
+/* ── base ───────────────────────────────────────────── */
+body{
+  font-stretch:100%;font-weight:600;letter-spacing:-.005em;
+  background:var(--dp);color:var(--dt);
+  background-image:radial-gradient(900px 520px at 92% -8%,var(--iv-g1),transparent 62%),
+                   radial-gradient(700px 480px at -6% 108%,var(--iv-g2),transparent 60%);
+  background-attachment:fixed;
+  transition:background-color .35s,color .35s;
+}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--dm) 45%,transparent);border-radius:6px;}
+::selection{background:var(--iv-acs);color:var(--dt);}
+:focus-visible{outline:2px solid var(--iv-ac);outline-offset:2px;border-radius:8px;}
+
+/* ── theme button ───────────────────────────────────── */
+.iv-theme-btn{position:fixed;right:18px;bottom:18px;z-index:250;width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  background:var(--iv-glass);color:var(--dt);border:1px solid var(--db);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--iv-sh);
+  transition:transform .25s cubic-bezier(.34,1.45,.64,1),border-color .2s;}
+.iv-theme-btn:hover{border-color:var(--iv-ac);transform:rotate(18deg) scale(1.06);}
+.iv-theme-btn:active{transform:scale(.9);}
+@media(max-width:1100px){.iv-theme-btn{top:12px;bottom:auto;right:12px;width:44px;height:44px;}}
+@media print{.iv-theme-btn{display:none;}}
+
+/* ── top navigation (laptop) ────────────────────────── */
+@media(min-width:1101px){
+  .topnav{top:12px;left:16px;right:16px;height:64px;padding:0 14px 0 18px;border-radius:24px;
+    background:var(--iv-glass);border:1px solid var(--db);box-shadow:var(--iv-sh);
+    -webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);}
+  .main{padding-top:110px!important;}
+  body.tn-hidden .main{padding-top:30px!important;}
+}
+.tn-brand{color:var(--dt);font-weight:900;letter-spacing:-.01em;}
+.tn-brand:hover{background:var(--iv-acs);}
+.tn-brand img{box-shadow:0 0 0 2px var(--db);}
+.tn-b{color:var(--dm);border-radius:999px;font-weight:700;padding:9px 15px;transition:background-color .2s,color .2s,transform .15s;}
+.tn-b:hover{background:var(--iv-acs);color:var(--dt);}
+.tn-b:active{transform:scale(.96);}
+.tn-b.on{background:var(--iv-ac);color:var(--iv-oa);}
+.tn-b.tn-mgmt{background:var(--iv-acs);color:var(--iv-ac);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iv-ac) 40%,transparent);}
+.tn-b.tn-mgmt:hover{background:var(--iv-ac);color:var(--iv-oa);}
+.tn-b.tn-hub{color:var(--iv-ac);border-color:color-mix(in srgb,var(--iv-ac) 40%,transparent);}
+@media(min-width:1101px) and (max-width:1600px){.tn-b{padding:9px 10px;}.tn-out{padding:9px 12px;}}
+@media(min-width:1101px) and (max-width:1320px){.tn-b{padding:9px 9px;}}
+.tn-menu{background:var(--ds);border:1px solid var(--db);border-radius:22px;padding:8px;box-shadow:0 30px 70px -24px rgba(0,0,0,.6);}
+.tn-menu .tn-b{border-radius:14px;}
+.tn-cap{color:var(--dm);}
+.tn-who{color:var(--dm);}
+.tn-out{border-radius:999px;padding:9px 16px;border-color:color-mix(in srgb,#F87171 45%,transparent);color:#F87171;}
+html[data-theme="light"] .tn-out{color:#B3261E;border-color:rgba(179,38,30,.4);}
+.tn-out:hover{background:rgba(248,113,113,.16);color:#F87171;}
+.tn-tog{border-radius:999px;padding:9px 14px;border-color:var(--db);color:var(--dm);}
+.tn-tog:hover{background:var(--iv-acs);color:var(--dt);}
+.tn-show{border-radius:999px;background:var(--iv-glass);border-color:var(--db);color:var(--dt);}
+.tn-show:hover{background:var(--iv-acs);}
+
+/* ── sidebar (phone and tablet) ─────────────────────── */
+.sidebar{background:var(--ds);border-right:1px solid var(--db);box-shadow:var(--iv-sh);}
+.sb-logo{border-bottom-color:var(--db);}
+.sb-logo h2{color:var(--dt);letter-spacing:-.01em;text-transform:none;font-size:18px;}
+.nav-item{border-radius:14px;color:var(--dm);}
+.nav-item:hover{background:var(--iv-acs);color:var(--dt);}
+.nav-item.active{background:var(--iv-acs);color:var(--iv-ac);border-color:color-mix(in srgb,var(--iv-ac) 35%,transparent);box-shadow:none;}
+.nav-sec,.nav-cap{color:var(--dm);}
+.sb-bot{border-top-color:var(--db);}
+#menuBtn{background:var(--iv-glass);border-color:var(--db);color:var(--dt);border-radius:14px;
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);width:44px;height:44px;}
+
+/* ── hero ───────────────────────────────────────────── */
+.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--iv-ac) 16%,var(--ds)),var(--ds) 62%);
+  border:1px solid var(--db);border-radius:28px;padding:34px 38px;box-shadow:var(--iv-sh);}
+.hero::before{background:radial-gradient(ellipse at 88% 0%,var(--iv-g1),transparent 60%);}
+.hero-greet{font-size:clamp(28px,3.6vw,42px);font-weight:900;letter-spacing:-.03em;line-height:1.05;color:var(--dt);}
+.hero-greet span{background:linear-gradient(100deg,var(--iv-ac),#F472B6);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero-sub{color:var(--dm);letter-spacing:.1em;font-size:12px;}
+.hero-clock{color:var(--iv-ac);text-shadow:none;font-weight:900;letter-spacing:-.03em;}
+.hero-date{color:var(--dm);}
+
+/* ── panels and cards ───────────────────────────────── */
+.panel{background:var(--ds);border:1px solid var(--db);border-radius:26px;padding:26px 28px;box-shadow:var(--iv-sh);transition:background-color .35s,border-color .25s;}
+.panel h2{font-size:12px;letter-spacing:.16em;color:var(--iv-ac);}
+.panel .sub{color:var(--dm);}
+.welcome{border-left:1px solid var(--db);background:linear-gradient(160deg,color-mix(in srgb,var(--iv-ac) 10%,var(--ds)),var(--ds) 60%);}
+.scard{background:var(--ds);border-color:var(--db);border-radius:20px;}
+.qa-tl{color:var(--dm);}
+.qa-tile{border-radius:20px;background:var(--ds2);border:1px solid transparent;}
+.qa-tile:hover{border-color:var(--iv-ac);background:var(--iv-acs);}
+.qa-hub .qa-tile{border-color:color-mix(in srgb,var(--pur) 40%,transparent);}
+
+/* ── buttons ────────────────────────────────────────── */
+.btn{border-radius:999px;padding:9px 18px;font-weight:800;}
+.btn-bl,.lbtn{background:var(--iv-ac);color:var(--iv-oa);}
+.btn-bl:hover,.lbtn:hover{box-shadow:0 14px 30px -14px var(--iv-ac);}
+.btn-ol{color:var(--dm);border-color:var(--db);background:transparent;}
+.btn-ol:hover{color:var(--dt);border-color:var(--iv-ac);}
+.lbtn{border-radius:16px;padding:14px;font-size:16px;}
+
+/* ── forms ──────────────────────────────────────────── */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea{
+  background-color:var(--iv-field);color:var(--dt);border-color:var(--db);border-radius:14px;
+  transition:border-color .2s,box-shadow .2s,background-color .35s;}
+input:not([type=checkbox]):not([type=radio]):focus,select:focus,textarea:focus{
+  border-color:var(--iv-ac)!important;box-shadow:0 0 0 4px var(--iv-acs);outline:none;}
+input::placeholder,textarea::placeholder{color:var(--dm);opacity:.8;}
+.fg label{letter-spacing:.12em;}
+
+/* ── sign-in ────────────────────────────────────────── */
+#loginScreen,#setPwScreen{background-color:var(--dp);}
+.lbox{background:var(--ds);border:1px solid var(--db);border-radius:32px;padding:46px 42px;box-shadow:var(--iv-sh);}
+html[data-theme="light"] #loginScreen::before{opacity:.5;}
+
+/* ── lists, rows, tables ────────────────────────────── */
+.sb-row,.um-row,.mem-row{border-color:var(--db);}
+.badge,.stat{border-radius:999px;}
+.toast{background:var(--ds);color:var(--dt);border-radius:16px;box-shadow:var(--iv-sh);}
+.md-row input{border-radius:16px;}
+.mtab th{color:var(--dm);}
+
+/* ── division and Safety pages ──────────────────────── */
+body>.top{background:var(--iv-glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom-color:var(--db);}
+.top .t b{letter-spacing:.02em;}
+.card{border-radius:30px;box-shadow:var(--iv-sh);}
+.role{color:var(--dt);}
+.hub{border-color:var(--db);}
+.hub:hover{border-color:var(--iv-ac);background:var(--iv-acs);}
+
+/* ── light theme: places the pages colour directly ──── */
+html[data-theme="light"] .tn-brand,
+html[data-theme="light"] .hero-date{color:var(--dm);}
+html[data-theme="light"] .tn-brand{color:var(--dt);}
+html[data-theme="light"] .sb-logo-img,html[data-theme="light"] .tn-brand img{background:#fff;}
+html[data-theme="light"] #sideOverlay{background:rgba(11,27,51,.35);}
+
+/* ── motion: quick and calm ─────────────────────────── */
+@media (prefers-reduced-motion:reduce){
+  .iv-theme-btn{transition:none;}
+}
