@@ -28,6 +28,15 @@ returns boolean language sql stable security definer set search_path = public as
   select public.safety_can_manage() or public.safety_roles() && array['ss_team'];
 $$;
 
+-- Signed-out callers have no use for these (every policy using them is for
+-- signed-in users), and functions are executable by PUBLIC unless revoked.
+revoke execute on function public.safety_roles()      from public, anon;
+revoke execute on function public.safety_can_manage() from public, anon;
+revoke execute on function public.safety_can_read()   from public, anon;
+grant  execute on function public.safety_roles()      to authenticated;
+grant  execute on function public.safety_can_manage() to authenticated;
+grant  execute on function public.safety_can_read()   to authenticated;
+
 -- 2. Tables.
 create table if not exists public.safety_roster (
   date date primary key,
