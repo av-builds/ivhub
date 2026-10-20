@@ -249,3 +249,33 @@ th{color:var(--dm);}
 td,th{border-color:var(--db);}
 hr{border-color:var(--db);}
 html[data-theme="light"] .ntag{color:#8A5A00;background:rgba(245,158,11,.2);border-color:rgba(180,83,9,.5);}
+
+/* ── Safety and Security ────────────────────────────── */
+.tab{background:var(--ds);transition:background-color .2s,color .2s,border-color .2s,transform .15s;}
+.tab:active{transform:scale(.95);}
+.tab.on{background:var(--iv-ac);border-color:transparent;color:var(--iv-oa);}
+.hub.primary{background:var(--iv-ac);color:var(--iv-oa);}
+.nav{color:var(--dt);background:var(--ds);}
+.cell{background:var(--ds2);border-radius:16px;border-color:transparent;}
+.cell.mgr:hover{border-color:var(--iv-ac);background:var(--iv-acs);}
+.cell .n{background:var(--ds);}
+.pn{color:var(--dt);}
+.duty{background:var(--ds2);border-radius:20px;border-color:transparent;}
+.sheet-bg{background:rgba(5,11,22,.6);}
+.sheet{border-radius:28px;}
+html[data-theme="light"] .sheet-bg{background:rgba(11,27,51,.4);}
+html[data-theme="light"] .cell.full .n{color:#0B6B47;background:rgba(11,138,95,.14);}
+html[data-theme="light"] .cell.part .n{color:#8A5A00;background:rgba(245,158,11,.22);}
+html[data-theme="light"] .cell.none .n{color:#B3261E;background:rgba(179,38,30,.12);}
+html[data-theme="light"] .warn{color:#8A5A00;}
+
+/* The saved My Duties poster is an image with its own dark look. Pin the
+   colours it reads so it comes out identical in dark and light mode. */
+.mdposter,.mdposter *{--dp:#020B18;--ds:#071628;--ds2:#0D2040;--dt:#E8F4FD;--dm:#7AAECB;--db:rgba(79,195,247,.18);--blue-lt:#4FC3F7;--gold:#F59E0B;--gold-lt:#FCD34D;}
+.mdposter{letter-spacing:normal;font-stretch:85%;font-weight:700;}
+
+/* ── phone: keep the menu button clear of content ───── */
+@media(max-width:900px){
+  .sidebar{padding-top:70px;}
+  .main{padding-top:72px!important;}
+}
