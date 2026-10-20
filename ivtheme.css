@@ -219,3 +219,33 @@ html[data-theme="light"] #sideOverlay{background:rgba(11,27,51,.35);}
   .tn-row{flex:0 1 auto;margin:0 auto;gap:2px;padding:5px;border-radius:999px;background:var(--ds2);}
   .tn-sp{display:none;}
 }
+
+/* ── page headers, chips, lists ─────────────────────── */
+.ph{margin-bottom:26px;}
+.ph h1{font-size:clamp(32px,4.4vw,52px);text-transform:none;letter-spacing:-.035em;line-height:1;font-weight:900;}
+.ph p{font-size:15px;margin-top:10px;color:var(--dm);max-width:640px;}
+.chip{padding:9px 16px;min-height:40px;display:inline-flex;align-items:center;border-radius:999px;background:var(--ds);transition:background-color .2s,color .2s,border-color .2s,transform .15s;}
+.chip:hover{border-color:var(--iv-ac);}
+.chip:active{transform:scale(.95);}
+.chip.active{background:var(--iv-ac);color:var(--iv-oa);border-color:transparent;}
+.chip-warn,.chip-uni{border-radius:999px;}
+.dcard{background:var(--ds);border-radius:22px;padding:16px 20px;box-shadow:none;}
+.dcard:hover{border-color:var(--iv-ac);transform:translateX(4px);}
+.dcard-date{min-width:64px;padding:8px 6px;border-radius:16px;background:var(--iv-acs);}
+.dcard-date .dd{font-size:20px;}
+.mem-row{background:var(--ds);border-radius:20px;}
+.mem-head:hover{background:var(--iv-acs);}
+.mem-edit{background:var(--ds2);}
+.md-sug{background:var(--ds);border:1px solid var(--db);border-radius:20px;padding:6px;box-shadow:0 30px 70px -24px rgba(0,0,0,.6);}
+.md-sug-i{border-radius:14px;}
+.md-sug-i:hover,.md-sug-i.sel{background:var(--iv-acs);}
+.pill-tgl{border-radius:999px;}
+html[data-theme="light"] .pill-tgl.on{color:#0B6B47;border-color:rgba(11,107,71,.4);background:rgba(11,138,95,.12);}
+html[data-theme="light"] .stat.ok{color:#0B6B47;border-color:rgba(11,107,71,.4);background:rgba(11,138,95,.10);}
+html[data-theme="light"] .stat.no{color:#B3261E;border-color:rgba(179,38,30,.35);background:rgba(179,38,30,.08);}
+html[data-theme="light"] .btn-red{color:#B3261E;background:rgba(179,38,30,.08);border-color:rgba(179,38,30,.35);}
+table{border-collapse:separate;border-spacing:0;}
+th{color:var(--dm);}
+td,th{border-color:var(--db);}
+hr{border-color:var(--db);}
+html[data-theme="light"] .ntag{color:#8A5A00;background:rgba(245,158,11,.2);border-color:rgba(180,83,9,.5);}
