@@ -441,6 +441,26 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(r.ss==='clean'||r.ss==='clean,clean','tags    Safety & Security\'s own tile is clean',r.ss);
   chk(p.errs.length===0,'tags    no page errors'); await p.context().close(); }
 
+// ── Opening animations ──
+for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.html','A',/Welcome to[\s\S]*Team\s*A/i],['teamb.html','B',/Welcome to[\s\S]*Team\s*B/i],['av.html','AV',/Welcome to[\s\S]*Team\s*AV/i]]){
+  const p=await open(file,{width:1200,height:800});
+  const r=await p.evaluate(async key=>{ const o={};
+    o.automated=(()=>{ ivSplashReset(); ivSplash(key); return !document.getElementById('ivs'); })();   // tests are skipped by default
+    window.__ivsForce=true; ivSplashReset(); ivSplash(key);
+    const el=document.getElementById('ivs'); o.shown=!!el; o.text=el?el.innerText.replace(/\s+/g,' '):'';
+    o.acc=el?getComputedStyle(el).getPropertyValue('--acc').trim():''; o.skip=!!(el&&el.querySelector('.ivs-skip'));
+    document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})); await new Promise(r=>setTimeout(r,350));
+    o.closed=!document.getElementById('ivs');
+    ivSplash(key); o.noReplay=!document.getElementById('ivs');
+    ivSplashReset(); ivSplash(key); o.replaysAfterReset=!!document.getElementById('ivs'); document.getElementById('ivs')&&document.getElementById('ivs').remove();
+    return o; }, key);
+  chk(r.automated===true,'opening '+file+' is skipped for automated browsers');
+  chk(r.shown&&words.test(r.text),'opening '+file+' says the right words',r.text);
+  chk(r.skip&&r.closed,'opening '+file+' can be skipped with Esc');
+  chk(r.noReplay&&r.replaysAfterReset,'opening '+file+' plays once per sign-in');
+  if(key!=='hub') chk(/#(34D399|F472B6|4FC3F7)/i.test(r.acc)||/rgb/.test(r.acc)||r.acc.length>0,'opening '+file+' has its team accent',r.acc);
+  chk(p.errs.length===0,'opening '+file+' no page errors'); await p.context().close(); }
+
 // saving: the payload must carry the event's date (the column is NOT NULL)
 { const p=await open('teama.html',{width:1300,height:900});
   const r=await p.evaluate(`(async()=>{ await (${SEED})(['tl_a']); let sent=null;
