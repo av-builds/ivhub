@@ -489,3 +489,13 @@ html[data-theme="light"] .cell.ev-jk,html[data-theme="light"] .cell.ev-training{
 .cell:last-child,.cell:nth-child(7n){border-right:1px solid var(--db);}
 .cell.other:last-child,.cell.other:nth-child(7n){border-right:1px dashed var(--db);}
 .cell.ev-jk:last-child,.cell.ev-training:last-child,.cell.ev-jk:nth-child(7n),.cell.ev-training:nth-child(7n){border-right:0!important;}
+
+/* Plain days: the border fades from the top, like the tint on event days.
+   Only the 1px edge is a gradient; the fill stays as it is. */
+.cell:not(.ev-jk):not(.ev-training):not(.other){border-color:transparent;}
+.cell:not(.ev-jk):not(.ev-training):not(.other)::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(79,195,247,.6) 0,rgba(79,195,247,.22) 42%,transparent 78%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);}
+html[data-theme="light"] .cell:not(.ev-jk):not(.ev-training):not(.other)::after{background:linear-gradient(180deg,rgba(21,101,192,.5) 0,rgba(21,101,192,.18) 42%,transparent 78%);}
+.cell:not(.ev-jk):not(.ev-training):not(.other):hover{border-color:var(--iv-ac);}
+.cell.today:not(.ev-jk):not(.ev-training){box-shadow:inset 0 0 0 2px var(--iv-ac);}

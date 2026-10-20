@@ -5109,10 +5109,16 @@ async function downloadRosterPNG(){
       const kind = avCellKind(mjEv,trEv);
       const out=document.createElement('div');
       /* Tinted days carry no border — the colour is the edge; plain days get a crisp hairline. */
-      const edge=kind==='plain'?'1px solid rgba(21,101,192,0.22)':'0';
-      out.style.cssText=`background:${avCellBG(kind,S,isOther)};border:${edge};border-radius:14px;`+
-        `min-height:195px;box-sizing:border-box;overflow:hidden;`;
-      out.innerHTML=avCellHTML({day:day,mj:mjEv,tr:trEv,evs:evs,ro:ro,isFri:isFri,isOther:isOther},S);
+      const inner=avCellHTML({day:day,mj:mjEv,tr:trEv,evs:evs,ro:ro,isFri:isFri,isOther:isOther},S);
+      if(kind==='plain' && !isOther){
+        /* A plain day's edge fades from the top, like the tint on an event day: a 1px
+           gradient frame with the fill drawn inside it. */
+        out.style.cssText=`background:linear-gradient(180deg,rgba(21,101,192,0.5),rgba(21,101,192,0.06) 78%);padding:1px;border-radius:14px;min-height:195px;box-sizing:border-box;display:flex;`;
+        out.innerHTML=`<div style="background:${S.bgPlain};border-radius:13px;flex:1;min-width:0;box-sizing:border-box;overflow:hidden;">${inner}</div>`;
+      } else {
+        out.style.cssText=`background:${avCellBG(kind,S,isOther)};border:0;border-radius:14px;min-height:195px;box-sizing:border-box;overflow:hidden;`;
+        out.innerHTML=inner;
+      }
       gridWrap.appendChild(out);
     });
     container.appendChild(gridWrap);
