@@ -633,8 +633,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021c">
-<script src="ivtheme.js?v=20261021c"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021d">
+<script src="ivtheme.js?v=20261021d"></script>
 </head>
 <body>
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
@@ -863,6 +863,9 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           </div>
         </div>
       </section>
+
+      <!-- Everything under the banner: Quick Access and numbers for leads, upcoming duties for everyone. Filled by renderHome(). -->
+      <div id="homeDash" class="hm"></div>
 
       <!-- Team Leads and Assistant Leads: one tap to anything on their team page. -->
       <section class="panel" id="quickPanel" style="display:none;"></section>
@@ -2195,6 +2198,7 @@ function preferredLeadTeam(teams){
    page on purpose — otherwise "Back to Hub" would bounce them straight out
    again. */
 function leadLanding(){
+  return false;   // leads now land on the Hub dashboard, whose Quick Access portal takes them to their page
   const teams = myLeadTeams();
   if(!teams.length) return false;
   try{
@@ -2455,6 +2459,7 @@ async function loadHubVolunteerCards(){
   el.style.display = 'grid';
 }
 async function loadDashStats(){
+  if(window.renderHome) renderHome();
   loadMyDutiesDash();
   loadMyTeamCards();
   loadCoverTeams();
@@ -5028,6 +5033,299 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       bar.appendChild(b); document.body.appendChild(bar);
     }).catch(function(){});
   }catch(e){}
+})();
+</script>
+<script>
+/* ═══ HOME DASHBOARD (everything under the banner) ═══
+   Leads get a Quick Access portal to the page they lead, then their team's numbers.
+   Everyone else gets their upcoming duties. I'm Away and the Accounts overview are the
+   panels that were here before; they open on demand from the buttons at the bottom, so
+   nothing is lost. Numbers come from the same sources the team pages use. */
+(function(){
+  var HOME = { team:null, stats:{}, ovr:null, token:0 };
+  var DIV_SPEC = { MT:'MAINTENANCE', CK:'COOKING', CL:'CLEANING', AB:'ABESHAFA', SK:'SUKREET', SS:'SAFETY', TD:'TD' };
+  function g(id){ return document.getElementById(id); }
+  function cls(k){ return /^(A|B|AV)$/.test(k) ? 'hm-c-'+k.toLowerCase() : 'hm-c-div'; }
+  function dd(a,b){ return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000); }
+  function mon(iso){ return new Date(iso+'T12:00:00').toLocaleDateString('en-NZ',{month:'short'}).toUpperCase(); }
+  function dnum(iso){ return String(+iso.slice(8,10)); }
+  function longDate(iso){ return new Date(iso+'T12:00:00').toLocaleDateString('en-NZ',{day:'numeric',month:'long',year:'numeric'}); }
+  function when(n){ return n<=0 ? 'today' : n===1 ? 'tomorrow' : 'in '+n+' days'; }
+
+  /* ── who is this person, to the dashboard ── */
+  function leadKeys(){
+    var out = [];
+    var add = function(k){ if(out.indexOf(k)<0 && LEAD_TEAMS[k]) out.push(k); };
+    if(CU && myRank() <= 5){ add('A'); add('B'); }
+    if(CU && (myRank() <= 4 || (typeof AV_ADMIN==='function' && AV_ADMIN()))) add('AV');
+    myLeadTeams().forEach(add);
+    return out;
+  }
+  function divisionOf(k){ for(var i=0;i<DIVISIONS.length;i++){ if(DIVISIONS[i].key.toUpperCase()===k) return DIVISIONS[i]; } return null; }
+
+  /* ── cycles (same maths as the team pages) ── */
+  var ANCHOR_K = 327;
+  function teamForCycle(k){ return (((k-ANCHOR_K)%2)+2)%2===0 ? 'B' : 'A'; }
+  function cyStart(k){ return chandraatISO(k, HOME.ovr || {}); }
+  function cycleNow(iso){
+    var d=new Date(iso+'T12:00:00'), doy=(d-new Date(d.getFullYear(),0,0))/86400000;
+    var k=Math.round((d.getFullYear()+doy/365.25-2000)*12.3685);
+    for(var i=k-3;i<=k+3;i++){ if(cyStart(i)<=iso && iso<cyStart(i+1)) return i; }
+    return k;
+  }
+  async function loadOverrides(){
+    if(HOME.ovr!==null || !sb) return;
+    try{ var r = await sb.from('iv_settings').select('*').eq('key','chandraat_overrides');
+         HOME.ovr = (r.data && r.data[0] && r.data[0].value) || {}; }
+    catch(e){ HOME.ovr = {}; }
+  }
+
+  /* ── numbers ── */
+  async function teamNumbers(T){
+    var today = todayNZ(), out = {};
+    await loadOverrides();
+    var run = function(p){ return Promise.resolve(p).then(function(r){ return r; }, function(){ return {}; }); };
+    var res = await Promise.all([
+      run(sb.from('iv_members').select('id,status').eq('team',T)),
+      run(sb.rpc('member_attendance_totals',{p_team:T})),
+      run(sb.from('iv_events').select('date,name,type').eq('team',T).gte('date',today).order('date').limit(1))
+    ]);
+    var mem = res[0].data, att = res[1].data, ev = res[2].data;
+    if(Array.isArray(mem)) out.people = mem.filter(function(m){ return m.status==='active'; }).length;
+    if(Array.isArray(att)){
+      var ok=0, den=0;
+      att.forEach(function(r){ var p=+r.present||0, l=+r.late||0, a=+r.absent||0; ok+=p+l; den+=p+l+a; });
+      out.rate = den ? Math.round(ok/den*100) : null;
+    }
+    if(Array.isArray(ev) && ev[0]) out.next = ev[0];
+    var k = cycleNow(today), end = cyStart(k+1), begin = cyStart(k);
+    out.cycle = { mine: teamForCycle(k)===T, days: dd(today,end), total: Math.max(1,dd(begin,end)), done: dd(begin,today) };
+    return out;
+  }
+  async function avNumbers(){
+    var today = todayNZ(), out = {};
+    var run = function(p){ return Promise.resolve(p).then(function(r){ return r; }, function(){ return {}; }); };
+    var res = await Promise.all([
+      run(sb.from('iv_members').select('id,status,spec')),
+      run(sb.from('majalis').select('date,name,type,time').gte('date',today).in('type',['Majalis','Event']).order('date').limit(1))
+    ]);
+    if(Array.isArray(res[0].data)){
+      out.people = res[0].data.filter(function(r){
+        if(r.status!=='active') return false;
+        var s=r.spec; if(typeof s==='string'){ try{ s=JSON.parse(s); }catch(e){ s=[]; } }
+        return Array.isArray(s) && s.some(function(x){ return String(x).toUpperCase()==='AV'; });
+      }).length;
+    }
+    if(Array.isArray(res[1].data) && res[1].data[0]) out.next = res[1].data[0];
+    var d = new Date(today+'T12:00:00'), dim = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    out.month = { days: dim - d.getDate(), dim: dim };
+    /* the person's own sessions: a training, and a supervision shift */
+    out.sessions = [];
+    try{
+      var me = await resolveMyName();
+      if(me && me.name){
+        var tr = await sb.from('majalis').select('date,name,data').eq('type','Training').gte('date',today).order('date').limit(80);
+        var t = (tr.data||[]).filter(function(r){ var x=r.data||{}; return fuzzyMatch(me.name, x.trainee||'') || fuzzyMatch(me.name, x.trainer||''); })[0];
+        if(t){ var d0=t.data||{}, asTrainer = d0.trainer && fuzzyMatch(me.name, d0.trainer);
+          out.sessions.push({ kind:'training', date:t.date, text: asTrainer ? 'You’re scheduled to run a training' : 'You’re scheduled for a training', with: asTrainer ? (d0.trainee||'') : (d0.trainer||'') }); }
+        var duty = await fetchDutyData();
+        var sup = duty.entries.filter(function(e){ return e.duty==='AV: Supervisor' && fuzzyMatch(me.name, e.person); })[0];
+        if(sup){ var who = duty.entries.filter(function(e){ return e.date===sup.date && e.duty==='AV: JK Duty'; }).map(function(e){ return e.person; });
+          out.sessions.push({ kind:'supervision', date:sup.date, text:'You’re on supervision', with: who.join(', ') }); }
+      }
+    }catch(e){}
+    return out;
+  }
+  async function divisionNumbers(k){
+    var d = divisionOf(k), out = { channels: [] };
+    var r = await Promise.resolve(sb.from('iv_members').select('id,status,spec')).then(function(x){ return x; }, function(){ return {}; });
+    var rows = (r.data||[]).filter(function(m){ return m.status==='active'; });
+    var specs = rows.map(function(m){ var s=m.spec; if(typeof s==='string'){ try{ s=JSON.parse(s); }catch(e){ s=[]; } } return Array.isArray(s)?s.map(String):[]; });
+    var teams = d ? d.teams : [];
+    teams.forEach(function(t){ var id = DIV_SPEC[t.key.toUpperCase()]; out.channels.push({ name:t.name, n: specs.filter(function(s){ return s.indexOf(id)>=0; }).length }); });
+    out.people = out.channels.reduce(function(a,c){ return a+c.n; },0);
+    return out;
+  }
+
+  /* ── pieces ── */
+  function faces(n){
+    var cols=['#4BA3DC','#F59E0B','var(--hc)','#9B7BE8','#EE6F5C','#34D399','#9DB3C7'], h='';
+    for(var i=0;i<Math.min(7,Math.max(0,n));i++) h+='<i style="background:'+cols[i%cols.length]+'"></i>';
+    return h;
+  }
+  function ring(pct, big, small){
+    var off = 239*(1-Math.max(0,Math.min(1,pct)));
+    return '<svg class="hm-ring" viewBox="0 0 92 92" role="img" aria-label="'+esc(big)+'"><circle cx="46" cy="46" r="38" class="t"/><circle cx="46" cy="46" r="38" class="v" stroke-dasharray="239" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 46 46)"/>'+
+      '<text x="46" y="'+(small?50:54)+'" text-anchor="middle" class="b">'+esc(big)+'</text>'+(small?'<text x="46" y="64" text-anchor="middle" class="s">'+esc(small)+'</text>':'')+'</svg>';
+  }
+  function calCard(iso, kicker, title, sub){
+    return '<div class="hm-card hm-cal"><div class="hm-page"><b>'+mon(iso)+'</b><span>'+dnum(iso)+'</span></div><div><div class="hm-k">'+esc(kicker)+'</div><div class="hm-t">'+esc(title)+'</div><div class="hm-s">'+esc(sub)+'</div></div></div>';
+  }
+  function peopleCard(n, label){
+    return '<div class="hm-card hm-people"><div class="hm-num"><b>'+(n==null?'—':n)+'</b><span>'+label+'</span></div><div class="hm-faces">'+faces(n||0)+(n>7?'<em>+'+(n-7)+'</em>':'')+'</div></div>';
+  }
+  function portalHTML(key, T, big, sub, chips, cta){
+    var href = T.url + (T.land === undefined ? '?p=calendar' : T.land);
+    return '<div class="hm-portal '+cls(key)+(big?' big':'')+'">'+
+      '<a class="hm-stretch" href="'+href+'" onclick="rememberTeam(\''+key+'\')" aria-label="'+esc(cta)+'"></a>'+
+      '<span class="hm-rings"><i></i><i></i><i></i><img src="logo.png" alt=""></span>'+
+      '<span class="hm-pbody"><span class="hm-k">'+(big?'Your page':'Channel')+'</span><span class="hm-ptitle">'+esc(T.label)+'</span>'+
+      (sub?'<span class="hm-psub">'+esc(sub)+'</span>':'')+
+      '<span class="hm-row"><span class="hm-cta">'+esc(cta)+'</span>'+(chips||[]).map(function(c){ return '<a class="hm-chip" href="'+c.href+'" onclick="rememberTeam(\''+key+'\')">'+esc(c.t)+'</a>'; }).join('')+'</span></span></div>';
+  }
+  function chipsFor(key){
+    var T = LEAD_TEAMS[key]; if(!T || !/^(A|B|AV)$/.test(key)) return [];
+    return T.pages.slice(0,3).map(function(p){ return { t:p[2], href: T.url + '?p=' + p[0] }; });
+  }
+  function portalsHTML(keys){
+    var h = '';
+    keys.forEach(function(k){
+      var T = LEAD_TEAMS[k], d = divisionOf(k);
+      if(d && d.teams.length){
+        h += '<div class="hm-portals hm-pdiv">'+portalHTML(k, T, true, 'The overview for your whole division.', [], 'Open division')+
+          '<div class="hm-chan">'+d.teams.map(function(t){ var TT = LEAD_TEAMS[t.key.toUpperCase()]; return TT ? portalHTML(t.key.toUpperCase(), TT, false, '', [], 'Open') : ''; }).join('')+'</div></div>';
+      } else {
+        var sub = k==='AV' ? 'The monthly roster, your team and the week ahead.' : (/^(A|B)$/.test(k) ? 'Calendar, roster, attendance and people, all in one place.' : '');
+        h += '<div class="hm-portals">'+portalHTML(k, T, true, sub, chipsFor(k), 'Enter '+T.label)+'</div>';
+      }
+    });
+    var multi = keys.length > 1;
+    return '<section class="hm-sec"><h3 class="hm-h">Quick access<small>'+(multi?'Everything you can open':'The page you lead')+'</small></h3><div class="'+(multi?'hm-multi':'')+'">'+h+'</div></section>';
+  }
+
+  /* numbers section for one team */
+  function numbersHTML(key, n){
+    if(key==='A' || key==='B'){
+      var c = n.cycle, sent = c.mine ? 'days remaining in your cycle' : 'days till your team’s cycle begins';
+      var seg = '', tot = Math.min(30, c.total), fill = c.mine ? Math.round(c.done/c.total*tot) : 0;
+      for(var i=0;i<tot;i++) seg += '<i'+(i<fill?' class="on"':'')+'></i>';
+      return '<div class="hm-grid">'+
+        peopleCard(n.people, 'people<br>on your team')+
+        '<div class="hm-card hm-att">'+(n.rate==null ? '<div class="hm-num"><b>—</b></div>' : ring(n.rate/100, n.rate+'%'))+'<div><div class="hm-t">Overall attendance</div><div class="hm-s">'+(n.rate==null?'Nothing marked yet.':'Of the duties marked, your team turned up '+n.rate+'% of the time.')+'</div></div></div>'+
+        (n.next ? calCard(n.next.date, 'Next event', n.next.name || 'Event', when(Math.max(0, dd(todayNZ(), n.next.date)))) :
+          '<div class="hm-card hm-cal"><div><div class="hm-k">Next event</div><div class="hm-t">Nothing on the calendar yet</div></div></div>')+
+        '<div class="hm-card hm-cyc"><div class="hm-cyl"><b>'+Math.max(0,c.days)+'</b><span>'+sent+'</span></div><div class="hm-segs">'+seg+'</div></div>'+
+      '</div>';
+    }
+    if(key==='AV'){
+      var s = n.sessions||[];
+      return '<div class="hm-grid">'+
+        peopleCard(n.people, 'people<br>on the AV team')+
+        '<div class="hm-card hm-att">'+ring(1-n.month.days/n.month.dim, String(n.month.days), 'DAYS')+'<div><div class="hm-t">Until the end of the month</div><div class="hm-s">The next roster is built around then.</div></div></div>'+
+        (n.next ? calCard(n.next.date, 'Next AV event', n.next.name || 'Event', when(Math.max(0, dd(todayNZ(), n.next.date)))) :
+          '<div class="hm-card hm-cal"><div><div class="hm-k">Next AV event</div><div class="hm-t">Nothing scheduled yet</div></div></div>')+
+        (s.length ? '<div class="hm-card hm-sess"><div class="hm-k">Your sessions</div><div class="hm-srow">'+s.map(function(x){
+            return '<div class="hm-sitem '+x.kind+'"><span>'+(x.kind==='training'?'T':'S')+'</span><div><div class="hm-t">'+esc(x.text)+(x.with?' with '+esc(x.with):'')+'</div><div class="hm-s">'+esc(longDate(x.date))+'</div></div></div>'; }).join('')+'</div></div>' : '')+
+      '</div>';
+    }
+    /* a division */
+    var max = Math.max.apply(null, [1].concat(n.channels.map(function(c){ return c.n; })));
+    return '<div class="hm-grid hm-gdiv">'+peopleCard(n.people, 'people<br>across your channels')+
+      '<div class="hm-card hm-bars">'+n.channels.map(function(c){ return '<div class="hm-bar"><span>'+esc(c.name)+'</span><i><b style="width:'+Math.round(c.n/max*100)+'%"></b></i><em>'+c.n+'</em></div>'; }).join('')+'</div></div>';
+  }
+  function statsShell(keys){
+    var has = keys.filter(function(k){ return k!=='' ; });
+    var tabs = has.length>1 ? '<div class="hm-tabs">'+has.map(function(k){ return '<button type="button" class="'+(k===HOME.team?'on '+cls(k):cls(k))+'" data-hm="'+k+'">'+esc(LEAD_TEAMS[k].label)+'</button>'; }).join('')+'</div>' : '';
+    return '<section class="hm-sec" id="hmStats"><h3 class="hm-h">'+(has.length>1?'The numbers':'Your team')+'</h3>'+tabs+'<div id="hmStatBody" class="'+cls(HOME.team)+'"><div class="hm-skel"></div></div></section>';
+  }
+
+  /* duties */
+  function dutyItem(e, i){
+    var team = e.team==='AV' ? 'av' : e.team==='B' ? 'b' : 'a';
+    var n = Math.max(0, dd(todayNZ(), e.date));
+    return '<div class="hm-duty hm-c-'+team+(e.kind==='training'?' training':'')+'" style="animation-delay:'+Math.min(i*0.05,0.4)+'s"><span class="hm-dot"></span>'+
+      '<div class="hm-dd"><b>'+mon(e.date)+'</b><span>'+dnum(e.date)+'</span><em>'+fmtDW(e.date)+'</em></div>'+
+      '<div class="hm-dm"><div class="hm-t">'+esc(e.event||e.duty)+'</div><div class="hm-s">'+esc(e.duty)+(e.uniform?' · '+esc(e.uniform)+' uniform':'')+'</div></div>'+
+      '<span class="hm-tag">'+(e.kind==='training'?'Training':(e.team==='AV'?'AV':'Team '+esc(e.team)))+'</span></div>';
+  }
+  async function dutiesHTML(lead){
+    var me = await resolveMyName(), mine = [];
+    if(me && me.name){
+      var duty = await fetchDutyData();
+      mine = duty.entries.filter(function(e){ return fuzzyMatch(me.name, e.person); });
+      try{
+        var today = todayNZ();
+        var tr = await sb.from('majalis').select('date,name,data').eq('type','Training').gte('date',today).order('date').limit(80);
+        (tr.data||[]).forEach(function(r){ var x=r.data||{};
+          if(fuzzyMatch(me.name, x.trainee||'') || fuzzyMatch(me.name, x.trainer||'')) mine.push({ date:r.date, duty: (x.trainer && fuzzyMatch(me.name, x.trainer)) ? 'Running the training' : 'Training', event:r.name||'Training', team:'AV', kind:'training' }); });
+      }catch(e){}
+      mine.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
+    }
+    if(!mine.length){
+      if(lead) return '';
+      return '<section class="hm-sec"><h3 class="hm-h">Your upcoming duties</h3><div class="hm-empty"><b>Nothing on your list yet.</b><span>When you are rostered, your duties appear here with the date, time and team.</span></div></section>';
+    }
+    var first = mine[0], n = Math.max(0, dd(todayNZ(), first.date)), pct = Math.max(0.06, 1-Math.min(7,n)/7);
+    return '<section class="hm-sec"><h3 class="hm-h">Your upcoming duties</h3><div class="hm-duties">'+
+      '<div class="hm-next hm-c-'+(first.team==='AV'?'av':first.team==='B'?'b':'a')+'"><div class="hm-k"><i></i>Next up</div>'+
+        '<div class="hm-nrow">'+ring(pct, n<=0?'0':String(n), n===1?'DAY':'DAYS')+'<div><div class="hm-big">'+esc(first.event||first.duty)+'</div><div class="hm-t">'+esc(first.duty)+'</div><div class="hm-s">'+esc(longDate(first.date))+(first.uniform?' · '+esc(first.uniform)+' uniform':'')+'</div></div></div>'+
+        '<div class="hm-row"><button type="button" class="hm-cta" onclick="nav(\'myduties\')">Open My Duties</button></div></div>'+
+      '<div class="hm-line">'+mine.slice(0,6).map(dutyItem).join('')+'</div></div></section>';
+  }
+
+  /* the old panels, on demand */
+  function footHTML(){
+    var away = g('awayPanel') && g('awayPanel').style.display !== 'none';
+    var acc = g('signupPanel') && g('signupPanel').style.display !== 'none';
+    var page = g('page-dashboard');
+    return (away ? '<button type="button" class="hm-link'+(page.classList.contains('hm-show-away')?' on':'')+'" data-hm-foot="away">I’m away</button>' : '')+
+           (acc ? '<button type="button" class="hm-link'+(page.classList.contains('hm-show-acc')?' on':'')+'" data-hm-foot="acc">Accounts overview</button>' : '')+
+           '<button type="button" class="hm-link" data-hm-foot="duties">My Duties</button>';
+  }
+  function refreshFoot(){ var f = g('hmFoot'); if(f) f.innerHTML = footHTML(); }
+
+  async function showStats(key, token){
+    var body = g('hmStatBody'); if(!body) return;
+    body.className = cls(key); body.innerHTML = '<div class="hm-skel"></div>';
+    try{
+      var n = HOME.stats[key];
+      if(!n){
+        n = /^(A|B)$/.test(key) ? await teamNumbers(key) : key==='AV' ? await avNumbers() : await divisionNumbers(key);
+        HOME.stats[key] = n;
+      }
+      if(token!==HOME.token) return;
+      body.innerHTML = numbersHTML(key, n);
+    }catch(e){ console.warn('home numbers:', e.message||e); body.innerHTML = '<div class="hm-empty"><b>Numbers are not available right now.</b><span>Try again in a moment.</span></div>'; }
+  }
+
+  window.renderHome = async function(){
+    var root = g('homeDash'); if(!root) return;
+    var token = ++HOME.token;
+    HOME.stats = {};
+    var keys = leadKeys();
+    var statKeys = keys.filter(function(k){ return !!(/^(A|B|AV)$/.test(k) || divisionOf(k)); });
+    HOME.team = statKeys.indexOf(HOME.team)>=0 ? HOME.team : statKeys[0] || null;
+    var h = '';
+    if(keys.length){
+      h += portalsHTML(keys);
+      if(HOME.team) h += statsShell(statKeys);
+    }
+    h += '<div id="hmDuties"></div><div class="hm-foot" id="hmFoot"></div>';
+    root.innerHTML = h; root.className = 'hm';
+    refreshFoot(); setTimeout(refreshFoot, 1500); setTimeout(refreshFoot, 5000);
+    if(HOME.team && sb) showStats(HOME.team, token);
+    if(sb){
+      try{ var d = await dutiesHTML(keys.length>0); if(token===HOME.token && g('hmDuties')) g('hmDuties').innerHTML = d; }
+      catch(e){ console.warn('home duties:', e.message||e); }
+    }
+  };
+
+  document.addEventListener('click', function(e){
+    var t = e.target.closest && e.target.closest('[data-hm],[data-hm-foot]'); if(!t) return;
+    var page = g('page-dashboard');
+    if(t.hasAttribute('data-hm')){
+      HOME.team = t.getAttribute('data-hm');
+      document.querySelectorAll('.hm-tabs button').forEach(function(b){ b.classList.toggle('on', b===t); });
+      showStats(HOME.team, HOME.token); return;
+    }
+    var w = t.getAttribute('data-hm-foot');
+    if(w==='duties'){ nav('myduties'); return; }
+    var c = w==='away' ? 'hm-show-away' : 'hm-show-acc';
+    page.classList.toggle(c);
+    refreshFoot();
+    var panel = g(w==='away' ? 'awayPanel' : 'signupPanel');
+    if(page.classList.contains(c) && panel) panel.scrollIntoView({behavior:'smooth', block:'start'});
+  });
 })();
 </script>
 </body>
