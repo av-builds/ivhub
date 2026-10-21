@@ -24,6 +24,11 @@
     var f=(location.pathname.split('/').pop()||'index.html').replace(/\.html$/,'').toLowerCase();
     var T={teama:'teal',safety:'amber',abeshafa:'green',ancillary:'green',cleaning:'green',cooking:'green',maintenance:'green',paat:'green',sukreet:'green',training:'green',teamb:'pending',av:'pending',setup:'pending'};
     if(T[f]) root.setAttribute('data-team',T[f]);
+    /* Name shown on the welcome card: set as a CSS variable so every hero can print it */
+    var N={teama:'Team A',teamb:'Team B',av:'AV Team',safety:'Safety & Security'};
+    var nm=N[f]||(document.title||'').split(/\s+[\u2014-]\s+/)[0].trim();
+    if(T[f]&&nm) root.style.setProperty('--iv-team-name','"'+nm.replace(/["\\]/g,'')+'"');
+    window.IV_TEAM_NAME=nm;
     /* Brand mark as the tab icon on every page */
     try{
       var old=document.querySelectorAll('link[rel~="icon"]'); for(var i=0;i<old.length;i++) old[i].parentNode.removeChild(old[i]);
@@ -43,5 +48,18 @@
     document.body.appendChild(b);
     apply(root.getAttribute('data-theme'));
   }
-  if(document.body) mount(); else document.addEventListener('DOMContentLoaded',mount);
+  /* Pages without a welcome card of their own (Safety, division pages) get one at the top of their signed-in view. */
+  function welcome(){
+    var ok=document.getElementById('stOk');
+    if(!ok||document.querySelector('.hero,.dash-hero,.iv-welcome')||!root.getAttribute('data-team')) return;
+    var d=''; try{ d=new Date().toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long',timeZone:'Pacific/Auckland'}); }catch(e){}
+    var w=document.createElement('div'); w.className='iv-welcome';
+    w.innerHTML='<div class="iv-w-t"><div class="iv-w-team"></div><div class="iv-w-greet">Ya Ali Madad</div><div class="iv-w-date"></div></div>'+
+      '<img class="iv-w-logo" src="logo.png" alt="Ismaili Volunteers">';
+    w.querySelector('.iv-w-team').textContent=window.IV_TEAM_NAME||'';
+    w.querySelector('.iv-w-date').textContent=d+(d?' \u00b7 ':'')+'Auckland Jamatkhana';
+    ok.insertBefore(w,ok.firstChild);
+  }
+  function boot(){ mount(); welcome(); }
+  if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);
 })();

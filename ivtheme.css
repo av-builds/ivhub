@@ -586,3 +586,23 @@ html[data-team] .dash-hero-logo{width:56px;height:56px;box-shadow:0 0 0 3px var(
 #page-dashboard .hero::after{display:block!important;content:"";position:absolute;inset:auto;right:-20px;top:-30px;width:340px;height:340px;border-radius:0;
   background:url("logo.png") no-repeat center/contain;opacity:.06;pointer-events:none;}
 html[data-theme="light"] #page-dashboard .hero::after{opacity:.09;}
+
+/* Team name on every welcome card (set by ivtheme.js from the page) */
+html[data-team] .dash-greet::before{content:var(--iv-team-name,"");display:block;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--iv-sec);-webkit-text-fill-color:var(--iv-sec);margin-bottom:6px;}
+
+/* Welcome card added to pages that had none (Safety, division pages): same seal wash */
+.iv-welcome{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--iv-ac) 24%,var(--ds)) 0%,var(--ds) 62%);border:1px solid var(--db);border-radius:28px;
+  padding:26px 30px;margin:0 0 18px;box-shadow:var(--iv-sh);color:var(--dt);text-align:left;}
+html[data-theme="light"] .iv-welcome{background:linear-gradient(160deg,color-mix(in srgb,var(--iv-ac) 20%,#fff) 0%,#fff 62%);}
+.iv-welcome::before{content:"";position:absolute;left:-80px;top:-80px;width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,var(--iv-sec),transparent 70%);opacity:.3;pointer-events:none;}
+.iv-welcome::after{content:"";position:absolute;right:-90px;bottom:-90px;width:340px;height:340px;background:url("logo.png") no-repeat center/contain;opacity:.07;pointer-events:none;}
+html[data-theme="light"] .iv-welcome::after{opacity:.09;}
+.iv-w-t{position:relative;z-index:1;min-width:0;}
+.iv-w-team{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--iv-sec);margin-bottom:6px;}
+.iv-w-greet{font-size:clamp(28px,3.4vw,40px);font-weight:900;letter-spacing:-.03em;line-height:1.04;
+  background:linear-gradient(100deg,var(--dt) 45%,var(--iv-sec));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.iv-w-date{font-size:13px;color:var(--dm);margin-top:6px;}
+.iv-w-logo{position:relative;z-index:1;width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px var(--iv-sec);object-fit:contain;}
