@@ -71,8 +71,8 @@
       l.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
     });
   }
-  /* Page changes: the seal lifts off the pressed button and grows into the loading screen's seal,
-     while the screen opens out from that spot. The real page change follows a beat later. */
+  /* Page changes: the page zooms in on the button you pressed, a dark curtain comes over it, and the
+     next page opens straight into the welcome animation (Ya Ali Madad), which then lifts to load it in. */
   var press=null;
   function rememberPress(el,x,y){
     var t=el&&el.closest&&el.closest('a,button,[role=button],.sb-logo,.tn-brand,.nav-item');
@@ -82,37 +82,36 @@
   document.addEventListener('keydown',function(e){
     if(e.key==='Enter'||e.key===' '){ var t=e.target&&e.target.getBoundingClientRect&&e.target.getBoundingClientRect(); if(t) rememberPress(e.target,t.left+t.width/2,t.top+t.height/2); }
   },true);
+  var zoomed=[];
+  function resetZoom(){
+    zoomed.forEach(function(c){ try{ c.getAnimations().forEach(function(a){ a.cancel(); }); }catch(e){} c.style.transformOrigin=''; c.style.willChange=''; });
+    zoomed=[]; document.documentElement.style.overflow='';
+    var v=document.getElementById('ivVeil'); if(v) v.classList.remove('iv-show');
+  }
   function growVeil(){
     var go=window.ivGo; if(typeof go!=='function'||go.ivGrown) return;
     var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var busy=false;
     var w=function(){
       var args=arguments, self=this, v=document.getElementById('ivVeil');
-      if(!v||reduce) return go.apply(self,args);
-      var p=press||{x:window.innerWidth/2,y:window.innerHeight/2};
-      var target=v.querySelector('.iv-logo'), tr=target&&target.getBoundingClientRect();
-      if(!tr||!tr.width) return go.apply(self,args);
-      /* where the flying seal starts: the logo image if the press was on one, else a seal-sized spot on the button */
-      var img=p.el&&p.el.querySelector&&p.el.querySelector('img');
-      var sr=(img&&img.getBoundingClientRect().width)?img.getBoundingClientRect():(p.el&&p.el.tagName==='IMG'?p.el.getBoundingClientRect():null);
-      var sx=sr?sr.left+sr.width/2:p.x, sy=sr?sr.top+sr.height/2:p.y, ss=sr?Math.max(sr.width,28):44;
-      if(p.el&&!sr&&p.el.getBoundingClientRect){ var br=p.el.getBoundingClientRect(); if(br.width){ sx=br.left+br.width/2; sy=br.top+br.height/2; } }
-      v.style.setProperty('--ox',sx+'px'); v.style.setProperty('--oy',sy+'px');
-      v.classList.add('iv-grow');
-      var fly=document.createElement('div'); fly.className='iv-fly'; fly.setAttribute('aria-hidden','true');
-      fly.style.cssText='position:fixed;z-index:5001;left:'+tr.left+'px;top:'+tr.top+'px;width:'+tr.width+'px;height:'+tr.height+'px;border-radius:50%;background:#fff;overflow:hidden;pointer-events:none;'+
-        'box-shadow:0 0 0 5px rgba(255,255,255,.08),0 18px 50px rgba(0,20,50,.7),0 0 46px rgba(75,163,220,.35);';
-      fly.innerHTML='<img src="logo.png" alt="" style="width:100%;height:100%;object-fit:contain;display:block">';
-      document.body.appendChild(fly);
-      var s=ss/tr.width, dx=sx-(tr.left+tr.width/2), dy=sy-(tr.top+tr.height/2);
-      try{ fly.animate([{transform:'translate('+dx+'px,'+dy+'px) scale('+s+')'},{transform:'none'}],{duration:440,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}); }catch(e){}
-      setTimeout(function(){ go.apply(self,args); },160);
+      if(!v||reduce||busy||!document.body.animate) return go.apply(self,args);
+      busy=true;
+      var p=press||{x:window.innerWidth/2,y:window.innerHeight/2}, cx=p.x, cy=p.y;
+      if(p.el&&p.el.getBoundingClientRect){ var br=p.el.getBoundingClientRect(); if(br.width){ cx=br.left+br.width/2; cy=br.top+br.height/2; } }
+      zoomed=[].filter.call(document.body.children,function(c){
+        return c!==v&&c.id!=='ivThemeBtn'&&!/^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(c.tagName)&&getComputedStyle(c).display!=='none';
+      });
+      document.documentElement.style.overflow='hidden';
+      zoomed.forEach(function(c){
+        var r=c.getBoundingClientRect();
+        c.style.transformOrigin=(cx-r.left)+'px '+(cy-r.top)+'px'; c.style.willChange='transform';
+        c.animate([{transform:'scale(1)'},{transform:'scale(24)'}],{duration:640,easing:'cubic-bezier(.6,0,.9,.4)',fill:'forwards'});
+      });
+      /* zoomed in: the curtain closes over it, then the page changes */
+      setTimeout(function(){ v.classList.add('iv-show'); setTimeout(function(){ go.apply(self,args); },200); },560);
     };
     w.ivGrown=true; window.ivGo=w;
-    window.addEventListener('pageshow',function(e){
-      if(!e.persisted) return;
-      var v=document.getElementById('ivVeil'); if(v) v.classList.remove('iv-grow');
-      document.querySelectorAll('.iv-fly').forEach(function(n){ n.remove(); });
-    });
+    window.addEventListener('pageshow',function(e){ if(e.persisted){ busy=false; resetZoom(); } });
   }
   function boot(){ mount(); welcome(); homeLogo(); growVeil(); }
   if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);

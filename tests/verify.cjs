@@ -451,7 +451,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(p.errs.length===0,'tags    no page errors'); await p.context().close(); }
 
 // ── Opening animations ──
-for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.html','A',/Welcome to[\s\S]*Team\s*A/i],['teamb.html','B',/Welcome to[\s\S]*Team\s*B/i],['av.html','AV',/Welcome to[\s\S]*Team\s*AV/i]]){
+for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.html','A',/Welcome to[\s\S]*Team\s*A/i],['teamb.html','B',/Welcome to[\s\S]*Team\s*B/i],['av.html','AV',/Welcome to[\s\S]*AV\s*Team/i]]){
   const p=await open(file,{width:1200,height:800});
   const r=await p.evaluate(async key=>{ const o={};
     o.automated=(()=>{ ivSplashReset(); ivSplash(key); return !document.getElementById('ivs'); })();   // tests are skipped by default
