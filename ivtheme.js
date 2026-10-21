@@ -22,7 +22,7 @@
   /* Secondary colour by page. Hub and unlisted pages get none; pages still waiting for a colour keep the old pink. */
   (function(){
     var f=(location.pathname.split('/').pop()||'index.html').replace(/\.html$/,'').toLowerCase();
-    var T={teama:'teal',safety:'amber',abeshafa:'green',ancillary:'green',cleaning:'green',cooking:'green',maintenance:'green',paat:'green',sukreet:'green',training:'green',teamb:'pending',av:'pending',setup:'pending'};
+    var T={teama:'teal',safety:'amber',abeshafa:'green',ancillary:'green',cleaning:'green',cooking:'green',maintenance:'green',paat:'green',sukreet:'green',training:'green',teamb:'coral',av:'forest',setup:'pending'};
     if(T[f]) root.setAttribute('data-team',T[f]);
     /* Name shown on the welcome card: set as a CSS variable so every hero can print it */
     var N={teama:'Team A',teamb:'Team B',av:'AV Team',safety:'Safety & Security'};
