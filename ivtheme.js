@@ -71,24 +71,48 @@
       l.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
     });
   }
-  /* Page changes: the loading screen grows out of the button that was pressed. */
-  var ox=null;
-  document.addEventListener('pointerdown',function(e){ ox={x:e.clientX,y:e.clientY}; },true);
+  /* Page changes: the seal lifts off the pressed button and grows into the loading screen's seal,
+     while the screen opens out from that spot. The real page change follows a beat later. */
+  var press=null;
+  function rememberPress(el,x,y){
+    var t=el&&el.closest&&el.closest('a,button,[role=button],.sb-logo,.tn-brand,.nav-item');
+    press={el:t||el,x:x,y:y};
+  }
+  document.addEventListener('pointerdown',function(e){ rememberPress(e.target,e.clientX,e.clientY); },true);
   document.addEventListener('keydown',function(e){
-    if(e.key==='Enter'||e.key===' '){ var t=e.target&&e.target.getBoundingClientRect&&e.target.getBoundingClientRect(); if(t) ox={x:t.left+t.width/2,y:t.top+t.height/2}; }
+    if(e.key==='Enter'||e.key===' '){ var t=e.target&&e.target.getBoundingClientRect&&e.target.getBoundingClientRect(); if(t) rememberPress(e.target,t.left+t.width/2,t.top+t.height/2); }
   },true);
   function growVeil(){
     var go=window.ivGo; if(typeof go!=='function'||go.ivGrown) return;
+    var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
     var w=function(){
-      var v=document.getElementById('ivVeil');
-      if(v){
-        var p=ox||{x:window.innerWidth/2,y:window.innerHeight/2};
-        v.style.setProperty('--ox',p.x+'px'); v.style.setProperty('--oy',p.y+'px');
-        v.classList.add('iv-grow');
-      }
-      return go.apply(this,arguments);
+      var args=arguments, self=this, v=document.getElementById('ivVeil');
+      if(!v||reduce) return go.apply(self,args);
+      var p=press||{x:window.innerWidth/2,y:window.innerHeight/2};
+      var target=v.querySelector('.iv-logo'), tr=target&&target.getBoundingClientRect();
+      if(!tr||!tr.width) return go.apply(self,args);
+      /* where the flying seal starts: the logo image if the press was on one, else a seal-sized spot on the button */
+      var img=p.el&&p.el.querySelector&&p.el.querySelector('img');
+      var sr=(img&&img.getBoundingClientRect().width)?img.getBoundingClientRect():(p.el&&p.el.tagName==='IMG'?p.el.getBoundingClientRect():null);
+      var sx=sr?sr.left+sr.width/2:p.x, sy=sr?sr.top+sr.height/2:p.y, ss=sr?Math.max(sr.width,28):44;
+      if(p.el&&!sr&&p.el.getBoundingClientRect){ var br=p.el.getBoundingClientRect(); if(br.width){ sx=br.left+br.width/2; sy=br.top+br.height/2; } }
+      v.style.setProperty('--ox',sx+'px'); v.style.setProperty('--oy',sy+'px');
+      v.classList.add('iv-grow');
+      var fly=document.createElement('div'); fly.className='iv-fly'; fly.setAttribute('aria-hidden','true');
+      fly.style.cssText='position:fixed;z-index:5001;left:'+tr.left+'px;top:'+tr.top+'px;width:'+tr.width+'px;height:'+tr.height+'px;border-radius:50%;background:#fff;overflow:hidden;pointer-events:none;'+
+        'box-shadow:0 0 0 5px rgba(255,255,255,.08),0 18px 50px rgba(0,20,50,.7),0 0 46px rgba(75,163,220,.35);';
+      fly.innerHTML='<img src="logo.png" alt="" style="width:100%;height:100%;object-fit:contain;display:block">';
+      document.body.appendChild(fly);
+      var s=ss/tr.width, dx=sx-(tr.left+tr.width/2), dy=sy-(tr.top+tr.height/2);
+      try{ fly.animate([{transform:'translate('+dx+'px,'+dy+'px) scale('+s+')'},{transform:'none'}],{duration:440,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}); }catch(e){}
+      setTimeout(function(){ go.apply(self,args); },160);
     };
     w.ivGrown=true; window.ivGo=w;
+    window.addEventListener('pageshow',function(e){
+      if(!e.persisted) return;
+      var v=document.getElementById('ivVeil'); if(v) v.classList.remove('iv-grow');
+      document.querySelectorAll('.iv-fly').forEach(function(n){ n.remove(); });
+    });
   }
   function boot(){ mount(); welcome(); homeLogo(); growVeil(); }
   if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);
