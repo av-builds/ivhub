@@ -549,6 +549,9 @@ for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.htm
     const si=document.getElementById('alSearch'); si.value='zara'; si.dispatchEvent(new Event('input')); o.search=document.querySelectorAll('#umList .al-row').length; si.value=''; si.dispatchEvent(new Event('input'));
     const t0=document.querySelector('#alTiles .al-tile'); t0.click(); o.flipped=t0.classList.contains('flip'); t0.click(); o.unflipped=!t0.classList.contains('flip');
     o.newAdmins=document.querySelectorAll('#alTiles .al-tile')[3].innerText.replace(/\s+/g,' ').slice(0,40);
+    const row=document.querySelector('#umList .al-row'); row.click(); o.menuOpen=!!document.querySelector('.al-menu.open'); o.noBtn=!document.querySelector('#umList .al-acts .btn');
+    o.menuItems=[...document.querySelectorAll('.al-menu.open button')].map(b=>b.innerText.trim()).join('|');
+    document.body.click(); o.menuClosed=!document.querySelector('.al-menu.open');
     document.getElementById('umNewBtn').click(); o.drawer=document.getElementById('umInvite').classList.contains('show'); o.preview=document.getElementById('ufPreview').innerText.slice(0,30);
     return o; });
   chk(r.tiles===4&&r.rows===4,'logins  four summary tiles and a row per account',JSON.stringify(r));
@@ -556,6 +559,7 @@ for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.htm
   chk(r.noAccess===1&&r.search===1,'logins  the No access chip and the search narrow the list',r.noAccess+' '+r.search);
   chk(r.flipped&&r.unflipped,'logins  a tile flips over and back');
   chk(r.drawer&&/WHAT THEY WILL/i.test(r.preview),'logins  Invite opens the side drawer with an access preview',r.preview);
+  chk(r.menuOpen&&r.noBtn&&/Change role/.test(r.menuItems)&&/Remove from Hub/.test(r.menuItems)&&r.menuClosed,'logins  clicking a person opens the actions menu (no Change role button)',r.menuItems);
   chk(/Aly/.test(r.names),'logins  names still render in .um-name');
   chk(p.errs.length===0,'logins  no page errors'); await p.context().close(); }
 
