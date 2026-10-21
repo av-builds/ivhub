@@ -2023,17 +2023,17 @@ function todayDS(){ return localDS(new Date()); }
    admins add records in the same millisecond. */
 function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
 /* ── PERMISSION HELPERS — single source of truth for role checks ── */
-const PERM_KEYS = ['owner','developer','director','deputy_director','phmu_lead','iv_admin','av_admin','av_atl','av_coord','av_team','facilitator','tl_a','ytl_a','tl_b','ytl_b','team_a','team_b','iv_team'];
+const PERM_KEYS = ['owner','developer','director','deputy_director','phmu_lead','iv_admin','av_admin','av_atl','av_yatl','av_coord','av_team','facilitator','tl_a','ytl_a','tl_b','ytl_b','team_a','team_b','iv_team'];
 // Anyone at Director level or above sees everything bar the Developer Panel.
 const IV_TOP = ['owner','developer','director','deputy_director','phmu_lead','iv_admin'];
 // Admin over the AV panel: AV Lead, AV Assistant Lead, AV Co-ordinator, and IV leadership.
-const AV_ADMIN_KEYS = IV_TOP.concat(['av_admin','av_atl','av_coord']);
+const AV_ADMIN_KEYS = IV_TOP.concat(['av_admin','av_atl','av_yatl','av_coord']);
 // Who may read the activity log. IV leadership sees every team's; the AV
 // Lead and Assistant Lead see AV's own. The database enforces the same
 // list, so anyone outside it would be shown an empty page rather than a
 // restricted one — better to not offer it. A Co-ordinator runs the
 // roster but does not oversee the team, so is not on it.
-const LOG_READ_KEYS = IV_TOP.concat(['av_admin','av_atl']);
+const LOG_READ_KEYS = IV_TOP.concat(['av_admin','av_atl','av_yatl']);
 // Legacy values from older builds / hand-edited rows → current keys
 const PERM_LEGACY = { admin:'av_admin', avadmin:'av_admin', ivadmin:'iv_admin', volunteer:'av_team', team:'av_team', member:'av_team' };
 /* Parses whatever shape a perms value arrives in — a real array, a JSON
@@ -6621,7 +6621,7 @@ async function fontsSettled(ms){
     hub: {acc:'#4BA3DC', kick:'', l1:'Ya Ali', l2:'Madad', sub:'IV Hub · Auckland Jamatkhana'},
     A:   {acc:'#34D399', kick:'Welcome to', l1:'Team ', l2:'A',  sub:'IV Hub · Auckland Jamatkhana', mono:'A'},
     B:   {acc:'#F472B6', kick:'Welcome to', l1:'Team ', l2:'B',  sub:'IV Hub · Auckland Jamatkhana', mono:'B'},
-    AV:  {acc:'#4BA3DC', kick:'Welcome to', l1:'Team ', l2:'AV', sub:'IV Hub · Auckland Jamatkhana', mono:'AV'}
+    AV:  {acc:'#4BA3DC', kick:'Welcome to', l1:'AV ', l2:'Team', sub:'IV Hub · Auckland Jamatkhana', mono:'AV'}
   };
   var CSS = '.ivs{position:fixed;inset:0;z-index:2147483000;overflow:hidden;background:transparent;font-family:Archivo,system-ui,sans-serif;color:#E8F4FD;--acc:#4BA3DC}'+
   '.ivs *{box-sizing:border-box}'+

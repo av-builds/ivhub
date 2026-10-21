@@ -1284,8 +1284,9 @@ const PERM_RANK = {
   facilitator:5,
   tl_a:6, tl_b:6, av_admin:6,
   ytl_a:7, ytl_b:7, av_atl:7,
-  av_coord:8,
-  team_a:9, team_b:9, av_team:9,
+  av_yatl:8,
+  av_coord:9,
+  team_a:10, team_b:10, av_team:10,
 };
 const IV_TOP = ['owner','developer','director','deputy_director','phmu_lead','iv_admin'];
 const myRank = ()=>Math.min(99, ...(CU.perms||[]).map(p=>PERM_RANK[p]==null?99:PERM_RANK[p]));
@@ -1296,8 +1297,8 @@ const VIEW_A     = ()=>hasPerm(...IV_TOP,'facilitator','tl_a','ytl_a','team_a');
 const VIEW_B     = ()=>hasPerm(...IV_TOP,'facilitator','tl_b','ytl_b','team_b');
 const ADMIN_A    = ()=>hasPerm(...IV_TOP,'facilitator','tl_a','ytl_a');
 const ADMIN_B    = ()=>hasPerm(...IV_TOP,'facilitator','tl_b','ytl_b');
-const AV_VIEW    = ()=>hasPerm(...IV_TOP,'av_admin','av_atl','av_coord','av_team'); // facilitator NEVER sees AV
-const AV_ADMIN   = ()=>hasPerm(...IV_TOP,'av_admin','av_atl','av_coord');
+const AV_VIEW    = ()=>hasPerm(...IV_TOP,'av_admin','av_atl','av_yatl','av_coord','av_team'); // facilitator NEVER sees AV
+const AV_ADMIN   = ()=>hasPerm(...IV_TOP,'av_admin','av_atl','av_yatl','av_coord');
 const USERS_ADMIN= ()=>hasPerm(...IV_TOP,'facilitator');
 /* Duty Stats has been removed from the Hub, so nobody is shown it. */
 const STATS_VIEW = ()=>false;
@@ -1322,7 +1323,7 @@ function prepareTeams(){
   const t = [];
   if(myRank() <= 5 || hasPerm('tl_a','ytl_a'))      t.push('A');
   if(myRank() <= 5 || hasPerm('tl_b','ytl_b'))      t.push('B');
-  if(myRank() <= 4 || hasPerm('av_admin','av_atl')) t.push('AV');
+  if(myRank() <= 4 || hasPerm('av_admin','av_atl','av_yatl')) t.push('AV');
   return t;
 }
 function approveTeams(){
@@ -1336,7 +1337,7 @@ const CAN_SUBMIT  = ()=>prepareTeams().length > 0;
 const CAN_APPROVE = ()=>false;
 /* Rapid Link is shown to Assistant Leads and above, but only the Owner and Developer can
    open it while it is under development. */
-const rapidVisible = ()=>!!CU && myRank() <= 7;
+const rapidVisible = ()=>!!CU && myRank() <= 8;
 const rapidOpen    = ()=>hasPerm('owner','developer');
 const TEAM_LABEL  = {A:'Team A', B:'Team B', AV:'AV Team'};
 /* Which team a member counts as, for invitation purposes. Mirrors
@@ -1360,7 +1361,7 @@ const ROLE_LABELS = {
   facilitator:'Facilitator',
   tl_a:'Team A Lead', ytl_a:'Team A Assistant Lead',
   tl_b:'Team B Lead', ytl_b:'Team B Assistant Lead',
-  av_admin:'AV Team Lead', av_atl:'AV Team Assistant Lead', av_coord:'AV Team Co-ordinator',
+  av_admin:'AV Team Lead', av_atl:'AV Team Assistant Lead', av_yatl:'AV Youth Assistant Lead', av_coord:'AV Team Co-ordinator',
   team_a:'IV Team A Volunteer', team_b:'IV Team B Volunteer', av_team:'AV Team Volunteer',
 };
 /* Role dropdown definitions: UI label → role id → perms array */
@@ -1379,12 +1380,13 @@ const ROLE_DEFS = [
   { id:'ytl_b',            label:'Team B Assistant Lead',     perms:['ytl_b'] },
   { id:'av_admin',         label:'AV Team Lead',              perms:['av_admin'] },
   { id:'av_atl',           label:'AV Team Assistant Lead',    perms:['av_atl'] },
+  { id:'av_yatl',          label:'AV Youth Assistant Lead',   perms:['av_yatl'] },
   { id:'av_coord',         label:'AV Team Co-ordinator',      perms:['av_coord'] },
   { id:'team_a',           label:'IV Team A Volunteer',       perms:['team_a'] },
   { id:'team_b',           label:'IV Team B Volunteer',       perms:['team_b'] },
   { id:'av_team',          label:'AV Team Volunteer',         perms:['av_team'] },
 ];
-const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead','facilitator','tl_a','ytl_a','tl_b','ytl_b','av_admin','av_atl','av_coord','team_a','team_b','av_team'];
+const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead','facilitator','tl_a','ytl_a','tl_b','ytl_b','av_admin','av_atl','av_yatl','av_coord','team_a','team_b','av_team'];
 /* ═══ DIVISIONS AND TEAMS ═══
    wip: the page is still Under Construction — its menu entry and Quick
    access tile carry a warning tag. Remove the flag when the page is built.
@@ -1394,7 +1396,7 @@ const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead
    Follows the IV chart. A division (Ancillary Services, Paat, Safety &
    Security, Training & Development) has a Lead and an Assistant Lead; its
    teams each have a Lead, Assistant Lead and Volunteer. Division and team
-   Leads rank like AV's (6, 7) and volunteers 9. A division head can open
+   Leads rank like AV's (6, 7) and volunteers 10. A division head can open
    their division and every team beneath it; they get no other Hub powers.
    The rosters are still to be designed, so the pages are "under
    construction". Mirrored by tools/make-specialty.cjs, which generates the
@@ -1429,7 +1431,7 @@ DIVISIONS.forEach(d=>{
   d.teams.forEach(t=>{
     defRole(t.key+'_lead',  6, t.role + ' Lead');
     defRole(t.key+'_alead', 7, t.role + ' Assistant Lead');
-    defRole(t.key+'_team',  9, t.role + ' Volunteer');
+    defRole(t.key+'_team',  10, t.role + ' Volunteer');
   });
 });
 const divPerms    = d=>[d.key+'_lead', d.key+'_alead'];
@@ -1446,7 +1448,7 @@ function roleGroups(){
     {id:'iv', label:'IV Leadership', cat:'Leadership', levels:[['owner','Owner'],['developer','Developer'],['director','Director'],['deputy_director','Deputy Director'],['phmu_lead','PHMU Lead'],['facilitator','Facilitator']]},
     {id:'A',  label:'Team A', cat:'PHMU', levels:[['tl_a','Team Lead'],['ytl_a','Assistant Team Lead'],['team_a','Volunteer']]},
     {id:'B',  label:'Team B', cat:'PHMU', levels:[['tl_b','Team Lead'],['ytl_b','Assistant Team Lead'],['team_b','Volunteer']]},
-    {id:'AV', label:'AV Team', cat:'PHMU', levels:[['av_admin','Team Lead'],['av_atl','Assistant Team Lead'],['av_coord','Co-ordinator'],['av_team','Volunteer']]},
+    {id:'AV', label:'AV Team', cat:'PHMU', levels:[['av_admin','Team Lead'],['av_atl','Assistant Team Lead'],['av_yatl','Youth Assistant Lead'],['av_coord','Co-ordinator'],['av_team','Volunteer']]},
   ];
   DIVISIONS.forEach(d=>{
     const cat = d.group === 'phmu' ? 'PHMU' : d.group === 'anc' ? 'Ancillary Services' : d.name;
@@ -2165,7 +2167,7 @@ async function loadCoverTeams(){
    each page inside it. This is only navigation: the team pages already open
    on a requested page (?p=) and nothing inside them is touched.
    Facilitators and above keep the Hub dashboard as their home. */
-const LEAD_KEYS = { A:['tl_a','ytl_a'], B:['tl_b','ytl_b'], AV:['av_admin','av_atl'] };
+const LEAD_KEYS = { A:['tl_a','ytl_a'], B:['tl_b','ytl_b'], AV:['av_admin','av_atl','av_yatl'] };
 const LEAD_TEAMS = {
   A:  { label:'Team A',  url:'teama.html', pages:[['calendar','📅','Calendar'],['roster','📋','Roster'],['attendance','✅','Attendance'],['reports','📊','Numbers'],['members','👥','People'],['announce','📣','Announcements']] },
   B:  { label:'Team B',  url:'teamb.html', pages:[['calendar','📅','Calendar'],['roster','📋','Roster'],['attendance','✅','Attendance'],['reports','📊','Numbers'],['members','👥','People'],['announce','📣','Announcements']] },
@@ -3693,7 +3695,7 @@ async function vlSave(id){
 }
 /* Admin Logins is everyone above volunteer, and anyone who has no role yet
    (so a new invite can be given one). Volunteers are in Volunteer Logins. */
-const isAdminAccount = p=>{ const pm = permsOf(p); return !pm.length || rankOf(pm) < 9; };
+const isAdminAccount = p=>{ const pm = permsOf(p); return !pm.length || rankOf(pm) < 10; };
 function renderUserList(){
   const ALL_PROFILES = PROFILES; PROFILES = PROFILES.filter(isAdminAccount);
   try{ renderAdminRows(); } finally { PROFILES = ALL_PROFILES; }
@@ -4914,7 +4916,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     hub: {acc:'#4BA3DC', kick:'', l1:'Ya Ali', l2:'Madad', sub:'IV Hub · Auckland Jamatkhana'},
     A:   {acc:'#34D399', kick:'Welcome to', l1:'Team ', l2:'A',  sub:'IV Hub · Auckland Jamatkhana', mono:'A'},
     B:   {acc:'#F472B6', kick:'Welcome to', l1:'Team ', l2:'B',  sub:'IV Hub · Auckland Jamatkhana', mono:'B'},
-    AV:  {acc:'#4BA3DC', kick:'Welcome to', l1:'Team ', l2:'AV', sub:'IV Hub · Auckland Jamatkhana', mono:'AV'}
+    AV:  {acc:'#4BA3DC', kick:'Welcome to', l1:'AV ', l2:'Team', sub:'IV Hub · Auckland Jamatkhana', mono:'AV'}
   };
   var CSS = '.ivs{position:fixed;inset:0;z-index:2147483000;overflow:hidden;background:transparent;font-family:Archivo,system-ui,sans-serif;color:#E8F4FD;--acc:#4BA3DC}'+
   '.ivs *{box-sizing:border-box}'+

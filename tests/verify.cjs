@@ -216,7 +216,16 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(/Paat/.test(r.director)&&/Safety/.test(r.director)&&/Training/.test(r.director)&&/Abeshafa/.test(r.director)&&/Maintenance/.test(r.director),'teams   a director sees every division and team');
   chk(r.tl==='','teams   a Team A lead sees none of them');
   chk(/Safety & Security/.test(r.safety),'teams   a Safety & Security assistant lead sees their division',r.safety);
-  chk(r.rank.join()==='6,7,9','teams   leads rank 6, assistants 7, volunteers 9',r.rank.join());
+  chk(r.rank.join()==='6,7,10','teams   leads rank 6, assistants 7, volunteers 10',r.rank.join());
+  const y=await p.evaluate(()=>{ const o={};
+    o.ranks=[PERM_RANK.av_atl,PERM_RANK.av_yatl,PERM_RANK.av_coord,PERM_RANK.av_team].join();
+    CU={user:'x',display:'X',perms:['av_yatl'],uid:'u'};
+    o.admin=[AV_ADMIN(),AV_VIEW(),rapidVisible(),myLeadTeams().join()].join();
+    CU={user:'x',display:'X',perms:['av_coord'],uid:'u'}; o.coord=[AV_ADMIN(),rapidVisible()].join();
+    CU={user:'x',display:'X',perms:['director'],uid:'u'}; o.grant=grantableRoles().includes('av_yatl');
+    o.label=ROLE_LABELS.av_yatl; return o; });
+  chk(y.ranks==='7,8,9,10','av role av_atl 7, AV Youth Assistant Lead 8, co-ordinator 9, volunteer 10',y.ranks);
+  chk(y.admin.startsWith('true,true,true')&&y.coord==='true,false'&&y.grant===true&&y.label==='AV Youth Assistant Lead','av role AV Youth Assistant Lead has the Assistant Lead powers, a director can grant it',JSON.stringify(y));
   chk(r.grant===23&&r.facGrant===0,'teams   directors grant all 23 roles, facilitators none',r.grant+' / '+r.facGrant);
   chk(r.leadTeams==='AN','teams   a division assistant lead is treated as a lead for landing');
   chk(/Division page/.test(r.quick)&&/Maintenance/.test(r.quick)&&/Cooking/.test(r.quick),'teams   a division head gets tiles for the division and each team',r.quick);
@@ -442,7 +451,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(p.errs.length===0,'tags    no page errors'); await p.context().close(); }
 
 // ── Opening animations ──
-for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.html','A',/Welcome to[\s\S]*Team\s*A/i],['teamb.html','B',/Welcome to[\s\S]*Team\s*B/i],['av.html','AV',/Welcome to[\s\S]*Team\s*AV/i]]){
+for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.html','A',/Welcome to[\s\S]*Team\s*A/i],['teamb.html','B',/Welcome to[\s\S]*Team\s*B/i],['av.html','AV',/Welcome to[\s\S]*AV\s*Team/i]]){
   const p=await open(file,{width:1200,height:800});
   const r=await p.evaluate(async key=>{ const o={};
     o.automated=(()=>{ ivSplashReset(); ivSplash(key); return !document.getElementById('ivs'); })();   // tests are skipped by default
