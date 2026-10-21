@@ -530,6 +530,35 @@ for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.htm
   chk(r.clearedBtn,'duties  no button when nothing is found');
   chk(p.errs.length===0,'duties  no page errors'); await p.context().close(); }
 
+// ── Admin Logins revamp ──
+{ const p=await open('index.html',{width:1300,height:900});
+  const r=await p.evaluate(async()=>{ const o={};
+    const iso=d=>new Date(Date.now()-d*86400000).toISOString();
+    CU={user:'x',display:'Owner',perms:['owner'],uid:'u0'};
+    PROFILES=[
+      {id:'u1',email:'a@x.com',display:'Aly',perms:['director'],member_id:1,last_seen:iso(1),created_at:iso(300)},
+      {id:'u3',email:'z@x.com',display:'Zara',perms:['tl_a'],member_id:3,last_seen:iso(2),created_at:iso(5)},
+      {id:'u5',email:'s@x.com',display:'Sana',perms:['av_atl'],member_id:null,last_seen:null,created_at:iso(3)},
+      {id:'u6',email:'m@x.com',display:'Maya',perms:[],member_id:null,last_seen:null,created_at:iso(1)}];
+    AL.mem=[]; renderUserList();
+    o.tiles=document.querySelectorAll('#alTiles .al-tile').length; o.rows=document.querySelectorAll('#umList .al-row').length;
+    o.chips=[...document.querySelectorAll('#alChips .al-chip')].map(c=>c.innerText.replace(/\s+/g,'')).join(',');
+    o.names=[...document.querySelectorAll('#umList .um-name')].map(e=>e.innerText).join();
+    document.querySelector('#alChips [data-f="none"]').click(); o.noAccess=document.querySelectorAll('#umList .al-row').length;
+    document.querySelector('#alChips [data-f="all"]').click();
+    const si=document.getElementById('alSearch'); si.value='zara'; si.dispatchEvent(new Event('input')); o.search=document.querySelectorAll('#umList .al-row').length; si.value=''; si.dispatchEvent(new Event('input'));
+    const t0=document.querySelector('#alTiles .al-tile'); t0.click(); o.flipped=t0.classList.contains('flip'); t0.click(); o.unflipped=!t0.classList.contains('flip');
+    o.newAdmins=document.querySelectorAll('#alTiles .al-tile')[3].innerText.replace(/\s+/g,' ').slice(0,40);
+    document.getElementById('umNewBtn').click(); o.drawer=document.getElementById('umInvite').classList.contains('show'); o.preview=document.getElementById('ufPreview').innerText.slice(0,30);
+    return o; });
+  chk(r.tiles===4&&r.rows===4,'logins  four summary tiles and a row per account',JSON.stringify(r));
+  chk(/All4,Leadership1,Teamleads1,AV1,Divisions0,Noaccess1/.test(r.chips),'logins  filter chips carry live counts',r.chips);
+  chk(r.noAccess===1&&r.search===1,'logins  the No access chip and the search narrow the list',r.noAccess+' '+r.search);
+  chk(r.flipped&&r.unflipped,'logins  a tile flips over and back');
+  chk(r.drawer&&/WHAT THEY WILL/i.test(r.preview),'logins  Invite opens the side drawer with an access preview',r.preview);
+  chk(/Aly/.test(r.names),'logins  names still render in .um-name');
+  chk(p.errs.length===0,'logins  no page errors'); await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);

@@ -432,6 +432,95 @@ table.mtab{width:100%;border-collapse:collapse;font-size:13px;}
 .xperm input{accent-color:var(--blue2);cursor:pointer;}
 .xperm:has(input:checked){color:var(--blue-lt);border-color:rgba(75,163,220,.45);background:rgba(0,85,139,.14);}
 .um-form-acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+/* ═══ ADMIN LOGINS: tiles, filters, directory, invite drawer ═══ */
+.al-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:20px;}
+.al-tile{appearance:none;border:0;padding:0;margin:0;background:none;color:inherit;font:inherit;text-align:left;display:block;height:200px;perspective:1100px;cursor:pointer;--alc:var(--dm);}
+.al-tile.t-amber{--alc:var(--gold-lt);}.al-tile.t-blue{--alc:var(--blue-lt);}
+.al-in{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.2,.75,.25,1);}
+.al-tile.flip .al-in{transform:rotateY(180deg);}
+.al-face{position:absolute;inset:0;box-sizing:border-box;padding:18px 20px 14px;display:flex;flex-direction:column;gap:4px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--ds);border:1px solid var(--db);border-top:3px solid var(--alc);}
+.al-back{transform:rotateY(180deg);}
+.al-t{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.al-lab{font-size:12px;font-weight:900;letter-spacing:.14em;color:var(--alc);text-transform:uppercase;}
+.al-t svg{width:16px;height:16px;flex:none;color:var(--dm);}
+.al-nr{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;min-width:0;}
+.al-num{font-size:44px;font-weight:900;letter-spacing:-.03em;line-height:1;color:var(--dt);}
+.al-unit{font-size:14px;font-weight:800;color:var(--alc);}
+.al-sub{font-size:13px;font-weight:600;color:var(--dm);}
+.al-viz{margin-top:auto;display:flex;flex-direction:column;gap:5px;}
+.al-bars{display:flex;align-items:flex-end;gap:3px;height:34px;}
+.al-bars i{display:block;flex:1;background:var(--alc);min-width:2px;}
+.al-bars i.m{background:var(--dm);opacity:.55;}
+.al-cap{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--dm);text-transform:uppercase;}
+.al-toolbar{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:nowrap;}
+.al-toolbar input{flex:1 1 180px;min-width:150px;min-height:46px;padding:0 20px;border-radius:999px;border:1px solid var(--db);background:var(--ds2);color:var(--dt);font:inherit;font-size:14px;font-weight:600;}
+.al-toolbar input:focus{outline:none;border-color:var(--blue-lt);}
+.al-drawer .fg{margin-bottom:14px;}.al-drawer .fg label{display:block;margin-bottom:6px;}
+.al-chips{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.al-chips::-webkit-scrollbar{display:none;}
+.al-chipw{--ol:#fff;flex:none;padding:1.5px;background:var(--ol);display:flex;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 100%,14px 100%);}
+html[data-theme="light"] .al-chipw{--ol:#0B3A5B;}
+.al-chip{min-height:40px;padding:0 24px;border:0;cursor:pointer;font:inherit;font-size:13px;font-weight:800;white-space:nowrap;color:var(--dm);
+  background:linear-gradient(rgba(75,163,220,.16),rgba(75,163,220,.16)),var(--ds);clip-path:polygon(0 0,calc(100% - 14px) 0,100% 100%,14px 100%);}
+.al-chip span{font-weight:700;opacity:.8;margin-left:4px;}
+.al-chip.on{background:var(--blue-lt);color:#04141F;}
+html[data-theme="light"] .al-chip.on{color:#fff;}
+.al-head,.al-row{display:grid;grid-template-columns:minmax(0,2.4fr) minmax(0,2.2fr) minmax(0,1.6fr) 230px;gap:16px;align-items:center;}
+.al-head{padding:10px 14px;border-top:1px solid var(--db);border-bottom:1px solid var(--db);font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--dm);text-transform:uppercase;}
+.al-ha{text-align:right;}
+.al-row{position:relative;padding:12px 14px;border-bottom:1px solid var(--db);}
+.al-row .um-edit{grid-column:1/-1;}
+.al-person{display:flex;align-items:center;gap:14px;min-width:0;}
+.al-av{width:46px;height:46px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;background:var(--iv-acs,rgba(75,163,220,.16));color:var(--blue-lt);}
+.al-pn{min-width:0;}
+.al-name{font-size:15px;font-weight:800;color:var(--dt);}
+.al-you{margin-left:8px;font-size:11px;font-weight:900;color:var(--blue-lt);}
+.al-mail{font-size:12.5px;color:var(--dm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.al-roles{display:flex;gap:6px;flex-wrap:wrap;}
+.al-pill{padding:4px 13px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid transparent;}
+.al-pill.p-top{background:rgba(63,143,191,.16);color:var(--blue-lt);border-color:rgba(63,143,191,.4);}
+.al-pill.p-fac{background:rgba(251,191,36,.14);color:var(--gold-lt);border-color:rgba(251,191,36,.35);}
+.al-pill.p-a{background:rgba(134,228,154,.14);color:#86E49A;border-color:rgba(134,228,154,.35);}
+.al-pill.p-b{background:rgba(238,111,92,.14);color:#F59A8C;border-color:rgba(238,111,92,.35);}
+.al-pill.p-av{background:rgba(142,168,225,.16);color:#B3C5EE;border-color:rgba(142,168,225,.38);}
+.al-pill.p-div{background:rgba(61,220,151,.12);color:#3DDC97;border-color:rgba(61,220,151,.32);}
+.al-pill.p-none{background:transparent;color:var(--dm);border-color:var(--db);}
+html[data-theme="light"] .al-pill.p-a{color:#1B6B3A;}html[data-theme="light"] .al-pill.p-b{color:#A8402F;}
+html[data-theme="light"] .al-pill.p-av{color:#3A559E;}html[data-theme="light"] .al-pill.p-div{color:#12724B;}
+.al-link{font-size:13.5px;font-weight:700;color:var(--dm);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.al-link.warn{color:var(--gold-lt);}
+.al-acts{display:flex;gap:8px;justify-content:flex-end;align-items:center;position:relative;}
+.al-acts .btn{min-height:44px;}
+.al-more{width:44px;height:44px;border-radius:50%;border:1px solid var(--db);background:transparent;color:var(--dt);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.al-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:40;min-width:240px;padding:8px;background:var(--ds);border:1px solid var(--db);box-shadow:0 24px 50px -24px rgba(0,0,0,.6);display:none;flex-direction:column;gap:2px;}
+.al-menu.open{display:flex;}
+.al-menu button{min-height:44px;padding:0 14px;border:0;background:transparent;color:var(--dt);font:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer;}
+.al-menu button:hover{background:var(--iv-acs,rgba(75,163,220,.14));}
+.al-menu .warn{color:var(--gold-lt);}.al-menu .bad{color:#F87171;}
+.al-drawer{position:fixed!important;top:0;right:0;bottom:0;margin:0!important;width:min(520px,100vw);box-sizing:border-box;z-index:5000;border-radius:0!important;overflow:auto;display:block!important;visibility:hidden;transform:translateX(105%);transition:transform .3s,visibility 0s .3s;animation:none!important;padding:26px 26px 24px;}
+.al-drawer.show{visibility:visible;transform:none;transition:transform .3s;box-shadow:0 0 0 100vmax rgba(2,8,16,.62);}
+.al-dr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.al-dr-k{font-size:11px;font-weight:900;letter-spacing:.16em;color:var(--blue-lt);text-transform:uppercase;}
+.al-dr-top h4{margin:2px 0 0;font-size:24px;letter-spacing:-.02em;text-transform:none;color:var(--dt);}
+.al-x{width:44px;height:44px;border-radius:50%;border:1px solid var(--db);background:transparent;color:var(--dt);font-size:22px;cursor:pointer;}
+.al-prev{margin:6px 0 12px;padding:14px 16px;border:1px solid var(--db);background:var(--dp,rgba(0,0,0,.2));}
+.al-prev h5{margin:0 0 10px;font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--dm);text-transform:uppercase;}
+.al-prev ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;}
+.al-prev li{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:var(--dt);}
+.al-prev li.no{color:var(--dm);opacity:.65;}
+.al-prev li b{width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;background:rgba(134,228,154,.18);color:#4ADE80;}
+.al-prev li.no b{background:rgba(255,255,255,.06);color:var(--dm);}
+@media(max-width:1000px){.al-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}.al-tile{height:226px;}.al-num{font-size:32px;}.al-lab{font-size:10px;letter-spacing:.08em;}.al-face{padding:14px 14px 12px;}}
+@media(max-width:820px){
+  .al-head{display:none;}
+  .al-row{grid-template-columns:1fr;gap:10px;margin-bottom:10px;padding:16px;border:1px solid var(--db);background:var(--ds);}
+  .al-acts{justify-content:stretch;}.al-acts .btn{flex:1;}
+  .al-toolbar{flex-direction:column;align-items:stretch;}
+  .al-toolbar input{flex:none;width:100%;}
+  .al-chips{margin:0 -4px;}
+}
+@media(prefers-reduced-motion:reduce){.al-in,.al-drawer{transition:none;}}
+
 
 /* ─── ADMIN PANEL ─── */
 .ap-note{font-size:12px;color:var(--dm);line-height:1.65;margin-bottom:14px;}
@@ -670,8 +759,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021i">
-<script src="ivtheme.js?v=20261021i"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021j">
+<script src="ivtheme.js?v=20261021j"></script>
 </head>
 <body>
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
@@ -1055,30 +1144,38 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <div class="page" id="page-logins">
       <div class="ph">
         <div><h1>Admin Logins</h1><p>Everybody above volunteer, plus new accounts waiting for access. Volunteers are in Volunteer Logins.</p></div>
-        <div class="ha"><button class="btn btn-bl" id="umNewBtn">+ Invite User</button></div>
+        <div class="ha"><button class="btn btn-bl al-invite" id="umNewBtn">+ Invite User</button></div>
       </div>
+      <div class="al-tiles" id="alTiles" aria-label="Account summary"></div>
       <section class="panel">
         <div class="um-sub">Accounts live in <b>Supabase Auth</b> — passwords are never stored here and cannot be read by anyone.
         Grant access by adding a team role below, and link an account to its person in Data Management so duties and logins line up.</div>
         <div class="um-warn" id="umWarn"></div>
-        <div id="umInvite" class="um-form">
-          <h4>Invite a user</h4>
-          <div class="um-sub" style="margin:0 0 10px;">Supabase emails them a link to set their own password — you never see or choose it.
-          Pick their access below and it is waiting the moment they finish setting up; you can change it later in the list.</div>
-          <div class="um-grid">
-            <div class="fg"><label>Email address</label><input id="ufInviteEmail" type="email" placeholder="firstname.lastname@example.com" autocomplete="off"></div>
-            <div class="fg"><label>Display name (optional)</label><input id="ufInviteName" placeholder="e.g. Ahad Lokhandwala" autocomplete="off"></div>
-            <div class="fg"><label>Access to grant</label><div id="ufInviteRoleBox"></div></div>
-          </div>
-          <div id="ufInviteMsg" class="um-sub" style="margin:0 0 8px;"></div>
-          <div class="um-form-acts">
-            <button class="btn btn-bl" id="ufInviteSend">Send invite</button>
-            <button class="btn btn-ol" id="ufInviteCopy">Copy email</button>
-            <button class="btn btn-ol" id="ufCancelBtn">Close</button>
-          </div>
+        <div class="al-toolbar">
+          <input type="search" id="alSearch" placeholder="Search name, email or role" autocomplete="off" aria-label="Search accounts">
+          <div class="al-chips" id="alChips" role="group" aria-label="Filter accounts"></div>
         </div>
+        <div class="al-head"><div>Person</div><div>Role</div><div>Linked person</div><div class="al-ha">Actions</div></div>
         <div id="umList"></div>
       </section>
+    </div>
+
+    <!-- Invite drawer: same fields and handlers as before, shown beside the list -->
+    <div id="umInvite" class="um-form al-drawer" role="dialog" aria-modal="true" aria-labelledby="umInvTitle">
+      <div class="al-dr-top"><div><div class="al-dr-k">New account</div><h4 id="umInvTitle">Invite a user</h4></div>
+        <button type="button" class="al-x" id="ufCloseX" aria-label="Close">&times;</button></div>
+      <div class="um-sub">Supabase emails them a link to set their own password — you never see or choose it.
+      The access you pick is waiting the moment they finish setting up, and you can change it later in the list.</div>
+      <div class="fg"><label>Email address</label><input id="ufInviteEmail" type="email" placeholder="firstname.lastname@example.com" autocomplete="off"></div>
+      <div class="fg"><label>Display name (optional)</label><input id="ufInviteName" placeholder="e.g. Ahad Lokhandwala" autocomplete="off"></div>
+      <div class="fg"><label>Access to grant</label><div id="ufInviteRoleBox"></div></div>
+      <div class="al-prev" id="ufPreview"></div>
+      <div id="ufInviteMsg" class="um-sub" style="margin:0 0 8px;"></div>
+      <div class="um-form-acts">
+        <button class="btn btn-bl" id="ufInviteSend">Send invite</button>
+        <button class="btn btn-ol" id="ufInviteCopy">Copy email</button>
+        <button class="btn btn-ol" id="ufCancelBtn">Close</button>
+      </div>
     </div>
 
     <!-- ═══ PAGE: DUTY STATS ═══ -->
@@ -4011,26 +4108,162 @@ async function vlSave(id){
    (so a new invite can be given one). Volunteers are in Volunteer Logins. */
 const isAdminAccount = p=>{ const pm = permsOf(p); return !pm.length || rankOf(pm) < 10; };
 function renderUserList(){
-  const ALL_PROFILES = PROFILES; PROFILES = PROFILES.filter(isAdminAccount);
+  const ALL_PROFILES = PROFILES; PROFILES = PROFILES.filter(isAdminAccount); AL.all = ALL_PROFILES;
   try{ renderAdminRows(); } finally { PROFILES = ALL_PROFILES; }
 }
+/* ═══ ADMIN LOGINS: summary tiles, filters and rows ═══
+   Everything below reads the same profiles the page always read; it only
+   changes how they are laid out. The tiles are computed from those profiles
+   (and the member directory for "not linked"), never typed in. */
+const AL = {filter:'all', q:'', flip:[false,false,false,false], mem:null, memLoading:false};
+const AL_DIV = /^(pt|td|ss|an|ab|sk|mt|ck|cl)_/;
+const AL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 2v5h-5M6 22v-5h5"/></svg>';
+function alPill(pm){
+  const rk = PERM_RANK[pm]==null ? 99 : PERM_RANK[pm];
+  if(pm === 'facilitator') return 'p-fac';
+  if(rk <= 4 || pm === 'iv_admin') return 'p-top';
+  if(/^(tl|ytl|team)_a$/.test(pm)) return 'p-a';
+  if(/^(tl|ytl|team)_b$/.test(pm)) return 'p-b';
+  if(/^av/.test(pm)) return 'p-av';
+  return 'p-div';
+}
+function alCats(r){
+  const pm = permsOf(r); if(!pm.length) return ['none'];
+  const c = [];
+  if(rankOf(pm) <= 5) c.push('lead');
+  if(pm.some(x=>/^(tl|ytl)_[ab]$/.test(x))) c.push('tl');
+  if(pm.some(x=>/^av/.test(x))) c.push('av');
+  if(pm.some(x=>AL_DIV.test(x))) c.push('div');
+  return c;
+}
+const AL_FILTERS = [['all','All'],['lead','Leadership'],['tl','Team leads'],['av','AV'],['div','Divisions'],['none','No access']];
+function alInitials(r){
+  const n = String(r.display || r.username || r.email || '?').trim().split(/[\s.@_-]+/).filter(Boolean);
+  return ((n[0]||'?')[0] + (n.length > 1 ? n[1][0] : '')).toUpperCase();
+}
+function alBarsByDay(dates, n, size){          // n buckets of `size` days, oldest first
+  const out = Array(n).fill(0), now = Date.now();
+  dates.forEach(d=>{ if(!d) return; const t = new Date(d).getTime(); if(isNaN(t)) return;
+    const k = Math.floor((now - t) / (86400000 * size)); if(k >= 0 && k < n) out[n-1-k]++; });
+  return out;
+}
+const alViz = (arr, cls)=>{ const m = Math.max(1, ...arr); return arr.map(v=>({h:Math.max(3, Math.round(v/m*34)), m:cls})); };
+const alSeg = arr=>arr.map((v,i)=>({fg:v, h:14, m:i ? 'm' : ''}));
+function alTilesData(admins){
+  const all = ALL_PROFILES_FOR_TILES(), now = Date.now(), DAY = 86400000;
+  const seen = d=>d ? now - new Date(d).getTime() : Infinity;
+  const week = admins.filter(r=>seen(r.last_seen) <= 7*DAY).length, month = admins.filter(r=>seen(r.last_seen) <= 30*DAY).length;
+  const nw = admins.filter(r=>r.created_at && now - new Date(r.created_at).getTime() <= 7*DAY).length;
+  const nm = admins.filter(r=>r.created_at && now - new Date(r.created_at).getTime() <= 30*DAY).length;
+  const byRank = Array(7).fill(0); admins.forEach(r=>{ const rk = rankOf(permsOf(r)); byRank[Math.min(6, Math.max(0, rk>=99 ? 6 : Math.floor(rk*0.7)))]++; });
+  const linked = all.filter(r=>r.member_id != null).length;
+  const adminsUnlinked = admins.filter(r=>r.member_id == null).length;
+  let volUnlinked = null;
+  if(AL.mem){ const ids = new Set(all.filter(r=>r.member_id != null).map(r=>String(r.member_id)));
+    volUnlinked = AL.mem.filter(m=>memberRank(m) === 'Member' && (m.status||'active') === 'active' && !ids.has(String(m.id))).length; }
+  const nl = volUnlinked == null ? adminsUnlinked : volUnlinked + adminsUnlinked;
+  const nlSub = volUnlinked == null ? 'admins without a linked person' : volUnlinked+' volunteers · '+adminsUnlinked+' admins';
+  return [
+    {cls:'', front:{label:'Role hierarchy', n:ROLE_DEFS.length, unit:'roles', sub:'in total', cap:'Accounts per rank, top to bottom', viz:alViz(byRank,'')},
+              back:{label:'Divisions', n:DIVISIONS.length, unit:'divisions', sub:'in IV Hub', cap:'Plus Team A, Team B and AV', viz:alViz([1,1,1,1],'')}},
+    {cls:'t-blue', front:{label:'Usage', n:week, unit:'active', sub:'admins signed in this week', cap:'Last 7 days', viz:alViz(alBarsByDay(admins.map(r=>r.last_seen),7,1),'')},
+              back:{label:'Usage', n:month, unit:'active', sub:'admins signed in this month', cap:'Last 30 days', viz:alViz(alBarsByDay(admins.map(r=>r.last_seen),30,1),'')}},
+    {cls:'', front:{label:'Linked', n:linked, unit:'people', sub:'with linked accounts', cap:'Linked · not linked', viz:alSeg([Math.max(linked,0.0001), Math.max(nl,0.0001)])},
+              back:{label:'Not linked', n:nl, unit:'people', sub:'have no linked account', cap:nlSub, viz:alSeg([Math.max(volUnlinked||0,0.0001), Math.max(adminsUnlinked,0.0001)])}},
+    {cls:'t-amber', front:{label:'New admins added', n:nw, unit:'admins', sub:'new this week', cap:'Last 7 days', viz:alViz(alBarsByDay(admins.map(r=>r.created_at),7,1),'')},
+              back:{label:'New admins added', n:nm, unit:'admins', sub:'new this month', cap:'Last 4 weeks', viz:alViz(alBarsByDay(admins.map(r=>r.created_at),4,7),'')}}
+  ];
+}
+function ALL_PROFILES_FOR_TILES(){ return AL.all || PROFILES; }
+function alFace(f, back){
+  return '<div class="al-face'+(back?' al-back':'')+'"><div class="al-t"><span class="al-lab">'+esc(f.label)+'</span>'+AL_ICON+'</div>'+
+    '<div class="al-nr"><span class="al-num">'+esc(String(f.n))+'</span><span class="al-unit">'+esc(f.unit)+'</span></div>'+
+    '<div class="al-sub">'+esc(f.sub)+'</div>'+
+    '<div class="al-viz"><div class="al-bars">'+f.viz.map(v=>'<i'+(v.m?' class="'+v.m+'"':'')+' style="'+(v.fg!=null?'flex:'+v.fg+';':'')+'height:'+v.h+'px"></i>').join('')+'</div><div class="al-cap">'+esc(f.cap)+'</div></div></div>';
+}
+function alRenderTiles(admins){
+  const el = $('alTiles'); if(!el) return;
+  el.innerHTML = alTilesData(admins).map((t,i)=>
+    '<button type="button" class="al-tile '+t.cls+(AL.flip[i]?' flip':'')+'" data-i="'+i+'" aria-label="'+esc(t.front.label+': '+t.front.n+' '+t.front.unit+' '+t.front.sub+'. Tap to flip.')+'"><div class="al-in">'+alFace(t.front,false)+alFace(t.back,true)+'</div></button>').join('');
+}
+async function alLoadMembers(){
+  if(AL.mem || AL.memLoading || !sb) return;
+  if(Array.isArray(mRows) && mRows.length){ AL.mem = mRows; alRenderTiles(AL.admins || []); return; }
+  AL.memLoading = true;
+  try{ const m = await sb.from('iv_members').select('id,name,rank,status,team,spec'); if(!m.error) AL.mem = m.data || []; }catch(e){}
+  AL.memLoading = false;
+  if(AL.mem && pageActive('logins')) renderUserList();
+}
 function renderAdminRows(){
-  if(!PROFILES.length){
-    $('umList').innerHTML = '<div class="md-empty"><div class="big">👤</div>No admin accounts to show — invite someone, or see Volunteer Logins for volunteers.</div>';
+  const admins = PROFILES;                     // already narrowed to admin accounts by renderUserList
+  AL.admins = admins;
+  alRenderTiles(admins);
+  $('alChips').innerHTML = AL_FILTERS.map(f=>{
+    const n = f[0] === 'all' ? admins.length : admins.filter(r=>alCats(r).indexOf(f[0]) >= 0).length;
+    return '<div class="al-chipw"><button type="button" class="al-chip'+(AL.filter === f[0] ? ' on' : '')+'" data-f="'+f[0]+'">'+esc(f[1])+'<span>'+n+'</span></button></div>';
+  }).join('');
+  alRenderList();
+  alLoadMembers();
+}
+function alRenderList(){
+  const q = (AL.q || '').trim().toLowerCase();
+  const rows = (AL.admins || []).filter(r=>{
+    if(AL.filter !== 'all' && alCats(r).indexOf(AL.filter) < 0) return false;
+    if(!q) return true;
+    const roles = permsOf(r).map(p=>ROLE_LABELS[p]||p).join(' ');
+    return (String(r.display||'')+' '+String(r.email||'')+' '+String(r.username||'')+' '+roles).toLowerCase().includes(q);
+  });
+  if(!rows.length){
+    $('umList').innerHTML = '<div class="md-empty"><div class="big">👤</div>'+((AL.admins||[]).length ? 'No accounts match.' : 'No admin accounts to show — invite someone, or see Volunteer Logins for volunteers.')+'</div>';
     return;
   }
-  $('umList').innerHTML = PROFILES.map(r=>{
+  $('umList').innerHTML = rows.map(r=>{
     const perms = permsOf(r);
     const linked = (mRows||[]).find(m=>String(m.id)===String(r.member_id));
-    const chips = perms.length ? perms.map(p=>'<span class="pchip">'+esc(ROLE_LABELS[p]||p)+'</span>').join('')
-                               : '<span class="pchip" style="opacity:.6">no access</span>';
-    return '<div class="um-row" data-id="'+esc(r.id)+'">'+
-      '<div class="um-row-main"><div class="um-name">'+esc(r.display||r.username||r.email||'—')+'</div>'+
-      '<div class="um-meta">'+esc(r.email||'')+(linked?(' · linked to <b>'+esc(linked.name)+'</b>'+(linked.team?(' (Team '+esc(linked.team)+')'):'')):' · <i>not linked</i>')+'</div>'+
-      '<div class="um-chips">'+chips+'</div></div>'+
-      '<div class="um-row-acts">'+(canManageProfile(perms)?'<button class="btn btn-ol btn-sm" onclick="editProfile(\''+esc(r.id)+'\')">Manage</button>':'<span class="pchip" title="This account outranks you">outranks you</span>')+'</div>'+
-      '<div class="um-edit" id="ue-'+esc(r.id)+'" style="display:none;"></div></div>';
+    const self = CU && CU.uid === r.id, can = canManageProfile(perms);
+    const pills = perms.length ? perms.map(p=>'<span class="al-pill '+alPill(p)+'">'+esc(ROLE_LABELS[p]||p)+'</span>').join('') : '<span class="al-pill p-none">no access</span>';
+    const link = linked ? 'Linked · '+esc(linked.name)+(linked.team?' ('+(/^[AB]$/.test(linked.team)?'Team '+esc(linked.team):esc(linked.team))+')':'') : (r.member_id ? 'Linked' : 'Not linked to a person');
+    const id = esc(r.id);
+    const menu = (can && !self) ? '<div class="al-menu" id="alm-'+id+'" role="menu">'+
+        '<button type="button" role="menuitem" onclick="alMenuClose();sendResetTo(\''+id+'\')">'+(r.last_seen ? 'Send password reset' : 'Resend invite')+'</button>'+
+        (perms.length ? '<button type="button" role="menuitem" class="warn" onclick="alMenuClose();revokeAccess(\''+id+'\')">Revoke access</button>' : '')+
+        '<button type="button" role="menuitem" class="bad" onclick="alMenuClose();deleteAccount(\''+id+'\')">Remove from Hub</button></div>' : '';
+    return '<div class="al-row" data-id="'+id+'">'+
+      '<div class="al-person"><div class="al-av" aria-hidden="true">'+esc(alInitials(r))+'</div><div class="al-pn"><div><span class="um-name al-name">'+esc(r.display||r.username||r.email||'—')+'</span>'+(self?'<span class="al-you">You</span>':'')+'</div>'+
+        '<div class="al-mail">'+esc(r.email||'')+'</div></div></div>'+
+      '<div class="al-roles">'+pills+'</div>'+
+      '<div class="al-link'+(linked||r.member_id?'':' warn')+'">'+link+'</div>'+
+      '<div class="al-acts">'+(can ? '<button type="button" class="btn btn-ol" onclick="alMenuClose();editProfile(\''+id+'\')">'+(self?'Manage':'Change role')+'</button>' : '<span class="pchip" title="This account outranks you">outranks you</span>')+
+        (menu ? '<button type="button" class="al-more" aria-label="More actions" aria-haspopup="menu" onclick="alMenu(\''+id+'\',event)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>'+menu : '')+'</div>'+
+      '<div class="um-edit" id="ue-'+id+'" style="display:none;"></div></div>';
   }).join('');
+}
+function alMenuClose(){ document.querySelectorAll('.al-menu.open').forEach(m=>m.classList.remove('open')); }
+function alMenu(id, ev){
+  if(ev) ev.stopPropagation();
+  const m = document.getElementById('alm-'+id); if(!m) return;
+  const was = m.classList.contains('open'); alMenuClose(); if(!was) m.classList.add('open');
+}
+/* What a chosen role would be able to open, worked out with the Hub's own
+   page guards by trying them as that role. Preview only: the server still
+   decides on sign-in. */
+function alPreview(){
+  const box = $('ufPreview'); if(!box) return;
+  const roleId = rpValue('ufInviteRole');
+  if(!roleId){ box.innerHTML = '<h5>What they will be able to open</h5><div class="um-sub" style="margin:0">Pick an access level to preview it.</div>'; return; }
+  const saved = CU.perms;
+  let rows = [];
+  try{
+    CU.perms = [roleId];
+    rows = [['Hub home and My Duties', true],
+      ['Team A', hasPerm(...IV_TOP,'facilitator','tl_a','ytl_a','team_a')],
+      ['Team B', hasPerm(...IV_TOP,'facilitator','tl_b','ytl_b','team_b')],
+      ['AV Team', hasPerm(...IV_TOP,'av_admin','av_atl','av_yatl','av_coord','av_team')],
+      ['Data Management', !!PAGES.members()], ['Admin Logins', !!PAGES.logins()],
+      ['Duty Stats', !!PAGES.stats()], ['Audit Logs', !!PAGES.audit()]];
+  }finally{ CU.perms = saved; }
+  box.innerHTML = '<h5>What they will be able to open · '+esc(ROLE_LABELS[roleId]||roleId)+'</h5><ul>'+
+    rows.map(x=>'<li class="'+(x[1]?'':'no')+'"><b aria-hidden="true">'+(x[1]?'✓':'–')+'</b>'+esc(x[0])+'</li>').join('')+'</ul>';
 }
 function editProfile(id){
   const box = document.getElementById('ue-'+id); if(!box) return;
@@ -4959,8 +5192,16 @@ function bindUI(){
   /* login management */
   $('spwBtn').addEventListener('click', doSetPassword);
   ['spw1','spw2'].forEach(id=>$(id).addEventListener('keydown', e=>{ if(e.key==='Enter') doSetPassword(); }));
-  $('umNewBtn').addEventListener('click', ()=>{ const b=$('umInvite'); b.classList.toggle('show'); fillInviteRoles(); });
+  $('umNewBtn').addEventListener('click', ()=>{ const b=$('umInvite'); b.classList.toggle('show'); fillInviteRoles(); alPreview(); if(b.classList.contains('show')) $('ufInviteEmail').focus(); });
   $('ufCancelBtn').addEventListener('click', ()=>$('umInvite').classList.remove('show'));
+  $('ufCloseX').addEventListener('click', ()=>$('umInvite').classList.remove('show'));
+  $('ufInviteRoleBox').addEventListener('change', alPreview);
+  $('alSearch').addEventListener('input', e=>{ AL.q = e.target.value; alRenderList(); });
+  $('alChips').addEventListener('click', e=>{ const b = e.target.closest('.al-chip'); if(!b) return; AL.filter = b.dataset.f;
+    document.querySelectorAll('#alChips .al-chip').forEach(c=>c.classList.toggle('on', c === b)); alRenderList(); });
+  $('alTiles').addEventListener('click', e=>{ const b = e.target.closest('.al-tile'); if(!b) return; const i = +b.dataset.i; AL.flip[i] = !AL.flip[i]; b.classList.toggle('flip', AL.flip[i]); });
+  document.addEventListener('click', e=>{ if(!e.target.closest('.al-acts')) alMenuClose(); });
+  document.addEventListener('keydown', e=>{ if(e.key === 'Escape'){ alMenuClose(); const d = $('umInvite'); if(d && d.classList.contains('show')) d.classList.remove('show'); } });
   $('ufInviteSend').addEventListener('click', sendInvite);
   $('ufInviteCopy').addEventListener('click', async ()=>{
     const v = ($('ufInviteEmail').value||'').trim();
