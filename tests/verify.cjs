@@ -507,6 +507,24 @@ for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.htm
   chk(r.sent&&r.sent.date===r.date&&r.sent.event_id===1,'save    the roster is saved with its event date',r.sent?String(r.sent.date):'nothing sent');
   await p.context().close(); }
 
+// ── My Duties: save as image ──
+{ const p=await open('index.html',{width:1200,height:850});
+  const r=await p.evaluate(async()=>{ const o={};
+    const E=(d,duty,team)=>({date:d,duty,event:'Friday Majlis',team,uniform:'Casual',person:'Test Person',source:team});
+    window.fetchDutyData=async()=>({warns:[],entries:[E('2026-10-24','Sound','AV'),E('2026-10-31','Door','A'),E('2026-11-07','Tea','B')]});
+    document.getElementById('mdName').value='Test Person'; await runDutySearch();
+    o.btn=!!document.getElementById('mdShotBtn'); o.months=document.querySelectorAll('.md-month').length; o.edges=document.querySelectorAll('.dcard.t-av,.dcard.t-a,.dcard.t-b').length;
+    const rows=mdShotData&&mdShotData.rows;
+    for(const f of ['phone','laptop']){ const cv=await mdDrawCard('Test Person',rows,f); o[f]=cv.width+'x'+cv.height; const blob=await new Promise(r=>cv.toBlob(r,'image/png')); o[f+'Png']=!!blob&&blob.size>5000; }
+    document.getElementById('mdName').value='Zzzz Nobody'; await runDutySearch(); o.clearedBtn=!document.getElementById('mdShotBtn')&&mdShotData===null;
+    return o; });
+  chk(r.btn,'duties  a single person gets a Save as image button',JSON.stringify(r));
+  chk(r.months===2&&r.edges===3,'duties  results are grouped by month with team colour edges',JSON.stringify(r));
+  chk(/^1080x/.test(r.phone)&&/^1600x/.test(r.laptop),'duties  phone card is 1080 wide, laptop card 1600 wide',r.phone+' '+r.laptop);
+  chk(r.phonePng&&r.laptopPng,'duties  both cards export as real PNG images');
+  chk(r.clearedBtn,'duties  no button when nothing is found');
+  chk(p.errs.length===0,'duties  no page errors'); await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);

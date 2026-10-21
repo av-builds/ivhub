@@ -215,6 +215,39 @@ html{scroll-behavior:smooth;}
 .chip-uni{font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(122,174,203,.1);color:var(--dm);border:1px solid var(--db);white-space:nowrap;}
 .md-empty{text-align:center;padding:30px 16px;color:var(--dm);font-size:14px;line-height:1.7;}
 .md-empty .big{font-size:30px;margin-bottom:8px;}
+/* My Duties: month grouping, team colour edge, hero and the save-as-image sheet */
+.dcard{border-left:4px solid var(--tc,var(--db));}
+.dcard.t-a{--tc:#86E49A;}.dcard.t-b{--tc:#EE6F5C;}.dcard.t-av{--tc:#8EA8E1;}
+html[data-theme="light"] .dcard.t-a{--tc:#24914F;}html[data-theme="light"] .dcard.t-b{--tc:#D4533F;}html[data-theme="light"] .dcard.t-av{--tc:#4A68B5;}
+.md-month{display:flex;align-items:center;gap:12px;margin:22px 0 10px;font-size:12px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);}
+.md-month::after{content:'';flex:1;height:1px;background:var(--db);}
+.md-month:first-child{margin-top:4px;}
+.md-hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 20px;margin-bottom:6px;border-radius:24px;border:1px solid var(--db);background:linear-gradient(135deg,var(--iv-acs,rgba(75,163,220,.12)),transparent 70%);}
+.md-av{width:56px;height:56px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:var(--iv-oa,#fff);background:var(--iv-ac,#00558B);box-shadow:0 0 0 3px var(--iv-sec,#3F8FBF);}
+.md-hero-t{flex:1;min-width:160px;}
+.md-hero-n{font-size:22px;font-weight:900;letter-spacing:-.02em;color:var(--dt);}
+.md-hero-s{font-size:13px;color:var(--dm);margin-top:2px;font-weight:700;}
+.md-shot{min-height:44px;display:inline-flex;align-items:center;gap:8px;}
+.md-shot svg{width:18px;height:18px;flex:none;}
+.mds-ov{position:fixed;inset:0;z-index:5000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(2,11,24,.74);backdrop-filter:blur(6px);}
+.mds-ov.open{display:flex;}
+.mds-box{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--ds);color:var(--dt);border:1px solid var(--db);border-radius:26px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 40px 90px -30px rgba(0,0,0,.7);}
+.mds-box.wide{width:min(980px,100%);}
+.mds-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.mds-top h3{margin:0;font-size:18px;font-weight:900;}
+.mds-x{min-width:44px;min-height:44px;border-radius:50%;border:1px solid var(--db);background:transparent;color:var(--dt);font-size:20px;cursor:pointer;}
+.mds-seg{display:inline-flex;padding:4px;border-radius:999px;background:var(--ds2);border:1px solid var(--db);align-self:flex-start;}
+.mds-seg button{min-height:40px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:var(--dm);font:inherit;font-size:13px;font-weight:800;cursor:pointer;}
+.mds-seg button.on{background:var(--iv-ac,#00558B);color:var(--iv-oa,#fff);}
+.mds-prev{display:flex;justify-content:center;align-items:center;min-height:200px;border-radius:18px;background:var(--ds2);padding:10px;}
+.mds-prev img{max-width:100%;max-height:62vh;border-radius:12px;box-shadow:0 18px 40px -18px rgba(0,0,0,.6);}
+.mds-prev .mds-load{color:var(--dm);font-size:14px;font-weight:700;}
+.mds-act{display:flex;gap:10px;flex-wrap:wrap;}
+.mds-act .btn{min-height:46px;flex:1 1 150px;justify-content:center;}
+.mds-act .btn-ghost{background:transparent;border:1.5px solid var(--iv-sec,#3F8FBF);color:var(--iv-sec,#3F8FBF);}
+.mds-hint{font-size:12px;color:var(--dm);line-height:1.5;}
+@media(max-width:520px){.dcard{flex-wrap:wrap;row-gap:10px;}.dcard-main{flex:1 1 0;min-width:140px;}.dcard-badges{flex-direction:row;flex-wrap:wrap;width:100%;justify-content:flex-start;}}
+
 .skel{height:64px;border-radius:12px;border:1px solid var(--db);margin-bottom:9px;
   background:linear-gradient(90deg,var(--ds2) 25%,rgba(0,85,139,.14) 50%,var(--ds2) 75%);background-size:200% 100%;animation:shimmer 1.2s linear infinite;}
 .empty-note{background:var(--ds);border:1px dashed var(--db);border-radius:14px;padding:26px;text-align:center;color:var(--dm);font-size:14px;line-height:1.7;margin-bottom:22px;}
@@ -633,8 +666,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021f">
-<script src="ivtheme.js?v=20261021f"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021g">
+<script src="ivtheme.js?v=20261021g"></script>
 </head>
 <body>
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
@@ -944,6 +977,23 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         </div>
       </section>
     </div>
+
+
+  <div class="mds-ov" id="mdShot" role="dialog" aria-modal="true" aria-labelledby="mdShotTitle">
+    <div class="mds-box" id="mdShotBox">
+      <div class="mds-top"><h3 id="mdShotTitle">Save my duties</h3><button type="button" class="mds-x" id="mdShotX" aria-label="Close">&times;</button></div>
+      <div class="mds-seg" role="group" aria-label="Image shape">
+        <button type="button" data-fmt="phone" class="on">Phone &middot; WhatsApp</button>
+        <button type="button" data-fmt="laptop">Laptop</button>
+      </div>
+      <div class="mds-prev" id="mdShotPrev"><span class="mds-load">Making your card&hellip;</span></div>
+      <div class="mds-act">
+        <button type="button" class="btn btn-bl" id="mdShotSave">Save image</button>
+        <button type="button" class="btn btn-ghost" id="mdShotShare" style="display:none;">Share to WhatsApp&hellip;</button>
+      </div>
+      <div class="mds-hint">On a phone, tap Share and choose WhatsApp or Photos. If Save does nothing, press and hold the picture.</div>
+    </div>
+  </div>
 
     <!-- ═══ PAGE: USER MANAGEMENT (people directory — iv_members, NOT logins) ═══ -->
     <div class="page" id="page-members">
@@ -2580,7 +2630,7 @@ function dutyCardHTML(e, overlap, idx){
   const badgeTxt = e.team === 'AV' ? 'AV' : 'Team ' + esc(e.team);
   const uni = e.uniform ? `<span class="chip-uni">${esc(e.uniform)} Uniform</span>` : '';
   const warn = overlap ? `<span class="chip-warn">⚠ Same-day overlap</span>` : '';
-  return `<div class="dcard${overlap ? ' overlap' : ''}" style="animation-delay:${Math.min(idx*0.04, 0.4)}s;">
+  return `<div class="dcard t-${e.team === 'AV' ? 'av' : e.team === 'B' ? 'b' : 'a'}${overlap ? ' overlap' : ''}" style="animation-delay:${Math.min(idx*0.04, 0.4)}s;">
     <div class="dcard-date tnum"><div class="dw">${esc(fmtDW(e.date))}</div><div class="dd">${esc(fmtDM(e.date))}</div></div>
     <div class="dcard-main">
       <div class="dcard-duty">${esc(e.duty)}</div>
@@ -2725,6 +2775,7 @@ async function runDutySearch(){
   const q = ($('mdName').value || '').trim();
   localStorage.setItem('ivhub_myname', $('mdName').value || '');
   const res = $('mdResults'), sum = $('mdSummary'), warnsEl = $('mdWarns');
+  mdShotData = null;
   sum.style.display = 'none';
   warnsEl.style.display = 'none';
   if(!q){
@@ -2755,7 +2806,19 @@ async function runDutySearch(){
     const srcByDate = {};
     list.forEach(e=>{ (srcByDate[e.date] = srcByDate[e.date] || new Set()).add(e.source); });
     if(names.length > 1) html += `<div class="md-person">${esc(nm)} <small>· ${list.length} dut${list.length===1?'y':'ies'}</small></div>`;
-    list.forEach((e, i)=>{ html += dutyCardHTML(e, srcByDate[e.date].size > 1, i); });
+    else{
+      const nx = list[0];
+      html += `<div class="md-hero"><div class="md-av" aria-hidden="true">${esc(mdInitials(nm))}</div>
+        <div class="md-hero-t"><div class="md-hero-n">${esc(nm)}</div><div class="md-hero-s">Next: ${esc(fmtDW(nx.date))} ${esc(fmtDM(nx.date))} · ${esc(nx.duty)}</div></div>
+        <button type="button" class="btn btn-bl md-shot" id="mdShotBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>Save as image</button></div>`;
+      mdShotData = {name:nm, rows:list.slice()};
+    }
+    let lastMonth = '';
+    list.forEach((e, i)=>{
+      const mo = new Date(e.date+'T12:00:00').toLocaleDateString('en-NZ',{month:'long',year:'numeric'});
+      if(mo !== lastMonth){ html += `<div class="md-month">${esc(mo)}</div>`; lastMonth = mo; }
+      html += dutyCardHTML(e, srcByDate[e.date].size > 1, i);
+    });
   });
   res.innerHTML = html;
   sum.style.display = 'block';
@@ -2763,6 +2826,156 @@ async function runDutySearch(){
   sum.innerHTML = `<b class="tnum" id="mdCount">0</b> upcoming dut${mine.length===1?'y':'ies'}${who} in the next 90 days`;
   countUp($('mdCount'), mine.length);
 }
+
+/* ═══ MY DUTIES: SAVE AS IMAGE ═══
+   Draws the card straight onto a canvas rather than photographing the page,
+   so it needs no extra library, works offline and comes out the same on every
+   device. "phone" is a tall 1080px card for WhatsApp and status; "laptop" is a
+   wide 1600px card in two columns. */
+let mdShotData = null, mdShotFmt = 'phone', mdShotBlob = null, mdShotSeq = 0;
+function mdInitials(n){ const p = String(n||'').trim().split(/\s+/).filter(Boolean); return ((p[0]||'')[0]||'') + ((p.length>1 ? p[p.length-1] : '')[0]||''); }
+const MD_TEAM = {A:{c:'#86E49A',t:'Team A'}, B:{c:'#EE6F5C',t:'Team B'}, AV:{c:'#8EA8E1',t:'AV Team'}};
+function mdRR(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function mdFit(c,txt,maxW){ txt = String(txt||''); if(c.measureText(txt).width <= maxW) return txt; while(txt.length>1 && c.measureText(txt+'…').width > maxW) txt = txt.slice(0,-1); return txt.trim()+'…'; }
+function mdLoadImg(src){ return new Promise(r=>{ const i = new Image(); i.onload = ()=>r(i); i.onerror = ()=>r(null); i.src = src; }); }
+async function mdDrawCard(name, rows, fmt){
+  const FONT = 'Archivo, system-ui, -apple-system, "Segoe UI", sans-serif';
+  try{ if(document.fonts && document.fonts.load) await Promise.race([Promise.all([400,700,900].map(w=>document.fonts.load(w+' 30px Archivo'))), new Promise(r=>setTimeout(r,2500))]); }catch(e){}
+  const logo = await mdLoadImg(window.IV_LOGO || 'logo.png');
+  const laptop = fmt === 'laptop';
+  const W = laptop ? 1600 : 1080, PAD = laptop ? 72 : 64, cols = laptop ? 2 : 1, GAP = 18;
+  const MAX = 8, shown = rows.slice(0, MAX), more = rows.length - shown.length;
+  const RH = 144, rowW = (W - PAD*2 - GAP*(cols-1)) / cols;
+  const HEAD = laptop ? 376 : 392, FOOT = 120;
+  const nRows = Math.ceil(shown.length / cols);
+  const H = HEAD + nRows*(RH+GAP) + (more>0 ? 70 : 0) + FOOT;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  /* ground */
+  let g = c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#04101D'); g.addColorStop(1,'#0A2236');
+  c.fillStyle = g; c.fillRect(0,0,W,H);
+  g = c.createRadialGradient(W*0.85,0,0,W*0.85,0,W*0.7); g.addColorStop(0,'rgba(63,143,191,.34)'); g.addColorStop(1,'rgba(63,143,191,0)');
+  c.fillStyle = g; c.fillRect(0,0,W,H);
+  g = c.createLinearGradient(0,0,W,0); g.addColorStop(0,'#00558B'); g.addColorStop(1,'#3F8FBF');
+  c.fillStyle = g; c.fillRect(0,0,W,10);
+  /* seal + organisation */
+  const lx = PAD, ly = 62, lr = 52;
+  c.save(); c.beginPath(); c.arc(lx+lr, ly+lr, lr+5, 0, Math.PI*2); c.fillStyle = '#3F8FBF'; c.fill(); c.restore();
+  c.save(); c.beginPath(); c.arc(lx+lr, ly+lr, lr, 0, Math.PI*2); c.fillStyle = '#fff'; c.fill(); c.clip();
+  if(logo) c.drawImage(logo, lx+4, ly+4, lr*2-8, lr*2-8); c.restore();
+  c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+  c.fillStyle = '#8FB8D6'; c.font = '800 24px '+FONT; c.fillText('ISMAILI VOLUNTEERS', lx+lr*2+28, ly+44);
+  c.fillStyle = '#E6F1FA'; c.font = '700 28px '+FONT; c.fillText('Auckland Jamatkhana', lx+lr*2+28, ly+84);
+  /* title block */
+  const ty = laptop ? 268 : 272;
+  c.fillStyle = '#3F8FBF'; c.font = '900 26px '+FONT; c.fillText('MY DUTIES', PAD, ty-64);
+  let fs = laptop ? 84 : 92; c.font = '900 '+fs+'px '+FONT;
+  while(c.measureText(name).width > W - PAD*2 - (laptop ? 360 : 0) && fs > 40){ fs -= 4; c.font = '900 '+fs+'px '+FONT; }
+  c.fillStyle = '#FFFFFF'; c.fillText(name, PAD, ty+fs*0.28);
+  c.fillStyle = '#9DB7CC'; c.font = '700 30px '+FONT;
+  const n = rows.length, nx = rows[0];
+  const sub = n+' upcoming dut'+(n===1?'y':'ies')+'  ·  next '+fmtDW(nx.date)+' '+fmtDM(nx.date);
+  c.fillText(sub, PAD, ty+fs*0.28+52);
+  if(laptop){
+    /* count badge on the right of the title area */
+    c.textAlign = 'right'; c.fillStyle = '#3F8FBF'; c.font = '900 120px '+FONT; c.fillText(String(n), W-PAD, ty+30);
+    c.fillStyle = '#9DB7CC'; c.font = '800 22px '+FONT; c.fillText('UPCOMING', W-PAD, ty+66); c.textAlign = 'left';
+  }
+  /* rows */
+  shown.forEach((e,i)=>{
+    const col = i % cols, r = Math.floor(i / cols);
+    const x = PAD + col*(rowW+GAP), y = HEAD + r*(RH+GAP);
+    const T = MD_TEAM[e.team] || MD_TEAM.A;
+    mdRR(c,x,y,rowW,RH,28); c.fillStyle = 'rgba(255,255,255,.06)'; c.fill();
+    c.lineWidth = 2; c.strokeStyle = 'rgba(255,255,255,.1)'; c.stroke();
+    c.save(); mdRR(c,x,y,rowW,RH,28); c.clip(); c.fillStyle = T.c; c.fillRect(x,y,8,RH); c.restore();
+    /* date block */
+    const dx = x+30, dy = y+16, dw = 112, dh = RH-32;
+    mdRR(c,dx,dy,dw,dh,20); c.fillStyle = 'rgba(255,255,255,.07)'; c.fill();
+    c.textAlign = 'center';
+    const d = new Date(e.date+'T12:00:00');
+    c.fillStyle = T.c; c.font = '800 21px '+FONT; c.fillText(d.toLocaleDateString('en-NZ',{weekday:'short'}).toUpperCase(), dx+dw/2, dy+34);
+    c.fillStyle = '#fff'; c.font = '900 50px '+FONT; c.fillText(String(d.getDate()), dx+dw/2, dy+84);
+    c.fillStyle = '#9DB7CC'; c.font = '800 20px '+FONT; c.fillText(d.toLocaleDateString('en-NZ',{month:'short'}).toUpperCase(), dx+dw/2, dy+108);
+    c.textAlign = 'left';
+    /* text */
+    const tx = dx+dw+26, pillW = laptop ? 136 : 150, textW = rowW - (tx-x) - pillW - 40;
+    c.fillStyle = '#FFFFFF'; c.font = '800 '+(laptop?32:36)+'px '+FONT; c.fillText(mdFit(c,e.duty,textW), tx, y+64);
+    c.fillStyle = '#9DB7CC'; c.font = '600 26px '+FONT; c.fillText(mdFit(c,e.event+(e.uniform ? '  ·  '+e.uniform : ''),textW), tx, y+104);
+    /* team pill */
+    const px = x+rowW-pillW-26, py = y+RH/2-24;
+    mdRR(c,px,py,pillW,48,24); c.fillStyle = T.c; c.fill();
+    c.fillStyle = '#06141F'; c.font = '900 22px '+FONT; c.textAlign = 'center'; c.fillText(T.t.toUpperCase(), px+pillW/2, py+32); c.textAlign = 'left';
+  });
+  if(more > 0){
+    c.fillStyle = '#9DB7CC'; c.font = '800 26px '+FONT; c.textAlign = 'center';
+    c.fillText('+ '+more+' more — open IV Hub to see them all', W/2, HEAD + nRows*(RH+GAP) + 36); c.textAlign = 'left';
+  }
+  /* footer */
+  c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(PAD, H-FOOT+8, W-PAD*2, 2);
+  c.fillStyle = '#8FB8D6'; c.font = '800 24px '+FONT; c.fillText('IV Hub', PAD, H-FOOT/2+14);
+  c.textAlign = 'right'; c.font = '700 24px '+FONT;
+  c.fillText('Saved '+new Date().toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric',timeZone:'Pacific/Auckland'}), W-PAD, H-FOOT/2+14);
+  c.textAlign = 'left';
+  return cv;
+}
+async function mdRenderShot(){
+  if(!mdShotData) return;
+  const seq = ++mdShotSeq, prev = $('mdShotPrev');
+  mdShotBlob = null;
+  prev.innerHTML = '<span class="mds-load">Making your card…</span>';
+  try{
+    const cv = await mdDrawCard(mdShotData.name, mdShotData.rows, mdShotFmt);
+    const blob = await new Promise(r=>cv.toBlob(r,'image/png'));
+    if(seq !== mdShotSeq) return;
+    if(!blob) throw new Error('no image');
+    mdShotBlob = blob;
+    const img = new Image(); img.alt = 'Your duties card'; img.src = URL.createObjectURL(blob);
+    prev.innerHTML = ''; prev.appendChild(img);
+  }catch(e){ console.warn('duties card failed:', e.message||e); if(seq === mdShotSeq) prev.innerHTML = '<span class="mds-load">Could not make the card. Please try again.</span>'; }
+}
+function mdShotFile(){
+  const safe = String(mdShotData.name).replace(/[^A-Za-z0-9]+/g,'');
+  const d = new Date().toLocaleDateString('en-CA',{timeZone:'Pacific/Auckland'});
+  return 'MyDuties-'+safe+'-'+d+(mdShotFmt==='laptop'?'-wide':'')+'.png';
+}
+function mdOpenShot(){
+  if(!mdShotData) return;
+  const ov = $('mdShot'); ov.classList.add('open');
+  $('mdShotBox').classList.toggle('wide', mdShotFmt === 'laptop');
+  const sh = $('mdShotShare');
+  try{ sh.style.display = (navigator.share && navigator.canShare) ? '' : 'none'; }catch(e){ sh.style.display = 'none'; }
+  ov.querySelectorAll('.mds-seg button').forEach(b=>b.classList.toggle('on', b.dataset.fmt === mdShotFmt));
+  $('mdShotX').focus();
+  mdRenderShot();
+}
+function mdCloseShot(){ $('mdShot').classList.remove('open'); mdShotSeq++; const b = $('mdShotBtn'); if(b) b.focus(); }
+function mdSaveShot(){
+  if(!mdShotBlob) return;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(mdShotBlob); a.download = mdShotFile();
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  toast('Image saved');
+}
+async function mdShareShot(){
+  if(!mdShotBlob) return;
+  try{
+    const f = new File([mdShotBlob], mdShotFile(), {type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[f]})) await navigator.share({files:[f], title:'My IV duties'});
+    else mdSaveShot();
+  }catch(e){ if(e && e.name !== 'AbortError'){ console.warn('share failed:', e.message||e); toast('Could not share — try Save image','err'); } }
+}
+(function(){
+  document.addEventListener('click', e=>{
+    if(e.target.closest('#mdShotBtn')){ mdShotFmt = 'phone'; mdOpenShot(); return; }
+    if(e.target.closest('#mdShotX') || e.target === $('mdShot')){ mdCloseShot(); return; }
+    const sg = e.target.closest('#mdShot .mds-seg button');
+    if(sg){ mdShotFmt = sg.dataset.fmt; $('mdShotBox').classList.toggle('wide', mdShotFmt === 'laptop'); $('mdShot').querySelectorAll('.mds-seg button').forEach(b=>b.classList.toggle('on', b === sg)); mdRenderShot(); return; }
+    if(e.target.closest('#mdShotSave')){ mdSaveShot(); return; }
+    if(e.target.closest('#mdShotShare')){ mdShareShot(); return; }
+  });
+  document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && $('mdShot') && $('mdShot').classList.contains('open')) mdCloseShot(); });
+})();
 
 /* ═══ USER MANAGEMENT (people directory — iv_members) ═══ */
 const RANKS = ['Member','Assistant Team Lead','Team Leader','Facilitator','PHMU','Deputy Director','Director'];
