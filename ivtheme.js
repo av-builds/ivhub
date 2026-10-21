@@ -168,7 +168,7 @@
     /* the signed-in person's name, on the line under the title in smaller text; filled in once sign-in lands */
     var nameEl=b.querySelector('.ivb-name'), tries=0, iv=setInterval(function(){
       var cu=(typeof CU!=='undefined')?CU:window.CU, who=cu&&(cu.display||cu.user); tries++;
-      if(who){ nameEl.textContent=String(who); clearInterval(iv); }
+      if(who){ nameEl.textContent=String(who); b.classList.add('has-name'); clearInterval(iv); }
       else if(tries>60) clearInterval(iv);
     },500);
   }
