@@ -3422,7 +3422,7 @@ AV_SKINS.siteLight=Object.assign({},AV_SKINS.export,{
   pad:'10px 12px', padTop:8, ramp:130, badge:32, bpill:10, ruleH:2,
   dn:26, lbl:11, nm:16, tnm:13, evSize:12, mphA:14, mphB:12,
   dnC:{plain:'#5B7189', mj:'#0B6B47', tr:'#8A5200', both:'#B3261E'}, dnOther:'#A3B6C9',
-  nameSh:'none', jkFg:'#2B6A97', jkRule:'#7DB2D6', mphFg:'#6D3FD0', mphRule:'#B79CFF', mphAc:'#3A1F8A', mphBc:'#5B4A9A',
+  nameSh:'none', jkFg:'#2B6A97', jkRule:'#7DB2D6', mphFg:'#C2410C', mphRule:'#FDBA74', mphAc:'#7C2D12', mphBc:'#9A3412',
 });
 AV_SKINS.site.dn=26; AV_SKINS.site.pad='10px 12px';
 function avSiteSkin(){ return document.documentElement.getAttribute('data-theme')==='light' ? AV_SKINS.siteLight : AV_SKINS.site; }
@@ -5117,7 +5117,7 @@ async function downloadRosterPNG(){
       const out=document.createElement('div');
       /* Tinted days carry no border — the colour is the edge; plain days get a crisp hairline. */
       const inner=avCellHTML({day:day,mj:mjEv,tr:trEv,evs:evs,ro:ro,isFri:isFri,isOther:isOther},S);
-      const mphFade=((isFri||ro._mph_primary)&&!ro._mph_removed)?'linear-gradient(0deg,rgba(124,58,237,0.2),rgba(124,58,237,0) 36%),':'';
+      const mphFade=((isFri||ro._mph_primary)&&!ro._mph_removed)?'linear-gradient(0deg,rgba(234,88,12,0.24),rgba(234,88,12,0) 36%),':'';
       if(kind==='plain' && !isOther){
         /* A plain day's edge fades from the top, like the tint on an event day: a 1px
            gradient frame with the fill drawn inside it. */
