@@ -2078,6 +2078,41 @@ function fairnessCycleK(){
 
 /* ── GENERATOR (Irfan's rule engine, ported verbatim; the only additions are the
    two documented extensions: away-date exclusion + duty-preference tie-break) ── */
+/* ── NO DOUBLING UP ACROSS ROSTERS ──────────────────────────────────
+   Building a roster skips anyone who is already rostered that day on
+   another roster: the AV roster, or the other team's event (Team A and
+   Team B on one date). Looked up by name, because the AV roster stores names
+   and not member ids. Loaded just before a build, and only for the dates
+   being built. Manual picks are not blocked; this only stops the generator
+   handing someone a second duty on the same day. */
+let XBUSY={};
+const xNorm=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+async function loadCrossBusy(dates){
+  XBUSY={};
+  dates=[...new Set((dates||[]).filter(Boolean))];
+  if(!sb||!dates.length) return;
+  const add=(d,n)=>{ n=xNorm(n); if(!n) return; (XBUSY[d]=XBUSY[d]||new Set()).add(n); };
+  const names=v=>Array.isArray(v)?v:(typeof v==='string'&&v.trim()?[v]:[]);
+  try{
+    const {data,error}=await sb.from('roster').select('date,data').in('date',dates);
+    if(error) throw error;
+    (data||[]).forEach(r=>{ const d=r.data||{};
+      ['_primary','_sup','_mph_primary','_mph_primary2'].forEach(k=>names(d[k]).forEach(n=>add(r.date,n))); });
+  }catch(e){ console.warn('AV roster not read for double-up check:',e.message||e); }
+  try{
+    const {data:evs,error:ee}=await sb.from('iv_events').select('id,date,team').in('date',dates).neq('team',PAGE_TEAM);
+    if(ee) throw ee;
+    if(evs&&evs.length){
+      const {data:ro,error:re}=await sb.from('iv_roster').select('event_id,data').in('event_id',evs.map(e=>e.id));
+      if(re) throw re;
+      const byId={}; (ro||[]).forEach(r=>{ byId[r.event_id]=r.data||{}; });
+      evs.forEach(ev=>{ const assign=(byId[ev.id]&&byId[ev.id].assign)||{};
+        Object.keys(assign).forEach(k=>{ const slot=assign[k]||{};
+          ['m','f','x'].forEach(g=>(Array.isArray(slot[g])?slot[g]:[]).forEach(p=>{ if(p&&p.name) add(ev.date,p.name); })); }); });
+    }
+  }catch(e){ console.warn('Other team roster not read for double-up check:',e.message||e); }
+}
+const busyElsewhere=(m,date)=>!!(XBUSY[date]&&XBUSY[date].has(xNorm(m.name)));
 function generateEventData(ev){
   const duties=dutiesForEvent(ev);
   const k=cycleForDate(ev.date);
@@ -2089,7 +2124,7 @@ function generateEventData(ev){
   const hist=cycleDutyHistory(k,ev.id);   // per-member duty names held this cycle (excl. this event)
   // EXTENSION (a): away-dates — a member whose away list contains this event's date is
   // treated as unavailable and excluded from the entire eligibility pool for this event.
-  const active=MEMBERS.filter(m=>m.status==='active'&&!isAway(m,ev.date));
+  const active=MEMBERS.filter(m=>m.status==='active'&&!isAway(m,ev.date)&&!busyElsewhere(m,ev.date));
   const byGA=(g,a)=>active.filter(m=>m.gender===g&&m.age_group===a);
   const mA=byGA('Male','adult'),mY=byGA('Male','youth'),mC=byGA('Male','child');
   const fA=byGA('Female','adult'),fY=byGA('Female','youth'),fC=byGA('Female','child');
@@ -2415,6 +2450,7 @@ async function generateCycle(k){
      through previewCycle() now; this stays for anything that wants the
      old one-step behaviour, and shares applyPlan() so there is exactly
      one piece of code that writes rosters to the database. */
+  await loadCrossBusy(eventsInCycle(k).map(e=>e.date));
   const plan=buildPlan(k);
   if(!plan) return toast('No events in this cycle to build','err');
   await applyPlan(plan);
@@ -3506,6 +3542,7 @@ function askGenerateCycle(k){
 async function runGenerate(k,includeLive){
   if(!IS_EDIT) return;
   if(!MEMBERS.some(m=>m.status==='active')) return toast('No active members','err');
+  await loadCrossBusy(eventsInCycle(k).map(e=>e.date));
   const plan=buildPlan(k,null,{includeLive:!!includeLive});
   if(!plan) return toast('No events in this cycle to build','err');
   if(!plan.buildCount) return toast('Every day is on the calendar — tick the box to re-roll them','err');
@@ -3530,6 +3567,7 @@ async function generateDay(id,opts){
   if(evLocked(ev)) return toast('This event is locked','err');
   if(!MEMBERS.some(m=>m.status==='active')) return toast('No active members','err');
   const k=cycleForDate(ev.date);
+  await loadCrossBusy([ev.date]);
   const plan=buildPlan(k,id);
   if(!plan) return toast('This event cannot be built','err');
   if(opts&&opts.midCycle) plan.midCycle=opts.midCycle;
