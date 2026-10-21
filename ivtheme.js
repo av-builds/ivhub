@@ -22,7 +22,7 @@
   /* Secondary colour by page. Hub and unlisted pages get none; pages still waiting for a colour keep the old pink. */
   (function(){
     var f=(location.pathname.split('/').pop()||'index.html').replace(/\.html$/,'').toLowerCase();
-    var T={teama:'teal',safety:'amber',abeshafa:'green',ancillary:'green',cleaning:'green',cooking:'green',maintenance:'green',paat:'green',sukreet:'green',training:'green',teamb:'pending',av:'pending',setup:'pending'};
+    var T={teama:'teal',safety:'amber',abeshafa:'green',ancillary:'green',cleaning:'green',cooking:'green',maintenance:'green',paat:'green',sukreet:'green',training:'green',teamb:'coral',av:'forest',setup:'pending'};
     if(T[f]) root.setAttribute('data-team',T[f]);
     /* Name shown on the welcome card: set as a CSS variable so every hero can print it */
     var N={teama:'Team A',teamb:'Team B',av:'AV Team',safety:'Safety & Security'};
@@ -71,8 +71,9 @@
       l.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
     });
   }
-  /* Page changes: the page zooms in on the button you pressed, a dark curtain comes over it, and the
-     next page opens straight into the welcome animation (Ya Ali Madad), which then lifts to load it in. */
+  /* Page changes: the pressed button itself grows, keeping its shape and colour, until it fills the screen and
+     turns into the dark welcome backdrop. The next page then opens straight into the welcome animation
+     (Ya Ali Madad), which lifts to load it in. */
   var press=null;
   function rememberPress(el,x,y){
     var t=el&&el.closest&&el.closest('a,button,[role=button],.sb-logo,.tn-brand,.nav-item');
@@ -82,36 +83,52 @@
   document.addEventListener('keydown',function(e){
     if(e.key==='Enter'||e.key===' '){ var t=e.target&&e.target.getBoundingClientRect&&e.target.getBoundingClientRect(); if(t) rememberPress(e.target,t.left+t.width/2,t.top+t.height/2); }
   },true);
-  var zoomed=[];
-  function resetZoom(){
-    zoomed.forEach(function(c){ try{ c.getAnimations().forEach(function(a){ a.cancel(); }); }catch(e){} c.style.transformOrigin=''; c.style.willChange=''; });
-    zoomed=[]; document.documentElement.style.overflow='';
+  var flies=[];
+  function resetGrow(){
+    flies.forEach(function(n){ if(n.parentNode) n.parentNode.removeChild(n); }); flies=[];
     var v=document.getElementById('ivVeil'); if(v) v.classList.remove('iv-show');
   }
+  function px(v,w,h){ v=String(v||'0'); var n=parseFloat(v)||0; return /%$/.test(v)?Math.min(w,h)*n/100:n; }
   function growVeil(){
     var go=window.ivGo; if(typeof go!=='function'||go.ivGrown) return;
     var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
     var busy=false;
+    var DARK='rgb(2, 11, 24)';
     var w=function(){
       var args=arguments, self=this, v=document.getElementById('ivVeil');
       if(!v||reduce||busy||!document.body.animate) return go.apply(self,args);
       busy=true;
-      var p=press||{x:window.innerWidth/2,y:window.innerHeight/2}, cx=p.x, cy=p.y;
-      if(p.el&&p.el.getBoundingClientRect){ var br=p.el.getBoundingClientRect(); if(br.width){ cx=br.left+br.width/2; cy=br.top+br.height/2; } }
-      zoomed=[].filter.call(document.body.children,function(c){
-        return c!==v&&c.id!=='ivThemeBtn'&&!/^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(c.tagName)&&getComputedStyle(c).display!=='none';
-      });
-      document.documentElement.style.overflow='hidden';
-      zoomed.forEach(function(c){
-        var r=c.getBoundingClientRect();
-        c.style.transformOrigin=(cx-r.left)+'px '+(cy-r.top)+'px'; c.style.willChange='transform';
-        c.animate([{transform:'scale(1)'},{transform:'scale(24)'}],{duration:640,easing:'cubic-bezier(.6,0,.9,.4)',fill:'forwards'});
-      });
-      /* zoomed in: the curtain closes over it, then the page changes */
-      setTimeout(function(){ v.classList.add('iv-show'); setTimeout(function(){ go.apply(self,args); },200); },560);
+      var p=press||{x:window.innerWidth/2,y:window.innerHeight/2}, el=p.el&&p.el.getBoundingClientRect?p.el:null;
+      var r=el?el.getBoundingClientRect():null;
+      if(!r||!r.width){ r={left:p.x-40,top:p.y-22,width:80,height:44,right:p.x+40,bottom:p.y+22}; el=null; }
+      var cs=el?getComputedStyle(el):null, W=r.width, H=r.height;
+      var rad=cs?[cs.borderTopLeftRadius,cs.borderTopRightRadius,cs.borderBottomRightRadius,cs.borderBottomLeftRadius].map(function(x){ return Math.min(px(x,W,H),Math.min(W,H)/2); }):[12,12,12,12];
+      var bg=cs&&cs.backgroundColor, clear=!bg||/rgba\(.*,\s*0\)$|transparent/.test(bg);
+      if(clear){ bg=getComputedStyle(document.documentElement).getPropertyValue('--iv-ac').trim()||'#4BA3DC'; }
+      var vw=window.innerWidth, vh=window.innerHeight;
+      var start='inset('+r.top+'px '+(vw-r.right)+'px '+(vh-r.bottom)+'px '+r.left+'px round '+rad.map(function(x){return x+'px';}).join(' ')+')';
+      var end='inset(0px 0px 0px 0px round 0px 0px 0px 0px)';
+      var fly=document.createElement('div'); fly.setAttribute('aria-hidden','true');
+      fly.style.cssText='position:fixed;inset:0;z-index:5001;pointer-events:none;background:'+bg+';clip-path:'+start+';';
+      document.body.appendChild(fly); flies.push(fly);
+      /* the button's own label, so it does not vanish the instant the shape starts to grow */
+      var label=el&&(el.innerText||'').trim();
+      if(cs&&label&&label.length<=32){
+        var t=document.createElement('div'); t.textContent=label;
+        t.style.cssText='position:fixed;z-index:5002;pointer-events:none;display:flex;align-items:center;justify-content:center;white-space:nowrap;left:'+r.left+'px;top:'+r.top+'px;width:'+W+'px;height:'+H+'px;font:'+cs.font+';color:'+cs.color+';letter-spacing:'+cs.letterSpacing+';';
+        document.body.appendChild(t); flies.push(t);
+        t.animate([{opacity:1},{opacity:0}],{duration:200,easing:'ease-out',fill:'forwards'});
+      }
+      var anim=fly.animate([
+        {clipPath:start,backgroundColor:bg,offset:0},
+        {backgroundColor:bg,offset:.35},
+        {clipPath:end,backgroundColor:DARK,offset:1}
+      ],{duration:600,easing:'cubic-bezier(.7,0,.2,1)',fill:'forwards'});
+      var next=function(){ v.classList.add('iv-show'); setTimeout(function(){ go.apply(self,args); },60); };
+      if(anim.finished&&anim.finished.then) anim.finished.then(next,next); else setTimeout(next,620);
     };
     w.ivGrown=true; window.ivGo=w;
-    window.addEventListener('pageshow',function(e){ if(e.persisted){ busy=false; resetZoom(); } });
+    window.addEventListener('pageshow',function(e){ if(e.persisted){ busy=false; resetGrow(); } });
   }
   function boot(){ mount(); welcome(); homeLogo(); growVeil(); }
   if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);
