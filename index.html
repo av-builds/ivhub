@@ -907,7 +907,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <section class="panel" style="animation-delay:.05s;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div><h2 style="margin:0;">My Duties</h2><div class="sub" style="margin-top:2px;">Your next upcoming duties across every team you're on.</div></div>
-          <button class="btn btn-bl" id="mdGoBtn">Open My Duties →</button>
+          <button class="btn btn-bl" id="mdGoBtn">Open My Duties</button>
         </div>
         <div id="mdDashResults" style="margin-top:12px;">
           <div class="md-empty"><div class="big">🗓️</div>Open My Duties to see your schedule.</div>
@@ -1080,7 +1080,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 
       <section class="panel">
         <h2>Shared Viewer Accounts</h2>
-        <div class="ap-note">The shared logins <b>team.a</b>, <b>team.b</b> and <b>av.team</b> have been retired. Everyone signs in with their own email address now, so the Hub can tell who did what — a password four hundred people know identifies nobody, and cannot be taken away from one person who leaves.<br><br>To give someone access, use <b>Admin Logins</b> → <b>Invite someone</b>.</div>
+        <div class="ap-note">The shared logins <b>team.a</b>, <b>team.b</b> and <b>av.team</b> have been retired. Everyone signs in with their own email address now, so the Hub can tell who did what — a password four hundred people know identifies nobody, and cannot be taken away from one person who leaves.<br><br>To give someone access, use <b>Admin Logins</b> › <b>Invite someone</b>.</div>
       </section>
     </div>
 
@@ -1857,8 +1857,8 @@ async function auditLog(action, category, detail){
    localStorage copy exists only so av.html / teama.html / teamb.html
    can read display name and perms without a second round-trip; each of
    those re-verifies against Auth on load too.
-   Accounts are created by inviting from Supabase → Authentication →
-   Users → Invite. The invite email lets the person set their own
+   Accounts are created by inviting from Supabase › Authentication
+   Users › Invite. The invite email lets the person set their own
    password; the DB trigger creates their profile with no permissions,
    and an Owner grants access here in Admin Logins.
 ═══════════════════════════════════════════════════════════════ */
@@ -2919,7 +2919,7 @@ async function setAccountLink(profileId, memberId){
   if(p) p.member_id = memberId;
   const m = memberId ? (mRows||[]).find(x=>String(x.id) === String(memberId)) : null;
   await auditLog(memberId ? 'Linked account' : 'Unlinked account', 'accounts',
-    accountLabel(p) + (memberId ? (' → ' + (m ? m.name : '#' + memberId)) : ' unlinked'));
+    accountLabel(p) + (memberId ? (' › ' + (m ? m.name : '#' + memberId)) : ' unlinked'));
   toast(memberId ? 'Linked.' : 'Unlinked.');
   return true;
 }
@@ -3260,7 +3260,7 @@ async function saveMemberEdit(row, panel){
   const notes = (panel.querySelector('[data-ef="notes"]').value || '').trim();
   if(notes !== (row.notes || '')) patch.notes = notes || null;
   if(!Object.keys(patch).length){ toast('No changes to save.'); return; }
-  const summary = Object.keys(patch).map(k=>k + ' → ' + (patch[k] === null ? 'none' : (Array.isArray(patch[k]) ? '[' + patch[k].join(', ') + ']' : patch[k]))).join(', ');
+  const summary = Object.keys(patch).map(k=>k + ' › ' + (patch[k] === null ? 'none' : (Array.isArray(patch[k]) ? '[' + patch[k].join(', ') + ']' : patch[k]))).join(', ');
   const ok = await updateMember(row.id, patch, `${row.name}: ${summary}`);
   if(ok) renderMembers();
 }
@@ -3331,8 +3331,8 @@ async function carryTeamAccess(memberId, fromTeam, toTeam){
       return;
     }
     auditLog('Moved team', 'members',
-      (data.email || data.display || ('#'+memberId)) + ' — Team ' + (fromTeam||'none') + ' → Team ' + toTeam +
-      ' · access ' + (was.join(', ')||'none') + ' → ' + (now.join(', ')||'none'));
+      (data.email || data.display || ('#'+memberId)) + ' — Team ' + (fromTeam||'none') + ' › Team ' + toTeam +
+      ' · access ' + (was.join(', ')||'none') + ' › ' + (now.join(', ')||'none'));
     toast('Moved to Team ' + toTeam + ' — their access moved too.');
   }catch(e){ console.warn('carryTeamAccess:', e.message || e); }
 }
@@ -3431,7 +3431,7 @@ async function addMember(){
   }
   toast(degraded ? ('Added ' + name + ' (rank/spec not stored — re-run SETUP.sql).') : ('Added ' + name),
         degraded ? 'err' : undefined);
-  auditLog('Added member', 'members', `${name} → ${team ? 'Team ' + team : 'no team (leadership)'} · ${rank}${spec.length ? ' · spec [' + spec.join(', ') + ']' : ''} (${base.gender}, ${base.age_group})`);
+  auditLog('Added member', 'members', `${name} › ${team ? 'Team ' + team : 'no team (leadership)'} · ${rank}${spec.length ? ' · spec [' + spec.join(', ') + ']' : ''} (${base.gender}, ${base.age_group})`);
   panel.querySelector('#maName').value = '';
   panel.classList.remove('show');
   loadMembers();
@@ -3773,7 +3773,7 @@ async function saveProfile(id){
   const label = ps => ps.length ? ps.map(k=>ROLE_LABELS[k]||k).join(', ') : 'no access';
   const permPart = (wasPerms.join('|') === nowPerms.join('|'))
     ? 'permissions unchanged (' + label(nowPerms) + ')'
-    : label(wasPerms) + ' → ' + label(nowPerms);
+    : label(wasPerms) + ' › ' + label(nowPerms);
   auditLog('Updated login', 'login', (r.email||id) + ' — ' + permPart +
     (patch.member_id ? (' · linked to member #'+patch.member_id) : ' · unlinked'));
   toast('Saved');
@@ -4536,7 +4536,7 @@ async function saveAnchor(){
   if(!await dbWrite('Saving the cycle anchor',
       ()=>sb.from('iv_settings').upsert({ key:'anchor', value:{ date, team } }),
       {hint: e=>isMissingTable(e) ? 'iv_settings table is missing — run SETUP.sql first.' : null})) return;
-  auditLog('Updated cycle anchor', 'admin', `${date} → Team ${team}`);
+  auditLog('Updated cycle anchor', 'admin', `${date} › Team ${team}`);
   toast('Cycle anchor saved.');
 }
 async function saveOverrides(){
@@ -4649,7 +4649,7 @@ function bindUI(){
   $('ufInviteCopy').addEventListener('click', async ()=>{
     const v = ($('ufInviteEmail').value||'').trim();
     if(!v){ toast('Enter their email first.','err'); return; }
-    try{ await navigator.clipboard.writeText(v); toast('Email copied — paste it into Supabase → Authentication → Users → Invite'); }
+    try{ await navigator.clipboard.writeText(v); toast('Email copied — paste it into Supabase › Authentication › Users › Invite'); }
     catch(e){ toast('Copy failed — select and copy manually.','err'); }
   });
   /* duty stats */
