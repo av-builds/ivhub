@@ -553,8 +553,8 @@ html[data-team="pending"]{--iv-sec:#F472B6;--iv-secs:rgba(244,114,182,.14);--iv-
 html[data-theme="light"][data-team="pending"]{--iv-sec:#DB2777;--iv-secs:rgba(219,39,119,.12);--iv-seco:#fff;}
 html[data-team="coral"]{--iv-sec:#EE6F5C;--iv-secs:rgba(238,111,92,.16);--iv-seco:#2F0F0A;--iv-g2:rgba(238,111,92,.15);}
 html[data-theme="light"][data-team="coral"]{--iv-sec:#D4533F;--iv-secs:rgba(212,83,63,.12);--iv-seco:#fff;--iv-g2:rgba(212,83,63,.2);}
-html[data-team="forest"]{--iv-sec:#86C7A6;--iv-secg:#86C7A6;--iv-secs:rgba(134,199,166,.16);--iv-seco:#0A1A12;--iv-g2:rgba(134,199,166,.16);}
-html[data-theme="light"][data-team="forest"]{--iv-sec:#254636;--iv-secg:#2E8057;--iv-secs:rgba(37,70,54,.12);--iv-seco:#fff;--iv-g2:rgba(46,128,87,.24);}
+html[data-team="cobalt"]{--iv-sec:#5B8DEF;--iv-secg:#5B8DEF;--iv-secs:rgba(91,141,239,.16);--iv-seco:#06142E;--iv-g2:rgba(91,141,239,.16);}
+html[data-theme="light"][data-team="cobalt"]{--iv-sec:#0047AB;--iv-secg:#0047AB;--iv-secs:rgba(0,71,171,.12);--iv-seco:#fff;--iv-g2:rgba(0,71,171,.2);}
 html[data-team="mint"]{--iv-sec:#86E49A;--iv-secg:#86E49A;--iv-secs:rgba(134,228,154,.16);--iv-seco:#0A2412;--iv-g2:rgba(134,228,154,.15);}
 html[data-theme="light"][data-team="mint"]{--iv-sec:#24914F;--iv-secg:#5CCB7C;--iv-secs:rgba(36,145,79,.12);--iv-seco:#fff;--iv-g2:rgba(92,203,124,.26);}
 html[data-team="amber"]{--iv-sec:#FBBF24;--iv-secs:rgba(251,191,36,.16);--iv-seco:#2A1A00;--iv-g2:rgba(251,191,36,.14);}
@@ -645,4 +645,4 @@ html[data-team] .dash-hero{position:relative;overflow:hidden;background:linear-g
 html[data-theme="light"][data-team] .dash-hero{background:linear-gradient(160deg,color-mix(in srgb,var(--iv-ac) 20%,#fff) 0%,#fff 62%);}
 html[data-team] .dash-hero::before{content:"";position:absolute;left:-80px;top:-80px;width:300px;height:300px;border-radius:50%;
   background:radial-gradient(circle,var(--iv-secg,var(--iv-sec)),transparent 70%);opacity:.34;pointer-events:none;}
-html[data-team="forest"] .dash-greet{text-shadow:none;}
+html[data-team="cobalt"] .dash-greet{text-shadow:none;}
