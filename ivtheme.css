@@ -688,3 +688,59 @@ html[data-team="cobalt"] .dash-greet{text-shadow:none;}
 #page-dashboard .dash-hero,#page-dashboard .hero{padding-top:18px;padding-bottom:18px;}
 #page-dashboard .hero-inner{display:none;}
 #page-dashboard .hero{padding:0 0 4px;display:flex;justify-content:flex-end;}
+
+/* ── LIGHT ("white") VERSIONS: dashboard banner, opening welcome, loading curtain ──
+   They follow the site theme. Same layout and hover; pale ground, dark ink, and each team's
+   deeper light-mode colour so the title and ring stay readable on white. */
+html[data-theme="light"] .iv-banner{--ba:#2A7FB8;background:linear-gradient(160deg,#DDEAF6 0%,#FFFFFF 62%);border-color:#D7E1EA;color:#0C2236;}
+html[data-theme="light"] .iv-banner[data-k="a"]{--ba:#24914F;}
+html[data-theme="light"] .iv-banner[data-k="b"]{--ba:#D4533F;}
+html[data-theme="light"] .iv-banner[data-k="av"]{--ba:#0047AB;}
+html[data-theme="light"] .ivb-hair{background:color-mix(in srgb,var(--ba) 14%,transparent);}
+html[data-theme="light"] .ivb-mono{-webkit-text-stroke-color:color-mix(in srgb,var(--ba) 30%,transparent);opacity:.65;}
+html[data-theme="light"] .ivb-glow{background:radial-gradient(closest-side,color-mix(in srgb,var(--ba) 26%,transparent),transparent);}
+html[data-theme="light"] .ivb-seal img{box-shadow:0 0 0 5px #fff,0 14px 34px color-mix(in srgb,var(--ba) 30%,transparent);}
+html[data-theme="light"] .ivb-arc{background:conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,rgba(255,255,255,0) 190deg,var(--ba) 330deg,var(--ba) 356deg,rgba(255,255,255,0) 360deg);}
+html[data-theme="light"] .ivb-kick span,html[data-theme="light"] .ivb-sub{color:#52677B;}
+html[data-theme="light"] .ivb-title{color:#0C2236;}
+html[data-theme="light"] .ivb-title span{color:var(--ba);}
+
+/* opening welcome (injected by each page, so these need the #ivs id to win) */
+html[data-theme="light"] #ivs{color:#0C2236;}
+html[data-theme="light"][data-team="mint"] #ivs{--acc:#24914F!important;}
+html[data-theme="light"][data-team="coral"] #ivs{--acc:#D4533F!important;}
+html[data-theme="light"][data-team="cobalt"] #ivs{--acc:#0047AB!important;}
+html[data-theme="light"]:not([data-team]) #ivs{--acc:#2A7FB8!important;}
+html[data-theme="light"] #ivs .ivs-sh{background:#F3F7FB;}
+html[data-theme="light"] #ivs .ivs-w{color:#0C2236;}
+html[data-theme="light"] #ivs .ivs-w b,html[data-theme="light"] #ivs .ivs-hub .ivs-w.two{color:var(--acc);}
+html[data-theme="light"] #ivs .ivs-kick,html[data-theme="light"] #ivs .ivs-sub{color:#52677B;}
+html[data-theme="light"] #ivs .ivs-mono{-webkit-text-stroke-color:color-mix(in srgb,var(--acc) 30%,transparent);opacity:.6;}
+html[data-theme="light"] #ivs .ivs-mark img{box-shadow:0 0 0 6px #F3F7FB,0 18px 50px color-mix(in srgb,var(--acc) 35%,transparent);}
+html[data-theme="light"] #ivs .ivs-mark::after{background:conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,rgba(255,255,255,0) 190deg,var(--acc) 330deg,var(--acc) 356deg,rgba(255,255,255,0) 360deg);}
+html[data-theme="light"] #ivs .ivs-load{background:rgba(12,34,54,.1);}
+html[data-theme="light"] #ivs .ivs-skip{background:rgba(255,255,255,.92);color:#0C2236;border-color:rgba(12,34,54,.28);}
+/* loading curtain */
+html[data-theme="light"] #ivVeil{background:#F3F7FB;}
+
+/* opening welcome: the middle line no longer strikes through the words; it frames "Welcome to" and fades out */
+#ivs .ivs-ax{display:none;}
+#ivs .ivs-kick{display:flex;align-items:center;justify-content:center;gap:18px;}
+#ivs .ivs-kick::before,#ivs .ivs-kick::after{content:"";flex:0 1 min(200px,18vw);height:2px;min-width:16px;}
+#ivs .ivs-kick::before{background:linear-gradient(90deg,transparent,var(--acc));}
+#ivs .ivs-kick::after{background:linear-gradient(270deg,transparent,var(--acc));}
+#ivs .ivs-kick{white-space:nowrap;}
+/* the shutter seam used to show for the whole welcome (its first keyframe filled backwards) and read as a line through the middle; it now only flashes as the shutters open */
+#ivs .ivs-t::after,#ivs .ivs-b::after{animation-fill-mode:forwards;}
+
+/* ── BANNER WITHOUT A BOX ───────────────────────────────
+   No border, no corners, no shadow. It fades out sideways into the page and runs up to the top edge of the
+   site (ivtheme.js sets --ivb-top to the space above it). The seal and text stay put. */
+.iv-banner{border:0!important;border-radius:0!important;box-shadow:none!important;
+  margin-top:calc(-1 * var(--ivb-top,0px));min-height:calc(340px + var(--ivb-top,0px));
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%);
+          mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%);}
+.ivb-in{top:var(--ivb-top,0px);}
+.ivb-mono{right:4%;}
+html[data-theme="light"] .iv-banner{background:linear-gradient(180deg,#DDEAF6 0%,#F3F7FB 100%);}
+@media(max-width:560px){.iv-banner{min-height:calc(300px + var(--ivb-top,0px));-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%);}}

@@ -93,7 +93,7 @@
     var go=window.ivGo; if(typeof go!=='function'||go.ivGrown) return;
     var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
     var busy=false;
-    var DARK='rgb(2, 11, 24)';
+    var DARK=root.getAttribute('data-theme')==='light'?'rgb(243, 247, 251)':'rgb(2, 11, 24)';
     var w=function(){
       var args=arguments, self=this, v=document.getElementById('ivVeil');
       if(!v||reduce||busy||!document.body.animate) return go.apply(self,args);
@@ -156,6 +156,15 @@
     var em=document.createElement('span'); em.textContent=last; t.appendChild(em);
     b.querySelector('.ivb-sub').textContent=(d?d+' \u00b7 ':'')+'Auckland Jamatkhana';
     pg.insertBefore(b,pg.firstChild);
+    /* No box: the banner runs up to the very top of the site (behind the floating menu) and fades out sideways. */
+    var fit=function(){
+      var cur=parseFloat(b.getAttribute('data-pull')||'0')||0;
+      var natural=Math.max(0,Math.round(b.getBoundingClientRect().top+(window.pageYOffset||0)+cur));
+      if(String(natural)!==b.getAttribute('data-pull')){ b.setAttribute('data-pull',natural); b.style.setProperty('--ivb-top',natural+'px'); }
+    };
+    fit(); try{ if(window.ResizeObserver) new ResizeObserver(function(){ fit(); }).observe(b); }catch(e){}
+    window.addEventListener('resize',function(){ clearTimeout(fit.t); fit.t=setTimeout(fit,120); });
+    window.addEventListener('load',fit);
     if(k==='hub'){
       /* the Hub greets by first name: wait for the sign-in to land */
       var n=0, kick=b.querySelector('.ivb-kick span'), iv=setInterval(function(){
