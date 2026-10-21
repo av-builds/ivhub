@@ -10,12 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
 <style>
 :root{--dp:#020B18;--ds:#071628;--ds2:#0D2040;--dt:#E8F4FD;--dm:#7AAECB;
-  --db:rgba(79,195,247,.18);--blue:#1565C0;--blue2:#1976D2;--blue-lt:#4FC3F7;
+  --db:rgba(75,163,220,.18);--blue:#00558B;--blue2:#1976D2;--blue-lt:#4BA3DC;
   --navy:#0C2461;--green:#4ADE80;--red:#F87171;--gold:#FCD34D;--r:10px;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-family:'Archivo',sans-serif;background:var(--dp);color:var(--dt);min-height:100vh;
   display:flex;align-items:center;justify-content:center;padding:20px;
-  background-image:radial-gradient(ellipse at 20% 40%,rgba(21,101,192,.18) 0%,transparent 60%),
+  background-image:radial-gradient(ellipse at 20% 40%,rgba(0,85,139,.18) 0%,transparent 60%),
                    radial-gradient(ellipse at 80% 70%,rgba(124,58,237,.10) 0%,transparent 55%);}
 .card{background:var(--ds);border:1px solid var(--db);border-radius:16px;padding:40px 38px;
   width:440px;max-width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:up .45s ease;}
@@ -36,12 +36,12 @@ h2{font-size:19px;font-weight:800;margin-bottom:8px;}
 .fg input{width:100%;background:var(--ds2);border:1px solid var(--db);border-radius:var(--r);
   padding:12px 14px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:15px;outline:none;
   transition:border-color .18s,box-shadow .18s;}
-.fg input:focus{border-color:var(--blue-lt);box-shadow:0 0 0 3px rgba(79,195,247,.12);}
+.fg input:focus{border-color:var(--blue-lt);box-shadow:0 0 0 3px rgba(75,163,220,.12);}
 .fg input:disabled{opacity:.62;cursor:not-allowed;}
 .btn{width:100%;background:linear-gradient(135deg,var(--navy),var(--blue2));color:#fff;border:none;
   border-radius:var(--r);padding:13px;font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;
   cursor:pointer;margin-top:8px;transition:box-shadow .18s,transform .12s;}
-.btn:hover:not(:disabled){box-shadow:0 6px 20px rgba(21,101,192,.45);}
+.btn:hover:not(:disabled){box-shadow:0 6px 20px rgba(0,85,139,.45);}
 .btn:active:not(:disabled){transform:scale(.985);}
 .btn:disabled{opacity:.6;cursor:not-allowed;}
 .btn.ghost{background:transparent;border:1px solid var(--db);color:var(--dm);margin-top:10px;}
