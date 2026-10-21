@@ -559,6 +559,23 @@ for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.htm
   chk(/Aly/.test(r.names),'logins  names still render in .um-name');
   chk(p.errs.length===0,'logins  no page errors'); await p.context().close(); }
 
+// ── No doubling up across rosters ──
+for(const file of ['teama.html','teamb.html']){
+  const p=await open(file,{width:1300,height:900});
+  await p.evaluate(`(${SEED})(['tl_a'])`);
+  const r=await p.evaluate(()=>{ const o={};
+    const ev=EVENTS[0], act=MEMBERS.filter(m=>m.status==='active');
+    const blocked=act.slice(0,Math.floor(act.length/2)), blockedSet=new Set(blocked.map(m=>xNorm(m.name)));
+    XBUSY={}; XBUSY[ev.date]=blockedSet;
+    const data=generateEventData(ev); const names=[];
+    Object.keys(data.assign||{}).forEach(k=>['m','f','x'].forEach(g=>((data.assign[k]||{})[g]||[]).forEach(x=>names.push(xNorm(x.name)))));
+    o.assigned=names.length; o.clash=names.filter(n=>blockedSet.has(n)).length;
+    XBUSY={}; o.busyFn=busyElsewhere(act[0],ev.date); XBUSY[ev.date]=new Set([xNorm(act[0].name)]); o.busyYes=busyElsewhere(act[0],ev.date); o.busyOtherDay=busyElsewhere(act[0],'1999-01-01');
+    return o; });
+  chk(r.assigned>0&&r.clash===0,'double   '+file+' build skips people already rostered elsewhere that day',JSON.stringify(r));
+  chk(!r.busyFn&&r.busyYes&&!r.busyOtherDay,'double   '+file+' the clash check matches by name and by date only');
+  chk(p.errs.length===0,'double   '+file+' no page errors'); await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);
