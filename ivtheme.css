@@ -537,5 +537,5 @@ html[data-theme="light"] .dc-top{background:linear-gradient(180deg,rgba(21,101,1
 
 /* MPH days: a violet fade rising from the bottom of the card */
 .cell{isolation:isolate;}
-.cell.has-mph .cell-inner::before{content:"";position:absolute;left:0;right:0;bottom:0;height:52%;z-index:-1;pointer-events:none;background:linear-gradient(0deg,rgba(139,92,246,.5) 0,rgba(139,92,246,.18) 55%,rgba(139,92,246,0));}
-html[data-theme="light"] .cell.has-mph .cell-inner::before{background:linear-gradient(0deg,rgba(124,58,237,.6) 0,rgba(124,58,237,.22) 55%,rgba(124,58,237,0));}
+.cell.has-mph .cell-inner::before{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;z-index:-1;pointer-events:none;background:linear-gradient(0deg,rgba(139,92,246,.3) 0,rgba(139,92,246,.1) 55%,rgba(139,92,246,0));}
+html[data-theme="light"] .cell.has-mph .cell-inner::before{background:linear-gradient(0deg,rgba(124,58,237,.34) 0,rgba(124,58,237,.12) 55%,rgba(124,58,237,0));}
