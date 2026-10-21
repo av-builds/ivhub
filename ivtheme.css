@@ -652,5 +652,9 @@ html #ivVeil .iv-bar span{width:44%;background:linear-gradient(90deg,rgba(75,163
 
 /* Loading screen grows out of the pressed button */
 @keyframes ivGrow{from{clip-path:circle(0 at var(--ox,50%) var(--oy,50%));}to{clip-path:circle(150vmax at var(--ox,50%) var(--oy,50%));}}
-#ivVeil.iv-grow.leaving{animation:ivGrow .28s cubic-bezier(.5,0,.2,1) both;}
-@media(prefers-reduced-motion:reduce){#ivVeil.iv-grow.leaving{animation:none;}}
+@keyframes ivInGrow{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* the screen is shown at once (no fade) and opens out from the pressed spot; the seal in it is drawn by the flying clone */
+html #ivVeil.iv-grow{opacity:1!important;visibility:visible!important;transition:none!important;animation:ivGrow .46s cubic-bezier(.3,.7,.2,1) both;}
+html #ivVeil.iv-grow .iv-in{animation:ivInGrow .4s .22s cubic-bezier(.16,1,.3,1) both;}
+html #ivVeil.iv-grow .iv-logo{opacity:0;}
+@media(prefers-reduced-motion:reduce){html #ivVeil.iv-grow{animation:none;}}
