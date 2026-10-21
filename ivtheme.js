@@ -134,9 +134,10 @@
      Only the seal moves, on hover. The page's own greeting text is hidden by CSS but kept in the page, because its
      scripts still write the date, today's duty and the clock into it. */
   function banner(){
-    var pg=document.getElementById('page-dashboard');
-    if(!pg||pg.querySelector('.iv-banner')) return;
     var f=(location.pathname.split('/').pop()||'index.html').replace(/\.html$/,'').toLowerCase();
+    /* Team A and B land on the calendar, so the banner sits there rather than on the (cover-panel) dashboard page */
+    var pg=document.getElementById((f==='teama'||f==='teamb')?'page-calendar':'page-dashboard');
+    if(!pg||pg.querySelector('.iv-banner')) return;
     var K={teama:'a',teamb:'b',av:'av',index:'hub'}; var k=K[f]; if(!k) return;
     var NM={a:'Team A',b:'Team B',av:'AV Team',hub:'Ya Ali Madad'}, MONO={a:'A',b:'B',av:'AV',hub:'IV'};
     var words=NM[k].split(' '), last=words.pop(), first=words.join(' ');
