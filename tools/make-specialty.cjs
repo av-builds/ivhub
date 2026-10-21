@@ -105,8 +105,8 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
 .hide{display:none!important;}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021b">
-<script src="ivtheme.js?v=20261021b"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021c">
+<script src="ivtheme.js?v=20261021c"></script>
 </head>
 <body>
 <header class="top">

@@ -751,3 +751,10 @@ html[data-theme="light"] .iv-banner{background:linear-gradient(180deg,#DDEAF6 0%
 html[data-theme="light"] .ivb-name{color:#0C2236;}
 @media(max-width:900px){.ivb-name{font-size:20px}}
 @media(max-width:560px){.ivb-name{font-size:17px}}
+
+/* Adding the name must not move anything else: the seal, "Welcome to" and the title stay exactly where they were,
+   and the name and date line sit below them. The padding is the name line's height, so the block's centre shifts
+   by half of it and the top of the block stays put. */
+.iv-banner.has-name .ivb-in{padding-top:36px;}
+@media(max-width:900px){.iv-banner.has-name .ivb-in{padding-top:37px;}}
+@media(max-width:560px){.iv-banner.has-name .ivb-in{padding-top:34px;}}
