@@ -60,6 +60,36 @@
     w.querySelector('.iv-w-date').textContent=d+(d?' \u00b7 ':'')+'Auckland Jamatkhana';
     ok.insertBefore(w,ok.firstChild);
   }
-  function boot(){ mount(); welcome(); }
+  /* The side logo is the way to the dashboard, so the Dashboard menu item is hidden (CSS) and this takes its click. */
+  function homeLogo(){
+    var home=document.querySelector('.sb-nav .nav-item[data-page="dashboard"]'); if(!home) return;
+    var go=function(){ home.click(); };
+    document.querySelectorAll('.sb-logo').forEach(function(l){
+      if(l.getAttribute('data-iv-home')) return; l.setAttribute('data-iv-home','1');
+      l.setAttribute('role','button'); l.setAttribute('tabindex','0'); l.setAttribute('title','Go to the dashboard');
+      l.addEventListener('click',go);
+      l.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+    });
+  }
+  /* Page changes: the loading screen grows out of the button that was pressed. */
+  var ox=null;
+  document.addEventListener('pointerdown',function(e){ ox={x:e.clientX,y:e.clientY}; },true);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key===' '){ var t=e.target&&e.target.getBoundingClientRect&&e.target.getBoundingClientRect(); if(t) ox={x:t.left+t.width/2,y:t.top+t.height/2}; }
+  },true);
+  function growVeil(){
+    var go=window.ivGo; if(typeof go!=='function'||go.ivGrown) return;
+    var w=function(){
+      var v=document.getElementById('ivVeil');
+      if(v){
+        var p=ox||{x:window.innerWidth/2,y:window.innerHeight/2};
+        v.style.setProperty('--ox',p.x+'px'); v.style.setProperty('--oy',p.y+'px');
+        v.classList.add('iv-grow');
+      }
+      return go.apply(this,arguments);
+    };
+    w.ivGrown=true; window.ivGo=w;
+  }
+  function boot(){ mount(); welcome(); homeLogo(); growVeil(); }
   if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);
 })();

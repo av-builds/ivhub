@@ -1223,7 +1223,7 @@ span.chip.blank{cursor:default;}
       <button id="sbCollapse" onclick="toggleCollapse()" title="Collapse sidebar" aria-label="Collapse sidebar">⇤</button>
     </div>
     <nav class="sb-nav" id="sbNav">
-      <a class="hub-link" href="index.html"><span>←</span><span class="hl-t">Back to Hub</span></a>
+      <a class="hub-link" href="index.html"><span class="hl-t">Back to Hub</span></a>
       <!-- Team pages are for leaders. One flat list, calendar first, because
            the calendar is where a lead lands. The Dashboard item stays hidden
            and exists only for a stand-in, who has no other page. -->
@@ -1683,7 +1683,7 @@ function dutiesForEvent(ev){
 function legacyLabel(key){ return KEY_TO_NAME[key]||String(key).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
 
 /* Per-duty assignment rules (ported duty-by-duty from Irfan's DUTY_ASSIGNMENT_CONFIG).
-   g = {mA,mY,mC,mN,fA,fY,fC,fN,used}; pick(pool,count,duty,allowFallback,ignoreUsed) → member[].
+   g = {mA,mY,mC,mN,fA,fY,fC,fN,used}; pick(pool,count,duty,allowFallback,ignoreUsed) › member[].
    Gender/mix randomness intentionally uses Math.random, matching the original. */
 const DUTY_ASSIGNMENT_CONFIG={
   'Nandi Labelling':(type,g,pick)=>{
@@ -1801,7 +1801,7 @@ const DUTY_ASSIGNMENT_CONFIG={
 
 /* ── GENERATOR EXTENSION (b) helper — duty-preference tie-break score.
    -1 = member lists this duty in prefs.prefer, +1 = prefs.avoid, 0 = neutral.
-   Prefs store dutyKeys; pick() passes the duty display name → map via DUTY_INFO.
+   Prefs store dutyKeys; pick() passes the duty display name › map via DUTY_INFO.
    Returns 0 (no effect, no randomness) whenever prefs are absent/empty, so an
    empty-prefs run is bit-for-bit identical to the original engine. */
 function prefScore(m,dutyName){
@@ -2441,7 +2441,7 @@ async function markAttendance(eventId,memberId,status){
      would sit on whatever it was when the page opened — visibly wrong to
      the person who just marked the register. */
   bumpTotals(memberId, cur, cur===status ? null : status);
-  auditLog('attendance','attendance',(memById(memberId)||{}).name+' → '+(cur===status?'cleared':status));
+  auditLog('attendance','attendance',(memById(memberId)||{}).name+' › '+(cur===status?'cleared':status));
   renderAttendance();
 }
 function bumpTotals(memberId, from, to){
@@ -2695,7 +2695,7 @@ async function boot(){
     document.body.insertAdjacentHTML('beforeend',
       '<div class="noaccess"><div class="box"><div style="font-size:30px">🔒</div><h2>No access</h2>'+
       '<p>Your account does not have permission to view '+esc(TEAM_NAME)+'.</p>'+
-      '<a class="btn btn-bl" href="index.html">← Back to Hub</a></div></div>');
+      '<a class="btn btn-bl" href="index.html">Back to Hub</a></div></div>');
     return;
   }
   applyNavScope();
@@ -2710,7 +2710,7 @@ async function boot(){
     document.body.insertAdjacentHTML('beforeend',
       '<div class="noaccess"><div class="box"><div style="font-size:30px">📋</div><h2>Leaders only</h2>'+
       '<p>The '+esc(TEAM_NAME)+' pages are for team leaders. Your duties, away dates and attendance are on the Hub.</p>'+
-      '<a class="btn btn-bl" href="index.html">← Go to the Hub</a></div></div>');
+      '<a class="btn btn-bl" href="index.html">Go to the Hub</a></div></div>');
     return;
   }
   await loadMyMember();   // which of these members the viewer is, for their own cards
@@ -2815,7 +2815,7 @@ function renderDashboard(){
   h+='<div class="pnl"><div class="pnl-h">📣 Announcements</div><div class="pnl-b" style="padding:10px">';
   if(!ANNS.length) h+='<div class="empty-note">No announcements.</div>';
   ANNS.slice(0,4).forEach(a=>{ h+='<div style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.04)"><div style="font-size:13px;line-height:1.5;white-space:pre-wrap">'+esc(a.text)+'</div><div style="font-size:12px;color:var(--dm);margin-top:4px">'+esc(a.author||'')+(a.created_at?' · '+esc(fmtNice(String(a.created_at).slice(0,10))):'')+'</div></div>'; });
-  h+='<div style="padding:8px"><button class="btn btn-ol btn-sm" onclick="nav(\'announce\')">Open announcements →</button></div></div></div></div>';
+  h+='<div style="padding:8px"><button class="btn btn-ol btn-sm" onclick="nav(\'announce\')">Open announcements</button></div></div></div></div>';
   el.innerHTML=h;
   tickClock();
 }
@@ -3276,7 +3276,7 @@ function cyclePretty(k){
   return s.slice(0,4)===e.slice(0,4)?mon(sm)+' – '+mon(em)+' '+s.slice(0,4)
                                     :mon(sm)+' '+s.slice(0,4)+' – '+mon(em)+' '+e.slice(0,4);
 }
-function cycleDates(k){ return fmtShort(cyStart(k))+' → '+fmtShort(addDaysLocal(cyStart(k+1),-1)); }
+function cycleDates(k){ return fmtShort(cyStart(k))+' › '+fmtShort(addDaysLocal(cyStart(k+1),-1)); }
 /* One pass over a cycle's events, in the calendar's own words: not built,
    draft, on the calendar. Drafts are split by whether they can go up with
    one press (complete) or need a deliberate one (gaps). */
@@ -3317,7 +3317,7 @@ function cycleCardHTML(c){
     '<span class="cy-dates">'+esc(cycleDates(c.k))+'</span>'+
     '<span class="cy-prog" aria-hidden="true">'+(s.n?seg(s.live,'lv')+seg(s.drafts,'dr')+seg(s.unbuilt,'nb'):'<i class="nb" style="flex:1"></i>')+'</span>'+
     '<span class="cy-line">'+line+'</span>'+
-    '<span class="cy-go" aria-hidden="true">→</span></button>';
+    '</button>';
 }
 function renderCyclePicker(){
   const live=CYCLES.filter(c=>c.status!=='historic'), past=CYCLES.filter(c=>c.status==='historic').slice().reverse();
@@ -3390,7 +3390,7 @@ function renderCycleView(k){
     for(const e of s.evs) main+=dayCardHTML(e,edit);
     main+='</div>';
   }
-  return '<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openRosterHome()">← All cycles</button></div>'+
+  return '<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openRosterHome()">All cycles</button></div>'+
     '<div class="cv-layout"><aside class="cv-side" aria-label="This cycle">'+side+'</aside>'+
     '<section class="cv-main" aria-label="Event days">'+main+'</section></div>';
 }
@@ -3413,8 +3413,8 @@ function dayCardHTML(e,edit){
       h+='<div class="cv-dacts">';
       if(built) h+='<button class="btn btn-ol btn-sm" onclick="toggleDayCalendar('+e.id+')">'+(e.confirmed?'Hide from calendar':'Put back on the calendar')+'</button>'+
                    '<button class="btn btn-ol btn-sm" onclick="askRegenerateDay('+e.id+')">↻ Regenerate day</button>';
-      h+='<button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster →</button></div>';
-    } else if(!hist||built) h+='<div class="cv-dacts"><button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster →</button></div>';
+      h+='<button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster</button></div>';
+    } else if(!hist||built) h+='<div class="cv-dacts"><button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster</button></div>';
     if(!built){
       h+=edit?'<div class="cv-empty"><p>This day has no roster yet. Building it fills every duty using everyone’s duties across the rest of the cycle, and puts it on the calendar.</p>'+
                 '<button class="btn btn-bl" onclick="generateDay('+e.id+')">⚡ Build this day</button></div>'
@@ -3508,7 +3508,7 @@ async function generateDay(id,opts){
 function renderEventPage(ev){
   const k=cycleForDate(ev.date), evs=eventsInCycle(k), i=evs.findIndex(e=>e.id===ev.id);
   const prev=i>0?evs[i-1]:null, next=i>=0&&i<evs.length-1?evs[i+1]:null;
-  let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openCycle('+k+')">← '+esc(cyclePretty(k))+'</button>'+
+  let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openCycle('+k+')">'+esc(cyclePretty(k))+'</button>'+
     '<span class="rc-here">'+esc(ev.name)+' · '+esc(fmtShort(ev.date))+'</span>'+
     '<span class="rc-nav">'+
       (prev?'<button class="btn btn-ol btn-sm" onclick="openFullRoster('+prev.id+')" aria-label="Previous event: '+esc(prev.name)+'">‹</button>':'')+
@@ -3576,7 +3576,7 @@ function renderEventView(ev){
       '<button class="btn btn-ol" onclick="askGenerateCycle('+cycleForDate(ev.date)+')">Generate All (cycle)</button></div>'+
       '<div class="rules-line">Rules: cycle fairness carried across three cycles · no duty repeats within a cycle · Nandi requires certification · children only at entrances &amp; Nandi Passing · away-dates skipped · age groups step up when a pool runs out · duty preferences honoured on ties · Seating &amp; Discipline is 1 adult + 1 youth per gender · Prayer Hall Entrance takes children then youth, never adults</div></div>';
   }
-  h+='<div class="num-link"><button class="btn btn-ol btn-sm" onclick="repMode=\'fairness\';repMember=null;nav(\'reports\')">📊 See fairness and counts in Numbers →</button></div>';
+  h+='<div class="num-link"><button class="btn btn-ol btn-sm" onclick="repMode=\'fairness\';repMember=null;nav(\'reports\')">📊 See fairness and counts in Numbers</button></div>';
   return h+dutyTableHTML(ev);
 }
 /* The roster table for one event. Shared by the full roster page and the
@@ -3800,7 +3800,7 @@ async function toggleYouth(){
   if(!await dbWrite('Changing the Youth setting', ()=>sb.from('iv_events').update({youth:ev.youth}).eq('id',ev.id))){
     ev.youth=!ev.youth;      // put it back; the database did not take it
   }
-  auditLog('youth-toggle','events',ev.name+' '+ev.date+' → '+(ev.youth?'ON':'OFF'));
+  auditLog('youth-toggle','events',ev.name+' '+ev.date+' › '+(ev.youth?'ON':'OFF'));
   renderRoster();
 }
 /* Putting a roster on the calendar, or taking it back off.
@@ -4117,7 +4117,7 @@ function openEventDrawer(id){
     h+='</div>';
   }
   h+='<div class="dp-actions">'+
-    (IS_EDIT?'<button class="btn btn-bl btn-sm" onclick="selectEvent('+ev.id+')">Open in Roster →</button>':'')+
+    (IS_EDIT?'<button class="btn btn-bl btn-sm" onclick="selectEvent('+ev.id+')">Open in Roster</button>':'')+
     (IS_EDIT&&!evLocked(ev)?'<button class="btn btn-ol btn-sm" onclick="closeDrawer();askRegenerateDay('+ev.id+')">↻ Regenerate</button>':'')+
     '<button class="btn btn-ol btn-sm" onclick="selEventId='+ev.id+';copyRoster()">⧉ Copy</button></div>';
   openDrawer(h);
@@ -4275,7 +4275,7 @@ function renderMembers(){
   const ranks=Array.from(new Set(MEMBERS.map(m=>m.rank||'Member'))).sort();
   let h='<div class="ph"><div><h1>People</h1><p>Leader-managed profiles — Nandi, away-dates, duty preferences, contact &amp; notes. Identity fields mirror the Hub.</p></div>'+
     '<div class="ha"><button class="btn btn-ol btn-sm" onclick="syncFromHub()" title="Reload members from the Hub">↻ Sync from Hub</button></div></div>';
-  h+='<div class="ib">🔗 Membership is managed in the <b>Hub</b> — tick <b>'+esc(TEAM_NAME)+'</b> under a person\'s main team in Home → User Management to add them here. This page manages team-side data only. <span id="hubSyncStatus" style="font-weight:800"></span></div>';
+  h+='<div class="ib">🔗 Membership is managed in the <b>Hub</b> — tick <b>'+esc(TEAM_NAME)+'</b> under a person\'s main team in Home › User Management to add them here. This page manages team-side data only. <span id="hubSyncStatus" style="font-weight:800"></span></div>';
   h+='<div class="mem-filters"><input type="text" placeholder="Search members…" value="'+esc(memFilter.q)+'" style="max-width:220px" oninput="memFilter.q=this.value;renderMemberGrid()">'+
     '<select onchange="memFilter.rank=this.value;renderMemberGrid()"><option value="">All ranks</option>'+ranks.map(r=>'<option value="'+esc(r)+'"'+(memFilter.rank===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select>'+
     '<select onchange="memFilter.age=this.value;renderMemberGrid()"><option value="">All ages</option>'+AGES.map(a=>'<option value="'+a+'"'+(memFilter.age===a?' selected':'')+'>'+esc(AGE_LABELS[a])+'</option>').join('')+'</select>'+
@@ -4353,7 +4353,7 @@ function openMemberDrawer(id){
       (Array.isArray(m.away)&&m.away.length?m.away.slice().sort().map(d=>'<span class="away-chip">'+esc(fmtShort(d))+'<button title="Remove" onclick="removeAway('+m.id+',\''+escJs(d)+'\')">✕</button></span>').join(''):'<span style="font-size:12px;color:var(--dm)">None — member is available for all events.</span>')+'</div>'+
       '<div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="mdAwayDate" style="flex:1"><button class="btn btn-ol btn-sm" onclick="addAway('+m.id+')">+ Add away date</button></div>';
     // prefs
-    h+='<label class="flabel">Duty preferences <span style="text-transform:none;letter-spacing:0;color:var(--dm2)">— click to cycle neutral → prefer → avoid</span></label><div class="dchips">'+
+    h+='<label class="flabel">Duty preferences <span style="text-transform:none;letter-spacing:0;color:var(--dm2)">— click to cycle neutral › prefer › avoid</span></label><div class="dchips">'+
       allDutyNames.map(n=>{ const key=DUTY_INFO[n].key; const st=(m.prefs.prefer||[]).indexOf(key)>=0?'prefer':((m.prefs.avoid||[]).indexOf(key)>=0?'avoid':'');
         return '<button class="dchip-tog '+st+'" onclick="cyclePref('+m.id+',\''+escJs(key)+'\')">'+esc(n)+(st==='prefer'?' ✓':(st==='avoid'?' ✕':''))+'</button>'; }).join('')+'</div>';
     // notes
@@ -4773,7 +4773,7 @@ function renderAttendance(){
   let h='<div class="ph"><div><h1>Attendance</h1><p>'+
     (IS_EDIT?'Everyone rostered for this event, plus the team leads. Their duties are listed so you can see who is covering what.'
             :'Attendance is recorded by the team leads.')+'</p></div></div>';
-  h+='<div class="num-link"><button class="btn btn-ol btn-sm" onclick="repMode=\'attendance\';repMember=null;nav(\'reports\')">📊 See attendance rates in Numbers →</button></div>';
+  h+='<div class="num-link"><button class="btn btn-ol btn-sm" onclick="repMode=\'attendance\';repMember=null;nav(\'reports\')">📊 See attendance rates in Numbers</button></div>';
   h+='<div class="pnl" style="margin-bottom:14px"><div class="pnl-b" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
     '<label class="flabel" style="margin:0">Event</label><select onchange="attEventId=+this.value;renderAttendance()" style="min-width:260px">'+
     (evs.length?evs.map(e=>'<option value="'+e.id+'"'+(e.id===attEventId?' selected':'')+'>'+esc(fmtShort(e.date))+' \u00b7 '+esc(e.name)+'</option>').join(''):'<option>No events</option>')+

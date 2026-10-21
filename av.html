@@ -1387,7 +1387,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <button class="lbtn" onclick="doLogin()">Sign In</button>
     <div id="loginErr" style="color:#f88;font-size:13px;text-align:center;margin-top:10px;min-height:16px;"></div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--db);font-size:12px;color:var(--dm);text-align:center;line-height:1.7;">
-      <a href="index.html" style="color:var(--blue-lt);text-decoration:none;font-weight:700;">← Back to IV Hub</a><br>
+      <a href="index.html" style="color:var(--blue-lt);text-decoration:none;font-weight:700;">Back to IV Hub</a><br>
       <span style="opacity:.6;">Contact your administrator for credentials.</span>
     </div>
   </div>
@@ -1406,7 +1406,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     </div>
     <nav class="sb-nav">
       <!-- Cross-page link back into the IV Hub shell -->
-      <a class="hub-link" href="index.html"><span>←</span><span class="hl-t">Back to Hub</span></a>
+      <a class="hub-link" href="index.html"><span class="hl-t">Back to Hub</span></a>
       <!-- ── GENERAL ── -->
       <div class="nav-sec">General</div>
       <div class="nav-item active" data-page="dashboard" onclick="nav(this)"><span class="ni">⊞</span> Dashboard</div>
@@ -1440,7 +1440,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div><h1>Dashboard</h1><p id="dashSub">Overview</p></div>
         <div class="ha">
           <button class="btn btn-ol btn-sm" onclick="showDebugInfo()" style="margin-right:8px;">🔍 DB Status</button>
-          <button class="btn btn-bl btn-sm" onclick="nav(document.querySelector('[data-page=calendar]'))">View Roster →</button>
+          <button class="btn btn-bl btn-sm" onclick="nav(document.querySelector('[data-page=calendar]'))">View Roster</button>
         </div>
       </div>
       <div id="debug-panel" style="display:none;margin:0 24px 16px;background:#0A1A2E;border:1px solid rgba(75,163,220,0.2);border-radius:8px;padding:14px 16px;font-family:'Archivo',sans-serif;font-size:13px;color:#90CAF9;"></div>
@@ -1478,7 +1478,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="tw">
         <div style="padding:12px 16px;border-bottom:1px solid var(--db);display:flex;align-items:center;justify-content:space-between;">
           <h3 style="font-family:'Archivo',sans-serif;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;">Upcoming Majalis</h3>
-          <button class="btn btn-ol btn-sm" onclick="nav(document.querySelector('[data-page=calendar]'))">View roster →</button>
+          <button class="btn btn-ol btn-sm" onclick="nav(document.querySelector('[data-page=calendar]'))">View roster</button>
         </div>
         <table><thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th></tr></thead>
         <tbody id="upTb"></tbody></table>
@@ -1576,7 +1576,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <div class="md-month-badge" id="mdRangeBadge">—</div>
             <button class="md-screenshot-btn" id="mdSaveBtn" onclick="mdSaveImage(false)">📷 Save image</button>
-            <button class="md-screenshot-btn md-share" id="mdShareBtn" onclick="mdSaveImage(true)" style="display:none">↗ Share</button>
+            <button class="md-screenshot-btn md-share" id="mdShareBtn" onclick="mdSaveImage(true)" style="display:none">Share</button>
           </div>
         </div>
         <div class="mdl-chips" role="group" aria-label="How far ahead">
@@ -1601,7 +1601,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="ph">
         <div><h1>User Management</h1><p>Volunteer profiles, availability, roles &amp; rotation health</p></div>
         <div class="ha">
-          <button class="btn btn-ol btn-sm" onclick="loadFromDB().then(()=>{autoRoster();renderAll();toast('Synced from Hub ✓');})" title="Refresh the AV list from the hub (people ticked AV Team in Home → User Management)">↻ Sync from Hub</button>
+          <button class="btn btn-ol btn-sm" onclick="loadFromDB().then(()=>{autoRoster();renderAll();toast('Synced from Hub ✓');})" title="Refresh the AV list from the hub (people ticked AV Team in Home › User Management)">↻ Sync from Hub</button>
           <button class="btn btn-ol btn-sm" onclick="cleanupUnlisted()" title="Delete volunteer records for people NOT ticked as AV Team in the hub">🧹 Remove unlisted</button>
           <span id="hubSyncStatus" style="font-size:12px;font-weight:800;color:var(--dm);"></span>
         </div>
@@ -1611,7 +1611,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div class="iv-ph" style="background:linear-gradient(135deg,#0B3A6B,#00558B);"><span>🔗</span> Membership comes from the Hub</div>
         <div class="iv-pb">
           <div class="ib" style="margin-bottom:0;">
-            People join or leave the AV Team in <b style="color:var(--dt);">Home → Management → Data Management</b> —
+            People join or leave the AV Team in <b style="color:var(--dt);">Home › Management › Data Management</b> —
             tick <b style="color:var(--gold-lt);">AV Team</b> under Specialized Teams and they appear here automatically.
             Renames, gender and org-wide inactive status follow the hub record.
             Use this page to set each member's <b style="color:var(--dt);">weekdays, roles and busy dates</b>.
@@ -2171,7 +2171,7 @@ async function dbStored(q, allowNone){
    HUB AV MEMBERSHIP
    The AV roster contains EXACTLY the
    people ticked "AV Team" in the hub
-   (Home → Management → Data Management).
+   (Home › Management › Data Management).
 ═══════════════════════════════════ */
 function hubHasAV(m){
   let s = m && m.spec;
@@ -2751,7 +2751,7 @@ async function dbSaveUser(username, data){
       try{
         const rowNoPerms = {username:row.username, pw:row.pw, role:row.role, display:row.display};
         await dbStored(sb.from('app_users').upsert(rowNoPerms, {onConflict:'username'}));
-        toast('Saved, but app_users has no "perms" column — only the primary role was stored. Open Dashboard → DB Status for the one-line fix.','err');
+        toast('Saved, but app_users has no "perms" column — only the primary role was stored. Open Dashboard › DB Status for the one-line fix.','err');
         return true;
       }catch(e2){ console.error('dbSaveUser retry error:', e2.message); }
     }
@@ -3328,9 +3328,9 @@ function showDebugInfo(){
       <div>app_users perms column: <b style="color:${_permsColMissing?'#f44':'#4CAF50'};">${_permsColMissing?'MISSING':'OK'}</b></div>
       <div>Signed in as: <b style="color:#FFF;">${window.CU?esc(CU.user):'—'}</b> · perms: <b style="color:#FFF;">${window.CU?esc((CU.perms||[]).join(', ')||'none'):'—'}</b></div>
     </div>
-    ${_permsColMissing?`<div style="color:#FCD34D;margin-top:8px;line-height:1.6;">⚠ The <b>app_users</b> table has no <b>perms</b> column, so multi-permission accounts can't be stored (saves fall back to a single role). Run this once in Supabase → SQL Editor:<pre style="background:#000;padding:8px;border-radius:6px;margin-top:6px;font-size:12px;color:#8f8;white-space:pre-wrap;">alter table app_users add column if not exists perms jsonb;
+    ${_permsColMissing?`<div style="color:#FCD34D;margin-top:8px;line-height:1.6;">⚠ The <b>app_users</b> table has no <b>perms</b> column, so multi-permission accounts can't be stored (saves fall back to a single role). Run this once in Supabase › SQL Editor:<pre style="background:#000;padding:8px;border-radius:6px;margin-top:6px;font-size:12px;color:#8f8;white-space:pre-wrap;">alter table app_users add column if not exists perms jsonb;
 update app_users set perms = to_jsonb(array[role]) where perms is null;</pre>Then reload the app.</div>`:''}
-    ${vols.length === 0 ? '<div style="color:#f88;margin-top:8px;font-weight:800;">⚠ No volunteers loaded — tick people as <b>AV Team</b> in Home → User Management, or check the browser console (F12) for errors.</div>' : ''}
+    ${vols.length === 0 ? '<div style="color:#f88;margin-top:8px;font-weight:800;">⚠ No volunteers loaded — tick people as <b>AV Team</b> in Home › User Management, or check the browser console (F12) for errors.</div>' : ''}
     ${vols.length > 0 ? '<div style="color:#4CAF50;margin-top:8px;">✓ Data loaded successfully. If calendar looks empty, check which month is selected.</div>' : ''}
     <div style="margin-top:8px;"><button onclick="loadFromDB().then(()=>{autoRoster();renderAll();})" style="background:#00558B;color:#fff;border:none;border-radius:4px;padding:4px 12px;font-size:12px;cursor:pointer;">↻ Reload from DB</button>
     <button onclick="document.getElementById('debug-panel').style.display='none'" style="background:transparent;color:#888;border:1px solid #444;border-radius:4px;padding:4px 12px;font-size:12px;cursor:pointer;margin-left:8px;">Close</button></div>
@@ -4206,7 +4206,7 @@ function renderVolCards(){
   if(_vmFilter==='inactive') list=list.filter(v=>v.status==='inactive');
   if(_vmFilter==='nodays')   list=list.filter(v=>!(v.days||[]).length);
   if(_vmSearch) list=list.filter(v=>v.name.toLowerCase().includes(_vmSearch));
-  if(!list.length){c.innerHTML=`<div style="text-align:center;padding:20px;color:var(--dm);font-size:13px;">${vols.length?'No volunteers match this filter.':'No AV members yet — tick people as <b>AV Team</b> in Home → Management → Data Management.'}</div>`;return;}
+  if(!list.length){c.innerHTML=`<div style="text-align:center;padding:20px;color:var(--dm);font-size:13px;">${vols.length?'No volunteers match this filter.':'No AV members yet — tick people as <b>AV Team</b> in Home › Management › Data Management.'}</div>`;return;}
   c.innerHTML=list.map(v=>{
     const roles=v.roles;
     const inactive=v.status==='inactive';
@@ -4264,7 +4264,7 @@ function renderVolCards(){
         </div>
         <div class="vf" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:11px;padding-top:10px;border-top:1px solid var(--db);">
           <button class="btn btn-da btn-sm" onclick="rmVol(${v.id})">🗑 Remove</button>
-          <span style="font-size:12px;color:#4A6A80;font-style:italic;">Removing someone from the AV Team is done in the Hub — untick <b>AV Team</b> in Home → User Management.</span>
+          <span style="font-size:12px;color:#4A6A80;font-style:italic;">Removing someone from the AV Team is done in the Hub — untick <b>AV Team</b> in Home › User Management.</span>
         </div>
       </div>
     </div>`;
@@ -4281,7 +4281,7 @@ function rmVol(id){
   // Hub-listed people cannot be deleted here — the next load would just
   // re-create them from iv_members. Send the admin to the hub instead.
   if(rv && hubAvSet && hubAvSet.has(String(rv.name||'').trim().toLowerCase())){
-    toast('This person is ticked "AV Team" in the Hub — untick them in Home → User Management to remove them from AV. (Deleting here would just re-create them on the next load.)','err');
+    toast('This person is ticked "AV Team" in the Hub — untick them in Home › User Management to remove them from AV. (Deleting here would just re-create them on the next load.)','err');
     return;
   }
   if(!confirm(`Remove ${rv?rv.name:'this volunteer'} permanently? Their assignments will be re-rostered.`)) return;
@@ -5186,7 +5186,7 @@ async function downloadRosterPNG(){
             Majalis · Khushiyali · Uniform Status · Other Events
    Period : the roster month's first Monday through the
             Sunday before the next month's first Monday
-            (always whole weeks, e.g. Mon 3 Aug → Sun 6 Sep).
+            (always whole weeks, e.g. Mon 3 Aug › Sun 6 Sep).
 ═══════════════════════════════════════════════════════ */
 /* How event names are spelled in the CSV. Left = name stored in the app,
    right = text written to the file. Anything not listed exports as-is. */
@@ -5759,7 +5759,7 @@ function apSaveUser(oldUsername){
     try{ localStorage.setItem('ivhub_session', JSON.stringify(window.CU)); }catch(e){}
     applySession();
   }
-  auditLog(`Edited user: ${oldData?.display} → ${newDisplay} (${oldUsername} → ${newUsername})`, 'login', `Perms: ${newPerms.join(', ')}`);
+  auditLog(`Edited user: ${oldData?.display} › ${newDisplay} (${oldUsername} › ${newUsername})`, 'login', `Perms: ${newPerms.join(', ')}`);
   renderApUserList();
   toast(`User "${newDisplay}" saved.`);
 }
@@ -5768,7 +5768,7 @@ function renderApUserList(){
   const allUsers = Object.entries(USERS);
   if(!allUsers.length){ el.innerHTML=''; return; }
   el.innerHTML = `
-    ${_permsColMissing?`<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:9px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#FCD34D;line-height:1.6;">⚠ <b>Multi-permission accounts can't be saved</b> — the app_users table has no <b>perms</b> column. Each account keeps only its highest role until you add it. See Dashboard → DB Status for the one-line SQL fix.</div>`:''}
+    ${_permsColMissing?`<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:9px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#FCD34D;line-height:1.6;">⚠ <b>Multi-permission accounts can't be saved</b> — the app_users table has no <b>perms</b> column. Each account keeps only its highest role until you add it. See Dashboard › DB Status for the one-line SQL fix.</div>`:''}
     <div style="font-size:11px;font-weight:800;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">All Users (${allUsers.length})</div>
     ${allUsers.map(([u,d])=>{
       const safeId = u.replace(/\./g,'_').replace(/@/g,'_').replace(/[^a-zA-Z0-9_]/g,'_');
