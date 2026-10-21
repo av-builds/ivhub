@@ -744,3 +744,10 @@ html[data-theme="light"] #ivVeil{background:#F3F7FB;}
 .ivb-mono{right:4%;}
 html[data-theme="light"] .iv-banner{background:linear-gradient(180deg,#DDEAF6 0%,#F3F7FB 100%);}
 @media(max-width:560px){.iv-banner{min-height:calc(300px + var(--ivb-top,0px));-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%);}}
+
+/* the person's name, under the title */
+.ivb-name{font-size:24px;font-weight:700;letter-spacing:.02em;color:#E8F1F9;line-height:1.2;margin-top:-2px;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ivb-name:empty{display:none;}
+html[data-theme="light"] .ivb-name{color:#0C2236;}
+@media(max-width:900px){.ivb-name{font-size:20px}}
+@media(max-width:560px){.ivb-name{font-size:17px}}
