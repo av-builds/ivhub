@@ -1522,6 +1522,12 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <button class="r-nav-btn" onclick="chMo(-1)">‹</button>
           <h2 id="calTitle"></h2>
           <button class="r-nav-btn" onclick="chMo(1)">›</button>
+          <div class="r-legend" aria-label="Colour key">
+            <span class="lg lg-mj"><i></i>Majalis</span>
+            <span class="lg lg-tr"><i></i>Training</span>
+            <span class="lg lg-both"><i></i>Majalis + training</span>
+            <span class="lg lg-mph"><i></i>MPH (Fridays)</span>
+          </div>
         </div>
         <!-- Grid: headers + cells -->
         <div class="cal-grid">
@@ -3416,7 +3422,7 @@ AV_SKINS.siteLight=Object.assign({},AV_SKINS.export,{
   pad:'10px 12px', padTop:8, ramp:130, badge:32, bpill:10, ruleH:2,
   dn:26, lbl:11, nm:16, tnm:13, evSize:12, mphA:14, mphB:12,
   dnC:{plain:'#5B7189', mj:'#0B6B47', tr:'#8A5200', both:'#B3261E'}, dnOther:'#A3B6C9',
-  nameSh:'none', jkFg:'#2B6A97', jkRule:'#7DB2D6', mphFg:'#6D3FD0', mphRule:'#B79CFF', mphAc:'#3A1F8A', mphBc:'#5B4A9A',
+  nameSh:'none', jkFg:'#2B6A97', jkRule:'#7DB2D6', mphFg:'#C2410C', mphRule:'#FDBA74', mphAc:'#7C2D12', mphBc:'#9A3412',
 });
 AV_SKINS.site.dn=26; AV_SKINS.site.pad='10px 12px';
 function avSiteSkin(){ return document.documentElement.getAttribute('data-theme')==='light' ? AV_SKINS.siteLight : AV_SKINS.site; }
@@ -3565,7 +3571,8 @@ function renderCal(){
     if(tr && mj)  cls+=' ev-jk ev-training';
     else if(tr)   cls+=' ev-training';
     else if(mj)   cls+=' ev-jk';
-    if(isToday) cls+=' today';   /* a quiet marker, so the current day can be found at a glance */
+    if(isToday) cls+=' today';
+    if((isFri||ro._mph_primary)&&!ro._mph_removed) cls+=' has-mph';   /* days that carry an MPH section get a violet fade at the bottom */   /* a quiet marker, so the current day can be found at a glance */
     div.className=cls;
     div.dataset.ds=ds;
     div.dataset.dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(ds+'T12:00').getDay()];
@@ -5108,10 +5115,18 @@ async function downloadRosterPNG(){
       const S    = AV_SKINS.export;
       const kind = avCellKind(mjEv,trEv);
       const out=document.createElement('div');
-      const edge={plain:'rgba(21,101,192,0.16)',mj:'#9ED9BB',tr:'#F0CC7A',both:'#F1A5B1'}[kind];
-      out.style.cssText=`background:${avCellBG(kind,S,isOther)};border:1.5px solid ${edge};border-radius:18px;`+
-        `box-shadow:0 10px 22px -16px rgba(20,60,120,0.45);min-height:195px;box-sizing:border-box;overflow:hidden;`;
-      out.innerHTML=avCellHTML({day:day,mj:mjEv,tr:trEv,evs:evs,ro:ro,isFri:isFri,isOther:isOther},S);
+      /* Tinted days carry no border — the colour is the edge; plain days get a crisp hairline. */
+      const inner=avCellHTML({day:day,mj:mjEv,tr:trEv,evs:evs,ro:ro,isFri:isFri,isOther:isOther},S);
+      const mphFade=((isFri||ro._mph_primary)&&!ro._mph_removed)?'linear-gradient(0deg,rgba(234,88,12,0.24),rgba(234,88,12,0) 36%),':'';
+      if(kind==='plain' && !isOther){
+        /* A plain day's edge fades from the top, like the tint on an event day: a 1px
+           gradient frame with the fill drawn inside it. */
+        out.style.cssText=`background:linear-gradient(180deg,rgba(21,101,192,0.5),rgba(21,101,192,0.06) 78%);padding:1px;border-radius:14px;min-height:195px;box-sizing:border-box;display:flex;`;
+        out.innerHTML=`<div style="background:${mphFade}${S.bgPlain};border-radius:13px;flex:1;min-width:0;box-sizing:border-box;overflow:hidden;">${inner}</div>`;
+      } else {
+        out.style.cssText=`background:${mphFade}${avCellBG(kind,S,isOther)};border:0;border-radius:14px;min-height:195px;box-sizing:border-box;overflow:hidden;`;
+        out.innerHTML=inner;
+      }
       gridWrap.appendChild(out);
     });
     container.appendChild(gridWrap);

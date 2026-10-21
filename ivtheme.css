@@ -464,3 +464,78 @@ html[data-theme="light"] .dc-x:hover{color:#B3261E;}
 /* roster header: calmer weight, same content */
 .r-title .sub{font-size:11px;}
 .r-badge-logo,.app-logo.r-badge-logo{box-shadow:0 0 0 2px var(--db);}
+
+/* ═══════════════ ROSTER: CRISP LINES ═══════════════
+   Hairlines instead of soft shadows, tighter corners, and no border on the
+   tinted event days — the colour is the edge. */
+.roster-wrap{border-radius:24px;border:1px solid var(--db);box-shadow:none;}
+.r-hdr{border-bottom:1px solid var(--db);}
+.r-nav{border-bottom:1px solid var(--db);}
+.r-nav-btn{border-radius:12px;width:42px;height:42px;border:1px solid var(--db);}
+.cal-grid{gap:8px;padding:14px 16px 18px;}
+.col-hdr{border-bottom:1px solid var(--db);padding:8px 4px 10px;border-radius:0;}
+.cell{border-radius:14px;border:1px solid var(--db);box-shadow:none;}
+.cell:hover{border-color:var(--iv-ac);box-shadow:none;transform:none;}
+.cell.other,.cell.other:hover{border:1px dashed var(--db);}
+.cell.ev-jk,.cell.ev-training,.cell.ev-jk.ev-training{border:0!important;box-shadow:none!important;}
+.cell.ev-jk:hover,.cell.ev-training:hover{border:0!important;box-shadow:inset 0 0 0 2px rgba(var(--k),.9)!important;}
+.cell.today{box-shadow:inset 0 0 0 2px var(--iv-ac);}
+.cell.ev-jk.today,.cell.ev-training.today{box-shadow:none!important;}
+html[data-theme="light"] .cell{box-shadow:none;}
+html[data-theme="light"] .cell.ev-jk,html[data-theme="light"] .cell.ev-training{box-shadow:none!important;}
+.r-ftr{border-top:1px solid var(--db);}
+#page-calendar .ha .btn,#screenshotBtn,#csvBtn{border-radius:12px!important;}
+#csvBtn{border:1px solid var(--db)!important;}
+.cell:last-child,.cell:nth-child(7n){border-right:1px solid var(--db);}
+.cell.other:last-child,.cell.other:nth-child(7n){border-right:1px dashed var(--db);}
+.cell.ev-jk:last-child,.cell.ev-training:last-child,.cell.ev-jk:nth-child(7n),.cell.ev-training:nth-child(7n){border-right:0!important;}
+
+/* Plain days: the border fades from the top, like the tint on event days.
+   Only the 1px edge is a gradient; the fill stays as it is. */
+.cell:not(.ev-jk):not(.ev-training):not(.other){border-color:transparent;}
+.cell:not(.ev-jk):not(.ev-training):not(.other)::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(79,195,247,.6) 0,rgba(79,195,247,.22) 42%,transparent 78%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);}
+html[data-theme="light"] .cell:not(.ev-jk):not(.ev-training):not(.other)::after{background:linear-gradient(180deg,rgba(21,101,192,.5) 0,rgba(21,101,192,.18) 42%,transparent 78%);}
+.cell:not(.ev-jk):not(.ev-training):not(.other):hover{border-color:var(--iv-ac);}
+.cell.today:not(.ev-jk):not(.ev-training){box-shadow:inset 0 0 0 2px var(--iv-ac);}
+
+/* ── roster legend, in the month bar ─────────────────── */
+.r-nav{justify-content:flex-start;gap:14px;flex-wrap:wrap;}
+.r-nav h2{flex:0 0 auto;}
+.r-legend{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;}
+.r-legend .lg{display:inline-flex;align-items:center;gap:8px;font:700 12px 'Archivo',sans-serif;color:var(--dm);white-space:nowrap;}
+.r-legend .lg i{width:12px;height:12px;border-radius:4px;background:var(--c);}
+.lg-mj{--c:#34D399;}.lg-tr{--c:#FBBF24;}.lg-both{--c:#FB7185;}.lg-mph{--c:#EA580C;}
+html[data-theme="light"] .lg-mj{--c:#10B981;}html[data-theme="light"] .lg-tr{--c:#F59E0B;}
+html[data-theme="light"] .lg-both{--c:#F43F5E;}html[data-theme="light"] .lg-mph{--c:#C2410C;}
+@media(max-width:820px){.r-legend{margin-left:0;width:100%;}}
+
+/* ── light theme: much more vivid gradients ──────────── */
+html[data-theme="light"]{--iv-g1:rgba(21,101,192,.26);--iv-g2:rgba(236,72,153,.22);}
+html[data-theme="light"] .cell.ev-jk{--k:16,185,129;}
+html[data-theme="light"] .cell.ev-training{--k:245,158,11;}
+html[data-theme="light"] .cell.ev-jk.ev-training{--k:244,63,94;}
+html[data-theme="light"] .cell.ev-jk,html[data-theme="light"] .cell.ev-training,html[data-theme="light"] .cell.ev-jk.ev-training{
+  background:linear-gradient(180deg,rgba(var(--k),.46) 0,rgba(var(--k),.16) 55%,rgba(var(--k),.04)),#fff;}
+html[data-theme="light"] .cell:not(.ev-jk):not(.ev-training):not(.other)::after{background:linear-gradient(180deg,rgba(21,101,192,.9) 0,rgba(21,101,192,.4) 45%,rgba(21,101,192,0) 88%);}
+html[data-theme="light"] .r-hdr{background:linear-gradient(135deg,rgba(21,101,192,.34) 0,rgba(99,102,241,.16) 45%,var(--ds) 85%);}
+html[data-theme="light"] .r-hdr::before{background:radial-gradient(ellipse at 92% 0%,rgba(236,72,153,.28),transparent 60%);}
+html[data-theme="light"] .hero,html[data-theme="light"] .dash-hero{background:linear-gradient(135deg,rgba(21,101,192,.30) 0,rgba(99,102,241,.14) 50%,var(--ds) 90%);}
+html[data-theme="light"] #quickPanel,html[data-theme="light"] .welcome{background:linear-gradient(150deg,rgba(21,101,192,.18),var(--ds) 65%);}
+html[data-theme="light"] .dc-tile.mj,html[data-theme="light"] .dc-tile.ev,html[data-theme="light"] .dc-tile.tr{background:linear-gradient(135deg,rgba(var(--k),.34),rgba(var(--k),.08)),#fff;}
+html[data-theme="light"] .dc-tile.mj{--k:16,185,129;}html[data-theme="light"] .dc-tile.tr{--k:245,158,11;}
+html[data-theme="light"] .dc-top{background:linear-gradient(180deg,rgba(21,101,192,.22),var(--ds));}
+
+/* TODAY tag: bottom corner on the grid, so it never pushes the badges out of the card */
+@media(min-width:821px){
+  .cell.today .dn::after{display:none;}
+  .cell.today::before{content:"TODAY";position:absolute;right:10px;bottom:10px;padding:3px 8px;border-radius:999px;font:800 9px 'Archivo',sans-serif;letter-spacing:.14em;background:var(--iv-ac);color:var(--iv-oa);z-index:1;}
+  .cell.today.ev-jk::before,.cell.today.ev-training::before{background:#fff;color:#14110A;}
+}
+@media(max-width:820px){.cell.today.ev-jk::before,.cell.today.ev-training::before{left:70px;right:auto;}}
+
+/* MPH days: a deep-orange fade rising from the bottom of the card */
+.cell{isolation:isolate;}
+.cell.has-mph .cell-inner::before{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;z-index:-1;pointer-events:none;background:linear-gradient(0deg,rgba(234,88,12,.36) 0,rgba(234,88,12,.12) 55%,rgba(234,88,12,0));}
+html[data-theme="light"] .cell.has-mph .cell-inner::before{background:linear-gradient(0deg,rgba(234,88,12,.4) 0,rgba(234,88,12,.14) 55%,rgba(234,88,12,0));}
