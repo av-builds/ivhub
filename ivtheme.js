@@ -147,7 +147,7 @@
       '<div class="ivb-in">'+
         '<div class="ivb-seal" title="Ismaili Volunteers"><svg viewBox="0 0 176 176" aria-hidden="true"><circle cx="88" cy="88" r="79"/></svg><i class="ivb-arc"></i><img alt="Ismaili Volunteers seal" src="logo.png"></div>'+
         '<div class="ivb-kick"><i class="ivb-rule l"></i><i class="ivb-dia"></i><span></span><i class="ivb-dia"></i><i class="ivb-rule r"></i></div>'+
-        '<div class="ivb-title"></div><div class="ivb-sub"></div>'+
+        '<div class="ivb-title"></div><div class="ivb-name"></div><div class="ivb-sub"></div>'+
       '</div>';
     b.querySelector('.ivb-mono').textContent=MONO[k];
     b.querySelector('.ivb-kick span').textContent=(k==='hub'?'Welcome':'Welcome to');
@@ -165,14 +165,12 @@
     fit(); try{ if(window.ResizeObserver) new ResizeObserver(function(){ fit(); }).observe(b); }catch(e){}
     window.addEventListener('resize',function(){ clearTimeout(fit.t); fit.t=setTimeout(fit,120); });
     window.addEventListener('load',fit);
-    if(k==='hub'){
-      /* the Hub greets by first name: wait for the sign-in to land */
-      var n=0, kick=b.querySelector('.ivb-kick span'), iv=setInterval(function(){
-        var who=window.CU&&(CU.display||CU.user); n++;
-        if(who){ kick.textContent='Welcome back, '+String(who).split(' ')[0]; clearInterval(iv); }
-        else if(n>40) clearInterval(iv);
-      },500);
-    }
+    /* the signed-in person's name, on the line under the title in smaller text; filled in once sign-in lands */
+    var nameEl=b.querySelector('.ivb-name'), tries=0, iv=setInterval(function(){
+      var cu=(typeof CU!=='undefined')?CU:window.CU, who=cu&&(cu.display||cu.user); tries++;
+      if(who){ nameEl.textContent=String(who); clearInterval(iv); }
+      else if(tries>60) clearInterval(iv);
+    },500);
   }
   function boot(){ mount(); welcome(); homeLogo(); growVeil(); banner(); }
   if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);
