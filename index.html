@@ -246,6 +246,10 @@ html[data-theme="light"] .dcard.t-a{--tc:#24914F;}html[data-theme="light"] .dcar
 .mds-act .btn{min-height:46px;flex:1 1 150px;justify-content:center;}
 .mds-act .btn-ghost{background:transparent;border:1.5px solid var(--iv-sec,#3F8FBF);color:var(--iv-sec,#3F8FBF);}
 .mds-hint{font-size:12px;color:var(--dm);line-height:1.5;}
+.mds-lab{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--dm);margin-bottom:-6px;}
+.mds-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;}
+.mds-chip{flex:none;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--db);background:transparent;color:var(--dm);font:inherit;font-size:13px;font-weight:800;cursor:pointer;}
+.mds-chip span{opacity:.7;}.mds-chip.on{border-color:var(--iv-sec,#3F8FBF);background:var(--iv-secs,rgba(63,143,191,.16));color:var(--dt);}
 @media(max-width:520px){.dcard{flex-wrap:wrap;row-gap:10px;}.dcard-main{flex:1 1 0;min-width:140px;}.dcard-badges{flex-direction:row;flex-wrap:wrap;width:100%;justify-content:flex-start;}}
 
 .skel{height:64px;border-radius:12px;border:1px solid var(--db);margin-bottom:9px;
@@ -666,8 +670,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021g">
-<script src="ivtheme.js?v=20261021g"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021i">
+<script src="ivtheme.js?v=20261021i"></script>
 </head>
 <body>
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
@@ -982,6 +986,13 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   <div class="mds-ov" id="mdShot" role="dialog" aria-modal="true" aria-labelledby="mdShotTitle">
     <div class="mds-box" id="mdShotBox">
       <div class="mds-top"><h3 id="mdShotTitle">Save my duties</h3><button type="button" class="mds-x" id="mdShotX" aria-label="Close">&times;</button></div>
+      <div class="mds-lab">Period</div>
+      <div class="mds-seg" role="group" aria-label="Period">
+        <button type="button" data-per="month" class="on">This month</button>
+        <button type="button" data-per="90">Next 90 days</button>
+      </div>
+      <div class="mds-chips" id="mdShotMonths"></div>
+      <div class="mds-lab">Shape</div>
       <div class="mds-seg" role="group" aria-label="Image shape">
         <button type="button" data-fmt="phone" class="on">Phone &middot; WhatsApp</button>
         <button type="button" data-fmt="laptop">Laptop</button>
@@ -991,6 +1002,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <button type="button" class="btn btn-bl" id="mdShotSave">Save image</button>
         <button type="button" class="btn btn-ghost" id="mdShotShare" style="display:none;">Share to WhatsApp&hellip;</button>
       </div>
+      <div class="mds-hint" id="mdShotNote"></div>
       <div class="mds-hint">On a phone, tap Share and choose WhatsApp or Photos. If Save does nothing, press and hold the picture.</div>
     </div>
   </div>
@@ -2829,103 +2841,170 @@ async function runDutySearch(){
 
 /* ═══ MY DUTIES: SAVE AS IMAGE ═══
    Draws the card straight onto a canvas rather than photographing the page,
-   so it needs no extra library, works offline and comes out the same on every
-   device. "phone" is a tall 1080px card for WhatsApp and status; "laptop" is a
-   wide 1600px card in two columns. */
-let mdShotData = null, mdShotFmt = 'phone', mdShotBlob = null, mdShotSeq = 0;
+   so it needs no extra library, works offline and looks the same on every
+   device. It follows the theme the person has on, picks the phone shape on
+   phones and the laptop shape on laptops (either can be switched), covers one
+   month or the next 90 days, and goes to two columns when the period is busy
+   so it stays readable. */
+let mdShotData = null, mdShotBlob = null, mdShotSeq = 0;
+let mdCfg = {fmt:'phone', period:'month', month:''};
 function mdInitials(n){ const p = String(n||'').trim().split(/\s+/).filter(Boolean); return ((p[0]||'')[0]||'') + ((p.length>1 ? p[p.length-1] : '')[0]||''); }
-const MD_TEAM = {A:{c:'#86E49A',t:'Team A'}, B:{c:'#EE6F5C',t:'Team B'}, AV:{c:'#8EA8E1',t:'AV Team'}};
+function mdAutoShape(){
+  try{ if(window.matchMedia('(pointer:coarse)').matches || window.innerWidth < 820) return 'phone'; }catch(e){}
+  return 'laptop';
+}
+const MD_PAL = {
+  dark:{ bg0:'#04101D', bg1:'#0A2236', glow:'rgba(63,143,191,.34)', text:'#FFFFFF', muted:'#9DB7CC', primary:'#4BA3DC', accent:'#3F8FBF',
+         card:'rgba(255,255,255,.06)', cardBd:'rgba(255,255,255,.10)', dateBg:'rgba(255,255,255,.07)', line:'rgba(255,255,255,.14)',
+         nextBg:'rgba(63,143,191,.12)', nextBd:'rgba(63,143,191,.35)', off:'rgba(255,255,255,.10)', ink:'#06141F',
+         A:{c:'#86E49A',t:'TEAM A'}, B:{c:'#EE6F5C',t:'TEAM B'}, AV:{c:'#8EA8E1',t:'AV TEAM'} },
+  light:{ bg0:'#F7FAFD', bg1:'#E4EDF6', glow:'rgba(63,143,191,.22)', text:'#0B1B33', muted:'#516782', primary:'#00558B', accent:'#0B3A5B',
+         card:'#FFFFFF', cardBd:'rgba(11,27,51,.10)', dateBg:'#EAF1F8', line:'rgba(11,27,51,.14)',
+         nextBg:'rgba(11,58,91,.07)', nextBd:'rgba(11,58,91,.20)', off:'rgba(11,27,51,.10)', ink:'#FFFFFF',
+         A:{c:'#24914F',t:'TEAM A'}, B:{c:'#D4533F',t:'TEAM B'}, AV:{c:'#4A68B5',t:'AV TEAM'} }
+};
 function mdRR(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
 function mdFit(c,txt,maxW){ txt = String(txt||''); if(c.measureText(txt).width <= maxW) return txt; while(txt.length>1 && c.measureText(txt+'…').width > maxW) txt = txt.slice(0,-1); return txt.trim()+'…'; }
 function mdLoadImg(src){ return new Promise(r=>{ const i = new Image(); i.onload = ()=>r(i); i.onerror = ()=>r(null); i.src = src; }); }
-async function mdDrawCard(name, rows, fmt){
+function mdNZToday(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Pacific/Auckland'}); }
+function mdMonthLabel(key){ const [y,m] = key.split('-').map(Number); return new Date(y, m-1, 15).toLocaleDateString('en-NZ',{month:'long',year:'numeric'}); }
+function mdMonths(rows){ const o = {}; rows.forEach(e=>{ const k = e.date.slice(0,7); o[k] = (o[k]||0)+1; }); return Object.keys(o).sort().map(k=>({key:k, n:o[k], label:new Date(+k.slice(0,4), +k.slice(5,7)-1, 15).toLocaleDateString('en-NZ',{month:'long'})})); }
+function mdPeriodRows(rows, cfg){
+  if(cfg.period === '90') return rows.slice();
+  return rows.filter(e=>e.date.slice(0,7) === cfg.month);
+}
+async function mdDrawCard(name, allRows, cfg, themeName){
   const FONT = 'Archivo, system-ui, -apple-system, "Segoe UI", sans-serif';
   try{ if(document.fonts && document.fonts.load) await Promise.race([Promise.all([400,700,900].map(w=>document.fonts.load(w+' 30px Archivo'))), new Promise(r=>setTimeout(r,2500))]); }catch(e){}
   const logo = await mdLoadImg(window.IV_LOGO || 'logo.png');
-  const laptop = fmt === 'laptop';
-  const W = laptop ? 1600 : 1080, PAD = laptop ? 72 : 64, cols = laptop ? 2 : 1, GAP = 18;
-  const MAX = 8, shown = rows.slice(0, MAX), more = rows.length - shown.length;
-  const RH = 144, rowW = (W - PAD*2 - GAP*(cols-1)) / cols;
-  const HEAD = laptop ? 376 : 392, FOOT = 120;
-  const nRows = Math.ceil(shown.length / cols);
-  const H = HEAD + nRows*(RH+GAP) + (more>0 ? 70 : 0) + FOOT;
+  const P = MD_PAL[themeName === 'light' ? 'light' : 'dark'];
+  const laptop = cfg.fmt === 'laptop';
+  const rows = mdPeriodRows(allRows, cfg);
+  const n = rows.length;
+  const W = laptop ? 1600 : 1080, PAD = laptop ? 72 : 64, GAP = 16;
+  const cols = (laptop || n > 8) ? 2 : 1;
+  const compact = !laptop && cols === 2;
+  const RH = compact ? 118 : (laptop ? 132 : 144);
+  const rowW = (W - PAD*2 - GAP*(cols-1)) / cols;
+  const byMonth = cfg.period === '90';
+  /* groups: the month period is one group, 90 days gets a heading per month */
+  const groups = [];
+  rows.forEach(e=>{ const k = e.date.slice(0,7); let g = groups[groups.length-1]; if(!g || g.key !== k){ g = {key:k, rows:[]}; groups.push(g); } g.rows.push(e); });
+  const HEADH = 64;
+  /* vertical layout, top to bottom */
+  const titleY = laptop ? 268 : 280;
+  let y = laptop ? 366 : 376;                 // next-up strip top
+  const NEXTH = 88; const nextY = y; y += NEXTH + 28;
+  const stripY = y; if(!byMonth && n){ y += 78 + 30; }
+  const startY = y;
+  const pos = [];
+  groups.forEach(g=>{
+    if(byMonth){ pos.push({head:g.key, y}); y += HEADH; }
+    g.rows.forEach((e,i)=>{ pos.push({e, x:PAD + (i%cols)*(rowW+GAP), y:y + Math.floor(i/cols)*(RH+GAP)}); });
+    y += Math.ceil(g.rows.length/cols)*(RH+GAP) + (byMonth ? 10 : 0);
+  });
+  const FOOT = 120;
+  const H = Math.max(y + FOOT - (n ? 0 : 0), 720);
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const c = cv.getContext('2d');
   /* ground */
-  let g = c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#04101D'); g.addColorStop(1,'#0A2236');
+  let g = c.createLinearGradient(0,0,0,H); g.addColorStop(0,P.bg0); g.addColorStop(1,P.bg1);
   c.fillStyle = g; c.fillRect(0,0,W,H);
-  g = c.createRadialGradient(W*0.85,0,0,W*0.85,0,W*0.7); g.addColorStop(0,'rgba(63,143,191,.34)'); g.addColorStop(1,'rgba(63,143,191,0)');
+  g = c.createRadialGradient(W*0.85,0,0,W*0.85,0,W*0.7); g.addColorStop(0,P.glow); g.addColorStop(1,'rgba(63,143,191,0)');
   c.fillStyle = g; c.fillRect(0,0,W,H);
-  g = c.createLinearGradient(0,0,W,0); g.addColorStop(0,'#00558B'); g.addColorStop(1,'#3F8FBF');
+  g = c.createLinearGradient(0,0,W,0); g.addColorStop(0,P.primary); g.addColorStop(1,P.accent);
   c.fillStyle = g; c.fillRect(0,0,W,10);
+  c.textBaseline = 'alphabetic'; c.textAlign = 'left';
   /* seal + organisation */
   const lx = PAD, ly = 62, lr = 52;
-  c.save(); c.beginPath(); c.arc(lx+lr, ly+lr, lr+5, 0, Math.PI*2); c.fillStyle = '#3F8FBF'; c.fill(); c.restore();
+  c.beginPath(); c.arc(lx+lr, ly+lr, lr+5, 0, Math.PI*2); c.fillStyle = P.accent; c.fill();
   c.save(); c.beginPath(); c.arc(lx+lr, ly+lr, lr, 0, Math.PI*2); c.fillStyle = '#fff'; c.fill(); c.clip();
   if(logo) c.drawImage(logo, lx+4, ly+4, lr*2-8, lr*2-8); c.restore();
-  c.textBaseline = 'alphabetic'; c.textAlign = 'left';
-  c.fillStyle = '#8FB8D6'; c.font = '800 24px '+FONT; c.fillText('ISMAILI VOLUNTEERS', lx+lr*2+28, ly+44);
-  c.fillStyle = '#E6F1FA'; c.font = '700 28px '+FONT; c.fillText('Auckland Jamatkhana', lx+lr*2+28, ly+84);
-  /* title block */
-  const ty = laptop ? 268 : 272;
-  c.fillStyle = '#3F8FBF'; c.font = '900 26px '+FONT; c.fillText('MY DUTIES', PAD, ty-64);
-  let fs = laptop ? 84 : 92; c.font = '900 '+fs+'px '+FONT;
-  while(c.measureText(name).width > W - PAD*2 - (laptop ? 360 : 0) && fs > 40){ fs -= 4; c.font = '900 '+fs+'px '+FONT; }
-  c.fillStyle = '#FFFFFF'; c.fillText(name, PAD, ty+fs*0.28);
-  c.fillStyle = '#9DB7CC'; c.font = '700 30px '+FONT;
-  const n = rows.length, nx = rows[0];
-  const sub = n+' upcoming dut'+(n===1?'y':'ies')+'  ·  next '+fmtDW(nx.date)+' '+fmtDM(nx.date);
-  c.fillText(sub, PAD, ty+fs*0.28+52);
-  if(laptop){
-    /* count badge on the right of the title area */
-    c.textAlign = 'right'; c.fillStyle = '#3F8FBF'; c.font = '900 120px '+FONT; c.fillText(String(n), W-PAD, ty+30);
-    c.fillStyle = '#9DB7CC'; c.font = '800 22px '+FONT; c.fillText('UPCOMING', W-PAD, ty+66); c.textAlign = 'left';
+  c.fillStyle = P.accent; c.font = '800 24px '+FONT; c.fillText('ISMAILI VOLUNTEERS', lx+lr*2+28, ly+44);
+  c.fillStyle = P.text; c.font = '700 28px '+FONT; c.fillText('Auckland Jamatkhana', lx+lr*2+28, ly+84);
+  /* title block: kicker, name, big count */
+  const kick = 'MY DUTIES  ·  ' + (byMonth ? 'NEXT 90 DAYS' : mdMonthLabel(cfg.month).toUpperCase());
+  c.fillStyle = P.accent; c.font = '900 26px '+FONT; c.fillText(kick, PAD, titleY-64);
+  c.font = '900 132px '+FONT; const cw = c.measureText(String(n)).width;
+  let fs = laptop ? 84 : 88; c.font = '900 '+fs+'px '+FONT;
+  while(c.measureText(name).width > W - PAD*2 - cw - 40 && fs > 40){ fs -= 4; c.font = '900 '+fs+'px '+FONT; }
+  c.fillStyle = P.text; c.fillText(name, PAD, titleY+fs*0.28);
+  c.textAlign = 'right'; c.fillStyle = P.primary; c.font = '900 132px '+FONT; c.fillText(String(n), W-PAD, titleY+30);
+  c.fillStyle = P.muted; c.font = '800 22px '+FONT; c.fillText(n===1 ? 'DUTY' : 'DUTIES', W-PAD, titleY+66); c.textAlign = 'left';
+  if(!n){
+    c.fillStyle = P.muted; c.font = '700 32px '+FONT; c.fillText('No duties in this period.', PAD, nextY+50);
+  } else {
+    /* next up */
+    const nx = rows[0], today = mdNZToday();
+    const diff = Math.round((Date.parse(nx.date+'T12:00:00Z') - Date.parse(today+'T12:00:00Z'))/86400000);
+    const when = fmtDW(nx.date)+' '+fmtDM(nx.date);
+    mdRR(c,PAD,nextY,W-PAD*2,NEXTH,28); c.fillStyle = P.nextBg; c.fill(); c.lineWidth = 2; c.strokeStyle = P.nextBd; c.stroke();
+    c.fillStyle = P.accent; c.font = '900 20px '+FONT; c.fillText('NEXT UP', PAD+28, nextY+NEXTH/2+7);
+    const inTxt = diff <= 0 ? 'today' : diff === 1 ? 'tomorrow' : 'in '+diff+' days';
+    c.textAlign = 'right'; c.fillStyle = P.muted; c.font = '800 24px '+FONT; c.fillText(inTxt, W-PAD-28, nextY+NEXTH/2+9); const iw = c.measureText(inTxt).width; c.textAlign = 'left';
+    c.fillStyle = P.text; c.font = '800 30px '+FONT; c.fillText(mdFit(c, when+'  ·  '+nx.duty, W-PAD*2-56-130-iw-20), PAD+28+130, nextY+NEXTH/2+10);
+    /* month strip: every day, duty days lit in team colour */
+    if(!byMonth){
+      const [yy,mm] = cfg.month.split('-').map(Number), dim = new Date(yy, mm, 0).getDate();
+      const byDay = {}; rows.forEach(e=>{ byDay[+e.date.slice(8,10)] = e; });
+      const sw = (W - PAD*2 - 6*(dim-1)) / dim;
+      for(let d=1; d<=dim; d++){
+        const e = byDay[d], x = PAD + (d-1)*(sw+6), bh = e ? 44 : 14;
+        mdRR(c,x,stripY+44-bh,sw,bh,6); c.fillStyle = e ? (P[e.team]||P.A).c : P.off; c.fill();
+        c.fillStyle = e ? P.text : P.muted; c.font = (e?'900':'600')+' 15px '+FONT; c.textAlign = 'center'; c.fillText(String(d), x+sw/2, stripY+44+26); c.textAlign = 'left';
+      }
+    }
   }
-  /* rows */
-  shown.forEach((e,i)=>{
-    const col = i % cols, r = Math.floor(i / cols);
-    const x = PAD + col*(rowW+GAP), y = HEAD + r*(RH+GAP);
-    const T = MD_TEAM[e.team] || MD_TEAM.A;
-    mdRR(c,x,y,rowW,RH,28); c.fillStyle = 'rgba(255,255,255,.06)'; c.fill();
-    c.lineWidth = 2; c.strokeStyle = 'rgba(255,255,255,.1)'; c.stroke();
-    c.save(); mdRR(c,x,y,rowW,RH,28); c.clip(); c.fillStyle = T.c; c.fillRect(x,y,8,RH); c.restore();
-    /* date block */
-    const dx = x+30, dy = y+16, dw = 112, dh = RH-32;
-    mdRR(c,dx,dy,dw,dh,20); c.fillStyle = 'rgba(255,255,255,.07)'; c.fill();
+  /* headings and rows */
+  pos.forEach(it=>{
+    if(it.head){
+      c.fillStyle = P.muted; c.font = '900 22px '+FONT; const t = mdMonthLabel(it.head).toUpperCase(); c.fillText(t, PAD, it.y+36);
+      const tw = c.measureText(t).width; c.fillStyle = P.line; c.fillRect(PAD+tw+20, it.y+28, W-PAD*2-tw-20, 2);
+      return;
+    }
+    const e = it.e, x = it.x, yy = it.y, T = P[e.team] || P.A;
+    mdRR(c,x,yy,rowW,RH,compact?24:28); c.fillStyle = P.card; c.fill(); c.lineWidth = 2; c.strokeStyle = P.cardBd; c.stroke();
+    c.save(); mdRR(c,x,yy,rowW,RH,compact?24:28); c.clip(); c.fillStyle = T.c; c.fillRect(x,yy,8,RH); c.restore();
+    const dw = compact ? 84 : 112, dh = compact ? 88 : RH-32, dx = x+(compact?24:30), dy = yy+(RH-dh)/2;
+    mdRR(c,dx,dy,dw,dh,compact?16:20); c.fillStyle = P.dateBg; c.fill();
     c.textAlign = 'center';
     const d = new Date(e.date+'T12:00:00');
-    c.fillStyle = T.c; c.font = '800 21px '+FONT; c.fillText(d.toLocaleDateString('en-NZ',{weekday:'short'}).toUpperCase(), dx+dw/2, dy+34);
-    c.fillStyle = '#fff'; c.font = '900 50px '+FONT; c.fillText(String(d.getDate()), dx+dw/2, dy+84);
-    c.fillStyle = '#9DB7CC'; c.font = '800 20px '+FONT; c.fillText(d.toLocaleDateString('en-NZ',{month:'short'}).toUpperCase(), dx+dw/2, dy+108);
+    c.fillStyle = T.c; c.font = '800 '+(compact?15:21)+'px '+FONT; c.fillText(d.toLocaleDateString('en-NZ',{weekday:'short'}).toUpperCase(), dx+dw/2, dy+(compact?24:34));
+    c.fillStyle = P.text; c.font = '900 '+(compact?36:50)+'px '+FONT; c.fillText(String(d.getDate()), dx+dw/2, dy+(compact?62:84));
+    c.fillStyle = P.muted; c.font = '800 '+(compact?15:20)+'px '+FONT; c.fillText(d.toLocaleDateString('en-NZ',{month:'short'}).toUpperCase(), dx+dw/2, dy+(compact?82:108));
     c.textAlign = 'left';
-    /* text */
-    const tx = dx+dw+26, pillW = laptop ? 136 : 150, textW = rowW - (tx-x) - pillW - 40;
-    c.fillStyle = '#FFFFFF'; c.font = '800 '+(laptop?32:36)+'px '+FONT; c.fillText(mdFit(c,e.duty,textW), tx, y+64);
-    c.fillStyle = '#9DB7CC'; c.font = '600 26px '+FONT; c.fillText(mdFit(c,e.event+(e.uniform ? '  ·  '+e.uniform : ''),textW), tx, y+104);
-    /* team pill */
-    const px = x+rowW-pillW-26, py = y+RH/2-24;
-    mdRR(c,px,py,pillW,48,24); c.fillStyle = T.c; c.fill();
-    c.fillStyle = '#06141F'; c.font = '900 22px '+FONT; c.textAlign = 'center'; c.fillText(T.t.toUpperCase(), px+pillW/2, py+32); c.textAlign = 'left';
+    const tx = dx+dw+(compact?18:26), pillW = compact ? 0 : (laptop ? 136 : 150), textW = rowW - (tx-x) - pillW - (compact?20:40);
+    c.fillStyle = P.text; c.font = '800 '+(compact?25:(laptop?32:36))+'px '+FONT; c.fillText(mdFit(c,e.duty,textW), tx, yy+(compact?48:RH/2-8));
+    c.font = '900 15px '+FONT; const tlw = compact ? c.measureText(T.t).width + 14 : 0;
+    c.fillStyle = P.muted; c.font = '600 '+(compact?18:26)+'px '+FONT; c.fillText(mdFit(c,e.event+(e.uniform ? '  \u00b7  '+e.uniform : ''),textW-tlw), tx, yy+(compact?80:RH/2+32));
+    if(compact){
+      /* two-column rows are narrow, so the team is a small coloured label at the end of the second line instead of a pill */
+      c.fillStyle = T.c; c.font = '900 15px '+FONT; c.textAlign = 'right'; c.fillText(T.t, x+rowW-20, yy+80); c.textAlign = 'left';
+    } else {
+      const px = x+rowW-pillW-26, py = yy+RH/2-24;
+      mdRR(c,px,py,pillW,48,24); c.fillStyle = T.c; c.fill();
+      c.fillStyle = P.ink; c.font = '900 22px '+FONT; c.textAlign = 'center'; c.fillText(T.t, px+pillW/2, py+32); c.textAlign = 'left';
+    }
   });
-  if(more > 0){
-    c.fillStyle = '#9DB7CC'; c.font = '800 26px '+FONT; c.textAlign = 'center';
-    c.fillText('+ '+more+' more — open IV Hub to see them all', W/2, HEAD + nRows*(RH+GAP) + 36); c.textAlign = 'left';
-  }
   /* footer */
-  c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(PAD, H-FOOT+8, W-PAD*2, 2);
-  c.fillStyle = '#8FB8D6'; c.font = '800 24px '+FONT; c.fillText('IV Hub', PAD, H-FOOT/2+14);
+  c.fillStyle = P.line; c.fillRect(PAD, H-FOOT+8, W-PAD*2, 2);
+  c.fillStyle = P.muted; c.font = '800 24px '+FONT; c.fillText('IV Hub', PAD, H-FOOT/2+14);
   c.textAlign = 'right'; c.font = '700 24px '+FONT;
-  c.fillText('Saved '+new Date().toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric',timeZone:'Pacific/Auckland'}), W-PAD, H-FOOT/2+14);
+  /* date, time and timezone of the device that saved it, so it reads correctly wherever they are */
+  let stamp; try{ stamp = new Date().toLocaleString('en-NZ',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true,timeZoneName:'short'}).replace(/\b(am|pm)\b/i,m=>m.toUpperCase()); }catch(e){ stamp = new Date().toString(); }
+  c.fillText('Saved '+stamp, W-PAD, H-FOOT/2+14);
   c.textAlign = 'left';
   return cv;
 }
+function mdThemeNow(){ return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
 async function mdRenderShot(){
   if(!mdShotData) return;
   const seq = ++mdShotSeq, prev = $('mdShotPrev');
   mdShotBlob = null;
   prev.innerHTML = '<span class="mds-load">Making your card…</span>';
+  mdShotNote();
   try{
-    const cv = await mdDrawCard(mdShotData.name, mdShotData.rows, mdShotFmt);
+    const cv = await mdDrawCard(mdShotData.name, mdShotData.rows, mdCfg, mdThemeNow());
     const blob = await new Promise(r=>cv.toBlob(r,'image/png'));
     if(seq !== mdShotSeq) return;
     if(!blob) throw new Error('no image');
@@ -2934,18 +3013,34 @@ async function mdRenderShot(){
     prev.innerHTML = ''; prev.appendChild(img);
   }catch(e){ console.warn('duties card failed:', e.message||e); if(seq === mdShotSeq) prev.innerHTML = '<span class="mds-load">Could not make the card. Please try again.</span>'; }
 }
+function mdShotNote(){
+  const n = mdPeriodRows(mdShotData.rows, mdCfg).length;
+  const el = $('mdShotNote'); if(!el) return;
+  el.textContent = (mdCfg.period === '90' ? 'Next 90 days: ' : mdMonthLabel(mdCfg.month)+': ') + n + ' dut' + (n===1?'y':'ies') + '. ' +
+    (n > 8 || mdCfg.fmt === 'laptop' ? 'Busy periods use two columns so the card stays easy to read. ' : 'The card is as tall as it needs to be. ') + 'It uses the theme you have on.';
+}
+function mdShotChrome(){
+  const ov = $('mdShot');
+  $('mdShotBox').classList.toggle('wide', mdCfg.fmt === 'laptop');
+  ov.querySelectorAll('[data-fmt]').forEach(b=>b.classList.toggle('on', b.dataset.fmt === mdCfg.fmt));
+  ov.querySelectorAll('[data-per]').forEach(b=>b.classList.toggle('on', b.dataset.per === mdCfg.period));
+  const ms = mdMonths(mdShotData.rows), row = $('mdShotMonths');
+  row.style.display = mdCfg.period === 'month' ? '' : 'none';
+  row.innerHTML = ms.map(m=>'<button type="button" class="mds-chip'+(m.key === mdCfg.month ? ' on' : '')+'" data-mon="'+esc(m.key)+'">'+esc(m.label)+' <span>· '+m.n+'</span></button>').join('');
+}
 function mdShotFile(){
   const safe = String(mdShotData.name).replace(/[^A-Za-z0-9]+/g,'');
-  const d = new Date().toLocaleDateString('en-CA',{timeZone:'Pacific/Auckland'});
-  return 'MyDuties-'+safe+'-'+d+(mdShotFmt==='laptop'?'-wide':'')+'.png';
+  const per = mdCfg.period === '90' ? 'next90' : mdCfg.month;
+  return 'MyDuties-'+safe+'-'+per+(mdCfg.fmt==='laptop'?'-wide':'')+'.png';
 }
 function mdOpenShot(){
   if(!mdShotData) return;
+  const ms = mdMonths(mdShotData.rows);
+  mdCfg = {fmt: mdAutoShape(), period:'month', month: ms.length ? ms[0].key : mdNZToday().slice(0,7)};
   const ov = $('mdShot'); ov.classList.add('open');
-  $('mdShotBox').classList.toggle('wide', mdShotFmt === 'laptop');
   const sh = $('mdShotShare');
   try{ sh.style.display = (navigator.share && navigator.canShare) ? '' : 'none'; }catch(e){ sh.style.display = 'none'; }
-  ov.querySelectorAll('.mds-seg button').forEach(b=>b.classList.toggle('on', b.dataset.fmt === mdShotFmt));
+  mdShotChrome();
   $('mdShotX').focus();
   mdRenderShot();
 }
@@ -2967,10 +3062,11 @@ async function mdShareShot(){
 }
 (function(){
   document.addEventListener('click', e=>{
-    if(e.target.closest('#mdShotBtn')){ mdShotFmt = 'phone'; mdOpenShot(); return; }
+    if(e.target.closest('#mdShotBtn')){ mdOpenShot(); return; }
     if(e.target.closest('#mdShotX') || e.target === $('mdShot')){ mdCloseShot(); return; }
-    const sg = e.target.closest('#mdShot .mds-seg button');
-    if(sg){ mdShotFmt = sg.dataset.fmt; $('mdShotBox').classList.toggle('wide', mdShotFmt === 'laptop'); $('mdShot').querySelectorAll('.mds-seg button').forEach(b=>b.classList.toggle('on', b === sg)); mdRenderShot(); return; }
+    const sg = e.target.closest('#mdShot [data-fmt]'); if(sg){ mdCfg.fmt = sg.dataset.fmt; mdShotChrome(); mdRenderShot(); return; }
+    const pr = e.target.closest('#mdShot [data-per]'); if(pr){ mdCfg.period = pr.dataset.per; mdShotChrome(); mdRenderShot(); return; }
+    const mo = e.target.closest('#mdShot [data-mon]'); if(mo){ mdCfg.month = mo.dataset.mon; mdShotChrome(); mdRenderShot(); return; }
     if(e.target.closest('#mdShotSave')){ mdSaveShot(); return; }
     if(e.target.closest('#mdShotShare')){ mdShareShot(); return; }
   });
