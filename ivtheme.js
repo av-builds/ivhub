@@ -93,7 +93,7 @@
     var go=window.ivGo; if(typeof go!=='function'||go.ivGrown) return;
     var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
     var busy=false;
-    var DARK='rgb(2, 11, 24)';
+    var DARK=root.getAttribute('data-theme')==='light'?'rgb(243, 247, 251)':'rgb(2, 11, 24)';
     var w=function(){
       var args=arguments, self=this, v=document.getElementById('ivVeil');
       if(!v||reduce||busy||!document.body.animate) return go.apply(self,args);
@@ -130,6 +130,50 @@
     w.ivGrown=true; window.ivGo=w;
     window.addEventListener('pageshow',function(e){ if(e.persisted){ busy=false; resetGrow(); } });
   }
-  function boot(){ mount(); welcome(); homeLogo(); growVeil(); }
+  /* The dashboard banner: the opening welcome, held still, at the top of every dashboard (Hub, AV, Team A, Team B).
+     Only the seal moves, on hover. The page's own greeting text is hidden by CSS but kept in the page, because its
+     scripts still write the date, today's duty and the clock into it. */
+  function banner(){
+    var pg=document.getElementById('page-dashboard');
+    if(!pg||pg.querySelector('.iv-banner')) return;
+    var f=(location.pathname.split('/').pop()||'index.html').replace(/\.html$/,'').toLowerCase();
+    var K={teama:'a',teamb:'b',av:'av',index:'hub'}; var k=K[f]; if(!k) return;
+    var NM={a:'Team A',b:'Team B',av:'AV Team',hub:'Ya Ali Madad'}, MONO={a:'A',b:'B',av:'AV',hub:'IV'};
+    var words=NM[k].split(' '), last=words.pop(), first=words.join(' ');
+    var d=''; try{ d=new Date().toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long',timeZone:'Pacific/Auckland'}); }catch(e){}
+    var b=document.createElement('section'); b.className='iv-banner'; b.setAttribute('data-k',k); b.setAttribute('aria-label',NM[k]);
+    b.innerHTML='<i class="ivb-hair" style="left:12.5%"></i><i class="ivb-hair" style="left:37.5%"></i><i class="ivb-hair" style="left:62.5%"></i><i class="ivb-hair" style="left:87.5%"></i>'+
+      '<div class="ivb-mono" aria-hidden="true"></div><div class="ivb-glow"></div>'+
+      '<div class="ivb-in">'+
+        '<div class="ivb-seal" title="Ismaili Volunteers"><svg viewBox="0 0 176 176" aria-hidden="true"><circle cx="88" cy="88" r="79"/></svg><i class="ivb-arc"></i><img alt="Ismaili Volunteers seal" src="logo.png"></div>'+
+        '<div class="ivb-kick"><i class="ivb-rule l"></i><i class="ivb-dia"></i><span></span><i class="ivb-dia"></i><i class="ivb-rule r"></i></div>'+
+        '<div class="ivb-title"></div><div class="ivb-sub"></div>'+
+      '</div>';
+    b.querySelector('.ivb-mono').textContent=MONO[k];
+    b.querySelector('.ivb-kick span').textContent=(k==='hub'?'Welcome':'Welcome to');
+    var t=b.querySelector('.ivb-title');
+    if(first){ t.appendChild(document.createTextNode(first+' ')); }
+    var em=document.createElement('span'); em.textContent=last; t.appendChild(em);
+    b.querySelector('.ivb-sub').textContent=(d?d+' \u00b7 ':'')+'Auckland Jamatkhana';
+    pg.insertBefore(b,pg.firstChild);
+    /* No box: the banner runs up to the very top of the site (behind the floating menu) and fades out sideways. */
+    var fit=function(){
+      var cur=parseFloat(b.getAttribute('data-pull')||'0')||0;
+      var natural=Math.max(0,Math.round(b.getBoundingClientRect().top+(window.pageYOffset||0)+cur));
+      if(String(natural)!==b.getAttribute('data-pull')){ b.setAttribute('data-pull',natural); b.style.setProperty('--ivb-top',natural+'px'); }
+    };
+    fit(); try{ if(window.ResizeObserver) new ResizeObserver(function(){ fit(); }).observe(b); }catch(e){}
+    window.addEventListener('resize',function(){ clearTimeout(fit.t); fit.t=setTimeout(fit,120); });
+    window.addEventListener('load',fit);
+    if(k==='hub'){
+      /* the Hub greets by first name: wait for the sign-in to land */
+      var n=0, kick=b.querySelector('.ivb-kick span'), iv=setInterval(function(){
+        var who=window.CU&&(CU.display||CU.user); n++;
+        if(who){ kick.textContent='Welcome back, '+String(who).split(' ')[0]; clearInterval(iv); }
+        else if(n>40) clearInterval(iv);
+      },500);
+    }
+  }
+  function boot(){ mount(); welcome(); homeLogo(); growVeil(); banner(); }
   if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);
 })();

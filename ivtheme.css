@@ -646,3 +646,101 @@ html[data-theme="light"][data-team] .dash-hero{background:linear-gradient(160deg
 html[data-team] .dash-hero::before{content:"";position:absolute;left:-80px;top:-80px;width:300px;height:300px;border-radius:50%;
   background:radial-gradient(circle,var(--iv-secg,var(--iv-sec)),transparent 70%);opacity:.34;pointer-events:none;}
 html[data-team="cobalt"] .dash-greet{text-shadow:none;}
+
+/* ── DASHBOARD BANNER ───────────────────────────────────
+   The opening welcome, held still, on top of every dashboard. Always dark, in both themes.
+   Only the seal moves (hover). The middle line frames "Welcome to" and fades out at both ends
+   instead of striking through the text. */
+.iv-banner{--ba:#7DBDEB;position:relative;overflow:hidden;border-radius:28px;min-height:340px;background:#020B18;border:1px solid #16293D;
+  box-shadow:var(--iv-sh);color:#fff;font-family:Archivo,system-ui,sans-serif;grid-column:1/-1;margin:0 0 18px;}
+.iv-banner[data-k="a"]{--ba:#86E49A;}.iv-banner[data-k="b"]{--ba:#EE6F5C;}.iv-banner[data-k="av"]{--ba:#5B8DEF;}
+.ivb-hair{position:absolute;top:0;bottom:0;width:1px;background:color-mix(in srgb,var(--ba) 12%,transparent);}
+.ivb-mono{position:absolute;right:-30px;bottom:-96px;font-size:430px;font-weight:900;line-height:1;letter-spacing:-.04em;color:transparent;
+  -webkit-text-stroke:2px color-mix(in srgb,var(--ba) 42%,transparent);opacity:.5;pointer-events:none;}
+.ivb-glow{position:absolute;left:50%;top:36%;width:420px;height:420px;margin:-210px 0 0 -210px;border-radius:50%;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--ba) 38%,transparent),transparent);pointer-events:none;}
+.ivb-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:6px 16px 0;text-align:center;}
+.ivb-seal{position:relative;width:112px;height:112px;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;
+  transition:transform .55s cubic-bezier(.34,1.56,.64,1);}
+.ivb-seal:hover{transform:rotate(-12deg) scale(1.1);}
+.ivb-seal svg{position:absolute;inset:0;width:100%;height:100%;}
+.ivb-seal circle{fill:none;stroke:var(--ba);stroke-width:2;}
+.ivb-arc{position:absolute;inset:6px;border-radius:50%;opacity:0;transition:opacity .3s;
+  background:conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,rgba(255,255,255,0) 190deg,var(--ba) 320deg,#fff 356deg,rgba(255,255,255,0) 360deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));
+          mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));filter:drop-shadow(0 0 7px var(--ba));}
+.ivb-seal:hover .ivb-arc{opacity:1;animation:ivbSpin 1.1s cubic-bezier(.45,.05,.2,1) both;}
+@keyframes ivbSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.ivb-seal img{width:68%;height:68%;border-radius:50%;background:#fff;object-fit:contain;box-shadow:0 0 0 5px #020B18,0 14px 40px color-mix(in srgb,var(--ba) 38%,transparent);}
+.ivb-kick{display:flex;align-items:center;gap:18px;margin-top:8px;max-width:100%;}
+.ivb-kick span{font-size:14px;font-weight:800;letter-spacing:.5em;text-transform:uppercase;color:#7AAECB;padding-left:.5em;white-space:nowrap;}
+.ivb-rule{width:200px;height:2px;flex:0 1 200px;min-width:20px;}
+.ivb-rule.l{background:linear-gradient(90deg,transparent,var(--ba));}.ivb-rule.r{background:linear-gradient(270deg,transparent,var(--ba));}
+.ivb-dia{width:7px;height:7px;flex:none;transform:rotate(45deg);background:var(--ba);}
+.ivb-title{font-size:92px;font-weight:900;letter-spacing:-.03em;text-transform:uppercase;line-height:1;color:#fff;white-space:nowrap;}
+.ivb-title span{color:var(--ba);}
+.ivb-sub{font-size:13px;font-weight:800;letter-spacing:.36em;text-transform:uppercase;color:#7AAECB;padding-left:.36em;}
+@media(max-width:900px){.ivb-title{font-size:64px}.ivb-mono{font-size:300px}.ivb-kick span{letter-spacing:.3em;font-size:12px}.ivb-sub{letter-spacing:.2em;font-size:11px}}
+@media(max-width:560px){.iv-banner{min-height:300px}.ivb-title{font-size:44px}.ivb-seal{width:92px;height:92px}.ivb-rule{display:none}.ivb-mono{font-size:220px;right:-20px}.ivb-sub{font-size:10px;letter-spacing:.14em}}
+@media(prefers-reduced-motion:reduce){.ivb-seal,.ivb-arc{transition:none;animation:none!important}}
+/* the page's own greeting is covered by the banner; its text stays in the page for the scripts that fill it in */
+#page-dashboard .hero-greet,#page-dashboard .hero-sub,#page-dashboard .dash-greet,#page-dashboard .dash-date,#page-dashboard .dash-greet::before{display:none!important;}
+#page-dashboard .dash-hero,#page-dashboard .hero{padding-top:18px;padding-bottom:18px;}
+#page-dashboard .hero-inner{display:none;}
+#page-dashboard .hero{padding:0 0 4px;display:flex;justify-content:flex-end;}
+
+/* ── LIGHT ("white") VERSIONS: dashboard banner, opening welcome, loading curtain ──
+   They follow the site theme. Same layout and hover; pale ground, dark ink, and each team's
+   deeper light-mode colour so the title and ring stay readable on white. */
+html[data-theme="light"] .iv-banner{--ba:#2A7FB8;background:linear-gradient(160deg,#DDEAF6 0%,#FFFFFF 62%);border-color:#D7E1EA;color:#0C2236;}
+html[data-theme="light"] .iv-banner[data-k="a"]{--ba:#24914F;}
+html[data-theme="light"] .iv-banner[data-k="b"]{--ba:#D4533F;}
+html[data-theme="light"] .iv-banner[data-k="av"]{--ba:#0047AB;}
+html[data-theme="light"] .ivb-hair{background:color-mix(in srgb,var(--ba) 14%,transparent);}
+html[data-theme="light"] .ivb-mono{-webkit-text-stroke-color:color-mix(in srgb,var(--ba) 30%,transparent);opacity:.65;}
+html[data-theme="light"] .ivb-glow{background:radial-gradient(closest-side,color-mix(in srgb,var(--ba) 26%,transparent),transparent);}
+html[data-theme="light"] .ivb-seal img{box-shadow:0 0 0 5px #fff,0 14px 34px color-mix(in srgb,var(--ba) 30%,transparent);}
+html[data-theme="light"] .ivb-arc{background:conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,rgba(255,255,255,0) 190deg,var(--ba) 330deg,var(--ba) 356deg,rgba(255,255,255,0) 360deg);}
+html[data-theme="light"] .ivb-kick span,html[data-theme="light"] .ivb-sub{color:#52677B;}
+html[data-theme="light"] .ivb-title{color:#0C2236;}
+html[data-theme="light"] .ivb-title span{color:var(--ba);}
+
+/* opening welcome (injected by each page, so these need the #ivs id to win) */
+html[data-theme="light"] #ivs{color:#0C2236;}
+html[data-theme="light"][data-team="mint"] #ivs{--acc:#24914F!important;}
+html[data-theme="light"][data-team="coral"] #ivs{--acc:#D4533F!important;}
+html[data-theme="light"][data-team="cobalt"] #ivs{--acc:#0047AB!important;}
+html[data-theme="light"]:not([data-team]) #ivs{--acc:#2A7FB8!important;}
+html[data-theme="light"] #ivs .ivs-sh{background:#F3F7FB;}
+html[data-theme="light"] #ivs .ivs-w{color:#0C2236;}
+html[data-theme="light"] #ivs .ivs-w b,html[data-theme="light"] #ivs .ivs-hub .ivs-w.two{color:var(--acc);}
+html[data-theme="light"] #ivs .ivs-kick,html[data-theme="light"] #ivs .ivs-sub{color:#52677B;}
+html[data-theme="light"] #ivs .ivs-mono{-webkit-text-stroke-color:color-mix(in srgb,var(--acc) 30%,transparent);opacity:.6;}
+html[data-theme="light"] #ivs .ivs-mark img{box-shadow:0 0 0 6px #F3F7FB,0 18px 50px color-mix(in srgb,var(--acc) 35%,transparent);}
+html[data-theme="light"] #ivs .ivs-mark::after{background:conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,rgba(255,255,255,0) 190deg,var(--acc) 330deg,var(--acc) 356deg,rgba(255,255,255,0) 360deg);}
+html[data-theme="light"] #ivs .ivs-load{background:rgba(12,34,54,.1);}
+html[data-theme="light"] #ivs .ivs-skip{background:rgba(255,255,255,.92);color:#0C2236;border-color:rgba(12,34,54,.28);}
+/* loading curtain */
+html[data-theme="light"] #ivVeil{background:#F3F7FB;}
+
+/* opening welcome: the middle line no longer strikes through the words; it frames "Welcome to" and fades out */
+#ivs .ivs-ax{display:none;}
+#ivs .ivs-kick{display:flex;align-items:center;justify-content:center;gap:18px;}
+#ivs .ivs-kick::before,#ivs .ivs-kick::after{content:"";flex:0 1 min(200px,18vw);height:2px;min-width:16px;}
+#ivs .ivs-kick::before{background:linear-gradient(90deg,transparent,var(--acc));}
+#ivs .ivs-kick::after{background:linear-gradient(270deg,transparent,var(--acc));}
+#ivs .ivs-kick{white-space:nowrap;}
+/* the shutter seam used to show for the whole welcome (its first keyframe filled backwards) and read as a line through the middle; it now only flashes as the shutters open */
+#ivs .ivs-t::after,#ivs .ivs-b::after{animation-fill-mode:forwards;}
+
+/* ── BANNER WITHOUT A BOX ───────────────────────────────
+   No border, no corners, no shadow. It fades out sideways into the page and runs up to the top edge of the
+   site (ivtheme.js sets --ivb-top to the space above it). The seal and text stay put. */
+.iv-banner{border:0!important;border-radius:0!important;box-shadow:none!important;
+  margin-top:calc(-1 * var(--ivb-top,0px));min-height:calc(340px + var(--ivb-top,0px));
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%);
+          mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%);}
+.ivb-in{top:var(--ivb-top,0px);}
+.ivb-mono{right:4%;}
+html[data-theme="light"] .iv-banner{background:linear-gradient(180deg,#DDEAF6 0%,#F3F7FB 100%);}
+@media(max-width:560px){.iv-banner{min-height:calc(300px + var(--ivb-top,0px));-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%);}}
