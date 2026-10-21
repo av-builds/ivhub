@@ -562,6 +562,26 @@ for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.htm
   chk(/Aly/.test(r.names),'logins  names still render in .um-name');
   chk(p.errs.length===0,'logins  no page errors'); await p.context().close(); }
 
+// ── Team dashboard: banner, stats, month ──
+for(const [file,team] of [['teama.html','A'],['teamb.html','B']]){
+  const p=await open(file,{width:1300,height:900});
+  await p.evaluate(`(${SEED})(['tl_a','tl_b'])`);
+  const r=await p.evaluate(()=>{ const o={};
+    MY_MEM={id:3,name:'M2'}; ATT_TOTALS={3:{present:9,late:1,absent:2,excused:0}}; OTHER_EV={}; renderCalendar();
+    o.banner=!!document.querySelector('#page-calendar .iv-banner'); const b=document.querySelector('#page-calendar .iv-banner'); o.k=b?b.getAttribute('data-k'):'';
+    o.title=b?b.querySelector('.ivb-title').innerText.replace(/\s+/g,' '):'';
+    o.cards=document.querySelectorAll('#body-calendar .td-stats .td-card').length;
+    o.labels=[...document.querySelectorAll('#body-calendar .td-k')].map(e=>e.innerText.trim()).join('|');
+    o.tl=document.querySelectorAll('#body-calendar .cal-tl .tl-row').length; o.grid=!!document.querySelector('#body-calendar .cal-grid');
+    OTHER_EV[CAL.y+'-'+String(CAL.m+1).padStart(2,'0')]=[{id:99,date:nzTodayISO(),name:'Other event',team:PAGE_TEAM==='A'?'B':'A',confirmed:true}]; renderCalendar();
+    o.otherChip=!!document.querySelector('#body-calendar .cal-ev.oth');
+    return o; });
+  chk(r.banner&&r.k===team.toLowerCase()&&/TEAM\s*[AB]/i.test(r.title),'team-d   '+file+' shows the Team '+team+' banner on the landing page',JSON.stringify(r));
+  chk(r.cards===4&&/YOUR NEXT DUTY/i.test(r.labels)&&/THIS MONTH/i.test(r.labels)&&/YOUR CYCLE/i.test(r.labels)&&/YOUR TEAM/i.test(r.labels),'team-d   '+file+' four quick stats under the banner',r.labels);
+  chk(r.grid&&r.tl>=1,'team-d   '+file+' month grid plus a phone timeline');
+  chk(r.otherChip,'team-d   '+file+' leaders see the other team\'s events on the calendar');
+  chk(p.errs.length===0,'team-d   '+file+' no page errors'); await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);
