@@ -611,6 +611,24 @@ for(const file of ['teama.html','teamb.html']){
   chk(r.type==='AV Youth Lead'&&r.keepsJunior,'av-role  the label does not change how Junior or Supervisor logic reads a person');
   chk(p.errs.length===0,'av-role  no page errors'); await p.context().close(); }
 
+// ── quick access cards: one, two or three, as a connected strip ──
+for(const [w,touch] of [[1700,false],[390,true]]){
+  const p=await open('index.html',{width:w,height:900},touch);
+  const r=await p.evaluate(()=>{ const o={};
+    for(const [k,perms] of [[3,['owner']],[2,['facilitator']],[1,['tl_a']]]){
+      CU={user:'x',display:'X',perms,uid:'u'}; document.getElementById('app').style.display='block'; renderHome();
+      const cards=[...document.querySelectorAll('.hm-strip .hm-pc')], st=document.querySelector('.hm-strip');
+      o[k]={n:cards.length,cls:st&&st.className,clip:cards.map(c=>getComputedStyle(c).clipPath!=='none'),
+        seal:cards.every(c=>c.querySelector('.hm-rings img')),links:cards.every(c=>c.querySelectorAll('.hm-rowlink').length===3&&c.querySelector('.hm-cta')),
+        tall:cards.every(c=>[...c.querySelectorAll('.hm-rowlink')].every(a=>a.offsetHeight>=44))};
+    } return o; });
+  chk(r[3].n===3&&r[2].n===2&&r[1].n===1,'cards   '+w+'px one, two and three cards each render a strip',JSON.stringify([r[1].cls,r[2].cls,r[3].cls]));
+  chk(r[3].clip.every(Boolean)&&r[2].clip.every(Boolean),'cards   '+w+'px the cards of a multi-card strip are trapezoids');
+  chk([1,2,3].every(k=>r[k].seal&&r[k].links),'cards   '+w+'px every card has the seal, three links and a main button');
+  chk([1,2,3].every(k=>r[k].tall),'cards   '+w+'px link rows are at least 44px tall');
+  chk(await p.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'cards   '+w+'px no sideways scroll');
+  chk(p.errs.length===0,'cards   '+w+'px no page errors'); await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);

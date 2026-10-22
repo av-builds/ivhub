@@ -867,28 +867,57 @@ html[data-theme="light"] .hm-c-av{--hc:#4A68B5;--hco:#fff;}html[data-theme="ligh
 @media(max-width:900px){.hm-duties,.hm-pdiv{grid-template-columns:1fr;}.hm-grid>*{grid-column:span 12!important;}.hm-multi{grid-template-columns:1fr;}
   .hm-portal{flex-direction:column;align-items:flex-start;}.hm-ptitle{font-size:32px;}.hm-num b{font-size:64px;}.hm-nrow{flex-wrap:wrap;}}
 
-/* Quick access as interlocking trapezoids. Neighbouring cards share a slope and sit one gap apart, so the row reads
-   as a single strip. The border is the card's own background showing round an inset copy of the same shape, because
-   clip-path would cut a real border and shadow off. Wide screens alternate narrow-top and wide-top so the slopes
-   mesh side to side; narrower screens stack the cards as slanted bands (the gap is 10px; the -30px margins are the 40px slant less that gap). A division keeps its own layout. */
-.hm-multi>.hm-portals:not(.hm-pdiv)>.hm-portal{--sk:40px;border:0;border-radius:0;box-shadow:none;overflow:visible;
-  background:var(--db);padding:calc(28px + var(--sk)) 30px;transition:filter .25s,background .25s;
-  clip-path:polygon(0 var(--sk),100% 0,100% calc(100% - var(--sk)),0 100%);}
-.hm-multi>.hm-portals:not(.hm-pdiv)>.hm-portal::before{content:"";position:absolute;inset:1.5px;z-index:0;pointer-events:none;
-  background:linear-gradient(150deg,color-mix(in srgb,var(--hc) 18%,var(--ds)),var(--ds) 62%);
-  clip-path:polygon(0 var(--sk),100% 0,100% calc(100% - var(--sk)),0 100%);}
-.hm-multi:has(>.hm-portals:not(.hm-pdiv)){gap:0;grid-template-columns:minmax(0,1fr);}
-.hm-multi>.hm-portals:not(.hm-pdiv)+.hm-portals:not(.hm-pdiv){margin-top:-30px;}
-.hm-multi>.hm-portals:not(.hm-pdiv)>.hm-portal:hover{transform:none;filter:brightness(1.12);background:var(--hc);}
-.hm-multi>.hm-portals:not(.hm-pdiv)>.hm-portal:has(.hm-stretch:focus-visible){background:var(--hc);}
+/* Quick access cards. Two or three team cards tile one rectangle as interlocking trapezoids: neighbours share a slope
+   and sit 1px apart, and the strip's own border colour shows through that gap, so the seams are single crisp lines and
+   the outer edge is one clean rounded border. From 1500px they run side by side (the slopes alternate); below that they
+   stack as slanted bands. A lone card, a division or four or more get plain rounded cards. */
+.hm-pc{position:relative;display:flex;min-width:0;box-sizing:border-box;background:var(--ds);border:1px solid var(--db);border-radius:16px;padding:24px 26px;transition:background .25s,filter .25s;}
+.hm-pc:hover{background:color-mix(in srgb,var(--hc) 7%,var(--ds));}
+.hm-pc:has(.hm-stretch:focus-visible){background:color-mix(in srgb,var(--hc) 14%,var(--ds));}
+.hm-pc .hm-pbody{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:22px;}
+.hm-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.hm-ptext{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.hm-pc .hm-k{display:flex;align-items:center;gap:10px;font-size:11px;}
+.hm-pc .hm-k::before{content:"";width:18px;height:2px;background:var(--hc);}
+.hm-pc .hm-ptitle{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1;}
+.hm-pc .hm-psub{max-width:300px;}
+.hm-pc .hm-rings{width:64px;height:64px;margin:20px 20px 0 0;}
+.hm-pc .hm-rings i:nth-child(2){inset:-10px;}.hm-pc .hm-rings i:nth-child(3){inset:-20px;}
+.hm-pc .hm-rings img{box-shadow:none;}
+.hm-pc:hover .hm-rings i:nth-child(1){transform:scale(1.08);}.hm-pc:hover .hm-rings i:nth-child(2){transform:scale(1.14);}
+.hm-pc:hover .hm-rings i:nth-child(3){transform:scale(1.22);opacity:.4;}
+.hm-links{display:flex;flex-direction:column;}
+.hm-rowlink{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;min-height:44px;border-top:1px solid var(--db);font-size:15px;font-weight:600;color:var(--dm);text-decoration:none;}
+.hm-rowlink:nth-last-child(2){border-bottom:1px solid var(--db);}
+.hm-rowlink svg,.hm-cta svg{flex:none;transition:transform .2s ease,color .2s ease;}
+.hm-rowlink:hover{color:var(--dt);}.hm-rowlink:hover svg{transform:translateX(4px);color:var(--hc);}
+.hm-rowlink:focus-visible{outline:2px solid var(--hc);outline-offset:-2px;}
+.hm-pc .hm-cta{align-self:flex-start;margin-top:16px;gap:10px;border-radius:6px;min-height:44px;padding:0 20px;}
+.hm-pc .hm-cta:only-child{margin-top:0;}
+.hm-strip{display:flex;flex-direction:column;background:var(--db);border-radius:14px;overflow:hidden;outline:1px solid var(--db);outline-offset:-1px;}
+.hm-strip.n1{background:none;overflow:visible;outline:0;}
+.hm-strip .hm-pc{--sk:20px;border:0;border-radius:0;padding:calc(24px + var(--sk)) 26px;}
+.hm-strip .hm-pc+.hm-pc{margin-top:-19px;}
+.hm-strip.n1 .hm-pc{border:1px solid var(--db);border-radius:14px;padding:24px 26px;}
+.hm-strip.n2 .hm-pc:first-child,.hm-strip.n3 .hm-pc:first-child{clip-path:polygon(0 0,100% 0,100% calc(100% - 20px),0 100%);padding-top:24px;}
+.hm-strip.n3 .hm-pc:nth-child(2){clip-path:polygon(0 20px,100% 0,100% 100%,0 calc(100% - 20px));}
+.hm-strip.n2 .hm-pc:last-child{clip-path:polygon(0 20px,100% 0,100% 100%,0 100%);padding-bottom:24px;}
+.hm-strip.n3 .hm-pc:last-child{clip-path:polygon(0 0,100% 20px,100% 100%,0 100%);padding-bottom:24px;}
 @media(min-width:1500px){
-  .hm-multi:has(>.hm-portals:not(.hm-pdiv)){display:flex;}
-  .hm-multi>.hm-portals:not(.hm-pdiv){flex:1 1 0;}
-  .hm-multi>.hm-portals:not(.hm-pdiv)+.hm-portals:not(.hm-pdiv){margin-top:0;margin-left:-30px;}
-  .hm-multi>.hm-portals:not(.hm-pdiv)>.hm-portal{padding:28px calc(30px + 40px);
-    clip-path:polygon(40px 0,calc(100% - 40px) 0,100% 100%,0 100%);}
-  .hm-multi>.hm-portals:not(.hm-pdiv)>.hm-portal::before{clip-path:polygon(40px 0,calc(100% - 40px) 0,100% 100%,0 100%);}
-  .hm-multi>.hm-portals:not(.hm-pdiv):nth-child(even)>.hm-portal,
-  .hm-multi>.hm-portals:not(.hm-pdiv):nth-child(even)>.hm-portal::before{clip-path:polygon(0 0,100% 0,calc(100% - 40px) 100%,40px 100%);}
+  .hm-strip{flex-direction:row;}
+  .hm-strip .hm-pc{flex:1 1 0;min-height:380px;padding:32px 76px;}
+  .hm-strip .hm-pc+.hm-pc{margin-top:0;margin-left:-39px;}
+  .hm-strip.n1 .hm-pc{min-height:0;padding:28px 40px 28px 20px;}
+  .hm-strip.n1 .hm-pbody{flex-direction:row;align-items:center;gap:20px;}
+  .hm-strip.n1 .hm-top{display:contents;}
+  .hm-strip.n1 .hm-rings{order:-1;width:88px;height:88px;margin:28px;}
+  .hm-strip.n1 .hm-rings i:nth-child(2){inset:-14px;}.hm-strip.n1 .hm-rings i:nth-child(3){inset:-28px;}
+  .hm-strip.n1 .hm-ptext{flex:1 1 0;}.hm-strip.n1 .hm-ptitle{font-size:52px;}.hm-strip.n1 .hm-psub{max-width:380px;}
+  .hm-strip.n1 .hm-links{width:300px;flex:none;}
+  .hm-strip.n2 .hm-pc:first-child,.hm-strip.n3 .hm-pc:first-child{clip-path:polygon(0 0,calc(100% - 40px) 0,100% 100%,0 100%);padding:32px 76px 32px 36px;}
+  .hm-strip.n3 .hm-pc:nth-child(2){clip-path:polygon(0 0,100% 0,calc(100% - 40px) 100%,40px 100%);}
+  .hm-strip.n3 .hm-pc:last-child{clip-path:polygon(40px 0,100% 0,100% 100%,0 100%);padding:32px 36px 32px 76px;}
+  .hm-strip.n2 .hm-pc:first-child{padding-right:96px;}
+  .hm-strip.n2 .hm-pc:last-child{clip-path:polygon(0 0,100% 0,100% 100%,40px 100%);padding:32px 36px 32px 96px;}
 }
-@media(prefers-reduced-motion:reduce){.hm-portal,.hm-rings i,.hm-duty{transition:none;animation:none;}}
+@media(prefers-reduced-motion:reduce){.hm-portal,.hm-pc,.hm-rowlink svg,.hm-cta svg,.hm-rings i,.hm-duty{transition:none;animation:none;}}

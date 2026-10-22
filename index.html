@@ -5707,9 +5707,22 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       (sub?'<span class="hm-psub">'+esc(sub)+'</span>':'')+
       '<span class="hm-row"><span class="hm-cta">'+esc(cta)+'</span>'+(chips||[]).map(function(c){ return '<a class="hm-chip" href="'+c.href+'" onclick="rememberTeam(\''+key+'\')">'+esc(c.t)+'</a>'; }).join('')+'</span></span></div>';
   }
+  function subFor(k){ return k==='AV' ? 'The monthly roster, your team and the week ahead.' : (/^(A|B)$/.test(k) ? 'Calendar, roster, attendance and people, all in one place.' : ''); }
   function chipsFor(key){
     var T = LEAD_TEAMS[key]; if(!T || !/^(A|B|AV)$/.test(key)) return [];
     return T.pages.slice(0,3).map(function(p){ return { t:p[2], href: T.url + '?p=' + p[0] }; });
+  }
+  /* A team's quick access card: seal, name, a ruled list of where it goes, one main button. */
+  var ARROW = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>';
+  function cardHTML(key, T, sub, chips, cta){
+    var href = T.url + (T.land === undefined ? '?p=calendar' : T.land);
+    return '<div class="hm-pc '+cls(key)+'">'+
+      '<a class="hm-stretch" href="'+href+'" onclick="rememberTeam(\''+key+'\')" aria-label="'+esc(cta)+'"></a>'+
+      '<span class="hm-pbody"><span class="hm-top"><span class="hm-ptext"><span class="hm-k">Your page</span><span class="hm-ptitle">'+esc(T.label)+'</span>'+
+      (sub?'<span class="hm-psub">'+esc(sub)+'</span>':'')+'</span>'+
+      '<span class="hm-rings" aria-hidden="true"><i></i><i></i><i></i><img src="logo.png" alt=""></span></span>'+
+      '<span class="hm-links">'+(chips||[]).map(function(c){ return '<a class="hm-rowlink" href="'+c.href+'" onclick="rememberTeam(\''+key+'\')">'+esc(c.t)+ARROW+'</a>'; }).join('')+
+      '<span class="hm-cta">'+esc(cta)+ARROW+'</span></span></span></div>';
   }
   function portalsHTML(keys){
     var h = '';
@@ -5719,12 +5732,19 @@ window.addEventListener('DOMContentLoaded', async ()=>{
         h += '<div class="hm-portals hm-pdiv">'+portalHTML(k, T, true, 'The overview for your whole division.', [], 'Open division')+
           '<div class="hm-chan">'+d.teams.map(function(t){ var TT = LEAD_TEAMS[t.key.toUpperCase()]; return TT ? portalHTML(t.key.toUpperCase(), TT, false, '', [], 'Open') : ''; }).join('')+'</div></div>';
       } else {
-        var sub = k==='AV' ? 'The monthly roster, your team and the week ahead.' : (/^(A|B)$/.test(k) ? 'Calendar, roster, attendance and people, all in one place.' : '');
-        h += '<div class="hm-portals">'+portalHTML(k, T, true, sub, chipsFor(k), 'Enter '+T.label)+'</div>';
+        var sub = subFor(k);
+        h += '<div class="hm-portals">'+cardHTML(k, T, sub, chipsFor(k), 'Enter '+T.label)+'</div>';
       }
     });
     var multi = keys.length > 1;
-    return '<section class="hm-sec"><h3 class="hm-h">Quick access<small>'+(multi?'Everything you can open':'The page you lead')+'</small></h3><div class="'+(multi?'hm-multi':'')+'">'+h+'</div></section>';
+    /* Up to three team cards with no division among them form one connected strip, laid out for however many there are. */
+    var strip = keys.length <= 3 && !keys.some(function(k){ return !!divisionOf(k); });
+    if(strip){
+      h = keys.map(function(k){ var T = LEAD_TEAMS[k];
+        return cardHTML(k, T, subFor(k), chipsFor(k), 'Enter '+T.label); }).join('');
+      h = '<div class="hm-strip n'+keys.length+'">'+h+'</div>';
+    }
+    return '<section class="hm-sec"><h3 class="hm-h">Quick access<small>'+(multi?'Everything you can open':'The page you lead')+'</small></h3><div class="'+(multi&&!strip?'hm-multi':'')+'">'+h+'</div></section>';
   }
 
   /* numbers section for one team */
