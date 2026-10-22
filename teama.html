@@ -1138,7 +1138,7 @@ span.chip.blank{cursor:default;}
 <link rel="stylesheet" href="ivtheme.css?v=20261021m">
 <script src="ivtheme.js?v=20261021m"></script>
 </head>
-<body>
+<body class="tp">
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
      The same block sits at the top of index.html, teama.html (and so
      teamb.html) and av.html; change it in all of them together.
@@ -5469,7 +5469,28 @@ async function fontsSettled(ms){
   function vis(el){ return !!el && !el.hidden && getComputedStyle(el).display!=='none'; }
   function mk(tag,cls,html){ var e=document.createElement(tag); e.className=cls; if(html!=null) e.innerHTML=html; return e; }
 
+  /* Team pages show each page as a slanted block with a line icon over its label.
+     The sidebar keeps its emoji; only the bar is drawn this way. */
+  function ic(d){ return '<svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; }
+  var TP_ICONS={
+    dashboard:ic('<rect x="3" y="3" width="6" height="6" rx="1.2"/><rect x="11" y="3" width="6" height="6" rx="1.2"/><rect x="3" y="11" width="6" height="6" rx="1.2"/><rect x="11" y="11" width="6" height="6" rx="1.2"/>'),
+    calendar:ic('<rect x="3" y="4.5" width="14" height="12.5" rx="2"/><path d="M3 8.5h14M7 3v3M13 3v3"/>'),
+    roster:ic('<path d="M8 5.5h9M8 10h9M8 14.5h9M3.8 5.5h.01M3.8 10h.01M3.8 14.5h.01"/>'),
+    attendance:ic('<circle cx="10" cy="10" r="7"/><path d="M6.8 10.2l2.2 2.2 4.2-4.6"/>'),
+    reports:ic('<path d="M4 16V9M10 16V4M16 16v-5"/>'),
+    members:ic('<circle cx="7.5" cy="7" r="2.7"/><path d="M2.5 16c.4-2.8 2.5-4.2 5-4.2s4.6 1.4 5 4.2M13 4.6a2.5 2.5 0 010 4.8M14.5 12c1.8.4 3 1.6 3.3 4"/>'),
+    announce:ic('<path d="M3 8.5v3l9 4V4.5l-9 4zM12 7.5c2.2.3 3.5 1.2 3.5 2.5s-1.3 2.2-3.5 2.5"/>')
+  };
   function entry(src){
+    var pg=src.getAttribute('data-page');
+    if(document.body.classList.contains('tp')&&pg&&TP_ICONS[pg]){
+      var nt=src.querySelector('.nt'), bd=src.querySelector('.nbadge');
+      var bh=(bd&&vis(bd)&&bd.textContent.trim())?'<span class="tn-bd">'+bd.textContent.trim()+'</span>':'';
+      var blk=mk('button','tn-b tn-blk',TP_ICONS[pg]+'<span class="tn-t">'+(nt?nt.textContent.trim():pg)+'</span>'+bh);
+      if(src.classList.contains('active')) blk.classList.add('on');
+      blk.addEventListener('click',function(ev){ ev.stopPropagation(); closeAll(); src.click(); });
+      return blk;
+    }
     var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':''),src.innerHTML);
     if(src.classList.contains('active')) b.classList.add('on');
     b.addEventListener('click',function(ev){
@@ -5534,6 +5555,8 @@ async function fontsSettled(ms){
       }
     }
     flush();
+    var blks=row.querySelectorAll('.tn-blk');
+    if(blks.length){ blks[0].classList.add('tn-blk-first'); blks[blks.length-1].classList.add('tn-blk-last'); }
     bar.innerHTML='';
     var brand=mk('div','tn-brand','');
     var logo=document.querySelector('.sb-logo-img, .sb-logo img, .sidebar img');
@@ -5617,6 +5640,15 @@ async function fontsSettled(ms){
     var nav=document.querySelector('.sb-nav'); if(!nav) return;
     restore();
     build();
+    /* Past the top of the page the blocks fade out, leaving just the icons and labels; each block's shape
+       comes back on hover. Two thresholds so it does not flicker at the edge. */
+    var scrolled=false, sraf=0;
+    function onScroll(){
+      var y=window.pageYOffset||document.documentElement.scrollTop||0, n=scrolled?y>8:y>40;
+      if(n!==scrolled){ scrolled=n; document.body.classList.toggle('tn-scrolled',n); }
+    }
+    window.addEventListener('scroll',function(){ if(!sraf) sraf=requestAnimationFrame(function(){ sraf=0; onScroll(); }); },{passive:true});
+    onScroll();
     try{
       new MutationObserver(schedule).observe(nav.closest('.sidebar')||nav,
         {childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
