@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- IV Hub — Team roster · full UI/UX rebuild (new app-shell, Irfan's roster engine transplanted verbatim). Team identity derives entirely from const PAGE_TEAM. -->
+<!-- IV Hub - Team roster · full UI/UX rebuild (new app-shell, Irfan's roster engine transplanted verbatim). Team identity derives entirely from const PAGE_TEAM. -->
 <html lang="en">
 <head>
 <script>window.IV_LOGO="logo.png";</script>
@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
-/* ═══════════════ TOKENS (evolved IV Hub system — matches av.html family) ═══════════════ */
+/* ═══════════════ TOKENS (evolved IV Hub system - matches av.html family) ═══════════════ */
 :root{
   --navy:#0C2461;--navy2:#1e3799;--blue:#00558B;--blue2:#1976D2;--blue-lt:#4BA3DC;
   --red:#C0392B;
@@ -560,7 +560,7 @@ button.chip.un:hover{background:rgba(239,68,68,.22);border-color:var(--red-lt);}
 .frow{margin-bottom:11px;}
 .frow input,.frow select,.frow textarea{width:100%;}
 
-/* ─── DIALOG (centered modal — pickers/confirms) ─── */
+/* ─── DIALOG (centered modal - pickers/confirms) ─── */
 .dlg{position:fixed;inset:0;background:rgba(2,11,24,.72);z-index:600;display:none;align-items:flex-start;justify-content:center;padding:6vh 14px 40px;overflow-y:auto;backdrop-filter:blur(3px);}
 .dlg.show{display:flex;}
 .dcard{background:var(--ds);border:1px solid var(--db2);border-radius:16px;padding:22px;width:560px;max-width:100%;box-shadow:var(--sh-2);animation:popIn .25s ease both;}
@@ -607,8 +607,8 @@ table.sheet-t td.none{color:#3F627A;}
    them from the page.
 
    html2canvas 1.4.1 switches to per-character rendering the moment
-   letter-spacing is non-zero — `0 !== e.letterSpacing ? splitGraphemes(t)
-   : segmentWords(t)` in its source — and the spaces between words are lost
+   letter-spacing is non-zero - `0 !== e.letterSpacing ? splitGraphemes(t)
+   : segmentWords(t)` in its source - and the spaces between words are lost
    when it does. It also never reads font-stretch at all, so it measures
    glyphs at one width and paints them at another. Both must be normal
    here, or the image comes out with every word run together.
@@ -672,13 +672,13 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4BA3DC
 /* ── TOUCH ──────────────────────────────────────────────────────────
    Keyed to the pointer, not the viewport. A 12-inch tablet has a coarse
    pointer and a 13-inch laptop does not, and it was the tablet at the
-   Jamatkhana this app kept failing on — a width query would have missed it.
+   Jamatkhana this app kept failing on - a width query would have missed it.
    44px is the floor Apple and Google both publish; before this, exactly one
    control in the file met it. */
 /* ── THE ROSTER ON A NARROW SCREEN ──────────────────────────────────
    The duty table is 560px at its narrowest and a phone column is about
    332px, so two thirds of it sat off-screen behind a 6px scrollbar at 30%
-   opacity — and the part off-screen was the names. Same markup, same
+   opacity - and the part off-screen was the names. Same markup, same
    single renderer: the table reflows into one card per duty. */
 @media(max-width:760px){
   .tw-scroll{overflow-x:visible;}
@@ -751,8 +751,7 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4BA3DC
 b,strong{font-weight:900;} /*_iv_bold_lift*/
 input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;font-stretch:inherit;} /*_iv_form_inherit*/
 /* ── DESKTOP TOP NAVIGATION ──────────────────────────────────────────
-   Built at runtime from the sidebar, never duplicated in the markup —
-   the permission code hides sidebar items, and this mirrors whatever
+   Built at runtime from the sidebar, never duplicated in the markup - the permission code hides sidebar items, and this mirrors whatever
    survives. Sections become dropdowns so the bar stays short however
    many items a person can see.
    Below 1101px this is inert and the sidebar behaves exactly as before. */
@@ -768,7 +767,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .tn-b.on{background:#00558B;color:#fff;}
 /* Management is tinted permanently, not only when a page inside it is
    open, so the admin section is recognisable at a glance. General stays a
-   plain button — the point is the contrast between them. */
+   plain button - the point is the contrast between them. */
 .tn-b.tn-mgmt{background:#00558B;color:#fff;}
 .tn-b.tn-mgmt:hover{background:#1976D2;color:#fff;}
 .tn-b.tn-hub{color:#4BA3DC;border:1px solid rgba(75,163,220,.28);margin-right:8px;}
@@ -789,8 +788,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .tn-group.open .tn-menu{display:block;}
 .tn-menu .tn-b{display:flex;width:100%;justify-content:flex-start;}
 .tn-sp{flex:1;}
-/* Hiding the bar leaves a desktop with no navigation at all — the sidebar
-   is already hidden at this width — so the control that brings it back is
+/* Hiding the bar leaves a desktop with no navigation at all - the sidebar
+   is already hidden at this width - so the control that brings it back is
    always on screen rather than tucked into a menu. */
 .tn-right{margin-left:auto;display:flex;align-items:center;gap:9px;padding-left:14px;}
 .tn-who{font-size:13px;font-weight:800;color:#9FC6DF;white-space:nowrap;max-width:220px;
@@ -997,8 +996,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .cv-db .tw{margin:0;}
 .cv-empty{padding:18px;border:1.5px dashed var(--db);border-radius:12px;text-align:center;}
 .cv-empty p{font-size:13px;color:var(--dm);line-height:1.55;margin-bottom:12px;}
-/* A slot nobody fills shows as an empty, dashed place to put someone —
-   blank on the calendar, an obvious target for the lead. */
+/* A slot nobody fills shows as an empty, dashed place to put someone - blank on the calendar, an obvious target for the lead. */
 .chip.blank{background:transparent;border:1.5px dashed var(--db2);color:var(--dm);font-weight:800;cursor:pointer;}
 .chip.blank:hover{color:var(--blue-lt);border-color:var(--blue-lt);}
 span.chip.blank{cursor:default;}
@@ -1137,8 +1135,8 @@ span.chip.blank{cursor:default;}
   .cal-grid.anim-r{animation:slideInR .26s var(--ease-out) both;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021l">
-<script src="ivtheme.js?v=20261021l"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021m">
+<script src="ivtheme.js?v=20261021m"></script>
 </head>
 <body>
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
@@ -1232,7 +1230,7 @@ span.chip.blank{cursor:default;}
     e.preventDefault(); window.ivGo(h);
   },true);
   /* Coming back with the browser's Back button can restore the page as it
-     was left — with the screen up. Take it down. */
+     was left - with the screen up. Take it down. */
   window.addEventListener('pageshow',function(e){ if(e.persisted){ done=false; v.classList.add('off'); v.classList.remove('leaving'); } });
   if(v.getAttribute('data-hide')==='load'){
     if(document.readyState==='complete') window.ivVeilOff(); else window.addEventListener('load',window.ivVeilOff);
@@ -1272,7 +1270,7 @@ span.chip.blank{cursor:default;}
     <div class="sb-bot">
       <div class="uchip">
         <div class="uav" id="uav">A</div>
-        <div class="uinfo"><div id="unm">—</div><div id="url">—</div></div>
+        <div class="uinfo"><div id="unm">-</div><div id="url">-</div></div>
         <span class="uacts"><span id="syncDot" title="Sync status"></span>
           <button class="uout" onclick="signOut()" title="Sign out" aria-label="Sign out">⏻</button></span>
       </div>
@@ -1310,7 +1308,7 @@ span.chip.blank{cursor:default;}
 <script>
 'use strict';
 /* ════════════════════════════════════════════
-   IV HUB — TEAM ROSTER (modern rebuild)
+   IV HUB - TEAM ROSTER (modern rebuild)
    All team-specific behavior derives from PAGE_TEAM.
 ════════════════════════════════════════════ */
 const PAGE_TEAM='B';
@@ -1325,7 +1323,7 @@ const EDIT_PERMS=IV_TOP.concat(['facilitator','tl_'+TEAM_LC,'ytl_'+TEAM_LC]);
 const MOVE_PERMS=IV_TOP.concat(['facilitator']);
 /* Volunteers get the General group: the duties calendar and
    announcements, plus the dashboard, which shows the day's roster for
-   their own team. Rostering itself is a Management tool now — building a
+   their own team. Rostering itself is a Management tool now - building a
    roster is not the same job as reading one. */
 const VOLUNTEER_PAGES=['dashboard'];   // a stand-in's cover panel; everything else is leaders-only
 
@@ -1347,7 +1345,7 @@ function openTeamSwitch(){
   const go=t=>"ivGo('team"+t.toLowerCase()+".html?p="+curPage+"')";
   oM('<h3>Switch team</h3>'+
     '<div class="macts" style="flex-direction:column;align-items:stretch;justify-content:flex-start">'+
-    '<button class="btn btn-ol" disabled style="opacity:.6">\u2713 Team '+PAGE_TEAM+' \u2014 you are here</button>'+
+    '<button class="btn btn-ol" disabled style="opacity:.6">\u2713 Team '+PAGE_TEAM+' - you are here</button>'+
     '<button class="btn btn-bl" onclick="'+go(other)+'">Switch to Team '+other+' \u2192</button>'+
     '<button class="btn btn-ol" onclick="ivGo(\'index.html\')">\u2190 Back to the Hub</button>'+
     '<button class="btn btn-ol" onclick="cM()">Cancel</button></div>');
@@ -1372,16 +1370,16 @@ function recomputeAccess(){
    grants nothing. Sign-in happens at the hub; without a valid Auth
    session we send the visitor there. */
 async function verifyAuth(){
-  // Wait for the Supabase library before deciding anything — it loads from a
+  // Wait for the Supabase library before deciding anything - it loads from a
   // CDN and is not ready the instant this runs.
   await waitSupabase();
   // Still nothing means we genuinely cannot verify identity. There is nothing
   // useful to show offline anyway (all data lives in the DB), so deny rather
-  // than trust the cached session — otherwise blocking the CDN bypasses login.
+  // than trust the cached session - otherwise blocking the CDN bypasses login.
   if(!sb){ denyAccess('offline'); return false; }
   try{
     // Supabase stores the signed-in session per site, so anyone who signed in
-    // on the Hub is already signed in here — no second login.
+    // on the Hub is already signed in here - no second login.
     const {data}=await sb.auth.getSession();
     const sess=data&&data.session;
     if(!sess||!sess.user){ location.replace('index.html'); return false; }
@@ -1411,7 +1409,7 @@ function denyAccess(kind){
 }
 /* The log entry is written and awaited before the session ends. Signing out
    first would send the insert without a token, and the audit log only
-   accepts writes from someone signed in — so leaving this page recorded
+   accepts writes from someone signed in - so leaving this page recorded
    nothing at all, while the Hub and the AV page both recorded it. */
 async function signOut(){
   try{ await auditLog('Signed out','login',(CU&&(CU.display||CU.user)||'Someone')+' signed out of '+TEAM_NAME); }catch(e){}
@@ -1438,7 +1436,7 @@ function waitSupabase(){ // poll up to 3s for CDN lib; offline-tolerant if missi
     const t=setInterval(()=>{
       waited+=100;
       if(initSupabase()){ clearInterval(t); res(true); }
-      else if(waited>=3000){ clearInterval(t); console.warn('Supabase library unavailable — offline mode'); res(false); }
+      else if(waited>=3000){ clearInterval(t); console.warn('Supabase library unavailable - offline mode'); res(false); }
     },100);
   });
 }
@@ -1454,7 +1452,7 @@ function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').r
    esc() is NOT safe there: the browser HTML-decodes the attribute before the JS
    parser runs, so &#39; becomes a real quote and breaks out. Hex escapes (\xHH)
    have no HTML-special chars, survive decoding intact, and JS parses them back to
-   the literal char — so a name/role/username can never break the string. */
+   the literal char - so a name/role/username can never break the string. */
 function escJs(s){
   return String(s==null?'':s).replace(/[^a-zA-Z0-9_ .:\/-]/g, function(c){
     return '\\x' + c.charCodeAt(0).toString(16).padStart(2,'0');
@@ -1464,13 +1462,13 @@ let _toastTimer=null, _toastErrAt=0;
 /* A success message that lands on top of a failure is worse than no
    message at all: the screen ends up asserting the opposite of what
    happened, and the person walks away believing it. deleteEvent did
-   exactly this — dbWrite raised the error toast, then the next line
+   exactly this - dbWrite raised the error toast, then the next line
    replaced it with "Event deleted" before the first could paint.
 
    The call sites are fixed. This is the backstop for the ones nobody has
    found yet: for a second and a half after a failure, a cheerful message
-   does not get to take the toast away from it. Nothing is lost — the
-   suppressed message still goes to the console — and no real person
+   does not get to take the toast away from it. Nothing is lost - the
+   suppressed message still goes to the console - and no real person
    completes a second action inside that window, so it never eats a
    message they were waiting for. */
 const TOAST_ERR_HOLD=1500;
@@ -1503,17 +1501,16 @@ let _pauseRT=false,_prtT=null;
 function pauseRT(ms){ ms=ms||800; _pauseRT=true; if(_prtT)clearTimeout(_prtT); _prtT=setTimeout(()=>{_pauseRT=false;},ms); }
 /* The audit log recorded nothing at all for months and nobody knew,
    because the only handling was an empty catch. A failure here must not
-   block the action the person was taking — the action itself succeeded —
-   but it cannot be silent either, or the record quietly stops existing
+   block the action the person was taking - the action itself succeeded - but it cannot be silent either, or the record quietly stops existing
    again. So it is said once per session, and every failure goes to the
    console. */
 let _auditBroken=false;
 async function auditLog(action,category,detail){
   if(!sb) return false;
   // CU is null until verifyAuth() has run, and reading through it threw
-  // silently — so anything logged early recorded nothing.
+  // silently - so anything logged early recorded nothing.
   const u=CU||{};
-  /* No .select() here, and that is deliberate — see dbWrite. Anyone signed
+  /* No .select() here, and that is deliberate - see dbWrite. Anyone signed
      in may write to audit_logs; only rank 5 and above may read it. An
      INSERT ... RETURNING against a row the SELECT policy hides does not
      return nothing, it raises and rolls the insert back. Asking for the
@@ -1527,7 +1524,7 @@ async function auditLog(action,category,detail){
     console.error('audit log not written:', action, category, error);
     /* Said late and on purpose. auditLog runs alongside the action it is
        recording, so warning immediately would snatch the toast away from
-       "Published" or "Saved" — messages about a write that did work. The
+       "Published" or "Saved" - messages about a write that did work. The
        audit log being broken is a standing condition, not this action's
        result, so it waits its turn and is said once. */
     if(!_auditBroken){ _auditBroken=true; setTimeout(()=>
@@ -1546,7 +1543,7 @@ function closeSidebar(){ document.getElementById('sidebar').classList.remove('op
 function toggleCollapse(){ document.body.classList.toggle('sb-min'); }
 
 /* ════════════════════════════════════════════
-   NEW-MOON / CHANDRAAT MODULE (VERIFIED — verbatim per contract)
+   NEW-MOON / CHANDRAAT MODULE (VERIFIED - verbatim per contract)
 ════════════════════════════════════════════ */
 function newMoonJD(k){
   const T=k/1236.85,T2=T*T,T3=T2*T,T4=T3*T,D2R=Math.PI/180;
@@ -1639,14 +1636,14 @@ const TYPE_META={
   laylatalqadr:{label:'LAYLAT AL-QADR',name:'Laylat al-Qadr',color:'#B45309'},
   custom:{label:'CUSTOM',name:'',color:'#64748B'},
 };
-// The formal occasions — they default the uniform to Formal. They used to
+// The formal occasions - they default the uniform to Formal. They used to
 // carry a doubled Seating & Discipline too; that is now every event.
 const FORMAL_TYPES=['chandraat','navroz','imamat','salgirah','laylatalqadr'];
 const EID_NAMES=['Eid-al-Fitr','Eid-al-Adha','Eid-al-Ghadir','Yawm-i Ali'];
 
 /* ════════════════════════════════════════════
    DUTY RULE ENGINE (ported from Irfan's production roster app)
-   Rules are code-defined — there is no editable duty template.
+   Rules are code-defined - there is no editable duty template.
 ════════════════════════════════════════════ */
 const HAS_CHAI=new Set(['friday','chandraat']); // Chai: Friday & Chandraat ONLY
 // Children (<12) may ONLY hold these duties (generator + manual picker both enforce):
@@ -1663,9 +1660,9 @@ const DUTIES={
   eid:          ['Nandi Labelling','Number 1','Shoe Entrance','Prayer Hall Entrance','Seating & Discipline','Sukreet','Ghatpaat Closing','Safety Exit Door/Discipline','Nandi','Nandi Set-up','Nandi Centre','Nandi Trolley','Nandi Distribution','Nandi Line','Nandi Passing'],
   navroz:       ['Nandi Labelling','Number 1','Prayer Hall Entrance','Shoe Entrance','Seating & Discipline','Sukreet','Ghatpaat Closing','Safety Exit Door/Discipline','Nandi','Nandi Set-up','Nandi Centre','Nandi Trolley','Nandi Distribution','Water Station','Nandi Line','Nandi Passing'],
 };
-// REC (MPH) Congregation section — dates set in the AV file, rendered as its own table:
+// REC (MPH) Congregation section - dates set in the AV file, rendered as its own table:
 const YOUTH_DUTIES=['MPH Hall Entrance','Seating & Discipline (Youth)','Sukreet & Ghatpaat Closing (Youth)'];
-/* REC (MPH) Congregation dates — owned by the AV file (Add-ons → REC Congregation
+/* REC (MPH) Congregation dates - owned by the AV file (Add-ons → REC Congregation
    Dates) and shared by both teams via app_settings.rec_dates. A date in this set
    gets a REC section on the roster and its own table on the printed sheet. */
 let REC_DATES=new Set();
@@ -1742,7 +1739,7 @@ const DUTY_ASSIGNMENT_CONFIG={
   'Prayer Hall Entrance':(type,g,pick)=>({
     /* 2 per gender: children, then youth, and nothing after that. It used to
        fall through to adults as a third tier, which the duty rules do not
-       allow — the entrance is a children's duty with a youth fallback. With
+       allow - the entrance is a children's duty with a youth fallback. With
        both pools dry the slot now stays empty, which shows as a gap and keeps
        the roster off the calendar until a lead has looked at it. That is the
        point: an adult on the entrance was a silent rule break. */
@@ -1752,7 +1749,7 @@ const DUTY_ASSIGNMENT_CONFIG={
     male:g.tier([g.mY,g.mA,g.mC],1,'Shoe Entrance'),
     female:g.tier([g.fY,g.fA,g.fC],1,'Shoe Entrance')}),
   'Seating & Discipline':(type,g,pick)=>({
-    // Adult slot first, then a youth slot, on every event — DUTY_INFO now
+    // Adult slot first, then a youth slot, on every event - DUTY_INFO now
     // asks for two per gender, so capLists() keeps both. Each slot falls
     // through to the other age group rather than going empty.
     male:[...g.tier([g.mA,g.mY],1,'Seating & Discipline'),
@@ -1833,7 +1830,7 @@ const DUTY_ASSIGNMENT_CONFIG={
   },
 };
 
-/* ── GENERATOR EXTENSION (b) helper — duty-preference tie-break score.
+/* ── GENERATOR EXTENSION (b) helper - duty-preference tie-break score.
    -1 = member lists this duty in prefs.prefer, +1 = prefs.avoid, 0 = neutral.
    Prefs store dutyKeys; pick() passes the duty display name › map via DUTY_INFO.
    Returns 0 (no effect, no randomness) whenever prefs are absent/empty, so an
@@ -1863,7 +1860,7 @@ function selEvent(){ return EVENTS.find(e=>e.id===selEventId)||null; }
 function isHistoricEvent(ev){ return cyStart(cycleForDate(ev.date)+1)<=nzTodayISO(); }
 /* Being on the calendar is not the same as being finished.
 
-   `confirmed` used to mean both — visible to everyone, AND frozen against
+   `confirmed` used to mean both - visible to everyone, AND frozen against
    further editing. That pairing only worked while publishing was a
    deliberate last step. Now that generating a roster puts it straight on
    the calendar, treating confirmed as a lock would freeze every roster the
@@ -1871,7 +1868,7 @@ function isHistoricEvent(ev){ return cyStart(cycleForDate(ev.date)+1)<=nzTodayIS
 
    So confirmed now means one thing only: three hundred people can see it.
    A roster stays editable for as long as its cycle is current, which is
-   how leads actually work — somebody drops out on the Thursday and the
+   how leads actually work - somebody drops out on the Thursday and the
    duty has to move. */
 function evLocked(ev){ return !IS_EDIT||isHistoricEvent(ev); }
 function people(a){ return [].concat(a&&a.m||[],a&&a.f||[],a&&a.x||[]); }
@@ -1885,7 +1882,7 @@ function normMember(m){ if(!Array.isArray(m.away)) m.away=[]; if(!m.prefs||typeo
    downloaded both teams' entire history. A roster row carries the whole
    assignment for an event as one JSON blob and attendance is one row per
    person per event, so those two were by far the largest thing the page
-   did — and half of what arrived belonged to the other team.
+   did - and half of what arrived belonged to the other team.
 
    Events come back first so the two big tables can be asked for exactly
    the events this team owns. It costs one extra round trip and saves a
@@ -1925,7 +1922,7 @@ async function loadAll(){
   if(ev.error){ console.warn('iv_events:',ev.error.message||ev.error); if(tableMissing(ev.error))DB_MISSING=true; EVENTS=[]; }
   else EVENTS=ev.data||[];
   const evIds=EVENTS.map(e=>e.id);
-  /* The cycles this page will actually show — four back, the current
+  /* The cycles this page will actually show - four back, the current
      one, four forward. Built here rather than after, because it decides
      how far back the attendance register needs to be fetched. Valid at
      this point: the settings that move a chandraat have just arrived and
@@ -1937,8 +1934,8 @@ async function loadAll(){
      would quietly change numbers people act on. They are one row per
      event, which stays manageable.
 
-     Attendance is different. It is one row per person per event — at
-     three hundred volunteers, tens of thousands of rows — and the only
+     Attendance is different. It is one row per person per event - at
+     three hundred volunteers, tens of thousands of rows - and the only
      thing that needed all of it was a reliability percentage. That now
      comes back already counted, so the raw register is fetched only for
      the cycles on screen, which is all the attendance page and the
@@ -1969,7 +1966,7 @@ async function loadAll(){
   else (at.data||[]).forEach(r=>{ (ATTEND[r.event_id]=ATTEND[r.event_id]||{})[r.member_id]={status:r.status,marked_by:r.marked_by,marked_at:r.marked_at}; });
   // hub-sync status line
   const hs=document.getElementById('hubSyncStatus');
-  if(hs){ if(me.error){ hs.textContent='⚠ Hub membership unavailable — '+(me.error.message||me.error); hs.style.color='var(--gold-lt)'; }
+  if(hs){ if(me.error){ hs.textContent='⚠ Hub membership unavailable - '+(me.error.message||me.error); hs.style.color='var(--gold-lt)'; }
     else { hs.textContent='Hub ✓ '+MEMBERS.length+' member'+(MEMBERS.length!==1?'s':'')+' in '+TEAM_NAME; hs.style.color='var(--blue-lt)'; } }
 }
 
@@ -1995,7 +1992,7 @@ async function autoCreateEvents(){
   if(!missing.length) return;
   pauseRT(2000);
   /* This runs on load without anybody asking for it, so it stays quiet
-     when it has nothing to add — but a refusal is not nothing. A lead
+     when it has nothing to add - but a refusal is not nothing. A lead
      whose policy no longer lets them create events would find the Fridays
      simply missing, with the page saying it had made them. */
   const rows=await dbWriteRows('Creating this cycle’s automatic events',
@@ -2020,7 +2017,7 @@ function subscribeRT(){
 let _rtT=null;
 /* A reload replaces everything held here with what the database has.
    That is right for somebody else's change and wrong for our own work
-   that never stored — which is how a failed save came to look like a
+   that never stored - which is how a failed save came to look like a
    deletion. Anything unsaved is put back afterwards and stays flagged. */
 function rtReload(){ if(_rtT)clearTimeout(_rtT); _rtT=setTimeout(async()=>{
   await loadAll(); await loadCovering(); CYCLES=buildCycles();
@@ -2042,7 +2039,7 @@ function computeCounts(k,excludeEventId){
         if(k!=null&&inCycleK(ev.date,k)) cyc[p.id]=(cyc[p.id]||0)+1;
         // Carry fairness across cycles: someone who missed out recently
         // should come first when this cycle's counts are level. Three
-        // cycles is deliberate — long enough to even out a run of bad
+        // cycles is deliberate - long enough to even out a run of bad
         // luck, short enough that a new member is not picked for
         // everything for weeks the way a lifetime total would do.
         if(k!=null&&inCycleK(ev.date,k-1)||k!=null&&inCycleK(ev.date,k-2)||k!=null&&inCycleK(ev.date,k-3))
@@ -2122,7 +2119,7 @@ function generateEventData(ev){
   const cnt=_counts.cyc;                 // per-member assignment totals this cycle (excl. this event)
   const recent=_counts.recent;           // totals across the previous three cycles
   const hist=cycleDutyHistory(k,ev.id);   // per-member duty names held this cycle (excl. this event)
-  // EXTENSION (a): away-dates — a member whose away list contains this event's date is
+  // EXTENSION (a): away-dates - a member whose away list contains this event's date is
   // treated as unavailable and excluded from the entire eligibility pool for this event.
   const active=MEMBERS.filter(m=>m.status==='active'&&!isAway(m,ev.date)&&!busyElsewhere(m,ev.date));
   const byGA=(g,a)=>active.filter(m=>m.gender===g&&m.age_group===a);
@@ -2158,7 +2155,7 @@ function generateEventData(ev){
       // this cycle's counts are level. Ranks below the current cycle so it
       // never overrides present-cycle fairness, only settles its ties.
       const rd=(recent[a.id]||0)-(recent[b.id]||0); if(rd) return rd;
-      // EXTENSION (b): duty preference is a pure tie-break — only among fairness-tied
+      // EXTENSION (b): duty preference is a pure tie-break - only among fairness-tied
       // candidates, never overriding counts/eligibility/gender/age/child/nandi rules.
       const ap=prefScore(a,duty),bp=prefScore(b,duty); if(ap!==bp) return ap-bp;
       return Math.random()-.5;
@@ -2201,7 +2198,7 @@ function generateEventData(ev){
     (females||[]).forEach(m=>slot.f.push({id:m.id,name:m.name}));
     (males||[]).concat(females||[]).forEach(m=>{ used.add(m.id); cnt[m.id]=(cnt[m.id]||0)+1; });
   }
-  // seed manual duties (sacred — never touched by Regenerate/Generate All)
+  // seed manual duties (sacred - never touched by Regenerate/Generate All)
   for(const d of duties){
     if(manual[d.key]&&prev.assign&&prev.assign[d.key]){
       assign[d.key]=JSON.parse(JSON.stringify(prev.assign[d.key]));
@@ -2244,13 +2241,13 @@ function generateEventData(ev){
 /* ── SAVING A ROSTER ─────────────────────────────────────────────────
    This used to swallow every failure into a console warning. The
    generated roster stayed on screen, the database kept nothing, and the
-   next reload replaced what was on screen with what was stored — so a
+   next reload replaced what was on screen with what was stored - so a
    save that failed looked exactly like a roster that had been deleted,
    with nothing anywhere saying why.
 
    Three things now stop that. The error is shown rather than logged.
    The write is read back, because a rejected write is not the only way
-   to lose one — a duplicate row for the same event would take the
+   to lose one - a duplicate row for the same event would take the
    update and still leave the page reading the stale copy. And anything
    that did not store is remembered, so a reload cannot quietly replace
    work that only exists in this browser. */
@@ -2263,7 +2260,7 @@ function generateEventData(ev){
    Checking `error` is not enough, and this is the part that was wrong for
    months. Row Level Security does not reject an UPDATE or a DELETE whose
    rows it has filtered out. It runs the statement against no rows and
-   reports UPDATE 0 — success. PostgREST returns 200 with an empty body and
+   reports UPDATE 0 - success. PostgREST returns 200 with an empty body and
    supabase-js hands back {data:[], error:null}, which is indistinguishable
    from a write that worked unless you count the rows. Verified against a
    real Postgres, not assumed.
@@ -2275,45 +2272,45 @@ function generateEventData(ev){
 
    Zero rows is ambiguous on its own: the policy may have filtered the row
    out, or there may honestly have been nothing to change. opts.verify is a
-   read that settles it — run only in that case, so it costs nothing on the
+   read that settles it - run only in that case, so it costs nothing on the
    normal path. Anything still there means the write was refused.
 
    opts.rows === false is the blunt version, for writes where nothing coming
-   back is always fine and there is nothing worth reading back — or for an
+   back is always fine and there is nothing worth reading back - or for an
    RPC, which has no rows to return at all. Those still report a real error.
    Say why at the call site whenever you use it.
 
    One rule this cannot infer on its own: do not send an INSERT through
    here into a table the writer may not read. Verified against a real
-   Postgres — for UPDATE and DELETE the SELECT policy already decides
+   Postgres - for UPDATE and DELETE the SELECT policy already decides
    which rows the statement may touch, so asking for them back costs
    nothing. For INSERT it does not: RETURNING a row the SELECT policy
    hides raises "new row violates row-level security policy" and rolls the
    insert back. audit_logs is exactly that shape, so its insert is written
-   out by hand rather than sent through here — and loses nothing, because
+   out by hand rather than sent through here - and loses nothing, because
    an INSERT that RLS refuses raises anyway. Silence is only possible for
    UPDATE and DELETE.
  */
 async function dbWrite(what, run, opts){
   const o = opts || {};
-  if(!sb || DB_MISSING){ toast(what + ' failed — no database connection', 'err'); return false; }
+  if(!sb || DB_MISSING){ toast(what + ' failed - no database connection', 'err'); return false; }
   let res, counted = false;
   try{
     const q = run();
     counted = o.rows !== false && !!q && typeof q.select === 'function';
     res = await (counted ? q.select() : q);
   }catch(e){
-    /* supabase-js resolves rather than rejecting — a dropped connection
+    /* supabase-js resolves rather than rejecting - a dropped connection
        still comes back as {data,error}. So this catches a builder that
        threw while being assembled, nothing more. It is not the network
        path, and a try/catch is not a substitute for reading the result. */
-    console.error(what, e); toast(what + ' failed — ' + (e.message || e), 'err'); return false;
+    console.error(what, e); toast(what + ' failed - ' + (e.message || e), 'err'); return false;
   }
   const error = res && res.error;
   if(error){
     console.error(what, error);
     /* A table or column that is not there is not a bug in the page, it is
-       a script that has not been run — and saying so saves the user
+       a script that has not been run - and saying so saves the user
        working out what "column does not exist" means. */
     const msg = error.message || String(error);
     const schema = tableMissing(error) || /column/i.test(msg);
@@ -2322,7 +2319,7 @@ async function dbWrite(what, run, opts){
     // "duplicate key value violates..." is true and useless.
     const hint = o.hint && o.hint(error);
     toast(hint ? hint
-        : what + ' failed — ' + (schema ? 'run the latest SETUP.sql to enable this'
+        : what + ' failed - ' + (schema ? 'run the latest SETUP.sql to enable this'
                               : dupe   ? 'it already exists'
                                        : msg), 'err');
     return false;
@@ -2342,8 +2339,8 @@ async function dbWrite(what, run, opts){
         if(!still) return true;          // there was honestly nothing to change
       }
     }
-    console.error(what, '— the database accepted the request and changed nothing', res);
-    toast(what + ' failed — the database refused it. You may not have permission to change this.', 'err');
+    console.error(what, '- the database accepted the request and changed nothing', res);
+    toast(what + ' failed - the database refused it. You may not have permission to change this.', 'err');
     return false;
   }
   return true;
@@ -2386,7 +2383,7 @@ async function saveRoster(eventId, opts){
       const {data, error} = await sb.from('iv_roster').select('event_id,data').eq('event_id', eventId);
       if(error) err = error;
       else if(!data || !data.length) err = {message:'the row was accepted but is not there when read back'};
-      else if(data.length > 1) err = {message:'there are ' + data.length + ' roster rows for this event — the unique index on iv_roster(event_id) is missing, so saves cannot replace cleanly. Re-run SETUP.sql.'};
+      else if(data.length > 1) err = {message:'there are ' + data.length + ' roster rows for this event - the unique index on iv_roster(event_id) is missing, so saves cannot replace cleanly. Re-run SETUP.sql.'};
       else if(JSON.stringify(data[0].data) !== JSON.stringify(body)) err = {message:'what came back does not match what was sent'};
     }catch(e){ err = e; }
   }
@@ -2394,7 +2391,7 @@ async function saveRoster(eventId, opts){
     ROSTER_UNSAVED[eventId] = body;
     const why = err.message || String(err);
     console.error('saveRoster failed for event', eventId, err);
-    if(!quiet) toast('Roster NOT saved — ' + why, 'err');
+    if(!quiet) toast('Roster NOT saved - ' + why, 'err');
     renderSaveWarning();
     return false;
   }
@@ -2413,7 +2410,7 @@ async function retryUnsaved(){
     ROSTERS[id] = ROSTER_UNSAVED[id];
     if(await saveRoster(Number(id), {quiet:true})) ok++;
   }
-  toast(ok === ids.length ? 'Saved — everything is stored now'
+  toast(ok === ids.length ? 'Saved - everything is stored now'
                           : ok + ' of ' + ids.length + ' saved. The rest are still not stored.',
         ok === ids.length ? 'ok' : 'err');
   renderCurrent();
@@ -2426,7 +2423,7 @@ function renderSaveWarning(){
   el.style.display = 'flex';
   el.innerHTML = '<span>⚠️</span><span><b>' + n + ' roster' + (n===1?'' : 's') + ' not saved.</b> '
     + 'What you can see is in this browser only, and will be gone when the page reloads. '
-    + 'The database refused the write — the reason was shown when it happened and is in the browser console.</span>'
+    + 'The database refused the write - the reason was shown when it happened and is in the browser console.</span>'
     + '<button class="btn btn-bl btn-sm" onclick="retryUnsaved()" style="margin-left:auto">Try again</button>';
 }
 /* generateEvent() and rosterDelta() lived here. Both are gone: every
@@ -2440,7 +2437,7 @@ async function generateCycle(k){
   if(k==null){ const ev=selEvent(); if(!ev) return; k=cycleForDate(ev.date); }
   /* Every non-historic event in the cycle, whether or not it already has a
      roster. This used to skip anything already generated, on the reasoning
-     that re-rolling would discard a lead's hand-tuning — but it does not:
+     that re-rolling would discard a lead's hand-tuning - but it does not:
      generateEventData carries any duty flagged `manual` straight across and
      skips it, so only the generator's own picks change. Skipping meant that
      once a cycle was built there was no way to rebuild it at all, which is
@@ -2458,7 +2455,7 @@ async function generateCycle(k){
 
 /* ── ATTENDANCE HELPERS ── */
 function attStatus(eventId,memberId){ const r=ATTEND[eventId]; return r&&r[memberId]?r[memberId].status:null; }
-/* Lifetime, across every event this team has ever run — which is why it
+/* Lifetime, across every event this team has ever run - which is why it
    is counted in the database rather than here. Reading it off ATTEND
    would now silently mean "reliability over the last few cycles", since
    that is all the raw register still holds. */
@@ -2473,8 +2470,8 @@ function memberReliability(memberId){
 /* Marking the register writes first and changes the screen after.
 
    Clearing a mark used to be a bare await wrapped in
-   catch(e){console.warn(e)}, while the branch immediately below it — the
-   one that sets a mark — was checked. So a delete that Row Level Security
+   catch(e){console.warn(e)}, while the branch immediately below it - the
+   one that sets a mark - was checked. So a delete that Row Level Security
    refused took the tick off the screen, said nothing, and put it back on
    the next reload. Whoever marked the register saw it work twice and had
    no way to know it had not. */
@@ -2487,7 +2484,7 @@ async function markAttendance(eventId,memberId,status){
       pauseRT(1200);
       const ok=await dbWrite('Clearing the mark', ()=>
         sb.from('iv_attendance').delete().eq('event_id',eventId).eq('member_id',memberId),
-        /* A mark can legitimately be missing from the database — an
+        /* A mark can legitimately be missing from the database - an
            earlier save may have failed. Reading it back tells a refusal
            apart from a row that was never there, so neither one gets
            reported as the other. */
@@ -2508,7 +2505,7 @@ async function markAttendance(eventId,memberId,status){
   }
   /* Keep the lifetime total in step. It is counted by the database on
      load, so without this the reliability figure on the member card
-     would sit on whatever it was when the page opened — visibly wrong to
+     would sit on whatever it was when the page opened - visibly wrong to
      the person who just marked the register. */
   bumpTotals(memberId, cur, cur===status ? null : status);
   auditLog('attendance','attendance',(memById(memberId)||{}).name+' › '+(cur===status?'cleared':status));
@@ -2535,7 +2532,7 @@ async function logView(section){
   if(_lastView===section) return;        // a re-render is not a new visit
   _lastView=section;
   /* Recording a visit must never break the visit, so this one really is
-     best-effort — but "best-effort" means the console hears about it, not
+     best-effort - but "best-effort" means the console hears about it, not
      that nothing does. A page whose visit log stops filling looks
      identical to a page nobody visits. */
   const {error}=await sb.from('view_logs').insert({username:CU.user||'',user_display:CU.display||CU.user||'',
@@ -2596,11 +2593,11 @@ function renderCurrent(){
 function renderDbHint(){
   const el=document.getElementById('dbHint');
   el.innerHTML=(DB_MISSING&&IS_EDIT)?
-    '<div class="hint-banner"><span>⚠️</span><span>Database not initialised — run <b>&nbsp;SETUP.sql&nbsp;</b> on the Supabase project to create the IV tables.</span></div>':'';
+    '<div class="hint-banner"><span>⚠️</span><span>Database not initialised - run <b>&nbsp;SETUP.sql&nbsp;</b> on the Supabase project to create the IV tables.</span></div>':'';
 }
 /* ── THE FOUR CARDS ───────────────────────────────────────────────────
    A lead and a volunteer open this page for different reasons, and used
-   to be shown the same four numbers — of which a volunteer could act on
+   to be shown the same four numbers - of which a volunteer could act on
    none. "Unfilled slots" and "Cycle owner" tell somebody who cannot edit
    the roster nothing they can do anything about, and the second of those
    repeated the sentence in the banner directly above it.
@@ -2614,11 +2611,11 @@ async function loadMyMember(){
   try{
     const {data} = await sb.rpc('my_member_view');
     MY_MEM = data && data.member ? data.member : null;
-  }catch(e){ MY_MEM = null; }   // older database — the volunteer cards fall back
+  }catch(e){ MY_MEM = null; }   // older database - the volunteer cards fall back
 }
 /* Past events whose register was never finished. It is what every
    attendance figure is built on, and until now nothing said it was
-   outstanding — you had to go looking event by event. */
+   outstanding - you had to go looking event by event. */
 function unmarkedEvents(){
   const today = nzTodayISO();
   return EVENTS.filter(ev=>{
@@ -2634,7 +2631,7 @@ function rosterPeople(r){
   for(const k in (r.assign||{})) people(r.assign[k]).forEach(p=>{ if(p.id!=null && ids.indexOf(p.id)<0) ids.push(p.id); });
   return ids;
 }
-/* Has a roster, but is not on the calendar — so nobody outside the leads
+/* Has a roster, but is not on the calendar - so nobody outside the leads
    can see it. Generating publishes now, so this normally counts nothing;
    it catches the two cases that matter, a roster taken off the calendar
    on purpose and one whose publish was refused after the save worked. */
@@ -2661,7 +2658,7 @@ function leadCards(nextEv,nextFill,unfilled){
            unmarked.length ? esc(fmtShort(unmarked[0].date)) + ' and ' + (unmarked.length-1) + ' other' + (unmarked.length===2?'':'s')
                            : 'every past event is done',
            'nav(\'attendance\')')
-    + card('', 'Next event', nextEv?esc(fmtShort(nextEv.date)):'—',
+    + card('', 'Next event', nextEv?esc(fmtShort(nextEv.date)):'-',
            nextEv ? esc(nextEv.name) + (nextFill ? ' · ' + (nextFill.generated ? (nextFill.missing ? nextFill.missing+' gaps' : 'fully filled') : 'not generated') : '')
                   : 'no upcoming events',
            'nav(\'roster\')', 'font-size:20px;line-height:1.2')
@@ -2674,7 +2671,7 @@ function volunteerCards(){
   const today = nzTodayISO();
   const me = MY_MEM;
   /* Their next duty, from the rosters already loaded. Only events that are
-     on the calendar count — the same set the Hub shows them, so the two
+     on the calendar count - the same set the Hub shows them, so the two
      never disagree about what they have been asked to do. */
   let nextDuty = null;
   if(me){
@@ -2692,21 +2689,21 @@ function volunteerCards(){
   }
   const away = me && Array.isArray(me.away) ? me.away.filter(d=>d>today).sort() : [];
   const rel  = me ? memberReliability(me.id) : null;
-  /* Who to ask. The leads of this team, by name — a volunteer who needs
+  /* Who to ask. The leads of this team, by name - a volunteer who needs
      to swap or report a problem should not have to work out who that is. */
   const leads = MEMBERS.filter(m=>m.status==='active' && isTeamLeadMember(m)).map(m=>m.name);
 
   return card(nextDuty?'ok-green':'', 'My next duty',
-              nextDuty ? esc(fmtShort(nextDuty.ev.date)) : '—',
+              nextDuty ? esc(fmtShort(nextDuty.ev.date)) : '-',
               nextDuty ? esc(nextDuty.duty) + ' · ' + esc(nextDuty.ev.uniform||'Casual')
                        : (me ? 'nothing rostered yet' : 'your account is not linked to your name'),
               'nav(\'calendar\')', 'font-size:20px;line-height:1.2')
     + card(away.length?'':'ok-green', 'My away dates', away.length,
            away.length ? 'next: ' + esc(fmtShort(away[0])) : 'available for every event',
            'ivGo(\'index.html\')')
-    + card('', 'My attendance', rel && rel.rate!=null ? rel.rate+'%' : '—',
+    + card('', 'My attendance', rel && rel.rate!=null ? rel.rate+'%' : '-',
            rel && rel.total ? rel.total + ' duties marked' : 'nothing marked yet')
-    + card('', 'Who to ask', leads.length ? esc(leads[0].split(' ')[0]) : '—',
+    + card('', 'Who to ask', leads.length ? esc(leads[0].split(' ')[0]) : '-',
            leads.length ? esc(leads.join(' · ')) + ' · your ' + esc(TEAM_NAME) + ' lead' + (leads.length>1?'s':'')
                         : 'no lead listed for ' + esc(TEAM_NAME),
            'nav(\'members\')', 'font-size:20px;line-height:1.2');
@@ -2834,17 +2831,17 @@ function renderDashboard(){
   // hero
   h+='<div class="hero"><div style="position:relative;z-index:1;min-width:0"><div class="dash-greet">Ya Ali Madad</div>'+
     '<div class="dash-date">'+esc(fmtNice(today))+'</div>'+
-    '<div class="dash-today">This cycle — <b>'+esc(cycleLabel(kNow))+'</b> is owned by <b>Team '+esc(owner)+'</b>'+
+    '<div class="dash-today">This cycle - <b>'+esc(cycleLabel(kNow))+'</b> is owned by <b>Team '+esc(owner)+'</b>'+
       (owner===PAGE_TEAM?' (yours)':' · '+esc(TEAM_NAME)+' is off-cycle')+'</div></div>'+
     '<div class="dash-clock-wrap"><img class="dash-hero-logo" src="logo.png" alt="" onerror="this.onerror=null;this.src=window.IV_LOGO">'+
-    '<div><div class="dash-clock" id="dashClock">—</div><div class="dash-clock-lbl">Auckland · Live</div></div></div></div>';
-  // stat cards — see dashCards(); a lead and a volunteer get different ones
+    '<div><div class="dash-clock" id="dashClock">-</div><div class="dash-clock-lbl">Auckland · Live</div></div></div></div>';
+  // stat cards - see dashCards(); a lead and a volunteer get different ones
   h+='<div class="sg">'+dashCards(nextEv,nextFill,unfilled,active,owner,kNow)+'</div>';
   // two-col: upcoming events + announcements
   h+=renderCoverPanels();
   /* Volunteers no longer have the Rostering page, so the duties they came
      to read have to be here. Shows today when this team owns it, otherwise
-     the next day this team is on — a blank panel on an off-cycle day would
+     the next day this team is on - a blank panel on an off-cycle day would
      look broken rather than correct. */
   {
     const mineUpc=upc.filter(e=>teamForCycle(cycleForDate(e.date))===PAGE_TEAM);
@@ -2873,7 +2870,7 @@ function renderDashboard(){
     }
   }
   h+='<div class="dash-2col"><div class="pnl"><div class="pnl-h">⏭ Upcoming events <span class="ct">tap to open</span></div><div id="dashNext">';
-  if(!upc.length) h+='<div class="empty-note">No upcoming events'+(IS_EDIT?' — add one from the Roster page.':'.')+'</div>';
+  if(!upc.length) h+='<div class="empty-note">No upcoming events'+(IS_EDIT?' - add one from the Roster page.':'.')+'</div>';
   upc.slice(0,6).forEach(e=>{
     const sc=slotCounts(e); const tm=TYPE_META[e.type]||TYPE_META.custom;
     const tag=e.confirmed?'<span class="next-tag ok">Confirmed</span>':(sc.missing?'<span class="next-tag warn">'+sc.missing+' gaps</span>':(sc.generated?'<span class="next-tag ok">Filled</span>':'<span class="next-tag today">Draft</span>'));
@@ -2909,8 +2906,7 @@ function selectEvent(id){
    Generating was a black box. You pressed the button, every name on the
    screen changed at once, and the three questions a lead actually has
    went unanswered: what did that change, who is carrying this cycle, and
-   did anybody get missed. Worse, it answered them only after the write —
-   a regenerate on a live roster reaches three hundred people before you
+   did anybody get missed. Worse, it answered them only after the write - a regenerate on a live roster reaches three hundred people before you
    can look at it, and there is no undo.
 
    So the work is done first and shown before it is stored.
@@ -2944,7 +2940,7 @@ function dutyDiff(before,after){
   const A=(before&&before.assign)||{}, B=(after&&after.assign)||{};
   let changed=0,unchanged=0; const moves=[];
   /* The union, not just the new roster's keys: a duty that existed before
-     and is absent now — REC toggled off, say — is a change, and reading
+     and is absent now - REC toggled off, say - is a change, and reading
      only B would score it as nothing happening. */
   for(const key of new Set(Object.keys(A).concat(Object.keys(B)))){
     const a=people(A[key]).map(p=>p.name).filter(Boolean);
@@ -2957,7 +2953,7 @@ function dutyDiff(before,after){
   return {changed:changed,unchanged:unchanged,total:changed+unchanged,moves:moves};
 }
 /* The shortfalls, named. slotCounts only says how many slots are short,
-   which is no help deciding what to do about it — a lead needs the duty
+   which is no help deciding what to do about it - a lead needs the duty
    and the gender it could not fill. */
 function gapsFor(ev,data){
   const out=[];
@@ -3005,7 +3001,7 @@ function buildPlan(k,onlyEventId,opts){
      on it. Re-rolling it moves people who were told where to stand, so
      building a cycle leaves those alone and touches only what is still a
      draft. That is what makes "Build this cycle" safe to press on reflex
-     when something has been added mid-cycle — the worst it can do is
+     when something has been added mid-cycle - the worst it can do is
      re-roll work nobody has seen.
 
      Asking for one event by name is different: that is a lead pointing at
@@ -3014,7 +3010,7 @@ function buildPlan(k,onlyEventId,opts){
   const willBuild=e=>includeLive||!e.confirmed;
   const toBuild=evs.filter(willBuild);
   /* Generate against a copy of the whole map. Each event's picks depend
-     on what the earlier ones took — computeCounts reads ROSTERS — so the
+     on what the earlier ones took - computeCounts reads ROSTERS - so the
      run has to happen with the staged rosters in place, not one at a
      time against the live map. The skipped events stay in the copy at
      their stored value, so the ones being rebuilt still count them.
@@ -3039,14 +3035,14 @@ function buildPlan(k,onlyEventId,opts){
      Youth tagged, every REC slot on a youth Friday is unfillable, and the
      panel would otherwise just report a pile of empty duties. */
   const notes=[];
-  /* Only about the events actually being rebuilt — a warning about a
+  /* Only about the events actually being rebuilt - a warning about a
      roster this run is deliberately not touching is just noise. */
   if(toBuild.some(e=>e.type==='friday'&&e.youth)&&!MEMBERS.some(m=>m.status==='active'&&m.age_group==='youth'))
     notes.push('No members are tagged Youth, so the REC congregation slots cannot fill.');
   const awayHere=MEMBERS.filter(m=>m.status==='active'&&(m.away||[]).some(d=>toBuild.some(e=>e.date===d)));
   if(awayHere.length) notes.push(awayHere.length===1
-    ? '1 member is away on one of these dates and was left out — '+awayHere[0].name
-    : awayHere.length+' members are away on one of these dates and were left out — '+
+    ? '1 member is away on one of these dates and was left out - '+awayHere[0].name
+    : awayHere.length+' members are away on one of these dates and were left out - '+
       awayHere.map(m=>m.name).join(', '));
   const skippedCount=rows.filter(r=>r.skipped).length;
   return {k:k, label:cycleLabel(k), scope:onlyEventId!=null?'event':'cycle',
@@ -3056,7 +3052,7 @@ function buildPlan(k,onlyEventId,opts){
 }
 /* The single writer. Stores the staged rosters, publishes the ones that
    are complete, and reports what actually happened rather than what was
-   attempted — counting stored and live separately is how a cycle that
+   attempted - counting stored and live separately is how a cycle that
    half-saved stops reading as a success. */
 async function applyPlan(plan,opts){
   if(!plan) return false;
@@ -3069,7 +3065,7 @@ async function applyPlan(plan,opts){
      puts back a day somebody hid on purpose. */
   const pubNew=!!(opts&&opts.publish==='new');
   /* Rows the plan deliberately left alone are not written, are not
-     counted, and are not mentioned in the audit line — otherwise the
+     counted, and are not mentioned in the audit line - otherwise the
      receipt would claim credit for rosters this run never touched. */
   const build=plan.events.filter(r=>!r.skipped);
   if(!build.length) return false;
@@ -3086,19 +3082,19 @@ async function applyPlan(plan,opts){
   }
   const n=build.length;
   auditLog(n>1?'generate-all':'generate','roster',
-    plan.label+' — '+n+' event'+(n===1?'':'s')+', '+stored+' saved, '+live+' on the calendar'+
+    plan.label+' - '+n+' event'+(n===1?'':'s')+', '+stored+' saved, '+live+' on the calendar'+
     (plan.skippedCount?', '+plan.skippedCount+' left as '+(plan.skippedCount===1?'it was':'they were')+' (on the calendar)':''));
   plan.applied=true; plan.at=new Date(); plan.stored=stored; plan.live=live;
   renderRoster(); refreshBadges();
   if(pubNew&&stored===n){
     const blanks=build.reduce((t,r)=>t+(r.missing||0),0);
-    toast((n===1?'Built '+esc(build[0].name):'Generated '+n+' days')+' \u2014 '+live+' on the calendar'+
+    toast((n===1?'Built '+esc(build[0].name):'Generated '+n+' days')+' - '+live+' on the calendar'+
       (blanks?', '+blanks+' slot'+(blanks===1?'':'s')+' blank':''));
   }
-  else if(!publish&&stored===n) toast('Saved '+n+' as draft'+(n===1?'':'s')+' — publish from the bar when ready');
-  else if(live===n) toast('Built '+n+' event'+(n===1?'':'s')+' — all saved and on the calendar');
-  else if(stored===n) toast('Built and saved '+n+' — '+live+' went on the calendar, the rest still have unfilled slots','err');
-  else toast('Built '+n+', but only '+stored+' saved — see the warning above','err');
+  else if(!publish&&stored===n) toast('Saved '+n+' as draft'+(n===1?'':'s')+' - publish from the bar when ready');
+  else if(live===n) toast('Built '+n+' event'+(n===1?'':'s')+' - all saved and on the calendar');
+  else if(stored===n) toast('Built and saved '+n+' - '+live+' went on the calendar, the rest still have unfilled slots','err');
+  else toast('Built '+n+', but only '+stored+' saved - see the warning above','err');
   return stored===n;
 }
 /* Generating no longer stops at a preview: it saves and publishes, and the
@@ -3120,7 +3116,7 @@ function togglePlanLive(on){
 }
 function discardPlan(){ ROSTER_PLAN=null; PLAN_OPEN.clear(); renderRoster(); }
 function togglePlanRow(id){ PLAN_OPEN.has(id)?PLAN_OPEN.delete(id):PLAN_OPEN.add(id); renderRoster(); }
-/* A hand edit invalidates a staged plan outright — it was generated
+/* A hand edit invalidates a staged plan outright - it was generated
    against the roster as it was a moment ago, so storing it now would
    quietly overwrite what was just set by hand. Dropped rather than
    recomputed: silently re-rolling underneath somebody is the behaviour
@@ -3128,8 +3124,8 @@ function togglePlanRow(id){ PLAN_OPEN.has(id)?PLAN_OPEN.delete(id):PLAN_OPEN.add
 function invalidatePlan(){ if(ROSTER_PLAN&&!ROSTER_PLAN.applied){ ROSTER_PLAN=null; PLAN_OPEN.clear(); } }
 
 /* The panel itself. Three states out of one renderer: a staged build
-   waiting for approval, the receipt for the one just stored, and — when
-   neither applies — the standing picture of the cycle, so the column is
+   waiting for approval, the receipt for the one just stored, and - when
+   neither applies - the standing picture of the cycle, so the column is
    answering "who is carrying this one" even when nobody has pressed
    anything. */
 function renderPlanPanel(){
@@ -3163,7 +3159,7 @@ function renderPlanPanel(){
       sub=n+' event'+(n===1?'':'s')+' generated below'+
         (skipped?'. <b style="color:var(--green-lt)">'+skipped+'</b> '+(skipped===1?'is':'are')+
                  ' on the calendar and stay'+(skipped===1?'s':'')+' exactly as '+
-                 (skipped===1?'it is':'they are')+' — nobody already told their duty gets moved'
+                 (skipped===1?'it is':'they are')+' - nobody already told their duty gets moved'
                 :(touched?', '+touched+' of them replacing a roster that is already there':''))+
         '. '+
         (kept?kept+' dut'+(kept===1?'y':'ies')+' set by hand '+(kept===1?'is':'are')+' carried through untouched.'
@@ -3184,7 +3180,7 @@ function renderPlanPanel(){
     ttl=plan.scope==='event'?esc(plan.events[0].name)+' built':'Cycle generated';
     sub=(plan.scope==='event'?'1 day':n+' day'+(n===1?'':'s'))+' \u00b7 '+plan.stored+' saved \u00b7 '+plan.live+' on the calendar'+
       (st.missing?' \u00b7 '+st.missing+' slot'+(st.missing===1?'':'s')+' blank across the cycle':'')+
-      (plan.stored<n?'. The rest are not stored \u2014 see the warning on the page.':'.')+
+      (plan.stored<n?'. The rest are not stored - see the warning on the page.':'.')+
       (plan.midCycle?' Added mid-cycle, so it was filled using everyone\u2019s duties across the other '+plan.midCycle+
         ' event'+(plan.midCycle===1?'':'s')+'. Those rosters did not change.':'');
     acts='<button class="btn btn-ol btn-sm" onclick="discardPlan()">Done</button>';
@@ -3197,14 +3193,14 @@ function renderPlanPanel(){
         '<div class="gp-ttl">'+ttl+'</div><div class="gp-sub">'+sub+'</div></div>';
   if(acts) h+='<div class="gp-acts">'+acts+'</div>';
   /* The escape hatch. A lead who genuinely wants the published rosters
-     re-rolled can have it — they just cannot get it by accident. Only
+     re-rolled can have it - they just cannot get it by accident. Only
      offered when the cycle actually contains something live. */
   if(preview&&plan.scope==='cycle'&&plan.events.some(e=>e.live)){
     const liveN=plan.events.filter(e=>e.live).length;
     h+='<label class="gp-live"><input type="checkbox" onchange="togglePlanLive(this.checked)"'+
        (plan.includeLive?' checked':'')+'>'+
        '<span>Also re-roll the <b>'+liveN+'</b> already on the calendar'+
-       (plan.includeLive?' — people already told their duty will move':'')+'</span></label>';
+       (plan.includeLive?' - people already told their duty will move':'')+'</span></label>';
   }
 
   /* ── the four numbers ── */
@@ -3230,7 +3226,7 @@ function renderPlanPanel(){
          (row.skipped?'':' onclick="togglePlanRow('+row.id+')"')+'>'+
          '<div class="gp-row"><span class="nm">'+esc(fmtShort(row.date))+' · '+esc(row.name)+'</span>'+what+'</div>'+
          '<div class="gp-mt">'+(row.skipped
-            ?'On the calendar — staying exactly as it is'
+            ?'On the calendar - staying exactly as it is'
             :row.assigned+' filled'+(row.missing?' · <b style="color:var(--gold-lt)">'+row.missing+' short</b>':'')+
              (row.kept?' · '+row.kept+' kept by hand':''))+'</div>';
       if(open){
@@ -3290,9 +3286,7 @@ function renderPlanPanel(){
 /* ── ROSTER: CYCLES → ONE CYCLE → ONE EVENT ─────────────────────────
    The page used to open on three columns at once: every cycle and event
    in a sidebar, one event in the middle, and the build preview squeezed
-   into a third column. A lead's actual order of work is a cycle at a time
-   — pick it, generate it, check it, publish it, then fix single events —
-   so the page now follows that order.
+   into a third column. A lead's actual order of work is a cycle at a time - pick it, generate it, check it, publish it, then fix single events - so the page now follows that order.
 
    1. Cycles: a card per cycle with how far along it is.
    2. One cycle: generate it if it is not built, the preview full width in
@@ -3301,7 +3295,7 @@ function renderPlanPanel(){
 
    Building, previewing and saving are the same code as before (buildPlan,
    applyPlan); only where the result is shown has changed. The calendar is
-   still the landing page — this is where the Roster item opens. */
+   still the landing page - this is where the Roster item opens. */
 let ROSTER_BAR_K=null;          // the cycle the page is working on, when chosen
 let ROSTER_VIEW='cycles';       // 'cycles' | 'cycle' | 'event'
 let ROSTER_K=null;              // the cycle shown in the cycle view
@@ -3401,7 +3395,7 @@ function renderCyclePicker(){
 }
 
 /* ── 2. ONE CYCLE ──
-   Left: the cycle, its event days, and — after a generate — the Cycle
+   Left: the cycle, its event days, and - after a generate - the Cycle
    summary of what that run did. Middle: the event days themselves; click
    one and its roster opens right there, editable in place.
 
@@ -3494,8 +3488,7 @@ function dayCardHTML(e,edit){
   }
   return h+'</div>';
 }
-/* Expanding a day also selects it, so the slot picker and chip menu —
-   which work on the selected event — edit the day you are looking at. */
+/* Expanding a day also selects it, so the slot picker and chip menu - which work on the selected event - edit the day you are looking at. */
 function openDay(id,fromSide){
   const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
   const k=cycleForDate(ev.date);
@@ -3535,7 +3528,7 @@ function askGenerateCycle(k){
       (rest?'<b style="color:var(--dt)">'+rest+'</b> day'+(rest===1?'':'s')+' not on the calendar will be rebuilt. ':'')+
       (liveBuilt?'The <b style="color:var(--gold-lt)">'+liveBuilt+'</b> on the calendar stay exactly as they are unless you tick the box below. ':'')+
       'Duties set by hand are kept either way.</p>'+
-    (liveBuilt?'<label class="gp-live" style="padding:0 0 6px"><input type="checkbox" id="genLive"><span>Also re-roll the <b>'+liveBuilt+'</b> on the calendar — people already told their duty will move</span></label>':'')+
+    (liveBuilt?'<label class="gp-live" style="padding:0 0 6px"><input type="checkbox" id="genLive"><span>Also re-roll the <b>'+liveBuilt+'</b> on the calendar - people already told their duty will move</span></label>':'')+
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
     '<button class="btn btn-bl" onclick="const c=document.getElementById(\'genLive\');cM();runGenerate('+k+',!!(c&&c.checked))">⚡ Regenerate</button></div>');
 }
@@ -3545,7 +3538,7 @@ async function runGenerate(k,includeLive){
   await loadCrossBusy(eventsInCycle(k).map(e=>e.date));
   const plan=buildPlan(k,null,{includeLive:!!includeLive});
   if(!plan) return toast('No events in this cycle to build','err');
-  if(!plan.buildCount) return toast('Every day is on the calendar — tick the box to re-roll them','err');
+  if(!plan.buildCount) return toast('Every day is on the calendar - tick the box to re-roll them','err');
   PLAN_OPEN.clear(); ROSTER_VIEW='cycle'; ROSTER_K=ROSTER_BAR_K=k;
   await applyPlan(plan,{publish:'new'});
 }
@@ -3590,7 +3583,7 @@ function renderEventPage(ev){
 }
 
 /* Rebuilding a cycle re-rolls rosters that are already on the calendar and
-   there is no undo, so it used to describe itself in a modal first \u2014 how
+   there is no undo, so it used to describe itself in a modal first - how
    many events, how many already built, how many hand-set duties would be
    kept. That was the right instinct in the wrong place: a modal has room
    for four lines of summary and none at all for the thing a lead actually
@@ -3628,15 +3621,15 @@ function renderEventView(ev){
   if(IS_EDIT) h+='<button class="btn btn-ol btn-sm" title="Chandraat overrides" onclick="openCycleSettings()">⚙</button>';
   if(IS_EDIT&&!hist) h+='<button class="btn btn-da btn-sm" title="Delete event" onclick="confirmDeleteEvent()">🗑</button>';
   h+='</div>';
-  if(hist) h+='<div class="ro-note">🔒 Historical — read only</div>';
-  else if(ev.confirmed) h+='<div class="ro-note">📅 On the calendar — everyone can see this roster'+(IS_EDIT?'. Changes you make here go live straight away.':'')+'</div>';
+  if(hist) h+='<div class="ro-note">🔒 Historical - read only</div>';
+  else if(ev.confirmed) h+='<div class="ro-note">📅 On the calendar - everyone can see this roster'+(IS_EDIT?'. Changes you make here go live straight away.':'')+'</div>';
   /* Generating puts a roster on the calendar, so reaching this state now
-     means somebody took it off on purpose — or the publish half of a
+     means somebody took it off on purpose - or the publish half of a
      generate failed. Either way it is worth saying, because a hidden
      roster looks from here exactly like a visible one. */
   else if(IS_EDIT && hasRoster){
     h+='<div class="ib" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'+
-      '<span><b>Hidden from the calendar</b> \u2014 only the leads can see this roster.</span>'+
+      '<span><b>Hidden from the calendar</b> - only the leads can see this roster.</span>'+
       '<button class="btn btn-gd btn-sm" onclick="toggleConfirm()" style="margin-left:auto;white-space:nowrap">Put back on the calendar</button>'+
       '</div>';
   }
@@ -3673,19 +3666,19 @@ function renderLegacyRow(label,a){
   const male=(a.m||[]).map(p=>esc(p.name||'?')),female=(a.f||[]).map(p=>esc(p.name||'?'));
   (a.x||[]).forEach(p=>{ const mem=memById(p.id); ((mem&&mem.gender)==='Female'?female:male).push(esc(p.name||'?')); });
   const chip=n=>'<span class="chip">'+n+'</span>';
-  return '<tr><td class="dn2">'+esc(label)+'<span class="lock-badge">🗄 Old duty set — read only</span></td>'+
-    '<td data-col="Male"><div class="cellwrap">'+(male.map(chip).join('')||'<span style="color:var(--dm)">—</span>')+'</div></td>'+
-    '<td data-col="Female"><div class="cellwrap">'+(female.map(chip).join('')||'<span style="color:var(--dm)">—</span>')+'</div></td></tr>';
+  return '<tr><td class="dn2">'+esc(label)+'<span class="lock-badge">🗄 Old duty set - read only</span></td>'+
+    '<td data-col="Male"><div class="cellwrap">'+(male.map(chip).join('')||'<span style="color:var(--dm)">-</span>')+'</div></td>'+
+    '<td data-col="Female"><div class="cellwrap">'+(female.map(chip).join('')||'<span style="color:var(--dm)">-</span>')+'</div></td></tr>';
 }
 function chipHTML(ev,dutyKey,arrName,idx,p,locked){
   const mem=memById(p.id); const away=mem&&isAway(mem,ev.date);
-  /* "away" was carried by a strikethrough plus a title= — a styling a
+  /* "away" was carried by a strikethrough plus a title= - a styling a
      colour-blind user may not register and a tooltip a touch user cannot
      reach. It is a word now. */
   const note=away?'<span class="chip-note">away</span>':'';
   const nm=esc(p.name||'?');
   if(locked) return '<span class="chip'+(away?' away':'')+'">'+nm+note+'</span>';
-  return '<button class="chip'+(away?' away':'')+'" aria-label="'+nm+' — change or remove" '+
+  return '<button class="chip'+(away?' away':'')+'" aria-label="'+nm+' - change or remove" '+
     'onclick="openPicker(\''+escJs(dutyKey)+'\',\''+escJs(arrName)+'\','+idx+')">'+
     nm+note+'<span class="chip-more" aria-hidden="true">⋯</span></button>';
 }
@@ -3714,7 +3707,7 @@ function openChipMenu(dutyKey,arrName,idx){
 }
 /* Taking somebody off a roster that is already on the calendar leaves a
    hole three hundred people can see, and removeSlot has never asked. It
-   asks only in that case — a draft needs no ceremony. */
+   asks only in that case - a draft needs no ceremony. */
 function confirmRemoveSlot(dutyKey,arrName,idx){
   const ev=selEvent(); if(!ev) return;
   if(!ev.confirmed) return removeSlot(dutyKey,arrName,idx);
@@ -3742,7 +3735,7 @@ function renderDutyRow(ev,d,data,locked){
   let missF=Math.max(0,(d.reqF||0)-(a.f||[]).length);
   let missX=Math.max(0,(d.reqAny||0)-total-missM-missF);
   /* Gated on IS_EDIT rather than `locked`, which also covers historic
-     events — a lead looking back should still see where the team was short.
+     events - a lead looking back should still see where the team was short.
      A volunteer gets an empty space instead: UNASSIGNED is a job for whoever
      builds the roster, not a message for whoever reads it. */
   /* An unfilled slot is a blank, dashed place to put somebody. It shows
@@ -3750,7 +3743,7 @@ function renderDutyRow(ev,d,data,locked){
   const un=col=>!IS_EDIT ? ''
     : locked
     ? '<span class="chip blank">Blank</span>'
-    : '<button class="chip blank" aria-label="Blank '+esc(d.name)+' slot — assign somebody" '+
+    : '<button class="chip blank" aria-label="Blank '+esc(d.name)+' slot - assign somebody" '+
       'onclick="addToSlot(\''+escJs(d.key)+'\',\''+col+'\')">+ Assign</button>';
   for(let i=0;i<missM;i++) maleChips.push(un('m'));
   for(let i=0;i<missF;i++) femaleChips.push(un('f'));
@@ -3782,7 +3775,7 @@ function openPickerModal(){
   const cur=PICKER_CTX.idx!=null&&a&&a[PICKER_CTX.arr]?a[PICKER_CTX.arr][PICKER_CTX.idx]:null;
   const curMem=cur&&memById(cur.id);
   const q=x=>"'"+escJs(x)+"'";
-  oM('<h3>'+(cur?'Change':'Assign')+' \u2014 '+esc(d.name)+'</h3>'+
+  oM('<h3>'+(cur?'Change':'Assign')+' - '+esc(d.name)+'</h3>'+
     '<div class="pick-cur">'+esc(fmtShort(ev.date))+' \u00b7 '+(PICKER_CTX.gender||'Any')+
       (cur?' \u00b7 now <b>'+esc(cur.name||'?')+'</b>'+(curMem&&isAway(curMem,ev.date)?' <span class="pick-flag" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:var(--red-lt)">away</span>':''):'')+
       (r&&r.manual&&r.manual[PICKER_CTX.dutyKey]?' \u00b7 set by hand, kept on rebuilds':'')+'</div>'+
@@ -3827,7 +3820,7 @@ async function applyPick(memberId){
   const a=r.assign[PICKER_CTX.dutyKey]=r.assign[PICKER_CTX.dutyKey]||{m:[],f:[],x:[]};
   const arr=a[PICKER_CTX.arr]=a[PICKER_CTX.arr]||[];
   const entry={id:m.id,name:m.name};
-  // Capture the duty and anyone displaced before the arrays change — the
+  // Capture the duty and anyone displaced before the arrays change - the
   // log's job here is to answer "who took me off this duty", which needs
   // the duty name and the person replaced, not just the new name.
   const _duty=legacyLabel(PICKER_CTX.dutyKey);
@@ -3840,7 +3833,7 @@ async function applyPick(memberId){
   /* A hand edit leaves the day where it is. Days go on the calendar when
      they are generated and come off only when a lead hides them, so filling
      a slot on a hidden day must not quietly put it back. */
-  auditLog('manual-assign','roster',ev.name+' '+ev.date+' \u2014 '+_duty+': '+
+  auditLog('manual-assign','roster',ev.name+' '+ev.date+' - '+_duty+': '+
     (_replaced ? _replaced+' \u2192 '+m.name : 'added '+m.name));
   renderRoster(); refreshBadges();
   flashChip(m.name);
@@ -3850,19 +3843,19 @@ async function removeSlot(dutyKey,arrName,idx){
   const ev=selEvent(); if(!ev||evLocked(ev)) return;
   const r=ensureRoster(ev); const a=r.assign[dutyKey]; if(!a||!a[arrName]||idx>=a[arrName].length) return;
   const rm=a[arrName].splice(idx,1)[0]; r.manual[dutyKey]=true;
-  invalidatePlan();      // as above — the staged build no longer matches what is on screen
+  invalidatePlan();      // as above - the staged build no longer matches what is on screen
   await saveRoster(ev.id);
-  auditLog('manual-remove','roster',ev.name+' '+ev.date+' \u2014 '+legacyLabel(dutyKey)+
+  auditLog('manual-remove','roster',ev.name+' '+ev.date+' - '+legacyLabel(dutyKey)+
     ': removed '+(rm&&rm.name||'?'));
   renderRoster(); refreshBadges();
   /* A live roster stays live even when a gap opens in it. Pulling it back
      off the calendar would take the duty off three hundred phones because
-     one person was moved, which is worse than the gap — so the lead is
+     one person was moved, which is worse than the gap - so the lead is
      told about it instead. */
   const gaps=slotCounts(ev).missing;
   const loud=!!ev.confirmed && gaps>0;
   toast((rm&&rm.name||'Member')+' removed'+
-    (loud ? ' — '+gaps+' slot'+(gaps===1?'':'s')+' now unfilled, and this roster is on the calendar' : ''),
+    (loud ? ' - '+gaps+' slot'+(gaps===1?'':'s')+' now unfilled, and this roster is on the calendar' : ''),
     loud ? 'err' : 'ok');
 }
 async function toggleYouth(){
@@ -3880,18 +3873,18 @@ async function toggleYouth(){
    The Hub's calendar and My Duties both read confirmed events only, so
    this flag is the difference between a roster three hundred people can
    see and one only the leads can. It used to be set locally and then
-   written, ignoring the answer — so a refused write left the screen
+   written, ignoring the answer - so a refused write left the screen
    saying "Confirmed" over a database that still held a draft. The flag
    moves only once the database has taken it.
 
    Shared by generateEvent, which does this automatically, and by the
    button, which is now only needed to hide a roster deliberately. */
 /* Names what is short rather than counting it. "7 slots unfilled" gives a
-   lead nothing to act on; "Nandi Line — 1 male, 3 female" tells them whether
+   lead nothing to act on; "Nandi Line - 1 male, 3 female" tells them whether
    it is worth chasing somebody before it goes out. */
 function confirmPublishWithGaps(ev,gaps){
   const list=gapsFor(ev,ROSTERS[ev.id]||{});
-  const shown=list.slice(0,8).map(g=>'<li>'+esc(g.duty)+' — '+esc(g.why)+'</li>').join('');
+  const shown=list.slice(0,8).map(g=>'<li>'+esc(g.duty)+' - '+esc(g.why)+'</li>').join('');
   oM('<h3>Put it on the calendar with gaps?</h3>'+
     '<p style="font-size:14px;color:var(--dm);line-height:1.6">'+
       esc(ev.name)+' on '+esc(fmtShort(ev.date))+' has <b style="color:var(--gold-lt)">'+gaps+
@@ -3907,7 +3900,7 @@ async function doPublishWithGaps(id){
   const gaps=slotCounts(ev).missing;
   const ok=await publishIfComplete(ev,{force:true});
   renderRoster(); refreshBadges();
-  if(ok) toast('On the calendar — everyone can see it, with '+gaps+' slot'+(gaps===1?'':'s')+' still open');
+  if(ok) toast('On the calendar - everyone can see it, with '+gaps+' slot'+(gaps===1?'':'s')+' still open');
 }
 async function setOnCalendar(ev, want){
   if(want && unsavedCount()){
@@ -3925,11 +3918,11 @@ async function setOnCalendar(ev, want){
 
    A roster with holes in it is not something anybody can turn up to, so
    it does not go in front of three hundred people. The moment the last
-   hole is filled it goes out on its own — nobody has to remember a
+   hole is filled it goes out on its own - nobody has to remember a
    button, which is the whole point of the change.
 
    The gate is one way. A roster that is already live and then develops a
-   gap — somebody pulled off on the Thursday — stays on the calendar,
+   gap - somebody pulled off on the Thursday - stays on the calendar,
    because taking a published roster back out from under everybody is
    worse than the gap itself. The lead is told instead. */
 async function publishIfComplete(ev, opts){
@@ -3941,20 +3934,20 @@ async function publishIfComplete(ev, opts){
      setOnCalendar refuses in that case and says so. */
   if(unsavedCount()) return await setOnCalendar(ev, true);
   const gaps = slotCounts(ev).missing;
-  /* o.force is a lead saying "I know — publish it anyway". Some shortfalls
+  /* o.force is a lead saying "I know - publish it anyway". Some shortfalls
      cannot be filled at all: two Nandi-certified members cannot cover four
      Nandi slots. Without this, a roster that is 41 of 48 filled stays
      invisible for ever and three hundred people see nothing rather than
-     most of it. Only a deliberate press sets it — every automatic publish
+     most of it. Only a deliberate press sets it - every automatic publish
      calls this without force and still refuses. */
   if(gaps > 0 && !o.force){
-    if(!o.quiet) toast(gaps + ' slot' + (gaps===1?'':'s') + ' still unfilled — fill ' +
+    if(!o.quiet) toast(gaps + ' slot' + (gaps===1?'':'s') + ' still unfilled - fill ' +
       (gaps===1?'it':'them') + ', or use Put on the calendar to publish it as it is', 'err');
     return false;
   }
   const ok = await setOnCalendar(ev, true);
   if(ok && gaps > 0) auditLog('confirm-incomplete','events',
-    ev.name+' '+ev.date+' — put on the calendar with '+gaps+' slot'+(gaps===1?'':'s')+' unfilled');
+    ev.name+' '+ev.date+' - put on the calendar with '+gaps+' slot'+(gaps===1?'':'s')+' unfilled');
   return ok;
 }
 async function toggleConfirm(){
@@ -3966,12 +3959,12 @@ async function toggleConfirm(){
        day back up needs no second question. */
     const ok=await publishIfComplete(ev,{force:true});
     renderRoster();
-    if(ok) toast('On the calendar — everyone can see it now');
+    if(ok) toast('On the calendar - everyone can see it now');
     return;
   }
   const ok=await setOnCalendar(ev, false);
   renderRoster();
-  if(ok) toast('Taken off the calendar — only the leads can see it now');
+  if(ok) toast('Taken off the calendar - only the leads can see it now');
 }
 
 /* ── ADD / DELETE / RESET EVENTS ── */
@@ -4018,7 +4011,7 @@ function aeDateChanged(){
   const historic=cyStart(k+1)<=nzTodayISO();
   if(owner!==PAGE_TEAM){
     hint.className='ae-hint bad';
-    hint.textContent='\u2715 '+fmtShort(v)+' is in Team '+owner+'\u2019s cycle \u2014 '+cycleLabel(k)+'. Pick a date in one of Team '+PAGE_TEAM+'\u2019s.';
+    hint.textContent='\u2715 '+fmtShort(v)+' is in Team '+owner+'\u2019s cycle - '+cycleLabel(k)+'. Pick a date in one of Team '+PAGE_TEAM+'\u2019s.';
   } else if(historic){
     hint.className='ae-hint bad';
     hint.textContent='\u2715 '+cycleLabel(k)+' has finished. You cannot add events to a past cycle.';
@@ -4053,10 +4046,10 @@ async function submitAddEvent(){
   if(!date) return toast('Pick a date','err'); if(!name) return toast('Enter an event name','err');
   const k=cycleForDate(date);
   if(teamForCycle(k)!==PAGE_TEAM) return toast('That date is in Team '+OTHER_TEAM+"'s cycle",'err');
-  if(cyStart(k+1)<=nzTodayISO()) return toast('That cycle is historic — events cannot be added','err');
+  if(cyStart(k+1)<=nzTodayISO()) return toast('That cycle is historic - events cannot be added','err');
   if(EVENTS.some(e=>e.date===date&&e.name===name)) return toast('That event already exists','err');
   const row={team:PAGE_TEAM,date:date,name:name,type:type,uniform:uniform,youth:youth,confirmed:false};
-  if(!sb||DB_MISSING){ toast('Could not add event — no database connection','err'); return; }
+  if(!sb||DB_MISSING){ toast('Could not add event - no database connection','err'); return; }
   pauseRT(1500);
   /* The event goes on screen only with the id the database gave it.
      Falling back to a locally invented id used to leave a row that could
@@ -4072,19 +4065,19 @@ async function submitAddEvent(){
      already built is touched. Otherwise it simply joins its cycle's list. */
   const others=eventsInCycle(k).filter(e=>e.id!==ev.id&&slotCounts(e).generated).length;
   if(others&&MEMBERS.some(m=>m.status==='active')){
-    toast('Event added \u2014 building it against the rest of the cycle');
+    toast('Event added - building it against the rest of the cycle');
     generateDay(ev.id,{midCycle:others});
   } else { openCycle(k); toast('Event added'); }
 }
 function confirmDeleteEvent(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
-  oM('<h3>Delete event</h3><p style="font-size:14px;color:var(--dm)">Delete <b style="color:var(--dt)">'+esc(ev.name)+' — '+esc(fmtNice(ev.date))+'</b> and its roster? This cannot be undone.</p>'+
+  oM('<h3>Delete event</h3><p style="font-size:14px;color:var(--dm)">Delete <b style="color:var(--dt)">'+esc(ev.name)+' - '+esc(fmtNice(ev.date))+'</b> and its roster? This cannot be undone.</p>'+
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-da" onclick="deleteEvent()">Delete event</button></div>');
 }
 /* The database first, and nothing local until it has answered.
 
    This used to take the event out of EVENTS, fire the delete, throw the
-   answer away and toast "Event deleted" whatever happened — and because
+   answer away and toast "Event deleted" whatever happened - and because
    auditLog was not awaited, even the error toast dbWrite did raise was
    overwritten before it could paint. A refused delete emptied the screen
    while the event stayed on the calendar for three hundred people. */
@@ -4114,7 +4107,7 @@ async function doResetCycle(k){
 
      This was the worst of the silent writes. The delete lived in a
      catch(e){console.warn(e)}, so a refusal changed nothing and said
-     nothing — and the very next line calls autoCreateEvents(), which puts
+     nothing - and the very next line calls autoCreateEvents(), which puts
      the automatic Friday Majlis and Paanch Baar Saal events back.
      iv_events has no unique constraint on (team, date), so Postgres
      happily accepted a second copy of each. Resetting a cycle you were
@@ -4129,10 +4122,10 @@ async function doResetCycle(k){
     if(!ok) return;
   }
   const victims=EVENTS.filter(e=>inCycleK(e.date,k)); EVENTS=EVENTS.filter(e=>!inCycleK(e.date,k)); victims.forEach(e=>delete ROSTERS[e.id]);
-  auditLog('reset-cycle','events',cycleLabel(k)+' — removed '+victims.length+' events');
+  auditLog('reset-cycle','events',cycleLabel(k)+' - removed '+victims.length+' events');
   await autoCreateEvents();
   if(!selEvent()){ const f=eventsInCycle(k)[0]; selEventId=f?f.id:null; }
-  renderRoster(); refreshBadges(); toast('Cycle reset — auto events re-created');
+  renderRoster(); refreshBadges(); toast('Cycle reset - auto events re-created');
 }
 function openCycleSettings(){
   if(!IS_EDIT) return;
@@ -4152,8 +4145,7 @@ async function saveCycleSettings(){
   pauseRT(4000);
   /* Written before OVERRIDES moves. The overrides decide where every
      cycle starts, so a refused save that had already been applied locally
-     left this browser rostering to dates no other browser agreed with —
-     and then autoCreateEvents() created events on them. */
+     left this browser rostering to dates no other browser agreed with - and then autoCreateEvents() created events on them. */
   if(!await dbWrite('Saving the cycle settings', ()=>
       sb.from('iv_settings').upsert({key:'chandraat_overrides',value:newOv}))) return;
   OVERRIDES=newOv; clearCycleCache();
@@ -4178,7 +4170,7 @@ function openEventDrawer(id){
   const mayRead = IS_EDIT || ev.confirmed;
   if(data&&data.assign&&!mayRead){
     h+='<div class="dp-sec">Duties</div><div class="dp-card">'+
-      '<div style="font-size:13px;color:var(--dm);line-height:1.6">\u23f3 Not on the calendar yet \u2014 '+
+      '<div style="font-size:13px;color:var(--dm);line-height:1.6">\u23f3 Not on the calendar yet - '+
       'the '+esc(TEAM_NAME)+' leaders have not published this roster. It appears here as soon as they do.</div></div>';
   }
   if(data&&data.assign&&mayRead){
@@ -4255,7 +4247,7 @@ async function openDayDuties(iso,src){
   let evs=EVENTS.filter(e=>e.date===iso), rosters={};
   if(evs.length){ evs.forEach(e=>{ if(ROSTERS[e.id]) rosters[e.id]=ROSTERS[e.id]; }); }
 
-  // Nothing local — either the other team's day, or simply not loaded.
+  // Nothing local - either the other team's day, or simply not loaded.
   if(!evs.length && sb && !DB_MISSING){
     try{
       const {data:ev}=await sb.from('iv_events').select('*').eq('date',iso);
@@ -4289,7 +4281,7 @@ async function openDayDuties(iso,src){
       h+='<tr><td style="padding:4px 8px 4px 0;font-weight:800;white-space:nowrap;vertical-align:top">'+
          esc(recName(d.name))+'</td><td style="padding:4px 0;color:var(--dm)">'+esc(names.join(' / '))+'</td></tr>';
     }
-    if(!data) h+='<tr><td style="padding:4px 0;color:var(--dm)">Not on the calendar yet \u2014 '+
+    if(!data) h+='<tr><td style="padding:4px 0;color:var(--dm)">Not on the calendar yet - '+
       'the leaders have not published this roster.</td></tr>';
     else if(!any) h+='<tr><td style="padding:4px 0;color:var(--dm)">Not yet rostered.</td></tr>';
     h+='</table></div>';
@@ -4333,7 +4325,7 @@ function teamStatsHTML(){
     c1='<div class="td-card row"><div class="td-date"><b>'+MON_UP[d.getMonth()]+'</b><span>'+d.getDate()+'</span><i>'+d.toLocaleDateString('en-NZ',{weekday:'short'})+'</i></div>'+
       '<div style="min-width:0"><div class="td-k">Your next duty</div><div class="td-v">'+esc(next.duty)+'</div><div class="td-s">'+esc(next.ev.name)+' · '+(n<=0?'today':n===1?'tomorrow':'in '+n+' days')+'</div></div></div>';
   } else {
-    c1='<div class="td-card"><div class="td-k">Your next duty</div><div class="td-n"><b>—</b></div><div class="td-s">'+(MY_MEM?'nothing rostered yet':'your account is not linked to your name')+'</div></div>';
+    c1='<div class="td-card"><div class="td-k">Your next duty</div><div class="td-n"><b>-</b></div><div class="td-s">'+(MY_MEM?'nothing rostered yet':'your account is not linked to your name')+'</div></div>';
   }
   /* this month */
   const y=+today.slice(0,4), m=+today.slice(5,7)-1, ym=today.slice(0,7), dim=new Date(y,m+1,0).getDate();
@@ -4360,7 +4352,7 @@ function teamStatsHTML(){
   const rate=(pr+ab)?Math.round(pr/(pr+ab)*100):null, circ=213.6;
   const c4='<div class="td-card row"><svg class="td-ring" width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="34" fill="none" stroke="var(--db)" stroke-width="9"/>'+
     (rate!=null?'<circle cx="42" cy="42" r="34" fill="none" stroke="var(--iv-sec,var(--blue-lt))" stroke-width="9" stroke-dasharray="'+(circ*rate/100).toFixed(1)+' '+circ+'" transform="rotate(-90 42 42)"/>':'')+
-    '<text x="42" y="48" text-anchor="middle" font-size="18" font-weight="900" fill="var(--dt)">'+(rate!=null?rate+'%':'—')+'</text></svg>'+
+    '<text x="42" y="48" text-anchor="middle" font-size="18" font-weight="900" fill="var(--dt)">'+(rate!=null?rate+'%':'-')+'</text></svg>'+
     '<div style="min-width:0"><div class="td-k">Your team</div><div class="td-n"><b style="font-size:34px">'+act+'</b><span>people</span></div><div class="td-s">'+(rate!=null?rate+'% overall attendance':'no attendance marked yet')+'</div></div></div>';
   return '<div class="td-stats">'+c1+c2+c3+c4+'</div>';
 }
@@ -4398,11 +4390,11 @@ function renderCalendar(){
       const sc=slotCounts(e);
       const st=e.confirmed?'lv':(sc.generated?'dr':'nb');
       const label=e.confirmed?'On the calendar':(sc.generated?'Draft':'Not built');
-      h+='<button class="cal-ev st-'+st+(e.confirmed?' conf':'')+'" title="'+esc(e.name)+' — '+esc(fmtNice(e.date))+'" onclick="event.stopPropagation();openEventDrawer('+e.id+')">'+esc(e.name)+'</button>'+
+      h+='<button class="cal-ev st-'+st+(e.confirmed?' conf':'')+'" title="'+esc(e.name)+' - '+esc(fmtNice(e.date))+'" onclick="event.stopPropagation();openEventDrawer('+e.id+')">'+esc(e.name)+'</button>'+
          '<span class="cal-st st-'+st+'">'+label+(sc.generated&&sc.missing?' · <b>'+sc.missing+' short</b>':'')+'</span>';
     }
     for(const e of (otherByDate[iso]||[])){
-      h+='<button class="cal-ev oth" title="'+esc(e.name)+' · Team '+esc(e.team)+' — '+esc(fmtNice(e.date))+'" onclick="event.stopPropagation();openDayDuties(\''+iso+'\',this)">'+esc(e.name)+'</button>'+
+      h+='<button class="cal-ev oth" title="'+esc(e.name)+' · Team '+esc(e.team)+' - '+esc(fmtNice(e.date))+'" onclick="event.stopPropagation();openDayDuties(\''+iso+'\',this)">'+esc(e.name)+'</button>'+
          '<span class="cal-st">Team '+esc(e.team)+(e.confirmed?' · On the calendar':' · Draft')+'</span>';
     }
     h+='</div>';
@@ -4430,9 +4422,9 @@ function renderMembers(){
   const act=MEMBERS.filter(m=>m.status==='active').length;
   const nnd=MEMBERS.filter(m=>m.status==='active'&&!!m.nandi).length;
   const ranks=Array.from(new Set(MEMBERS.map(m=>m.rank||'Member'))).sort();
-  let h='<div class="ph"><div><h1>People</h1><p>Leader-managed profiles — Nandi, away-dates, duty preferences, contact &amp; notes. Identity fields mirror the Hub.</p></div>'+
+  let h='<div class="ph"><div><h1>People</h1><p>Leader-managed profiles - Nandi, away-dates, duty preferences, contact &amp; notes. Identity fields mirror the Hub.</p></div>'+
     '<div class="ha"><button class="btn btn-ol btn-sm" onclick="syncFromHub()" title="Reload members from the Hub">↻ Sync from Hub</button></div></div>';
-  h+='<div class="ib">🔗 Membership is managed in the <b>Hub</b> — tick <b>'+esc(TEAM_NAME)+'</b> under a person\'s main team in Home › User Management to add them here. This page manages team-side data only. <span id="hubSyncStatus" style="font-weight:800"></span></div>';
+  h+='<div class="ib">🔗 Membership is managed in the <b>Hub</b> - tick <b>'+esc(TEAM_NAME)+'</b> under a person\'s main team in Home › User Management to add them here. This page manages team-side data only. <span id="hubSyncStatus" style="font-weight:800"></span></div>';
   h+='<div class="mem-filters"><input type="text" placeholder="Search members…" value="'+esc(memFilter.q)+'" style="max-width:220px" oninput="memFilter.q=this.value;renderMemberGrid()">'+
     '<select onchange="memFilter.rank=this.value;renderMemberGrid()"><option value="">All ranks</option>'+ranks.map(r=>'<option value="'+esc(r)+'"'+(memFilter.rank===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select>'+
     '<select onchange="memFilter.age=this.value;renderMemberGrid()"><option value="">All ages</option>'+AGES.map(a=>'<option value="'+a+'"'+(memFilter.age===a?' selected':'')+'>'+esc(AGE_LABELS[a])+'</option>').join('')+'</select>'+
@@ -4469,7 +4461,7 @@ function renderMemberGrid(){
     return '<div class="mem-card" onclick="openMemberDrawer('+m.id+')"><div class="mc-top"><div class="mem-av">'+esc((m.name||'?').slice(0,1))+'</div>'+
       '<div style="min-width:0"><div class="mc-nm">'+esc(m.name)+'</div><div class="mc-meta">'+esc(m.gender)+' · '+esc(AGE_LABELS[m.age_group]||m.age_group)+' · '+esc(m.rank||'Member')+'</div></div></div>'+
       '<div class="mem-tags">'+tags.join('')+'</div>'+
-      '<div style="font-size:12px;color:var(--dm);margin-top:9px">All-time duties: <b class="num" style="color:var(--dt)">'+(counts.all[m.id]||0)+'</b> · Last: '+(counts.last[m.id]?esc(fmtShort(counts.last[m.id])):'—')+'</div></div>';
+      '<div style="font-size:12px;color:var(--dm);margin-top:9px">All-time duties: <b class="num" style="color:var(--dt)">'+(counts.all[m.id]||0)+'</b> · Last: '+(counts.last[m.id]?esc(fmtShort(counts.last[m.id])):'-')+'</div></div>';
   }).join('')+'</div>';
 }
 function syncFromHub(){ if(!sb) return toast('No database connection','err'); loadAll().then(()=>{ CYCLES=buildCycles(); renderMembers(); toast('Synced from Hub ✓'); }); }
@@ -4484,11 +4476,11 @@ function openMemberDrawer(id){
     '<div class="dp-chips"><span class="dp-chip lock">'+(m.status==='active'?'Active':'Inactive')+'</span>'+(m.nandi?'<span class="dp-chip ok">Nandi ✓</span>':'')+'</div>';
   // rollup
   h+='<div class="dp-sec">Reliability &amp; history</div><div class="dp-card">'+
-    '<div class="dp-row"><span class="dl">Attendance rate</span><span class="dv">'+(rel.rate!=null?rel.rate+'% ('+rel.total+' marked)':'—')+'</span></div>'+
+    '<div class="dp-row"><span class="dl">Attendance rate</span><span class="dv">'+(rel.rate!=null?rel.rate+'% ('+rel.total+' marked)':'-')+'</span></div>'+
     '<div class="dp-row"><span class="dl">Present / Late / Absent</span><span class="dv num">'+rel.present+' / '+rel.late+' / '+rel.absent+'</span></div>'+
     '<div class="dp-row"><span class="dl">Duties all-time</span><span class="dv num">'+(counts.all[m.id]||0)+'</span></div>'+
     '<div class="dp-row"><span class="dl">Duties this cycle</span><span class="dv num">'+(cyc[m.id]||0)+'</span></div>'+
-    '<div class="dp-row"><span class="dl">Last served</span><span class="dv">'+(counts.last[m.id]?esc(fmtNice(counts.last[m.id])):'—')+'</span></div>'+
+    '<div class="dp-row"><span class="dl">Last served</span><span class="dv">'+(counts.last[m.id]?esc(fmtNice(counts.last[m.id])):'-')+'</span></div>'+
     (dutiesThisCycle.length?'<div class="dp-row"><span class="dl">This cycle</span><span class="dv" style="max-width:60%;font-weight:700">'+esc(dutiesThisCycle.join(', '))+'</span></div>':'')+'</div>';
   // upcoming duties (whatsapp)
   const upc=memberUpcomingDuties(m.id);
@@ -4507,10 +4499,10 @@ function openMemberDrawer(id){
       '<button class="btn btn-ol btn-sm" style="margin-top:8px" onclick="saveMemberContact('+m.id+')">Save contact</button>';
     // away dates
     h+='<label class="flabel">Away / unavailable dates</label><div class="dchips" id="mdAway">'+
-      (Array.isArray(m.away)&&m.away.length?m.away.slice().sort().map(d=>'<span class="away-chip">'+esc(fmtShort(d))+'<button title="Remove" onclick="removeAway('+m.id+',\''+escJs(d)+'\')">✕</button></span>').join(''):'<span style="font-size:12px;color:var(--dm)">None — member is available for all events.</span>')+'</div>'+
+      (Array.isArray(m.away)&&m.away.length?m.away.slice().sort().map(d=>'<span class="away-chip">'+esc(fmtShort(d))+'<button title="Remove" onclick="removeAway('+m.id+',\''+escJs(d)+'\')">✕</button></span>').join(''):'<span style="font-size:12px;color:var(--dm)">None - member is available for all events.</span>')+'</div>'+
       '<div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="mdAwayDate" style="flex:1"><button class="btn btn-ol btn-sm" onclick="addAway('+m.id+')">+ Add away date</button></div>';
     // prefs
-    h+='<label class="flabel">Duty preferences <span style="text-transform:none;letter-spacing:0;color:var(--dm2)">— click to cycle neutral › prefer › avoid</span></label><div class="dchips">'+
+    h+='<label class="flabel">Duty preferences <span style="text-transform:none;letter-spacing:0;color:var(--dm2)">- click to cycle neutral › prefer › avoid</span></label><div class="dchips">'+
       allDutyNames.map(n=>{ const key=DUTY_INFO[n].key; const st=(m.prefs.prefer||[]).indexOf(key)>=0?'prefer':((m.prefs.avoid||[]).indexOf(key)>=0?'avoid':'');
         return '<button class="dchip-tog '+st+'" onclick="cyclePref('+m.id+',\''+escJs(key)+'\')">'+esc(n)+(st==='prefer'?' ✓':(st==='avoid'?' ✕':''))+'</button>'; }).join('')+'</div>';
     // notes
@@ -4554,7 +4546,7 @@ async function updateMember(id,patch){
   }
   Object.assign(m,patch); normMember(m);
   const changed=describeChange(before,patch);
-  if(changed) auditLog('update','members',m.name+' \u2014 '+changed);
+  if(changed) auditLog('update','members',m.name+' - '+changed);
   if(curPage==='members') renderMemberGrid();
   return true;
 }
@@ -4580,7 +4572,7 @@ const LEAD_RANKS=['Team Leader','Team Lead','Assistant Team Lead'];
 /* Must be a lead OF THIS TEAM, and not the AV team's.
    Two separate tests, and the second is the one that matters. MEMBERS is
    already filtered to this page's team by loadAll(), so a team check alone
-   changes nothing — an AV Team Lead who sits in Team A passes it. What
+   changes nothing - an AV Team Lead who sits in Team A passes it. What
    marks somebody as AV is their specialized-team membership, set in the
    Hub's member directory, so that is what is read here.
    Nobody is hidden by this. An AV lead who is actually rostered on the
@@ -4639,10 +4631,10 @@ const ATT_OPTS=[
 
    Anyone with an account can be given cover, including a volunteer who
    would fail can_edit_roster(). The database grants them write access to
-   exactly the rows of the event they are covering — see the *_cover
-   policies in SETUP.sql — so this is not enforced in the browser alone. */
+   exactly the rows of the event they are covering - see the *_cover
+   policies in SETUP.sql - so this is not enforced in the browser alone. */
 /* ════════════════════════════════════════════
-   THE BELL — what needs a lead's attention
+   THE BELL - what needs a lead's attention
    Three things, and only three. Everything in here is something a lead
    can act on, and clicking it goes straight to the thing it is about.
    No sound, no pop-up, no email: it lights with a count and clears when
@@ -4663,7 +4655,7 @@ function bellItems(){
   const horizon = addDaysLocal(today, BELL_HORIZON_DAYS);
 
   /* 1. Somebody marked themselves away for a duty they hold. This is why
-        the bell exists — nothing takes a person off a confirmed roster,
+        the bell exists - nothing takes a person off a confirmed roster,
         so a human has to see it and decide. */
   EVENTS.filter(e=>e.date >= today && e.confirmed).forEach(ev=>{
     const data = (ROSTERS[ev.id] || {assign:{}}).assign || {};
@@ -4758,8 +4750,7 @@ document.addEventListener('click', function(e){
 });
 
 /* Who has opened the Hub since this event was confirmed. Team Leads
-   cannot read the accounts table at all — profiles is rank 5 and above —
-   so this comes from roster_seen(), which answers that one question and
+   cannot read the accounts table at all - profiles is rank 5 and above - so this comes from roster_seen(), which answers that one question and
    returns member ids only: no addresses, no timestamps, and nothing
    about anybody who is not on this roster. */
 let SEEN={};              // event id -> Set(member id)
@@ -4768,7 +4759,7 @@ async function loadSeen(eventId){
   try{
     const {data,error}=await sb.rpc('roster_seen',{p_event_id:eventId});
     if(!error) SEEN[eventId]=new Set(Array.isArray(data)?data:[]);
-  }catch(e){ /* older database — the line simply does not appear */ }
+  }catch(e){ /* older database - the line simply does not appear */ }
 }
 
 let COVERING=[];          // events elsewhere that I have been asked to cover
@@ -4783,14 +4774,13 @@ async function loadCovering(){
       .eq('cover_uid',CU.uid).gte('date',today).order('date');
     /* Show the panel wherever the stand-in cannot already do the job
        through the normal roster screen. That is the other team's events
-       always, and this team's too when the person is a volunteer here —
-       the ordinary view is read-only for them, so filtering on team alone
+       always, and this team's too when the person is a volunteer here - the ordinary view is read-only for them, so filtering on team alone
        meant a volunteer asked to cover a day on their OWN team saw nothing
        at all and the cover silently did nothing. */
     const mine=(evs||[]).filter(e=>e.team!==PAGE_TEAM||!IS_EDIT);
     if(!mine.length) return;
     const ids=mine.map(e=>e.id);
-    // Only the teams actually being covered — usually one.
+    // Only the teams actually being covered - usually one.
     const teams=[...new Set(mine.map(e=>e.team).filter(Boolean))];
     const [{data:ro},{data:at},{data:me}] = await Promise.all([
       sb.from('iv_roster').select('*').in('event_id',ids),
@@ -4858,7 +4848,7 @@ async function markCoverAttendance(ci,memberId,status){
   const c=COVERING[ci]; if(!c) return;
   const cur=c.att[memberId]&&c.att[memberId].status;
   const next=(cur===status)?null:status;
-  if(!sb||DB_MISSING){ toast('Could not save attendance \u2014 no database connection','err'); return; }
+  if(!sb||DB_MISSING){ toast('Could not save attendance - no database connection','err'); return; }
   // Hold the realtime listener off, as markAttendance does. Without it
   // our own write echoes straight back, triggers a full reload and wipes
   // the mark that is still being tapped in.
@@ -4877,7 +4867,7 @@ async function markCoverAttendance(ci,memberId,status){
   if(!ok){ renderDashboard(); return; }
   if(next) c.att[memberId]={status:next}; else delete c.att[memberId];
   renderDashboard();
-  auditLog('cover-attendance','attendance','Team '+c.ev.team+' '+c.ev.date+' \u2014 '+
+  auditLog('cover-attendance','attendance','Team '+c.ev.team+' '+c.ev.date+' - '+
     ((c.members.find(m=>m.id===memberId)||{}).name||memberId)+': '+(next||'cleared'));
 }
 
@@ -4896,7 +4886,7 @@ async function openCoverDialog(eventId){
   let h='<h3>Assign cover</h3><p style="font-size:13px;color:var(--dm);margin:-4px 0 14px">'+
     esc(ev.name)+' \u00b7 '+esc(fmtNice(ev.date))+'</p>'+
     '<div class="fg"><label class="flabel">Who is standing in</label>'+
-    '<select id="coverPick" style="width:100%"><option value="">\u2014 nobody \u2014</option>'+
+    '<select id="coverPick" style="width:100%"><option value="">- nobody -</option>'+
     rows.map(r=>'<option value="'+esc(r.id)+'"'+(r.id===cur?' selected':'')+'>'+
       esc(r.display||r.email||r.id)+'</option>').join('')+'</select></div>'+
     '<div class="ib" style="margin:10px 0">They will see this event\u2019s roster and attendance on their own team page, and nothing else of '+esc(TEAM_NAME)+'.</div>'+
@@ -4915,7 +4905,7 @@ async function saveCover(eventId){
      hand-over had happened when the stand-in still could not see it. */
   if(!await dbWrite('Saving cover', ()=>sb.from('iv_events').update(patch).eq('id',ev.id))) return;
   Object.assign(ev,patch);
-  auditLog('cover','events',ev.name+' '+ev.date+' \u2014 '+(uid?('assigned to '+name):'cover removed'));
+  auditLog('cover','events',ev.name+' '+ev.date+' - '+(uid?('assigned to '+name):'cover removed'));
   cM(); toast(uid?('Cover assigned to '+name):'Cover removed'); renderRoster();
 }
 
@@ -4944,7 +4934,7 @@ function renderAttendance(){
   if(ev.confirmed && !SEEN[ev.id]) loadSeen(ev.id).then(()=>{ if(curPage==='attendance') renderAttendance(); });
   const rec=ATTEND[ev.id]||{};
   if(!roll.length){
-    h+='<div class="empty-note">Nobody is rostered for this event yet \u2014 generate the roster first.</div>';
+    h+='<div class="empty-note">Nobody is rostered for this event yet - generate the roster first.</div>';
     el.innerHTML=h; return;
   }
 
@@ -4976,7 +4966,7 @@ function renderAttendance(){
     const unseen=roll.filter(r=>!SEEN[ev.id].has(r.m.id));
     h+='<div class="ib" style="margin-bottom:12px">'+
        '<b>'+seen.length+' of '+roll.length+'</b> have opened the Hub since this roster was confirmed'+
-       (unseen.length?' \u00b7 not yet: '+unseen.map(r=>esc(r.m.name)).join(', '):' \u2014 everyone has')+
+       (unseen.length?' \u00b7 not yet: '+unseen.map(r=>esc(r.m.name)).join(', '):' - everyone has')+
        '</div>';
   }
   h+='<div class="tw"><div class="pnl-h">\u{1F465} On duty tonight <span class="ct">'+roll.length+'</span></div>';
@@ -5050,8 +5040,7 @@ function dutyStats(k){
   const bump=(id,key,duty,recent)=>{
     const o=out[id]=out[id]||{total:0,cyc:0,prev:0,recent:0,byDuty:{}};
     o.total++; if(key) o[key]++;
-    /* `recent` is the three-cycle carry the generator actually weighs —
-       computeCounts() sums cycles k-1, k-2 and k-3. The report only ever
+    /* `recent` is the three-cycle carry the generator actually weighs - computeCounts() sums cycles k-1, k-2 and k-3. The report only ever
        showed `prev`, a single cycle, so a lead reading this page was being
        shown a narrower window than the policy uses and could not tell why
        somebody kept being skipped. */
@@ -5075,13 +5064,12 @@ function renderAttendanceReport(k){
   const active=MEMBERS.filter(m=>m.status==='active');
   if(!active.length) return '<div class="empty-note">No active members.</div>';
   /* Built once. This used to call dutyStats(k) inside the map, so the whole
-     event and roster history was walked again for every single member —
-     sixty members over a year of events is thousands of full passes, and
+     event and roster history was walked again for every single member - sixty members over a year of events is thousands of full passes, and
      the Analytics tab simply locked up while it ground through them. */
   const ds=dutyStats(k);
   const rows=active.map(m=>({m:m, s:attendanceStats(m.id,k), d:(ds[m.id]||{total:0})}))
     .sort((x,y)=>(y.s.rate==null?-1:y.s.rate)-(x.s.rate==null?-1:x.s.rate)||x.m.name.localeCompare(y.m.name));
-  const pct=v=>v==null?'<span style="color:var(--dm)">\u2014</span>':v+'%';
+  const pct=v=>v==null?'<span style="color:var(--dm)">-</span>':v+'%';
   let h='<div class="tw"><div class="tw-scroll"><table><thead><tr>'+
     '<th>Member</th><th title="(Present + Late) as a share of Present, Late and Not present. Justified absences are excluded.">Attendance rate</th>'+
     '<th title="Late as a share of the times they turned up.">Lateness rate</th>'+
@@ -5097,7 +5085,7 @@ function renderAttendanceReport(k){
        '<td class="num">'+r.s.J+'</td><td class="num">'+r.s.N+'</td></tr>';
   });
   return h+'</tbody></table></div></div>'+
-    '<div class="ib" style="margin-top:12px">A justified absence is left out of the attendance rate entirely \u2014 giving notice costs nothing. Lateness is measured against the times someone actually turned up, so missing an event cannot make them look more punctual. A dash means they have never been rostered.</div>';
+    '<div class="ib" style="margin-top:12px">A justified absence is left out of the attendance rate entirely - giving notice costs nothing. Lateness is measured against the times someone actually turned up, so missing an event cannot make them look more punctual. A dash means they have never been rostered.</div>';
 }
 
 /* The routine events a cycle creates for itself. Anything else in the cycle
@@ -5121,7 +5109,7 @@ function renderDutyReporting(k){
   const rMin=Math.min.apply(null,recCounts), rMax=Math.max.apply(null,recCounts);
   /* Two clear of the average, not one. At one, a perfectly healthy spread of
      2-4 around a mean of 3.2 flagged eighteen people as barely used, which is
-     noise dressed up as a warning — the flag has to mean something when it
+     noise dressed up as a warning - the flag has to mean something when it
      fires. Stated in the panel rather than left as a magic threshold. */
   const heavy=rows.filter(r=>r.d.cyc>=mean+2).length;
   const light=rows.filter(r=>r.d.cyc<=mean-2).length;
@@ -5137,7 +5125,7 @@ function renderDutyReporting(k){
       stat('Across three cycles', rMin+' \u2013 '+rMax)+
     '</div>'+
     '<div style="font-size:12px;color:var(--dm);margin-top:12px;line-height:1.55">'+
-      'The generator balances on <b style="color:var(--dt)">three cycles</b>, not one \u2014 the same window shown here as \u201cLast 3 cycles\u201d. '+
+      'The generator balances on <b style="color:var(--dt)">three cycles</b>, not one - the same window shown here as \u201cLast 3 cycles\u201d. '+
       '<b style="color:var(--gold-lt)">Carrying more</b> and <b style="color:var(--red-lt)">barely used</b> mean two or more duties clear of the average. '+
       'A wide spread is not automatically unfair: certification, away dates and age limits all legitimately narrow who can take a duty.'+
     '</div></div></div>';
@@ -5147,7 +5135,7 @@ function renderDutyReporting(k){
   const added=evs.filter(e=>!ROUTINE_TYPES.has(e.type));
   if(added.length){
     h+='<div class="pnl" style="margin-bottom:14px"><div class="pnl-h">Added to this cycle <span class="ct">'+added.length+'</span></div><div class="pnl-b">'+
-      '<div style="font-size:12px;color:var(--dm);margin-bottom:9px;line-height:1.5">Events beyond the Friday Majlis and Paanch Baar Saal a cycle creates for itself. Fairness counts these exactly like any other duty \u2014 they are listed so you can see what moved the numbers.</div>'+
+      '<div style="font-size:12px;color:var(--dm);margin-bottom:9px;line-height:1.5">Events beyond the Friday Majlis and Paanch Baar Saal a cycle creates for itself. Fairness counts these exactly like any other duty - they are listed so you can see what moved the numbers.</div>'+
       added.map(function(e){
         const sc=slotCounts(e);
         return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(75,163,220,.08)">'+
@@ -5251,7 +5239,7 @@ function reportCSV(k){
   if(repMode==='fairness'){
     const ds=dutyStats(k);
     /* Same columns as the table, in the same order, including the three-cycle
-       window — a CSV that disagrees with the page it was exported from is
+       window - a CSV that disagrees with the page it was exported from is
        worse than no CSV. */
     let out='Member,Duties this cycle,Last 3 cycles,Duties last cycle,Duty days completed in total\n';
     active.forEach(m=>{ const d=ds[m.id]||{total:0,cyc:0,prev:0,recent:0};
@@ -5279,7 +5267,7 @@ async function copyReport(){ const t=reportCSV(repCycleK); try{ if(navigator.cli
 let annEditing=null;
 function renderAnnouncements(){
   const el=document.getElementById('body-announce'); if(!el) return;
-  let h='<div class="ph"><div><h1>Announcements</h1><p>Team-scoped notices'+(IS_EDIT?' — post, edit or remove.':' from your leaders.')+'</p></div></div>';
+  let h='<div class="ph"><div><h1>Announcements</h1><p>Team-scoped notices'+(IS_EDIT?' - post, edit or remove.':' from your leaders.')+'</p></div></div>';
   h+='<div class="pnl"><div class="pnl-b" id="annStrip">';
   if(!ANNS.length&&!IS_EDIT) h+='<div class="empty-note">No announcements.</div>';
   for(const a of ANNS){
@@ -5299,7 +5287,7 @@ async function postAnn(){
   const ta=document.getElementById('annNew'); const text=(ta&&ta.value||'').trim();
   if(!text) return toast('Write something first','err');
   const row={team:PAGE_TEAM,text:text,author:CU.display||CU.user};
-  if(!sb){ toast('Could not post announcement — no database connection','err'); return; }
+  if(!sb){ toast('Could not post announcement - no database connection','err'); return; }
   pauseRT(1500);
   /* The stored row goes into ANNS, not a hand-made copy of it. The edit
      and delete buttons address an announcement by id, and a locally
@@ -5318,7 +5306,7 @@ async function saveAnnEdit(id){
   const ta=document.getElementById('annEdit_'+id); const text=(ta&&ta.value||'').trim();
   if(!text) return toast('Announcement cannot be empty','err');
   const a=ANNS.find(x=>x.id===id); if(!a) return;
-  if(!sb){ toast('Could not update announcement — no database connection','err'); return; }
+  if(!sb){ toast('Could not update announcement - no database connection','err'); return; }
   pauseRT(1500);
   if(!await dbWrite('Updating the announcement', ()=>
       sb.from('announcements').update({text:text}).eq('id',id))) return;
@@ -5329,7 +5317,7 @@ async function saveAnnEdit(id){
 function deleteAnn(id){ oM('<h3>Delete announcement</h3><p style="font-size:14px;color:var(--dm)">This removes it for everyone.</p><div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-da" onclick="doDeleteAnn('+id+')">Delete</button></div>'); }
 async function doDeleteAnn(id){
   cM();
-  if(!sb){ toast('Could not delete announcement — no database connection','err'); return; }
+  if(!sb){ toast('Could not delete announcement - no database connection','err'); return; }
   pauseRT(1500);
   if(!await dbWrite('Deleting the announcement', ()=>
       sb.from('announcements').delete().eq('id',id))) return;
@@ -5409,19 +5397,19 @@ async function exportPNG(){
     a.download='Team'+PAGE_TEAM+'-'+String(ev.name).replace(/[^A-Za-z0-9]/g,'')+'-'+ev.date+'.png';
     a.href=canvas.toDataURL('image/png'); a.click();
     stage.innerHTML=''; auditLog('export','roster',ev.name+' '+ev.date); toast('Image downloaded');
-  }catch(e){ console.warn('export failed',e); toast('Export failed \u2014 check connection','err'); }
+  }catch(e){ console.warn('export failed',e); toast('Export failed - check connection','err'); }
 }
 async function clip(text){ try{ if(navigator.clipboard&&navigator.clipboard.writeText) await navigator.clipboard.writeText(text); else { const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } return true; }catch(e){ console.warn(e); return false; } }
 async function copyRoster(){
   const ev=selEvent()||EVENTS.find(e=>e.id===selEventId); if(!ev) return;
   const lines=rosterLines(ev);
-  let out='*'+ev.name+' — '+fmtNice(ev.date)+'* ('+(ev.uniform||'Casual')+' Uniform)\n'; let mph=false;
-  for(const l of lines){ if(l.sec==='mph'&&!mph){ out+='— REC Congregation —\n'; mph=true; } const names=l.male.concat(l.female); out+=l.name+': '+(names.length?names.join(', '):'—')+'\n'; }
-  toast(await clip(out)?'Copied — ready for WhatsApp':'Copy failed',(await clip(out))?'ok':'err');
+  let out='*'+ev.name+' - '+fmtNice(ev.date)+'* ('+(ev.uniform||'Casual')+' Uniform)\n'; let mph=false;
+  for(const l of lines){ if(l.sec==='mph'&&!mph){ out+='- REC Congregation -\n'; mph=true; } const names=l.male.concat(l.female); out+=l.name+': '+(names.length?names.join(', '):'-')+'\n'; }
+  toast(await clip(out)?'Copied - ready for WhatsApp':'Copy failed',(await clip(out))?'ok':'err');
 }
 async function copyMemberDuties(id){
   const m=memById(id); if(!m) return; const upc=memberUpcomingDuties(id);
-  let out='*'+m.name+' — upcoming '+TEAM_NAME+' duties*\n';
+  let out='*'+m.name+' - upcoming '+TEAM_NAME+' duties*\n';
   if(!upc.length) out+='No upcoming duties scheduled.\n';
   upc.forEach(u=>{ out+=fmtNice(u.ev.date)+' ('+u.ev.name+'): '+u.duties.join(', ')+'\n'; });
   toast(await clip(out)?'Member duties copied':'Copy failed',(await clip(out))?'ok':'err');
@@ -5443,8 +5431,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ cM(); closeDrawer
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
 else boot();
 
-/* The webfont must be rasterised, not merely requested, before a capture —
-   html2canvas draws whatever is loaded at that instant, so a slow font
+/* The webfont must be rasterised, not merely requested, before a capture - html2canvas draws whatever is loaded at that instant, so a slow font
    would silently produce an image in the fallback face. Capped so a
    blocked CDN degrades to a fallback image rather than hanging. */
 async function fontsSettled(ms){
@@ -5539,7 +5526,7 @@ async function fontsSettled(ms){
         // hub-link is the cross-page "Back to Hub" anchor. It lives in the
         // same nav but carries its own class, and skipping it left the AV
         // and Team pages with no way back to the Hub once the sidebar was
-        // hidden — the only exit was the browser's back button.
+        // hidden - the only exit was the browser's back button.
         if(!vis(el)) continue;
         if(group){ groupMenu.appendChild(entry(el)); groupHas=true;
                    if(el.classList.contains('active')) groupBtn.classList.add('on'); }
@@ -5576,7 +5563,7 @@ async function fontsSettled(ms){
     var right=mk('div','tn-right');
 
     /* Signing out lives in the sidebar footer, outside .sb-nav, and the
-       three pages each do it differently — a button, an icon button, a
+       three pages each do it differently - a button, an icon button, a
        span with an onclick. Hiding the sidebar took all of them with it,
        so a desktop user had no way to sign out at all. Whichever one this
        page has gets mirrored here and forwarded to the original, so the
@@ -5606,7 +5593,7 @@ async function fontsSettled(ms){
   }
 
   /* Kept in localStorage so the choice survives a reload, but the bar is
-     shown unless it was explicitly hidden — a missing or unreadable value
+     shown unless it was explicitly hidden - a missing or unreadable value
      always means visible. */
   var KEY='ivhub_topnav_hidden';
   function setHidden(h){

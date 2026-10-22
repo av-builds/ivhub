@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- IV Hub — account setup. Invite and password-reset links land here; the
+<!-- IV Hub - account setup. Invite and password-reset links land here; the
      Hub itself (index.html) is only ever for signing in. -->
 <html lang="en">
 <head>
@@ -66,8 +66,8 @@ h2{font-size:19px;font-weight:800;margin-bottom:8px;}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important;}}
 input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;font-stretch:inherit;} /*_iv_form_inherit*/
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021l">
-<script src="ivtheme.js?v=20261021l"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021m">
+<script src="ivtheme.js?v=20261021m"></script>
 </head>
 <body>
 
@@ -116,7 +116,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   <!-- No link, or an expired one. A fresh link is sent BY a leader, never
        requested here: this page is reachable by anyone, so a self-serve
        form would have handed the whole "resets are admin-sent" rule
-       straight back — anybody could have triggered a reset email to any
+       straight back - anybody could have triggered a reset email to any
        member's address just by typing it in. -->
   <div id="stepRequest" class="hide">
     <h2 id="reqTitle">Open your invitation link</h2>
@@ -149,7 +149,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <button type="button" class="eye" data-for="pwCopy" aria-label="Show password" title="Show password">&#128065;</button></div>
       </div>
       <button class="btn ghost" id="copyBtn" style="margin-top:0;">Copy password</button>
-      <div class="rules" style="margin-top:10px;">Copy it now if you want it saved somewhere &mdash; it is not stored, and closing this page loses it.</div>
+      <div class="rules" style="margin-top:10px;">Copy it now if you want it saved somewhere - it is not stored, and closing this page loses it.</div>
     </div>
     <a class="btn" href="index.html" style="display:block;text-align:center;text-decoration:none;line-height:1.4;">Go to the Hub</a>
   </div>
@@ -165,7 +165,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
    ACCOUNT SETUP
 
    Invite and password-reset emails send people here. The link carries a
-   one-time token which Supabase turns into a short-lived session — that
+   one-time token which Supabase turns into a short-lived session - that
    token is the proof of invitation, and it is the only thing that lets a
    password be set.
 
@@ -255,7 +255,7 @@ async function start(){
   ACCOUNT_EMAIL = (session.user.email || '').toLowerCase();
   if(LINK_KIND === 'recovery'){
     $('setTitle').textContent = 'Forgotten password';
-    $('setLede').textContent  = 'Your reset link is confirmed. Choose a new password to finish — you have been signed out everywhere.';
+    $('setLede').textContent  = 'Your reset link is confirmed. Choose a new password to finish - you have been signed out everywhere.';
     $('saveBtn').textContent  = 'Save new password';
     $('emailConfirm').placeholder = 'The address this reset was sent to';
     document.title = 'Reset Password | IV Hub';
@@ -291,7 +291,7 @@ async function savePassword(){
       return say('setMsg', error.message || 'Could not save your password.','err');
     }
     // Sign out so they arrive at the Hub and sign in properly with the
-    // password they just chose — that also proves it works.
+    // password they just chose - that also proves it works.
     try{ await sb.auth.signOut(); }catch(e){}
     // Hand the password to the copy step, then let them leave in their own
     // time. The old two-second redirect would have carried them off the
@@ -313,7 +313,7 @@ async function savePassword(){
 }
 
 /* requestLink() removed. Password resets are sent by a Director or
-   Facilitator from Admin Logins — never requested by the person
+   Facilitator from Admin Logins - never requested by the person
    locked out. Leaving a send-me-a-link form on a page anyone can open
    would have made that rule decorative. */
 
@@ -333,7 +333,7 @@ document.addEventListener('click', function(ev){
 });
 
 /* Copy without revealing. The value is only ever in this input and in the
-   variable behind it — nothing is written to storage, and a refresh loses
+   variable behind it - nothing is written to storage, and a refresh loses
    it, which is why the wording tells them to do it now. */
 $('copyBtn').addEventListener('click', async function(){
   const f = $('pwCopy'); if(!f.value) return;

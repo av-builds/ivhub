@@ -1,4 +1,4 @@
-/* ═══════════════ IV HUB — DESIGN LAYER ═══════════════
+/* ═══════════════ IV HUB - DESIGN LAYER ═══════════════
    One shared look for every page. It is loaded after each page's own
    styles and only changes how things look: colours, type, radii, shadows
    and motion. No element, id, class or script is added, removed or renamed,
@@ -470,7 +470,7 @@ html[data-theme="light"] .dc-x:hover{color:#B3261E;}
 
 /* ═══════════════ ROSTER: CRISP LINES ═══════════════
    Hairlines instead of soft shadows, tighter corners, and no border on the
-   tinted event days — the colour is the edge. */
+   tinted event days - the colour is the edge. */
 .roster-wrap{border-radius:24px;border:1px solid var(--db);box-shadow:none;}
 .r-hdr{border-bottom:1px solid var(--db);}
 .r-nav{border-bottom:1px solid var(--db);}

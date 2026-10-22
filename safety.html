@@ -108,8 +108,8 @@ select,input[type=number]{width:100%;min-height:44px;padding:0 12px;border-radiu
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021l">
-<script src="ivtheme.js?v=20261021l"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021m">
+<script src="ivtheme.js?v=20261021m"></script>
 </head>
 <body>
 <header class="top">
@@ -263,14 +263,14 @@ function showSetupWarn(){
 async function writeRows(table, rows, label){
   if(!sb){ toast('No connection.', true); return false; }
   const res = await sb.from(table).upsert(rows).select();
-  if(res.error){ toast(label + ' failed — ' + (isMissing(res.error) ? 'the database tables are not set up yet' : res.error.message), true); return false; }
-  if(!res.data || res.data.length < (Array.isArray(rows) ? rows.length : 1)){ toast(label + ' failed — the database refused it. You may not have permission.', true); return false; }
+  if(res.error){ toast(label + ' failed - ' + (isMissing(res.error) ? 'the database tables are not set up yet' : res.error.message), true); return false; }
+  if(!res.data || res.data.length < (Array.isArray(rows) ? rows.length : 1)){ toast(label + ' failed - the database refused it. You may not have permission.', true); return false; }
   return true;
 }
 async function deleteDay(ds){
   if(!sb) return false;
   const res = await sb.from('safety_roster').delete().eq('date', ds).select();
-  if(res.error){ toast('Reset failed — ' + res.error.message, true); return false; }
+  if(res.error){ toast('Reset failed - ' + res.error.message, true); return false; }
   return true;
 }
 
@@ -297,7 +297,7 @@ async function changeMonth(n){
 async function autoFill(){
   const g = gridRange(), dates = [];
   for(let i=0;i<g.total;i++){ const d = new Date(g.start.getFullYear(), g.start.getMonth(), g.start.getDate()+i); if(d.getMonth() === S.m) dates.push(ymd(d)); }
-  if(!S.pool.length){ toast('Nobody is in the Safety & Security pool yet — tick Safety & Security for people in Data Management.', true); return; }
+  if(!S.pool.length){ toast('Nobody is in the Safety & Security pool yet - tick Safety & Security for people in Data Management.', true); return; }
   const plan = planMonth(dates, S.roster, S.pool, S.avail, S.head);
   const rows = Object.keys(plan).map(ds=>({date:ds, data:{people:plan[ds], manual:false}}));
   if(!rows.length){ toast('Every day this month is locked by hand.'); return; }
@@ -305,7 +305,7 @@ async function autoFill(){
   if(!await writeRows('safety_roster', rows, 'Auto-fill')) return;
   rows.forEach(r=>{ S.roster[r.date] = r.data; });
   renderCal();
-  toast('Month filled' + (short ? ' — ' + short + ' day(s) are short of people' : ' ✓'), !!short);
+  toast('Month filled' + (short ? ' - ' + short + ' day(s) are short of people' : ' ✓'), !!short);
 }
 
 /* ── sheets ── */
