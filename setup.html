@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Set up your account — IV Hub</title>
+<title>Account Setup | IV Hub</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
 <style>
@@ -66,8 +66,8 @@ h2{font-size:19px;font-weight:800;margin-bottom:8px;}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important;}}
 input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;font-stretch:inherit;} /*_iv_form_inherit*/
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021k">
-<script src="ivtheme.js?v=20261021k"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021l">
+<script src="ivtheme.js?v=20261021l"></script>
 </head>
 <body>
 
@@ -258,7 +258,7 @@ async function start(){
     $('setLede').textContent  = 'Your reset link is confirmed. Choose a new password to finish — you have been signed out everywhere.';
     $('saveBtn').textContent  = 'Save new password';
     $('emailConfirm').placeholder = 'The address this reset was sent to';
-    document.title = 'Reset your password — IV Hub';
+    document.title = 'Reset Password | IV Hub';
   }
   // Keep the token out of the address bar and out of browser history.
   try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
