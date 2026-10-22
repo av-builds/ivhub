@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- IV Hub — AV Team · fixed build integrated into the hub (DB-only users, owner-perm gating, masked passwords, XSS escaping, NZ-timezone-safe dates, admin-only month sync, persisted auto-roster). Hub wiring: shared Supabase project, shared ivhub_session, inline IV logo, hub AV membership. -->
+<!-- IV Hub - AV Team · fixed build integrated into the hub (DB-only users, owner-perm gating, masked passwords, XSS escaping, NZ-timezone-safe dates, admin-only month sync, persisted auto-roster). Hub wiring: shared Supabase project, shared ivhub_session, inline IV logo, hub AV membership. -->
 <html lang="en">
 <head>
 <script>window.IV_LOGO="logo.png";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AV Team — IV Hub · Auckland Jamatkhana</title>
+<title>AV Team | IV Hub</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="icon" type="image/png" href="data:image/png;base64,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">
@@ -56,7 +56,7 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
 .sb-logo h2{font-family:'Archivo',sans-serif;font-size:17px;font-weight:900;color:var(--blue-lt);text-transform:uppercase;letter-spacing:0.04em;}
 .sb-logo p{font-size:12px;color:var(--dm);}
 .sb-nav{flex:1;padding:14px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
-/* Back to Hub — cross-page link into the IV Hub shell */
+/* Back to Hub - cross-page link into the IV Hub shell */
 .hub-link{display:flex;align-items:center;gap:9px;padding:9px 11px;margin:0 0 10px;border:1px solid var(--db);border-radius:7px;color:var(--blue-lt);font-size:13px;font-weight:800;text-decoration:none;transition:all .18s;white-space:nowrap;}
 .hub-link:hover{background:rgba(75,163,220,.08);border-color:rgba(75,163,220,.45);}
 .nav-sec{font-size:11px;font-weight:800;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;padding:9px 11px 4px;margin-top:4px;}
@@ -73,7 +73,7 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
 .page.active{display:block;animation:fadeIn .25s ease;}
 .page.ep-only{display:none!important;}
 .page.ep-only.ep-visible{display:block!important;animation:fadeIn .25s ease;}
-/* Role-gated nav items — hidden until applySession shows them */
+/* Role-gated nav items - hidden until applySession shows them */
 .nav-admin{display:none;}
 .nav-owner{display:none;}
 .nav-volunteer{display:none;}
@@ -124,7 +124,7 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
 .sc-v{font-family:'Archivo',sans-serif;font-size:30px;font-weight:900;color:var(--blue-lt);line-height:1;}
 .sc-s{font-size:12px;color:var(--dm);margin-top:4px;}
 /* ─────────────────────────────────────────
-   ROSTER CALENDAR — ISMAILI VOLUNTEERS DARK THEME
+   ROSTER CALENDAR - ISMAILI VOLUNTEERS DARK THEME
 ───────────────────────────────────────── */
 .roster-wrap{
   background:#050D1C;
@@ -207,7 +207,7 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
   background:#060F1E;
   border-right:1px solid rgba(75,163,220,0.08);
   border-bottom:1px solid rgba(75,163,220,0.08);
-  /* No padding here any more — the band and the body inside the cell supply
+  /* No padding here any more - the band and the body inside the cell supply
      their own, because the exported cell needs the same structure at a
      different scale and a single outer padding could not serve both. */
   padding:0;
@@ -219,7 +219,7 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
 }
 .cell:last-child,.cell:nth-child(7n){border-right:none;}
 .cell:nth-child(7n):not(.ev-jk):not(.ev-training):not(.today){background:#060F1E;}
-/* Sunday column special rule removed — all same bg */
+/* Sunday column special rule removed - all same bg */
 .cell:hover{background:#091828;}
 .cell.other{background:#060F1E;pointer-events:all;cursor:pointer;}
 .cell.other .cell-inner{opacity:1;}
@@ -238,7 +238,7 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
    Straight down, stops in PIXELS, tint at the top fixes all three: every
    cell gets an identical ramp whatever its height, neighbours meet at the
    same value, and the colour sits behind the content rather than under it.
-   The exported sheet uses the same shape with heavier stops — see
+   The exported sheet uses the same shape with heavier stops - see
    AV_SKINS.export, which is where the printed weights live. */
 /* A coloured day used to carry a full coloured border, which stayed bright
    along the bottom and right edges long after the fill had faded to nothing, so
@@ -388,6 +388,7 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
 .role-pill .rp-x:hover{opacity:1;}
 .role-pill.tl  {background:rgba(99,102,241,0.18);color:#A5B4FC;border:1px solid rgba(99,102,241,0.35);}
 .role-pill.atl {background:rgba(139,92,246,0.18);color:#C4B5FD;border:1px solid rgba(139,92,246,0.35);}
+.role-pill.yl  {background:rgba(6,182,212,0.18);color:#67E8F9;border:1px solid rgba(6,182,212,0.35);}
 .role-pill.sup {background:rgba(16,185,129,0.18);color:#6EE7B7;border:1px solid rgba(16,185,129,0.35);}
 .role-pill.mph {background:rgba(245,158,11,0.18);color:#FCD34D;border:1px solid rgba(245,158,11,0.35);}
 .role-pill.tm  {background:rgba(59,130,246,0.18);color:#93C5FD;border:1px solid rgba(59,130,246,0.35);}
@@ -729,7 +730,7 @@ tr:hover td{background:var(--ds2);}
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199;
 }
 /* ═══════════════════════════════════
-   RESPONSIVE — TABLET & MOBILE
+   RESPONSIVE - TABLET & MOBILE
 ═══════════════════════════════════ */
 @media(max-width:900px){
   /* Stats grid: 2 cols on tablet */
@@ -809,7 +810,7 @@ tr:hover td{background:var(--ds2);}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* ═══════════════════════════════════
-   IDENTITY & MOTION — Ismaili Volunteers
+   IDENTITY & MOTION - Ismaili Volunteers
 ═══════════════════════════════════ */
 @keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes popIn{from{opacity:0;transform:scale(.955) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
@@ -869,7 +870,7 @@ tr:hover td{background:var(--ds2);}
 #rotationStrip>div{transition:transform .2s cubic-bezier(.16,1,.3,1),border-color .2s;}
 #rotationStrip>div:hover{transform:translateY(-2px);}
 /* ═══════════════════════════════════
-   TYPE SYSTEM — Sora display / Inter UI
+   TYPE SYSTEM - Sora display / Inter UI
 ═══════════════════════════════════ */
 h1,h2,h3,
 .ph h1,.llogo h1,.sb-logo h2,.r-title .big,.r-nav h2,.mbox h3,
@@ -880,7 +881,7 @@ h1,h2,h3,
   letter-spacing:0.005em;
 }
 .dn,.sc-v,.mj-list-d,.md-card-date,.md-sum-val,.dash-clock{font-variant-numeric:tabular-nums;}
-/* Numeral cleanup — the old condensed-font tracking made numbers cramped.
+/* Numeral cleanup - the old condensed-font tracking made numbers cramped.
    Archivo needs neutral spacing and honest weights. */
 .dn{font-weight:900!important;letter-spacing:0!important;}
 .sc-v,.md-sum-val,.md-card-date,.mj-list-d,.ev-d,.dash-clock,.mj-list-yr,.mj-list-mo{letter-spacing:0!important;}
@@ -903,7 +904,7 @@ h1,h2,h3,
   background:linear-gradient(90deg,rgba(75,163,220,.05) 25%,rgba(75,163,220,.15) 50%,rgba(75,163,220,.05) 75%);
   background-size:200% 100%;animation:skShimmer 1.4s linear infinite;}
 .sk-line.w40{width:40%}.sk-line.w70{width:72%}.sk-line.w55{width:55%}
-/* Dashboard hero — greeting, date, live clock */
+/* Dashboard hero - greeting, date, live clock */
 .dash-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
   background:linear-gradient(135deg,rgba(0,85,139,.15),rgba(7,22,40,.7) 55%),
              radial-gradient(ellipse at 88% 0%,rgba(75,163,220,.12),transparent 60%);
@@ -920,7 +921,7 @@ h1,h2,h3,
 .dash-clock-wrap{display:flex;align-items:center;gap:15px;position:relative;z-index:1;}
 .dash-hero-logo{width:52px;height:52px;border-radius:50%;background:#fff;box-shadow:0 6px 22px rgba(2,11,24,.5);}
 .dash-clock{font-size:30px;font-weight:800;color:#4BA3DC;letter-spacing:0.02em;text-shadow:0 0 26px rgba(75,163,220,.35);}
-/* Login aurora — slow drifting light */
+/* Login aurora - slow drifting light */
 @keyframes aurora{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(4%,-3%) scale(1.07)}66%{transform:translate(-3%,3%) scale(.95)}}
 #loginScreen::before{content:'';position:absolute;inset:-20%;
   background:radial-gradient(ellipse 40% 30% at 25% 40%,rgba(0,85,139,.30),transparent 65%),
@@ -1191,8 +1192,7 @@ html{scroll-behavior:smooth;}
 b,strong{font-weight:900;} /*_iv_bold_lift*/
 input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;font-stretch:inherit;} /*_iv_form_inherit*/
 /* ── DESKTOP TOP NAVIGATION ──────────────────────────────────────────
-   Built at runtime from the sidebar, never duplicated in the markup —
-   the permission code hides sidebar items, and this mirrors whatever
+   Built at runtime from the sidebar, never duplicated in the markup - the permission code hides sidebar items, and this mirrors whatever
    survives. Sections become dropdowns so the bar stays short however
    many items a person can see.
    Below 1101px this is inert and the sidebar behaves exactly as before. */
@@ -1208,7 +1208,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .tn-b.on{background:#00558B;color:#fff;}
 /* Management is tinted permanently, not only when a page inside it is
    open, so the admin section is recognisable at a glance. General stays a
-   plain button — the point is the contrast between them. */
+   plain button - the point is the contrast between them. */
 .tn-b.tn-mgmt{background:#00558B;color:#fff;}
 .tn-b.tn-mgmt:hover{background:#1976D2;color:#fff;}
 .tn-b.tn-hub{color:#4BA3DC;border:1px solid rgba(75,163,220,.28);margin-right:8px;}
@@ -1229,8 +1229,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .tn-group.open .tn-menu{display:block;}
 .tn-menu .tn-b{display:flex;width:100%;justify-content:flex-start;}
 .tn-sp{flex:1;}
-/* Hiding the bar leaves a desktop with no navigation at all — the sidebar
-   is already hidden at this width — so the control that brings it back is
+/* Hiding the bar leaves a desktop with no navigation at all - the sidebar
+   is already hidden at this width - so the control that brings it back is
    always on screen rather than tucked into a menu. */
 .tn-right{margin-left:auto;display:flex;align-items:center;gap:9px;padding-left:14px;}
 .tn-who{font-size:13px;font-weight:800;color:#9FC6DF;white-space:nowrap;max-width:220px;
@@ -1259,8 +1259,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   body.tn-hidden .tn-show{display:inline-flex;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021k">
-<script src="ivtheme.js?v=20261021k"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021m">
+<script src="ivtheme.js?v=20261021m"></script>
 </head>
 <body>
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
@@ -1354,7 +1354,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     e.preventDefault(); window.ivGo(h);
   },true);
   /* Coming back with the browser's Back button can restore the page as it
-     was left — with the screen up. Take it down. */
+     was left - with the screen up. Take it down. */
   window.addEventListener('pageshow',function(e){ if(e.persisted){ done=false; v.classList.add('off'); v.classList.remove('leaving'); } });
   if(v.getAttribute('data-hide')==='load'){
     if(document.readyState==='complete') window.ivVeilOff(); else window.addEventListener('load',window.ivVeilOff);
@@ -1370,7 +1370,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   <div class="lbox">
     <div class="llogo">
       <div class="llogo-wrap">
-        <img class="app-logo llogo-img" src="logo.png" alt="Ismaili Volunteers — Service · Khidma" onerror="this.onerror=null;this.src=window.IV_LOGO">
+        <img class="app-logo llogo-img" src="logo.png" alt="Ismaili Volunteers - Service · Khidma" onerror="this.onerror=null;this.src=window.IV_LOGO">
         <div class="llogo-fallback">IV</div>
       </div>
       <h1>AV Team</h1>
@@ -1487,7 +1487,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <!-- MONTHLY ROSTER / CALENDAR -->
     <div class="page" id="page-calendar">
       <div class="ph">
-        <div><h1>Monthly Roster</h1><p>Official volunteer schedule — 🔒 marks manually locked days; click any day for details &amp; quick actions</p></div>
+        <div><h1>Monthly Roster</h1><p>Official volunteer schedule - 🔒 marks manually locked days; click any day for details &amp; quick actions</p></div>
         <div class="ha">
           <button class="btn btn-ol nav-admin" style="height:36px;" onclick="nav(document.querySelector('[data-page=volunteers]'))">👥 Manage Volunteers</button>
           <button class="btn btn-ol" style="height:36px;" onclick="autoRoster();toast('Roster regenerated')">↻ Regenerate</button>
@@ -1499,9 +1499,9 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           </button>
         </div>
       </div>
-      <!-- Roster issues banner — visible to AV Admins / Owner only -->
+      <!-- Roster issues banner - visible to AV Admins / Owner only -->
       <div id="rosterIssues" style="display:none;margin-bottom:14px;"></div>
-      <!-- Weekday rotation overview — visible to AV Admins / Owner only -->
+      <!-- Weekday rotation overview - visible to AV Admins / Owner only -->
       <div id="rotationStrip" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
       <div class="roster-wrap">
         <!-- Header -->
@@ -1571,10 +1571,10 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div class="md-results-hdr">
           <div>
             <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--dm);margin-bottom:4px;">Showing duties for</div>
-            <div class="md-vol-name" id="mdVolName">—</div>
+            <div class="md-vol-name" id="mdVolName">-</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <div class="md-month-badge" id="mdRangeBadge">—</div>
+            <div class="md-month-badge" id="mdRangeBadge">-</div>
             <button class="md-screenshot-btn" id="mdSaveBtn" onclick="mdSaveImage(false)">📷 Save image</button>
             <button class="md-screenshot-btn md-share" id="mdShareBtn" onclick="mdSaveImage(true)" style="display:none">Share</button>
           </div>
@@ -1611,8 +1611,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div class="iv-ph" style="background:linear-gradient(135deg,#0B3A6B,#00558B);"><span>🔗</span> Membership comes from the Hub</div>
         <div class="iv-pb">
           <div class="ib" style="margin-bottom:0;">
-            People join or leave the AV Team in <b style="color:var(--dt);">Home › Management › Data Management</b> —
-            tick <b style="color:var(--gold-lt);">AV Team</b> under Specialized Teams and they appear here automatically.
+            People join or leave the AV Team in <b style="color:var(--dt);">Home › Management › Data Management</b> - tick <b style="color:var(--gold-lt);">AV Team</b> under Specialized Teams and they appear here automatically.
             Renames, gender and org-wide inactive status follow the hub record.
             Use this page to set each member's <b style="color:var(--dt);">weekdays, roles and busy dates</b>.
           </div>
@@ -1652,7 +1651,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
                 <div>
                   <div style="font-size:11px;font-weight:800;color:#4BA3DC;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Majalis Name</div>
                   <select id="mjNameSelect" class="ws" style="background:#0D2040;color:#E8F4FD;border:1px solid rgba(75,163,220,0.3);" onchange="handleMjSelect()">
-                    <option value="">— Select type —</option>
+                    <option value="">- Select type -</option>
                     <option value="Chandraat">Chandraat</option>
                     <option value="Student">Student</option>
                     <option value="Paanch Baar Saal">Paanch Baar Saal</option>
@@ -1672,7 +1671,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
                 <div>
                   <div style="font-size:11px;font-weight:800;color:#4BA3DC;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Uniform Status <span style="color:rgba(75,163,220,0.5);font-weight:600;text-transform:none;letter-spacing:0;">(appears in the CSV)</span></div>
                   <select id="mjUniform" class="ws" style="background:#0D2040;color:#E8F4FD;border:1px solid rgba(75,163,220,0.3);">
-                    <option value="">— None —</option>
+                    <option value="">- None -</option>
                     <option value="Formal Uniform">Formal Uniform</option>
                     <option value="Casual Uniform">Casual Uniform</option>
                   </select>
@@ -1700,13 +1699,13 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
                 <div>
                   <div style="font-size:11px;font-weight:800;color:#F59E0B;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Trainee <span style="color:rgba(245,158,11,0.5);font-weight:600;text-transform:none;letter-spacing:0;">(Junior Team Member)</span></div>
                   <select id="trTrainee" class="ws" style="background:#1C1000;color:#E8F4FD;border:1px solid rgba(245,158,11,0.3);">
-                    <option value="">— Select trainee —</option>
+                    <option value="">- Select trainee -</option>
                   </select>
                 </div>
                 <div>
                   <div style="font-size:11px;font-weight:800;color:#F59E0B;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Trainer <span style="color:rgba(245,158,11,0.5);font-weight:600;text-transform:none;letter-spacing:0;">(Supervisor)</span></div>
                   <select id="trTrainer" class="ws" style="background:#1C1000;color:#E8F4FD;border:1px solid rgba(245,158,11,0.3);">
-                    <option value="">— Select trainer —</option>
+                    <option value="">- Select trainer -</option>
                   </select>
                 </div>
                 <div>
@@ -1730,7 +1729,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 0% 50%,rgba(34,211,238,0.09) 0%,transparent 70%);pointer-events:none;"></div>
             <div style="position:relative;z-index:1;">
               <div style="font-size:12px;color:#A5E9F5;line-height:1.7;margin-bottom:12px;">
-                Anything else happening that day — Navroz, a graduation, a visit. These appear as a
+                Anything else happening that day - Navroz, a graduation, a visit. These appear as a
                 second line on the calendar cell and on the printed sheet.
                 <b>Nobody is rostered to them</b>; they are there so the team knows what else is on.
               </div>
@@ -1738,7 +1737,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
                 <div>
                   <div style="font-size:11px;font-weight:800;color:#22D3EE;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Event Name</div>
                   <select id="evNameSelect" class="ws" style="background:#04222A;color:#E8F4FD;border:1px solid rgba(34,211,238,0.3);" onchange="handleEvSelect()">
-                    <option value="">— Select event —</option>
+                    <option value="">- Select event -</option>
                     <option value="Navroz">Navroz</option>
                     <option value="Imamat Day">Imamat Day</option>
                     <option value="Salgirah">Salgirah</option>
@@ -1757,7 +1756,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
                 <div>
                   <div style="font-size:11px;font-weight:800;color:#22D3EE;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Category <span style="color:rgba(34,211,238,0.5);font-weight:600;text-transform:none;letter-spacing:0;">(appears in the CSV)</span></div>
                   <select id="evCat" class="ws" style="background:#04222A;color:#E8F4FD;border:1px solid rgba(34,211,238,0.3);">
-                    <option value="">— None —</option>
+                    <option value="">- None -</option>
                     <option value="Ceremony">Ceremony</option>
                     <option value="Institutional">Institutional</option>
                     <option value="Community">Community</option>
@@ -1782,8 +1781,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 0% 50%,rgba(124,58,237,0.1) 0%,transparent 70%);pointer-events:none;"></div>
             <div style="position:relative;z-index:1;">
               <div style="font-size:12px;color:#C4B5FD;line-height:1.7;margin-bottom:12px;">
-                Dates listed here get a <b>REC Congregation</b> section on the Team A and Team B rosters —
-                the MPH duties (Hall Entrance, Seating &amp; Discipline, Sukreet &amp; Ghatpaat Closing) are added
+                Dates listed here get a <b>REC Congregation</b> section on the Team A and Team B rosters - the MPH duties (Hall Entrance, Seating &amp; Discipline, Sukreet &amp; Ghatpaat Closing) are added
                 to that day automatically and appear on the printed sheet as their own table.
                 The REC section always follows the main event's uniform.
               </div>
@@ -1803,7 +1801,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <!-- AUDIT LOGS -->
     <div class="page admin-page" id="page-audit">
       <div class="ph">
-        <div><h1>Audit Logs</h1><p>AV Team activity — what people changed, and what they opened</p></div>
+        <div><h1>Audit Logs</h1><p>AV Team activity - what people changed, and what they opened</p></div>
         <div class="ha">
           <button class="btn btn-ol btn-sm" onclick="clearAuditDisplay()">Clear View</button>
         </div>
@@ -1828,12 +1826,12 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div id="auditList" style="max-height:600px;overflow-y:auto;"></div>
       </div>
     </div>
-    <!-- ADMIN PANEL — Owner only -->
+    <!-- ADMIN PANEL - Owner only -->
     <div class="page owner-page ep-only" id="page-adminpanel">
       <div class="ph">
-        <div><h1>⚙️ Admin Panel</h1><p>System administration — restricted access</p></div>
+        <div><h1>⚙️ Admin Panel</h1><p>System administration - restricted access</p></div>
       </div>
-      <!-- Reset Month — also open to AV admins (limited view) -->
+      <!-- Reset Month - also open to AV admins (limited view) -->
       <div class="iv-panel ap-reset" style="margin-bottom:20px;">
         <div class="iv-ph" style="background:linear-gradient(135deg,#7F1D1D,#B91C1C);">
           <span>♻️</span> Reset Month to Auto
@@ -1841,7 +1839,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div class="iv-pb">
           <div class="add-form" style="background:linear-gradient(160deg,#1A0606,#2D0A0A);border:1px solid rgba(239,68,68,0.25);">
             <div style="font-size:12px;color:#FCA5A5;line-height:1.7;margin-bottom:12px;">
-              Clears <b>every</b> saved assignment for <b id="or-reset-label">the current roster month</b> — including manual overrides and days locked by older data — and regenerates the whole month automatically. Use this after changing someone's availability so the engine can re-seat everyone.
+              Clears <b>every</b> saved assignment for <b id="or-reset-label">the current roster month</b> - including manual overrides and days locked by older data - and regenerates the whole month automatically. Use this after changing someone's availability so the engine can re-seat everyone.
             </div>
             <button class="btn btn-da" style="font-size:14px;padding:9px 20px;" onclick="orResetMonth()">♻️ Reset Month &amp; Regenerate</button>
           </div>
@@ -1896,7 +1894,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
               <div><div style="font-size:11px;font-weight:800;color:#A78BFA;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Sun</div><input type="number" id="ap-cap-0" class="wi" style="width:64px;" min="1" max="10" value="2"></div>
               <button class="btn btn-bl" style="background:linear-gradient(135deg,#4C1D95,#6D28D9);height:38px;" onclick="apSaveDayCaps()">Save Pool Sizes</button>
             </div>
-            <div style="font-size:12px;color:#6D4BA0;margin-top:10px;font-style:italic;">Tip: a size bigger than the number of people actually available for that day just shows a warning — it never breaks the roster.</div>
+            <div style="font-size:12px;color:#6D4BA0;margin-top:10px;font-style:italic;">Tip: a size bigger than the number of people actually available for that day just shows a warning - it never breaks the roster.</div>
           </div>
         </div>
       </div>
@@ -1954,13 +1952,13 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <!-- DUTY STATS -->
     <div class="page" id="page-stats">
       <div class="ph">
-        <div><h1>📊 Duty Stats</h1><p>Who's doing what — totals, fairness and availability</p></div>
+        <div><h1>📊 Duty Stats</h1><p>Who's doing what - totals, fairness and availability</p></div>
         <div class="ha">
           <button class="btn btn-ol btn-sm st-scope" data-s="month" onclick="stSetScope('month')">This Month</button>
           <button class="btn btn-ol btn-sm st-scope" data-s="all" onclick="stSetScope('all')">All Time</button>
         </div>
       </div>
-      <div class="ib" id="stNote">Counts come from the roster records — "All Time" covers every month saved in the database.</div>
+      <div class="ib" id="stNote">Counts come from the roster records - "All Time" covers every month saved in the database.</div>
       <div class="tw" style="margin-bottom:16px;">
         <div style="padding:12px 16px;border-bottom:1px solid var(--db);">
           <h3 style="font-family:'Archivo',sans-serif;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;">Per-Person Totals <span id="stScopeLabel" style="font-size:12px;color:var(--dm);font-weight:700;"></span></h3>
@@ -1971,7 +1969,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         </table>
       </div>
       <div class="iv-panel">
-        <div class="iv-ph"><span>⚖️</span> Fairness — Total Duties per Person</div>
+        <div class="iv-ph"><span>⚖️</span> Fairness - Total Duties per Person</div>
         <div class="iv-pb" id="stBars"></div>
       </div>
     </div>
@@ -1998,7 +1996,7 @@ const ROLES=[
 const MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 let vols=[], majalisEvs=[], trainings=[], avEvents=[], roster={};
-// Hub AV membership — Map(nameLower → iv_members row) once hub membership loads OK.
+// Hub AV membership - Map(nameLower → iv_members row) once hub membership loads OK.
 // Null means the hub list was unavailable, in which case nothing is filtered out.
 let hubAvSet=null;
 // People per weekday rotation (index 0=Sun … 6=Sat). Owner-configurable in
@@ -2019,10 +2017,10 @@ function esc(s){
    Always derive YYYY-MM-DD from local time via these helpers. */
 function localDS(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function todayDS(){ return localDS(new Date()); }
-/* Collision-resistant numeric id — Date.now() alone can collide when two
+/* Collision-resistant numeric id - Date.now() alone can collide when two
    admins add records in the same millisecond. */
 function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
-/* ── PERMISSION HELPERS — single source of truth for role checks ── */
+/* ── PERMISSION HELPERS - single source of truth for role checks ── */
 const PERM_KEYS = ['owner','developer','director','deputy_director','phmu_lead','iv_admin','av_admin','av_atl','av_yatl','av_coord','av_team','facilitator','tl_a','ytl_a','tl_b','ytl_b','team_a','team_b','iv_team'];
 // Anyone at Director level or above sees everything bar the Developer Panel.
 const IV_TOP = ['owner','developer','director','deputy_director','phmu_lead','iv_admin'];
@@ -2031,14 +2029,14 @@ const AV_ADMIN_KEYS = IV_TOP.concat(['av_admin','av_atl','av_yatl','av_coord']);
 // Who may read the activity log. IV leadership sees every team's; the AV
 // Lead and Assistant Lead see AV's own. The database enforces the same
 // list, so anyone outside it would be shown an empty page rather than a
-// restricted one — better to not offer it. A Co-ordinator runs the
+// restricted one - better to not offer it. A Co-ordinator runs the
 // roster but does not oversee the team, so is not on it.
 const LOG_READ_KEYS = IV_TOP.concat(['av_admin','av_atl','av_yatl']);
 // Legacy values from older builds / hand-edited rows → current keys
 const PERM_LEGACY = { admin:'av_admin', avadmin:'av_admin', ivadmin:'iv_admin', volunteer:'av_team', team:'av_team', member:'av_team' };
-/* Parses whatever shape a perms value arrives in — a real array, a JSON
+/* Parses whatever shape a perms value arrives in - a real array, a JSON
    string ('["av_admin"]'), a comma list ('av_admin,av_team'), a single key,
-   or null — into a clean list of lowercase keys. Nothing is discarded here:
+   or null - into a clean list of lowercase keys. Nothing is discarded here:
    the hub session is SHARED with index.html and the team pages, which use
    keys this page knows nothing about (facilitator, tl_a, ytl_b, team_a…).
    Dropping them here would strip them from ivhub_session and lock people
@@ -2069,7 +2067,7 @@ function normalizePermList(raw){
   });
   return out;
 }
-/* Highest-privilege role for a perms array — stored in the role column so
+/* Highest-privilege role for a perms array - stored in the role column so
    even a DB without a perms column still round-trips admin access. */
 function roleFromPerms(perms){
   return PERM_KEYS.find(p=>perms.includes(p)) || 'av_team';
@@ -2078,11 +2076,11 @@ function curPerms(){ return (window.CU && (CU.perms || [CU.role])) || []; }
 function isOwnerUser(){ const p=curPerms(); return p.includes('owner') || p.includes('developer') || (window.CU && (CU.role==='owner'||CU.role==='developer')); }
 function isAvAdminUser(){ const p=curPerms(); return AV_ADMIN_KEYS.some(k=>p.includes(k)); }
 /* ═══════════════════════════════════
-   SUPABASE — cross-device sync
+   SUPABASE - cross-device sync
    Shared IV Hub project: the same
    database index.html, teama.html and
    teamb.html use. Do not point this at
-   a different project — users, roster
+   a different project - users, roster
    and audit logs live here.
 ═══════════════════════════════════ */
 const SB_URL  = 'https://ysmkqvceezrjcrlixlii.supabase.co';
@@ -2112,7 +2110,7 @@ if(!initSupabase()){
       const s = document.createElement('script');
       s.src = 'https://unpkg.com/@supabase/supabase-js@2';
       s.onload = () => { initSupabase(); };
-      s.onerror = () => console.error('Both Supabase CDNs failed — offline mode');
+      s.onerror = () => console.error('Both Supabase CDNs failed - offline mode');
       document.head.appendChild(s);
     }
   });
@@ -2124,7 +2122,7 @@ function setSyncStatus(state){
   const states = {
     ok:     {bg:'#00C853', title:'Saved'},
     saving: {bg:'#FFC107', title:'Saving…'},
-    error:  {bg:'#f44336', title:'Sync error — check connection'},
+    error:  {bg:'#f44336', title:'Sync error - check connection'},
     off:    {bg:'#555',    title:'Offline mode (data not saved across devices)'}
   };
   const s = states[state]||states.off;
@@ -2137,7 +2135,7 @@ function setSyncStatus(state){
    only that. Row Level Security does not reject an UPDATE or a DELETE
    whose rows it has filtered out: it runs the statement against no rows
    and reports UPDATE 0, which is success. PostgREST answers 200 with an
-   empty body and supabase-js hands back {data:[], error:null} — exactly
+   empty body and supabase-js hands back {data:[], error:null} - exactly
    what a write that worked looks like. So the dot went green, the screen
    kept the change, and the database kept the old one. Verified against a
    real Postgres, not assumed.
@@ -2148,13 +2146,13 @@ function setSyncStatus(state){
    in handling that exists.
 
    Pass allowNone for a write where nothing coming back is a legitimate
-   answer — deleting a day that was already empty. It still throws on a
+   answer - deleting a day that was already empty. It still throws on a
    real error.
 
    Do not use this for an INSERT into a table the writer may not read.
    Verified against a real Postgres: for UPDATE and DELETE the SELECT
    policy already gates which rows the statement can touch, so asking for
-   them back is free. For INSERT it is not — RETURNING a row the SELECT
+   them back is free. For INSERT it is not - RETURNING a row the SELECT
    policy hides raises "new row violates row-level security policy" and
    rolls the insert back. audit_logs is exactly that shape: anyone signed
    in may write, only a manager may read. Its insert stays plain, and it
@@ -2164,7 +2162,7 @@ async function dbStored(q, allowNone){
   const {data, error} = await q.select();
   if(error) throw error;
   if(!allowNone && (!data || !data.length))
-    throw new Error('the database refused it — you may not have permission to change this');
+    throw new Error('the database refused it - you may not have permission to change this');
   return data || [];
 }
 /* ═══════════════════════════════════
@@ -2186,9 +2184,9 @@ async function syncHubMembership(){
   try{
     const hR = await sb.from('iv_members').select('id,name,gender,status,spec');
     if(hR.error){
-      console.warn('Hub AV membership unavailable ('+hR.error.message+') — showing existing volunteers unfiltered');
+      console.warn('Hub AV membership unavailable ('+hR.error.message+') - showing existing volunteers unfiltered');
       const _st=document.getElementById('hubSyncStatus');
-      if(_st){ _st.textContent='⚠ Hub membership unavailable — '+hR.error.message; _st.style.color='var(--gold-lt)'; }
+      if(_st){ _st.textContent='⚠ Hub membership unavailable - '+hR.error.message; _st.style.color='var(--gold-lt)'; }
       return;
     }
     if(!Array.isArray(hR.data)) return;
@@ -2216,8 +2214,7 @@ async function syncHubMembership(){
     }
     if(updates.length){
       /* Names, genders and inactive flags coming down from the Hub. A
-         refusal here is not fatal — the sync runs again on every load —
-         but it was completely silent, so a page could spend weeks showing
+         refusal here is not fatal - the sync runs again on every load - but it was completely silent, so a page could spend weeks showing
          names the Hub had already corrected. */
       try{ await dbStored(sb.from('volunteers').upsert(updates));
         console.log('Hub sync: updated', updates.length, 'volunteer(s) from hub');
@@ -2227,7 +2224,7 @@ async function syncHubMembership(){
     const missing = avOnly.filter(m=>!claimed.has(m.id));
     let createErr = null;
     if(missing.length){
-      // Explicit client-side ids — the live volunteers table may predate
+      // Explicit client-side ids - the live volunteers table may predate
       // SETUP.sql and have no id auto-generator, so never rely on one.
       const base = Date.now();
       const rows = missing.map((m,i)=>{ const vid = base + i;
@@ -2250,14 +2247,14 @@ async function syncHubMembership(){
     vols = vols.filter(v=>linked.has(v.id));
     const _st=document.getElementById('hubSyncStatus');
     if(_st){
-      if(createErr){ _st.textContent='⚠ Hub found '+avOnly.length+' AV member(s) but creating their records failed — '+createErr+' (run the latest SETUP.sql)'; _st.style.color='var(--gold-lt)'; }
+      if(createErr){ _st.textContent='⚠ Hub found '+avOnly.length+' AV member(s) but creating their records failed - '+createErr+' (run the latest SETUP.sql)'; _st.style.color='var(--gold-lt)'; }
       else { _st.textContent='Hub ✓ '+avOnly.length+' AV member(s)'; _st.style.color='var(--blue-lt)'; }
     }
     if(createErr) toast('AV record creation failed: '+createErr,'err');
   }catch(e){
     console.warn('Hub AV sync skipped:', e.message||e);
     const _st=document.getElementById('hubSyncStatus');
-    if(_st){ _st.textContent='⚠ Hub sync skipped — '+(e.message||e); _st.style.color='var(--gold-lt)'; }
+    if(_st){ _st.textContent='⚠ Hub sync skipped - '+(e.message||e); _st.style.color='var(--gold-lt)'; }
   }
 }
 /* ── Remove volunteer records for people NOT ticked as AV Team in the hub ── */
@@ -2274,7 +2271,7 @@ async function cleanupUnlisted(){
     const doomed = (all.data||[]).filter(r=>{
       const d=r.data||r; return !keep.has(String(d.name||'').trim().toLowerCase());
     });
-    if(!doomed.length){ toast('Nothing to remove — all volunteers are hub-listed ✓'); return; }
+    if(!doomed.length){ toast('Nothing to remove - all volunteers are hub-listed ✓'); return; }
     if(!confirm(`Delete ${doomed.length} volunteer record(s) not ticked as AV Team in the hub?\nTheir availability/busy-date data will be permanently removed.\n(${keep.size} hub-listed AV member(s) will be kept.)`)) return;
     await dbStored(sb.from('volunteers').delete().in('id', doomed.map(r=>r.id)));
     auditLog('Removed unlisted volunteers','volunteer',`Deleted ${doomed.length} records not in hub AV membership`);
@@ -2284,7 +2281,7 @@ async function cleanupUnlisted(){
 }
 /* ── LOAD all data from Supabase on login ── */
 async function loadFromDB(){
-  if(!sb){ setSyncStatus('off'); toast('No database connection — check Supabase config','err'); return; }
+  if(!sb){ setSyncStatus('off'); toast('No database connection - check Supabase config','err'); return; }
   setSyncStatus('saving');
   try{
     // Load app users and global settings
@@ -2302,7 +2299,7 @@ async function loadFromDB(){
       const d = r.data || r; // handle both {id, data:{...}} and flat row
       return normalizeVol({...d, id:r.id||d.id});
     });
-    // Hub membership integration — reconcile against people ticked "AV Team"
+    // Hub membership integration - reconcile against people ticked "AV Team"
     await syncHubMembership();
     majalisEvs = (mR.data||[]).map(r=>{
       const d = r.data||{};
@@ -2332,14 +2329,14 @@ async function loadFromDB(){
        and were split out here by category; additional events do the same,
        which is why they needed no migration. Doing it once at the load
        boundary is what keeps the ~25 places that do
-       `majalisEvs.find(e=>e.date===ds)` correct by construction — none of
+       `majalisEvs.find(e=>e.date===ds)` correct by construction - none of
        them has to learn what an event is. */
     trainings  = majalisEvs.filter(e=>e.category==='training');
     avEvents   = majalisEvs.filter(e=>e.category==='event');
     majalisEvs = majalisEvs.filter(e=>e.category!=='training'&&e.category!=='event');
     console.log(`✓ Loaded: ${vols.length} volunteers, ${majalisEvs.length} majalis, ${trainings.length} trainings, ${Object.keys(roster).length} roster days`);
     setSyncStatus('ok');
-    toast(`✓ Synced — ${vols.length} volunteers, ${majalisEvs.length} majalis, ${Object.keys(roster).length} roster entries`);
+    toast(`✓ Synced - ${vols.length} volunteers, ${majalisEvs.length} majalis, ${Object.keys(roster).length} roster entries`);
     // Update debug info if panel is open
     const dbg = document.getElementById('debug-panel');
     if(dbg && dbg.style.display !== 'none') showDebugInfo();
@@ -2351,8 +2348,7 @@ async function loadFromDB(){
 }
 /* ── SAVE helpers ── */
 /* Each of these reports whether the change was actually stored. They used
-   to swallow the answer and only redden the sync dot, which nobody watches
-   — so a refused save left the volunteer edited on screen and unchanged in
+   to swallow the answer and only redden the sync dot, which nobody watches - so a refused save left the volunteer edited on screen and unchanged in
    the database until the next reload put it back. */
 async function dbSaveVol(vol){
   if(!sb) return false;
@@ -2457,7 +2453,7 @@ async function dbSaveRosterDay(date, data){
     toast('Could not save '+fd(date)+': '+(e.message||e),'err'); return false; }
 }
 /* The dates the calendar is showing, padding days from the neighbouring
-   months included — the same range autoRoster fills, and the only range
+   months included - the same range autoRoster fills, and the only range
    it ever touches. */
 function visibleGridDates(){
   const dim      = new Date(calYr, calMo+1, 0).getDate();
@@ -2474,8 +2470,7 @@ async function dbSaveRoster(){
   setSyncStatus('saving');
   try{
     /* Only the month on screen. This is called after a re-roster, and
-       autoRoster fills exactly the visible grid and nothing outside it —
-       so writing back every day ever recorded, which is what this used
+       autoRoster fills exactly the visible grid and nothing outside it - so writing back every day ever recorded, which is what this used
        to do, rewrote thousands of untouched rows to save a few dozen
        changed ones. Removing one volunteer meant re-uploading the whole
        history of the roster.
@@ -2505,7 +2500,7 @@ async function loadMonthSetting(){
   if(!sb) return;
   try{
     const {data,error} = await sb.from('app_settings').select('*').eq('key','active_month').maybeSingle();
-    if(error) return; // table may not exist yet — silently ignore
+    if(error) return; // table may not exist yet - silently ignore
     if(data && data.value){
       const val = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
       if(typeof val.mo === 'number' && typeof val.yr === 'number'){
@@ -2515,7 +2510,7 @@ async function loadMonthSetting(){
         sessionStorage.setItem('jk_calYr', calYr);
       }
     }
-  } catch(e){ /* ignore — settings table may not exist */ }
+  } catch(e){ /* ignore - settings table may not exist */ }
 }
 async function saveMonthSetting(mo, yr){
   if(!sb) return;
@@ -2549,7 +2544,7 @@ async function loadDayCaps(){
   if(!sb) return;
   try{
     const {data,error} = await sb.from('app_settings').select('*').eq('key','day_capacity').maybeSingle();
-    if(error) return; // row/table may not exist yet — defaults apply
+    if(error) return; // row/table may not exist yet - defaults apply
     if(data && data.value){
       const val = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
       dayCaps = normalizeDayCaps(val);
@@ -2589,7 +2584,7 @@ async function loadRecDates(){
   if(!sb) return;
   try{
     const {data,error} = await sb.from('app_settings').select('*').eq('key','rec_dates').maybeSingle();
-    if(error) return; // row/table may not exist yet — empty list applies
+    if(error) return; // row/table may not exist yet - empty list applies
     if(data && data.value) recDates = normalizeRecDates(data.value);
   } catch(e){ /* empty list applies */ }
 }
@@ -2610,7 +2605,7 @@ function addRecDate(){
   if(el) el.value = '';
   renderRecCards();
   saveRecDates()
-    .then(()=>{ auditLog('Added REC Congregation date','roster','REC on '+fd(d)+' — applies to Team A and Team B'); toast('✓ REC Congregation added for '+fd(d)); })
+    .then(()=>{ auditLog('Added REC Congregation date','roster','REC on '+fd(d)+' - applies to Team A and Team B'); toast('✓ REC Congregation added for '+fd(d)); })
     .catch(e=>toast('Saved locally but DB write failed: '+(e.message||e),'err'));
 }
 function delRecDate(d){
@@ -2625,7 +2620,7 @@ function delRecDate(d){
 function renderRecCards(){
   const c = document.getElementById('recCards'); if(!c) return;
   if(!recDates.length){
-    c.innerHTML = `<div style="text-align:center;padding:24px;color:var(--dm);font-size:13px;opacity:.6;">No REC Congregation dates yet — the team rosters will show main duties only.</div>`;
+    c.innerHTML = `<div style="text-align:center;padding:24px;color:var(--dm);font-size:13px;opacity:.6;">No REC Congregation dates yet - the team rosters will show main duties only.</div>`;
     return;
   }
   const today = todayDS();
@@ -2670,20 +2665,20 @@ async function apSaveDayCaps(){
     await saveDayCaps();
     auditLog('Updated rotation pool sizes','roster',
       'Mon '+dayCaps[1]+' · Tue '+dayCaps[2]+' · Wed '+dayCaps[3]+' · Thu '+dayCaps[4]+' · Fri '+dayCaps[5]+' · Sat '+dayCaps[6]+' · Sun '+dayCaps[0]);
-    toast('✓ Pool sizes saved — roster regenerated for everyone');
+    toast('✓ Pool sizes saved - roster regenerated for everyone');
   } catch(e){
     console.error('saveDayCaps error:', e.message||e);
-    toast('Applied locally but DB save failed — check connection','err');
+    toast('Applied locally but DB save failed - check connection','err');
   }
   autoRoster();
 }
 /* ═══════════════════════════════════
-   USER MANAGEMENT — Supabase only
+   USER MANAGEMENT - Supabase only
    SECURITY: no credentials live in this
    file. All accounts come from the
    `app_users` table shared with the hub.
    If the database is unreachable, direct
-   sign-in here is unavailable — sign in
+   sign-in here is unavailable - sign in
    at the hub (index.html) instead.
 ═══════════════════════════════════ */
 let USERS = {};
@@ -2694,7 +2689,7 @@ function dbUserToLocal(r){
   // shapes so permissions always load, whatever build wrote the row.
   if(r.perms === undefined) _permsColMissing = true;
   // permsAll keeps every key the hub stored, including ones only the team
-  // pages use — this is what gets written back to the shared session.
+  // pages use - this is what gets written back to the shared session.
   let permsAll = rawPermList(r.perms);
   if(!permsAll.length) permsAll = rawPermList([r.role]);
   // perms is the AV-side subset, used purely for gating this page.
@@ -2730,7 +2725,7 @@ async function loadUsersFromDB(){
       const apList = document.getElementById('ap-userlist');
       if(apList) renderApUserList();
     } else {
-      console.warn('app_users table is empty — create users in the hub or via an Owner account.');
+      console.warn('app_users table is empty - create users in the hub or via an Owner account.');
     }
   } catch(e){
     console.warn('Could not load users from DB:', e.message);
@@ -2744,14 +2739,14 @@ async function dbSaveUser(username, data){
     return true;
   } catch(e){
     // 42703 = column does not exist (usually 'perms'). Retry without it so
-    // the account still saves — role carries the highest privilege — and
+    // the account still saves - role carries the highest privilege - and
     // tell the admin how to fix the schema instead of failing silently.
     if(e.code === '42703' || /perms/i.test(e.message||'')){
       _permsColMissing = true;
       try{
         const rowNoPerms = {username:row.username, pw:row.pw, role:row.role, display:row.display};
         await dbStored(sb.from('app_users').upsert(rowNoPerms, {onConflict:'username'}));
-        toast('Saved, but app_users has no "perms" column — only the primary role was stored. Open Dashboard › DB Status for the one-line fix.','err');
+        toast('Saved, but app_users has no "perms" column - only the primary role was stored. Open Dashboard › DB Status for the one-line fix.','err');
         return true;
       }catch(e2){ console.error('dbSaveUser retry error:', e2.message); }
     }
@@ -2817,8 +2812,7 @@ function calSkeletonHTML(){
   return s;
 }
 /* After the full DB load, the current user's perms may be newer than what
-   they logged in with (fixes the "admin lands as viewer on first login" bug
-   — applySession is re-run with fresh perms). A session issued by the hub
+   they logged in with (fixes the "admin lands as viewer on first login" bug - applySession is re-run with fresh perms). A session issued by the hub
    for an account this page can't see in app_users is left alone rather than
    signed out; the hub already gated it and applySession re-gates it here. */
 /* ── SUPABASE AUTH ──
@@ -2841,7 +2835,7 @@ async function verifyAuth(){
       role: roleFromPerms(normalizePermList(perms)) , member_id: prof.member_id||null, uid: sess.user.id };
     // profiles is the authoritative source of permissions. Kept separately
     // so the legacy app_users refresh below can add to it but never take
-    // away — see refreshSessionPerms.
+    // away - see refreshSessionPerms.
     window.CU.permsAuth = perms.slice();
     try{ localStorage.setItem('ivhub_session', JSON.stringify(window.CU)); }catch(e){}
     return true;
@@ -2851,13 +2845,13 @@ function refreshSessionPerms(){
   if(!window.CU) return;
   const fresh = USERS[CU.user];
   if(!fresh){
-    console.warn('Account "'+CU.user+'" not found in app_users — keeping the hub-issued session as-is.');
+    console.warn('Account "'+CU.user+'" not found in app_users - keeping the hub-issued session as-is.');
     return;
   }
   // app_users is this page's own legacy user table and predates the Hub's
   // permission system. It used to replace the session's perms outright,
   // which silently stripped anything granted in the Hub but not mirrored
-  // here — a Developer would sign in with full access and be demoted a
+  // here - a Developer would sign in with full access and be demoted a
   // moment later, on this page only. Union instead: app_users may add AV
   // roles, it may never remove what profiles granted.
   const legacy = (fresh.permsAll && fresh.permsAll.length) ? fresh.permsAll.slice() : (fresh.perms || [fresh.role] || []);
@@ -2868,7 +2862,7 @@ function refreshSessionPerms(){
   try{ localStorage.setItem('ivhub_session', JSON.stringify(window.CU)); }catch(e){}
   applySession();
 }
-/* Opens on a requested page (?p=calendar) — what the Hub's shortcut tiles use.
+/* Opens on a requested page (?p=calendar) - what the Hub's shortcut tiles use.
    nav() still applies its own permission checks, so a bad value just does nothing. */
 function avDeepLink(){
   try{
@@ -2887,7 +2881,7 @@ function doLoginLegacy(){
   const p = document.getElementById('lp').value;
   const err = document.getElementById('loginErr');
   if(!Object.keys(USERS).length){
-    err.textContent = sb ? 'User database unavailable — please sign in at the Hub.' : 'No database connection — sign-in is unavailable.';
+    err.textContent = sb ? 'User database unavailable - please sign in at the Hub.' : 'No database connection - sign-in is unavailable.';
     setTimeout(() => err.textContent = '', 4000);
     return;
   }
@@ -2926,7 +2920,7 @@ function applySession(){
     const p = normalizePermList(raw);
     if(!p.some(x => AV_ADMIN_KEYS.concat(['av_team']).includes(x))){
       // Say why before leaving. This bounce used to be silent, which made
-      // an unrecognised permission look identical to a refused one — the
+      // an unrecognised permission look identical to a refused one - the
       // page appeared to deny someone it had simply never heard of.
       console.warn('[AV] No access. Permissions on the session:', raw,
                    '\n[AV] After normalising against PERM_KEYS:', p,
@@ -2944,7 +2938,7 @@ function applySession(){
   startClock();
   document.getElementById('unm').textContent = CU.display;
   document.getElementById('uav').textContent  = CU.display[0].toUpperCase();
-  // Gating subset only — CU.perms keeps the full hub set so that writing the
+  // Gating subset only - CU.perms keeps the full hub set so that writing the
   // session back never strips the team pages' own keys (tl_a, team_b, …).
   let perms = normalizePermList((CU.perms && CU.perms.length) ? CU.perms : [CU.role]);
   if(!perms.length) perms = normalizePermList([CU.role]); // never end up with nothing
@@ -2955,10 +2949,10 @@ function applySession(){
   const isAvTeam  = isAvAdmin || hasPerm('av_team');
   const isIvTeam  = isIvAdmin || hasPerm('iv_team');
   const isAnyAdmin = isAvAdmin || isIvAdmin;
-  // Role badge in sidebar — list all perms nicely
+  // Role badge in sidebar - list all perms nicely
   const permLabels = { owner:'👑 Owner', av_admin:'AV Admin', iv_admin:'IV Admin', av_team:'AV Team', iv_team:'IV Team' };
   const urlEl = document.getElementById('url');
-  urlEl.textContent = perms.length ? perms.map(p=>permLabels[p]||p).join(' · ') : (CU.role || '—');
+  urlEl.textContent = perms.length ? perms.map(p=>permLabels[p]||p).join(' · ') : (CU.role || '-');
   urlEl.style.color = isOwner ? '#F59E0B' : isAnyAdmin ? '#4BA3DC' : '#94A3B8';
   // ── Show/hide nav by permission ──
   // nav-volunteer (AV Team section): AV Team, AV Admin, IV Admin, Owner
@@ -2997,7 +2991,7 @@ function applySession(){
     }
   });
 }
-// Restore session on refresh — the hub-wide ivhub_session
+// Restore session on refresh - the hub-wide ivhub_session
 document.addEventListener('DOMContentLoaded', async () => {
   ['lu','lp'].forEach(id => {
     const el = document.getElementById(id);
@@ -3015,10 +3009,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 100);
     });
   }
-  if(!sb) console.error('Supabase not available — running offline');
-  // Load users from DB BEFORE showing login — so credentials are always current
+  if(!sb) console.error('Supabase not available - running offline');
+  // Load users from DB BEFORE showing login - so credentials are always current
   await loadUsersEarly();
-  // Auth first — the local session is only a cache and is never trusted
+  // Auth first - the local session is only a cache and is never trusted
   if(await verifyAuth()){
     applySession();
     if(!window.CU) return;
@@ -3029,7 +3023,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .catch(()=>{ autoRoster(); renderAll(); });
     return;
   }
-  // Not signed in — or no way to verify. Either way, no access: the cached
+  // Not signed in - or no way to verify. Either way, no access: the cached
   // session is never trusted, so blocking the CDN cannot bypass login.
   try{ localStorage.removeItem('ivhub_session'); }catch(e){}
   if(sb){ location.replace('index.html'); return; }
@@ -3042,7 +3036,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{
       window.CU = JSON.parse(saved);
       // Sessions saved by older builds may carry stringified perms. Parse the
-      // shape but keep every key — other hub pages read this same session.
+      // shape but keep every key - other hub pages read this same session.
       CU.perms = rawPermList((CU.perms && CU.perms.length) ? CU.perms : [CU.role]);
       CU.role = roleFromPerms(normalizePermList(CU.perms));
       applySession();
@@ -3058,8 +3052,8 @@ async function logout(){
   stopRealtime();
   // The log entry has to be written while the session still exists. This
   // ran signOut() first, so by the time the insert went out there was no
-  // token on it and the audit log's insert policy — which only accepts
-  // signed-in writers — turned it away. Every AV sign-out went unrecorded.
+  // token on it and the audit log's insert policy - which only accepts
+  // signed-in writers - turned it away. Every AV sign-out went unrecorded.
   await auditLog('Signed out', 'logout', `Session ended`);
   try{ if(sb) await sb.auth.signOut(); }catch(e){}
   window.CU = null;
@@ -3096,7 +3090,7 @@ function renderAll(){updateStats();renderCal();renderVolCards();renderMajalisCar
    pages give them instead, read off AV's own roster and busy dates, so
    the answer does not change depending on which page they opened.
 
-   Admins are untouched — their four are exactly as they were. */
+   Admins are untouched - their four are exactly as they were. */
 function myAvName(){
   return String((window.CU && (CU.display || CU.user)) || '').trim();
 }
@@ -3125,7 +3119,7 @@ function renderMyAvCards(){
   });
 
   const busy = vol ? String(vol.bds||'').split(',').map(x=>x.trim()).filter(Boolean).filter(d=>d>=today).sort() : [];
-  // How many days they have been on, all time — the same question the
+  // How many days they have been on, all time - the same question the
   // admin stats answer for everybody, asked about one person.
   let done = 0;
   Object.keys(roster).forEach(ds=>{
@@ -3138,13 +3132,13 @@ function renderMyAvCards(){
   const card=(l,v,sub,style)=>`<div class="sc"><div class="sc-l">${esc(l)}</div>`+
     `<div class="sc-v"${style?' style="'+style+'"':''}>${v}</div><div class="sc-s">${sub}</div></div>`;
   mine.innerHTML =
-      card('My next duty', next ? esc(fd(next.ds)) : '—',
+      card('My next duty', next ? esc(fd(next.ds)) : '-',
            next ? esc(next.roles) : (vol ? 'nothing rostered yet' : 'your name is not in the AV list'),
            'font-size:20px;line-height:1.25')
     + card('My busy dates', busy.length,
            busy.length ? 'next: ' + esc(fd(busy[0])) : 'available for every day')
     + card('Days done', done, done ? 'across the saved roster' : 'none recorded yet')
-    + card('Who to ask', leads.length ? esc(String(leads[0]).split(' ')[0]) : '—',
+    + card('Who to ask', leads.length ? esc(String(leads[0]).split(' ')[0]) : '-',
            leads.length ? esc(leads.join(' · ')) : 'no AV lead listed',
            'font-size:20px;line-height:1.25');
 }
@@ -3182,7 +3176,7 @@ function updateStats(){
   if(sub) sub.textContent = `Roster month: ${MO[calMo]} ${calYr}`;
 }
 /* ═══════════════════════════════════
-   DASHBOARD — next 7 days + issues
+   DASHBOARD - next 7 days + issues
 ═══════════════════════════════════ */
 function renderDashboard(){
   updateStats();
@@ -3221,7 +3215,7 @@ function renderDashboard(){
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:700;color:${jk?'#E8F4FD':'#F87171'};">${jk?esc(jk):'Unassigned'}${ro._manual?' <span style="font-size:12px;">🔒</span>':''}</div>
           <div style="font-size:12px;color:var(--dm);margin-top:1px;">
-            ${tr?`🎓 Training — trainee ${esc(tr.trainee)}`:''}
+            ${tr?`🎓 Training - trainee ${esc(tr.trainee)}`:''}
             ${!tr&&ro._sup?`SUP: ${esc(ro._sup)}`:''}
             ${(!ro._mph_removed&&ro._mph_primary)?` · MPH: ${esc(ro._mph_primary)}`:''}
           </div>
@@ -3237,15 +3231,15 @@ function renderDashboard(){
     if(isAvAdminUser()&&_rosterIssues.length){
       di.style.display='block';
       di.innerHTML=`<div style="background:linear-gradient(160deg,#1A0606,#2D0A0A);border:1px solid rgba(239,68,68,0.35);border-radius:12px;padding:12px 16px;">
-        <div style="font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:#FCA5A5;margin-bottom:6px;">⚠️ ${_rosterIssues.length} roster issue${_rosterIssues.length!==1?'s':''} — ${MO[calMo]} ${calYr}</div>
+        <div style="font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:#FCA5A5;margin-bottom:6px;">⚠️ ${_rosterIssues.length} roster issue${_rosterIssues.length!==1?'s':''} - ${MO[calMo]} ${calYr}</div>
         ${_rosterIssues.slice(0,4).map(i=>`<div style="font-size:12px;color:#FECACA;line-height:1.6;padding:2px 0;">• ${esc(i.text)}</div>`).join('')}
-        ${_rosterIssues.length>4?`<div style="font-size:12px;color:#7A4A4A;margin-top:4px;">+ ${_rosterIssues.length-4} more — see the Monthly Roster page</div>`:''}
+        ${_rosterIssues.length>4?`<div style="font-size:12px;color:#7A4A4A;margin-top:4px;">+ ${_rosterIssues.length-4} more - see the Monthly Roster page</div>`:''}
       </div>`;
     } else { di.style.display='none'; di.innerHTML=''; }
   }
 }
 /* ═══════════════════════════════════
-   DUTY STATS — totals, fairness, busy
+   DUTY STATS - totals, fairness, busy
 ═══════════════════════════════════ */
 let _stScope='month';
 function stSetScope(s){ _stScope=s; renderStats(); }
@@ -3281,7 +3275,7 @@ function renderStats(){
     b.style.color=on?'var(--blue-lt)':'';
   });
   const lbl=document.getElementById('stScopeLabel');
-  if(lbl) lbl.textContent = _stScope==='all' ? '— all time (saved records)' : `— ${MO[calMo]} ${calYr}`;
+  if(lbl) lbl.textContent = _stScope==='all' ? '- all time (saved records)' : `- ${MO[calMo]} ${calYr}`;
   const S=computeStats(_stScope);
   const rows=Object.entries(S)
     .map(([name,s])=>({name,...s,total:s.jk+s.mph+s.sup+s.tr}))
@@ -3324,20 +3318,20 @@ function showDebugInfo(){
       <div>Trainings loaded: <b style="color:#FFF;">${trainings.length}</b></div>
       <div>Roster entries: <b style="color:#FFF;">${rosterKeys.length}</b> (${manualCount} manual, ${autoCount} auto)</div>
       <div>Active volunteers: <b style="color:#FFF;">${vols.filter(v=>v.status==='active').length}</b></div>
-      <div>Hub AV membership: <b style="color:${hubAvSet?'#4CAF50':'#FCD34D'};">${hubAvSet?hubAvSet.size+' member(s)':'unavailable — unfiltered'}</b></div>
+      <div>Hub AV membership: <b style="color:${hubAvSet?'#4CAF50':'#FCD34D'};">${hubAvSet?hubAvSet.size+' member(s)':'unavailable - unfiltered'}</b></div>
       <div>app_users perms column: <b style="color:${_permsColMissing?'#f44':'#4CAF50'};">${_permsColMissing?'MISSING':'OK'}</b></div>
-      <div>Signed in as: <b style="color:#FFF;">${window.CU?esc(CU.user):'—'}</b> · perms: <b style="color:#FFF;">${window.CU?esc((CU.perms||[]).join(', ')||'none'):'—'}</b></div>
+      <div>Signed in as: <b style="color:#FFF;">${window.CU?esc(CU.user):'-'}</b> · perms: <b style="color:#FFF;">${window.CU?esc((CU.perms||[]).join(', ')||'none'):'-'}</b></div>
     </div>
     ${_permsColMissing?`<div style="color:#FCD34D;margin-top:8px;line-height:1.6;">⚠ The <b>app_users</b> table has no <b>perms</b> column, so multi-permission accounts can't be stored (saves fall back to a single role). Run this once in Supabase › SQL Editor:<pre style="background:#000;padding:8px;border-radius:6px;margin-top:6px;font-size:12px;color:#8f8;white-space:pre-wrap;">alter table app_users add column if not exists perms jsonb;
 update app_users set perms = to_jsonb(array[role]) where perms is null;</pre>Then reload the app.</div>`:''}
-    ${vols.length === 0 ? '<div style="color:#f88;margin-top:8px;font-weight:800;">⚠ No volunteers loaded — tick people as <b>AV Team</b> in Home › User Management, or check the browser console (F12) for errors.</div>' : ''}
+    ${vols.length === 0 ? '<div style="color:#f88;margin-top:8px;font-weight:800;">⚠ No volunteers loaded - tick people as <b>AV Team</b> in Home › User Management, or check the browser console (F12) for errors.</div>' : ''}
     ${vols.length > 0 ? '<div style="color:#4CAF50;margin-top:8px;">✓ Data loaded successfully. If calendar looks empty, check which month is selected.</div>' : ''}
     <div style="margin-top:8px;"><button onclick="loadFromDB().then(()=>{autoRoster();renderAll();})" style="background:#00558B;color:#fff;border:none;border-radius:4px;padding:4px 12px;font-size:12px;cursor:pointer;">↻ Reload from DB</button>
     <button onclick="document.getElementById('debug-panel').style.display='none'" style="background:transparent;color:#888;border:1px solid #444;border-radius:4px;padding:4px 12px;font-size:12px;cursor:pointer;margin-left:8px;">Close</button></div>
   `;
 }
 /* ═══════════════════════════════════
-   CALENDAR RENDER — pixel-perfect
+   CALENDAR RENDER - pixel-perfect
 ═══════════════════════════════════ */
 // Maps majalis name → { abbr, isK }
 const MJ_ABBR = {
@@ -3358,26 +3352,25 @@ function getMjBadge(name){
   if(!name) return null;
   // Direct lookup first
   if(MJ_ABBR[name]) return MJ_ABBR[name];
-  // Fuzzy match — normalise and compare
-  const n = name.trim().toLowerCase().replace(/[-–—]/g,'-').replace(/\s+/g,' ');
+  // Fuzzy match - normalise and compare
+  const n = name.trim().toLowerCase().replace(/[-\u2013\u2014]/g,'-').replace(/\s+/g,' ');
   for(const [key,val] of Object.entries(MJ_ABBR)){
-    if(key.toLowerCase().replace(/[-–—]/g,'-').replace(/\s+/g,' ') === n) return val;
+    if(key.toLowerCase().replace(/[-\u2013\u2014]/g,'-').replace(/\s+/g,' ') === n) return val;
   }
   return null;
 }
 /* ═══════════════════════════════════════════════════════════════════
-   THE CALENDAR CELL — ONE RENDERER, TWO SKINS
+   THE CALENDAR CELL - ONE RENDERER, TWO SKINS
 
    renderCal() and downloadRosterPNG() used to build this cell twice: the
    export cloned the on-screen cells and then restyled about ten element
-   types by hand. Every bug in the exported sheet has lived in that seam —
-   the names running together, the badges hanging off their row — because
+   types by hand. Every bug in the exported sheet has lived in that seam - the names running together, the badges hanging off their row - because
    nothing made the two agree. They now call one function and differ only
    in the skin handed to it. Sizes and colours vary; structure cannot.
 
    Layout is a band and a body. The band carries the date, the badges and
-   any additional events — what the day IS. The body carries JAMĀTKHANA and
-   MPH — who is ON it. A coloured rule under the band does the day-typing.
+   any additional events - what the day IS. The body carries JAMĀTKHANA and
+   MPH - who is ON it. A coloured rule under the band does the day-typing.
    ═══════════════════════════════════════════════════════════════════ */
 const AV_SKINS={
   site:{
@@ -3397,7 +3390,7 @@ const AV_SKINS={
   /* The printed sheet is compressed, re-shared and often looked at on paper,
      where a tint that reads on a bright screen disappears. So the export runs
      the same ramp with deeper stops and lands on a faint residual tint rather
-     than pure white — that is what keeps a tall cell's day type legible all
+     than pure white - that is what keeps a tall cell's day type legible all
      the way to the bottom. */
   export:{
     pad:'11px 13px', padTop:9, ramp:175, badge:36, bpill:12, ruleH:3,
@@ -3443,7 +3436,7 @@ function avEasedRamp(top,end,ramp){
 }
 function avCellBG(kind,S,isOther){
   /* A day from the previous or next month is dimmed by its date colour and a
-     flatter ground, never by opacity — fading the whole cell was making the
+     flatter ground, never by opacity - fading the whole cell was making the
      names on those days hard to read on the printed sheet. A trailing day that
      carries a majalis or a training still gets its full tint, because it is a
      real duty day for whoever is on it. */
@@ -3501,7 +3494,7 @@ function avCellHTML(ctx,S){
        `<div style="${nmBase}font-size:${S.tnm}px;color:${S.trFg};margin-top:3px;">Trainee: ${esc(tr.trainee)}</div>`;
   } else {
     const jkP=getJKP(ro);
-    const lock=ro._manual?`<span title="Manually assigned — the engine will not change this day" style="font-size:${S.lbl}px;margin-left:4px;opacity:.85;">🔒</span>`:'';
+    const lock=ro._manual?`<span title="Manually assigned - the engine will not change this day" style="font-size:${S.lbl}px;margin-left:4px;opacity:.85;">🔒</span>`:'';
     h+=`<div style="${lblBase}color:${S.jkFg};border-left:2px solid ${S.jkRule};padding-left:5px;margin-bottom:4px;">JAM&#256;TKHANA</div>`;
     h+= jkP
       ? `<div style="${nmBase}font-size:${S.nm}px;color:${S.name};text-shadow:${S.nameSh};">${esc(jkP)}${lock}</div>`+
@@ -3515,7 +3508,7 @@ function avCellHTML(ctx,S){
     h+= mphP
       ? `<div style="${nmBase}font-size:${S.mphA}px;color:${S.mphAc};">${esc(mphP)}</div>`+
         (mphP2?`<div style="${nmBase}font-size:${S.mphB}px;color:${S.mphBc};">${esc(mphP2)}</div>`:'')
-      : `<div style="font-family:'Archivo',sans-serif;font-size:${S.tnm}px;font-weight:600;font-style:italic;color:${S.dash};">—</div>`;
+      : `<div style="font-family:'Archivo',sans-serif;font-size:${S.tnm}px;font-weight:600;font-style:italic;color:${S.dash};">-</div>`;
   }
   h+='</div></div>';
   return h;
@@ -3531,7 +3524,7 @@ function renderCal(){
   body.innerHTML='';
   // ── Build cells: week starts Monday, shows ALL days of the month ──
   // Pad with days from previous/next month only as needed to complete rows.
-  // No full blank rows — trim any trailing row that is all padding.
+  // No full blank rows - trim any trailing row that is all padding.
   const td=new Date();
   const dim=new Date(calYr,calMo+1,0).getDate();
   // JS getDay(): 0=Sun,1=Mon...6=Sat
@@ -3549,7 +3542,7 @@ function renderCal(){
   }
   // All days of this month
   for(let d=1;d<=dim;d++) cells.push({d,m:calMo,yr:calYr,pad:false});
-  // Trailing padding — only enough to finish the current row, no full extra row
+  // Trailing padding - only enough to finish the current row, no full extra row
   let trail=0;
   while((cells.length+trail)%7!==0) trail++;
   for(let i=1;i<=trail;i++){
@@ -3566,7 +3559,7 @@ function renderCal(){
     const div=document.createElement('div');
     let cls='cell';
     if(c.pad) cls+=' other';
-    // Event styling applies to padding days too — a training or majalis
+    // Event styling applies to padding days too - a training or majalis
     // on a prev/next-month cell looks identical to any other day.
     if(tr && mj)  cls+=' ev-jk ev-training';
     else if(tr)   cls+=' ev-training';
@@ -3577,15 +3570,14 @@ function renderCal(){
     div.dataset.ds=ds;
     div.dataset.dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(ds+'T12:00').getDay()];
     div.onclick=()=>openDayModal(ds,c.d,div);
-    /* The cell itself is drawn by the shared renderer — see avCellHTML().
+    /* The cell itself is drawn by the shared renderer - see avCellHTML().
        Everything that used to be built inline here is now built once and
        handed a skin, so the exported sheet cannot drift away from it. */
     const evs=avEvents.filter(e=>e.date===ds);
     div.innerHTML=avCellHTML({day:c.d,mj:mj,tr:tr,evs:evs,ro:ro,isFri:isFri,isOther:!!c.pad},avSiteSkin());
     body.appendChild(div);
   });
-  // Month-slide animation (set by chMo). Class lives on the grid only —
-  // the JPG export builds its own container, so exports stay clean.
+  // Month-slide animation (set by chMo). Class lives on the grid only - // the JPG export builds its own container, so exports stay clean.
   if(window._slideDir){
     const grid=document.querySelector('#page-calendar .cal-grid');
     if(grid){
@@ -3611,7 +3603,7 @@ function chMo(d){
   window._slideDir = d>0 ? 'left' : 'right'; // month-slide animation direction
   sessionStorage.setItem('jk_calMo', calMo);
   sessionStorage.setItem('jk_calYr', calYr);
-  // Only AV Admins / Owner sync the shared month — a team member browsing
+  // Only AV Admins / Owner sync the shared month - a team member browsing
   // months no longer flips the roster month for everyone else.
   if(isAvAdminUser()){
     clearTimeout(window._chMoTimer);
@@ -3797,7 +3789,7 @@ function dcViewHTML(ds){
     h+=`<div class="dc-tile tr" style="display:block"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="dc-ic">🎓</div><div class="dc-name">Training day</div></div>
       <div class="dc-two-t">
         <div class="dc-person"><div class="dc-av gold">${esc((tr2.trainee||tr2.name||'?').trim().charAt(0).toUpperCase())}</div><div class="dc-main"><div class="dc-role">Trainee</div><div class="dc-name" style="font-size:15px">${esc(tr2.trainee||tr2.name)}</div></div></div>
-        <div class="dc-person"><div class="dc-av gold">${esc((tr2.trainer||'—').trim().charAt(0).toUpperCase())}</div><div class="dc-main"><div class="dc-role">Trainer</div><div class="dc-name" style="font-size:15px">${esc(tr2.trainer)||'—'}</div></div></div>
+        <div class="dc-person"><div class="dc-av gold">${esc((tr2.trainer||'-').trim().charAt(0).toUpperCase())}</div><div class="dc-main"><div class="dc-role">Trainer</div><div class="dc-name" style="font-size:15px">${esc(tr2.trainer)||'-'}</div></div></div>
       </div></div>`;
   }
   const assigned=tr2?tr2.trainer:getJKP(ro);
@@ -3837,12 +3829,12 @@ function dcEditHTML(ds){
     <div class="dc-sech">📅 Roster</div>
     ${L('Duties')}
     <select id="dc-mode" class="ws" onchange="dcRoster()">
-      <option value="jk"${mode==='jk'?' selected':''}>Jamātkhana duty only — cancels MPH for this day</option>
-      <option value="jk_mph"${mode==='jk_mph'?' selected':''}>JK and MPH duty — pick MPH volunteers</option>
+      <option value="jk"${mode==='jk'?' selected':''}>Jamātkhana duty only - cancels MPH for this day</option>
+      <option value="jk_mph"${mode==='jk_mph'?' selected':''}>JK and MPH duty - pick MPH volunteers</option>
     </select>
     ${L('Volunteer duty')}
     <select id="dc-primary" class="ws" onchange="dcRoster()">
-      <option value="">— Select volunteer —</option>
+      <option value="">- Select volunteer -</option>
       ${stray(act,ro._primary)}
       ${avail.length?`<optgroup label="Available on ${dowName}">`+avail.map(v=>o(v.name,ro._primary)).join('')+`</optgroup>`:''}
       ${others.length?`<optgroup label="Not usually available">`+others.map(v=>o(v.name,ro._primary)).join('')+`</optgroup>`:''}
@@ -3856,11 +3848,11 @@ function dcEditHTML(ds){
     <div id="dc-mph-fields" style="display:${mode==='jk_mph'?'block':'none'}">
       ${L('MPH duty 1 <span class="dc-req">(required)</span>','#F59E0B')}
       <select id="dc-mph1" class="ws" onchange="dcRoster()">
-        <option value="">— Select volunteer —</option>${stray(act,ro._mph_primary)}${act.map(v=>o(v.name,ro._mph_primary)).join('')}
+        <option value="">- Select volunteer -</option>${stray(act,ro._mph_primary)}${act.map(v=>o(v.name,ro._mph_primary)).join('')}
       </select>
       ${L('MPH training <span class="dc-req">(optional)</span>','#F59E0B')}
       <select id="dc-mph2" class="ws" onchange="dcRoster()">
-        <option value="">— None —</option>${stray(act,ro._mph_primary2)}${act.map(v=>o(v.name,ro._mph_primary2)).join('')}
+        <option value="">- None -</option>${stray(act,ro._mph_primary2)}${act.map(v=>o(v.name,ro._mph_primary2)).join('')}
       </select>
     </div>
     <div class="dc-hint" id="dc-h-roster"></div>
@@ -3881,7 +3873,7 @@ function dcEditHTML(ds){
       onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" onblur="dcMajalisCustom()">
     ${L('Uniform','#4BA3DC')}
     <select id="dc-uni" class="ws" onchange="dcUniform()"${mj?'':' disabled'}>
-      <option value="">— None —</option>
+      <option value="">- None -</option>
       <option value="Formal Uniform"${mj&&mj.uniform==='Formal Uniform'?' selected':''}>Formal Uniform</option>
       <option value="Casual Uniform"${mj&&mj.uniform==='Casual Uniform'?' selected':''}>Casual Uniform</option>
     </select>
@@ -3891,9 +3883,9 @@ function dcEditHTML(ds){
     <div class="dc-sech" style="color:#FCD34D">🎓 Training day</div>
     <div class="dc-two">
       <div>${L('Trainee <span class="dc-req">(Junior)</span>','#FCD34D')}
-        <select id="dc-tr-trainee" class="ws" onchange="dcTraining()"><option value="">— Select —</option>${stray(juniors,tr&&tr.trainee)}${juniors.map(v=>o(v.name,tr&&tr.trainee)).join('')}</select></div>
+        <select id="dc-tr-trainee" class="ws" onchange="dcTraining()"><option value="">- Select -</option>${stray(juniors,tr&&tr.trainee)}${juniors.map(v=>o(v.name,tr&&tr.trainee)).join('')}</select></div>
       <div>${L('Trainer <span class="dc-req">(Supervisor)</span>','#FCD34D')}
-        <select id="dc-tr-trainer" class="ws" onchange="dcTraining()"><option value="">— Select —</option>${stray(sups,tr&&tr.trainer)}${sups.map(v=>o(v.name,tr&&tr.trainer)).join('')}</select></div>
+        <select id="dc-tr-trainer" class="ws" onchange="dcTraining()"><option value="">- Select -</option>${stray(sups,tr&&tr.trainer)}${sups.map(v=>o(v.name,tr&&tr.trainer)).join('')}</select></div>
     </div>
     <div class="dc-hint" id="dc-h-training"></div>
     ${tr?`<div class="dc-row"><button type="button" class="btn btn-da btn-sm" onclick="dcTrainingRemove()">🗑 Remove training</button></div>`:''}
@@ -3902,10 +3894,10 @@ function dcEditHTML(ds){
     <div class="dc-sech" style="color:#67E8F9">📌 Additional events</div>
     ${evs.length?evs.map(e=>`<div class="dc-ev"><span>${esc(e.name)}${e.evcat?` <small>· ${esc(e.evcat)}</small>`:''}</span>
       <button type="button" class="ev-del" onclick="dcEvDel(${e.id})" title="Remove" aria-label="Remove ${esc(e.name)}">🗑</button></div>`).join(''):`<div class="dc-note">None on this day.</div>`}
-    ${evs.length>=3?`<div class="dc-note">Three is the most a day holds — remove one to add another.</div>`:`
+    ${evs.length>=3?`<div class="dc-note">Three is the most a day holds - remove one to add another.</div>`:`
     <div class="dc-two" style="margin-top:8px">
-      <select id="dc-ev-sel" class="ws" onchange="dcEvSel()">${evSel?evSel.innerHTML:'<option value="">— Event —</option><option value="__custom__">Custom…</option>'}</select>
-      <select id="dc-ev-cat" class="ws">${evCat?evCat.innerHTML.replace(/(<option value="">)[^<]*/,'$1Category (optional)'):'<option value="">—</option>'}</select>
+      <select id="dc-ev-sel" class="ws" onchange="dcEvSel()">${evSel?evSel.innerHTML:'<option value="">- Event -</option><option value="__custom__">Custom…</option>'}</select>
+      <select id="dc-ev-cat" class="ws">${evCat?evCat.innerHTML.replace(/(<option value="">)[^<]*/,'$1Category (optional)'):'<option value="">-</option>'}</select>
     </div>
     <input type="text" id="dc-ev-name" class="wi" placeholder="Event name…" style="display:none;margin-top:6px">
     <div class="dc-row"><button type="button" class="btn btn-bl btn-sm" onclick="dcEvAdd()">+ Add event</button></div>
@@ -3960,10 +3952,10 @@ function dcBusy(){
   }
   jobs.push(()=>dbSaveVol(v));
   dcRun('busy',dcSteps(jobs));
-  auditLog('Marked busy: '+name,'volunteer','Busy on '+fd(ds)+' via day card — cover auto-assigned');
+  auditLog('Marked busy: '+name,'volunteer','Busy on '+fd(ds)+' via day card - cover auto-assigned');
   autoRoster(); renderAll();
   dcBody();
-  toast('✓ '+name+' marked busy — cover assigned for '+fd(ds));
+  toast('✓ '+name+' marked busy - cover assigned for '+fd(ds));
 }
 function dcMajalis(){
   const v=dcV('dc-mj'), c=document.getElementById('dc-mj-custom');
@@ -4075,13 +4067,14 @@ function vmJump(name){
 }
 /* ═══════════════════════════════════
    VOLUNTEERS
-   Membership is owned by the hub — see
+   Membership is owned by the hub - see
    syncHubMembership(). This page edits
    availability, roles and busy dates.
 ═══════════════════════════════════ */
 const ROLE_CFG=[
   {key:'AV Team Lead',      cls:'tl',  dot:'#6366F1', short:'TL'},
   {key:'AV Assistant Team Lead', cls:'atl', dot:'#8B5CF6', short:'ATL'},
+  {key:'AV Youth Lead',     cls:'yl',  dot:'#06B6D4', short:'YL'},
   {key:'Supervisor',        cls:'sup', dot:'#10B981', short:'SUP'},
   {key:'MPH Certified Member', cls:'mph', dot:'#F59E0B', short:'MPH'},
   {key:'Team Member',       cls:'tm',  dot:'#3B82F6', short:'TM'},
@@ -4152,12 +4145,12 @@ function removeRole(id,role,e){
 }
 function syncVolType(v){
   // Sync the legacy 'type' field to highest-priority role for roster logic
-  const priority=['Supervisor','MPH Certified Member','Junior Team Member','AV Team Lead','AV Assistant Team Lead','Team Member'];
+  const priority=['Supervisor','MPH Certified Member','Junior Team Member','AV Team Lead','AV Assistant Team Lead','AV Youth Lead','Team Member'];
   const roles=Array.isArray(v.roles)?v.roles:[];
   v.type=priority.find(p=>roles.includes(p))||roles[0]||'Team Member';
   v.mph=roles.includes('MPH Certified Member');
 }
-/* ── Data normalisation — fixes legacy rows (missing status, bad arrays)
+/* ── Data normalisation - fixes legacy rows (missing status, bad arrays)
       that silently excluded volunteers from the rotation. ── */
 function normalizeVol(v){
   const VALID_DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -4168,7 +4161,7 @@ function normalizeVol(v){
   v.gender = (v.gender==='Male'||v.gender==='Female') ? v.gender : '';
   v.bds    = typeof v.bds==='string' ? v.bds : '';
   v.mph    = v.roles.includes('MPH Certified Member');
-  // hub_id links this record to iv_members — never drop it, it is how hub
+  // hub_id links this record to iv_members - never drop it, it is how hub
   // renames and status changes keep following the right person.
   if(v.hub_id === undefined || v.hub_id === '') v.hub_id = null;
   return v;
@@ -4199,14 +4192,14 @@ function renderVolCards(){
   const nIna=vols.length-nAct;
   const nNod=vols.filter(v=>v.status==='active'&&!(v.days||[]).length).length;
   const cnt=document.getElementById('vmCount');
-  if(cnt) cnt.textContent=`— ${vols.length} total · ${nAct} active${nIna?` · ${nIna} inactive`:''}${nNod?` · ${nNod} ⚠ no availability`:''}${hubAvSet?` · Hub ✓ ${hubAvSet.size} AV member${hubAvSet.size!==1?'s':''}`:''}`;
+  if(cnt) cnt.textContent=`- ${vols.length} total · ${nAct} active${nIna?` · ${nIna} inactive`:''}${nNod?` · ${nNod} ⚠ no availability`:''}${hubAvSet?` · Hub ✓ ${hubAvSet.size} AV member${hubAvSet.size!==1?'s':''}`:''}`;
   // Filter + search + sort
   let list=[...vols].sort((a,b)=>a.name.localeCompare(b.name));
   if(_vmFilter==='active')   list=list.filter(v=>v.status==='active');
   if(_vmFilter==='inactive') list=list.filter(v=>v.status==='inactive');
   if(_vmFilter==='nodays')   list=list.filter(v=>!(v.days||[]).length);
   if(_vmSearch) list=list.filter(v=>v.name.toLowerCase().includes(_vmSearch));
-  if(!list.length){c.innerHTML=`<div style="text-align:center;padding:20px;color:var(--dm);font-size:13px;">${vols.length?'No volunteers match this filter.':'No AV members yet — tick people as <b>AV Team</b> in Home › Management › Data Management.'}</div>`;return;}
+  if(!list.length){c.innerHTML=`<div style="text-align:center;padding:20px;color:var(--dm);font-size:13px;">${vols.length?'No volunteers match this filter.':'No AV members yet - tick people as <b>AV Team</b> in Home › Management › Data Management.'}</div>`;return;}
   c.innerHTML=list.map(v=>{
     const roles=v.roles;
     const inactive=v.status==='inactive';
@@ -4236,7 +4229,7 @@ function renderVolCards(){
           <div class="vbf">
             <label>Gender</label>
             <select class="ws" onchange="uGender(${v.id},this.value)">
-              <option value=""${!v.gender?' selected':''}>— Not set —</option>
+              <option value=""${!v.gender?' selected':''}>- Not set -</option>
               <option value="Male"${v.gender==='Male'?' selected':''}>Male</option>
               <option value="Female"${v.gender==='Female'?' selected':''}>Female</option>
             </select>
@@ -4247,7 +4240,7 @@ function renderVolCards(){
           </div>
         </div>
         <div class="ar"><label>Roles</label>${rolePills(v)}</div>
-        <div class="ar"><label>Weekly Availability ${noDays?'<span style="color:#FCA5A5;text-transform:none;letter-spacing:0;">— none set: not in rotation!</span>':''}</label><div class="dr">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(day=>`<label class="day-tog"><input type="checkbox" value="${day}"${(v.days||[]).includes(day)?' checked':''} onchange="uDays(${v.id})"><span>${day}</span></label>`).join('')}</div></div>
+        <div class="ar"><label>Weekly Availability ${noDays?'<span style="color:#FCA5A5;text-transform:none;letter-spacing:0;">- none set: not in rotation!</span>':''}</label><div class="dr">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(day=>`<label class="day-tog"><input type="checkbox" value="${day}"${(v.days||[]).includes(day)?' checked':''} onchange="uDays(${v.id})"><span>${day}</span></label>`).join('')}</div></div>
         <div class="ar" style="margin-top:10px;">
           <label>Busy Dates <span style="font-weight:600;text-transform:none;letter-spacing:0;color:#4A6A80;font-size:11px;">(dates this person is unavailable)</span></label>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
@@ -4264,7 +4257,7 @@ function renderVolCards(){
         </div>
         <div class="vf" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:11px;padding-top:10px;border-top:1px solid var(--db);">
           <button class="btn btn-da btn-sm" onclick="rmVol(${v.id})">🗑 Remove</button>
-          <span style="font-size:12px;color:#4A6A80;font-style:italic;">Removing someone from the AV Team is done in the Hub — untick <b>AV Team</b> in Home › User Management.</span>
+          <span style="font-size:12px;color:#4A6A80;font-style:italic;">Removing someone from the AV Team is done in the Hub - untick <b>AV Team</b> in Home › User Management.</span>
         </div>
       </div>
     </div>`;
@@ -4278,10 +4271,10 @@ function tVol(id){
 }
 function rmVol(id){
   const rv=vols.find(v=>v.id===id);
-  // Hub-listed people cannot be deleted here — the next load would just
+  // Hub-listed people cannot be deleted here - the next load would just
   // re-create them from iv_members. Send the admin to the hub instead.
   if(rv && hubAvSet && hubAvSet.has(String(rv.name||'').trim().toLowerCase())){
-    toast('This person is ticked "AV Team" in the Hub — untick them in Home › User Management to remove them from AV. (Deleting here would just re-create them on the next load.)','err');
+    toast('This person is ticked "AV Team" in the Hub - untick them in Home › User Management to remove them from AV. (Deleting here would just re-create them on the next load.)','err');
     return;
   }
   if(!confirm(`Remove ${rv?rv.name:'this volunteer'} permanently? Their assignments will be re-rostered.`)) return;
@@ -4291,7 +4284,7 @@ function rmVol(id){
   dbDeleteVol(id);
   dbSaveRoster();
   auditLog(`Removed volunteer: ${rv?rv.name:id}`, 'volunteer', `ID: ${id}`);
-  toast('Removed — roster updated.');
+  toast('Removed - roster updated.');
 }
 function uVol(id,f,v){
   const vol=vols.find(x=>x.id===id);
@@ -4305,7 +4298,7 @@ function uVol(id,f,v){
 function uGender(id,val){
   const v=vols.find(x=>x.id===id); if(!v) return;
   v.gender = (val==='Male'||val==='Female') ? val : '';
-  auditLog(`Set gender for ${v.name}`,'volunteer',`Gender: ${v.gender||'—'}`);
+  auditLog(`Set gender for ${v.name}`,'volunteer',`Gender: ${v.gender||'-'}`);
   renderVolCards();
   dbSaveVol(v);
 }
@@ -4358,12 +4351,12 @@ function removeBusyDate(id,date){
   dbSaveVol(v);
 }
 /* ═══════════════════════════════════
-   ROSTER ISSUES — errors for ownership
+   ROSTER ISSUES - errors for ownership
    Populated by autoRoster's health check.
    Shown above the calendar to AV Admins
    and the Owner only.
 ═══════════════════════════════════ */
-/* Weekday rotation overview — shows AV Admins/Owner exactly who the engine
+/* Weekday rotation overview - shows AV Admins/Owner exactly who the engine
    seated on each weekday, so availability problems are visible at a glance. */
 function renderRotationStrip(dayAssignees){
   const el = document.getElementById('rotationStrip');
@@ -4403,7 +4396,7 @@ function renderRosterIssues(){
     <div style="background:linear-gradient(160deg,#1A0606,#2D0A0A);border:1px solid rgba(239,68,68,0.35);border-radius:12px;padding:14px 18px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <span style="font-size:17px;">⚠️</span>
-        <span style="font-family:'Archivo',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:#FCA5A5;">Roster needs attention — ${_rosterIssues.length} issue${_rosterIssues.length!==1?'s':''} (${MO[calMo]} ${calYr})</span>
+        <span style="font-family:'Archivo',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:#FCA5A5;">Roster needs attention - ${_rosterIssues.length} issue${_rosterIssues.length!==1?'s':''} (${MO[calMo]} ${calYr})</span>
       </div>
       ${_rosterIssues.map(i=>`
         <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px solid rgba(239,68,68,0.12);">
@@ -4414,7 +4407,7 @@ function renderRosterIssues(){
     </div>`;
 }
 /* ═══════════════════════════════════════════════════════
-   AUTO-ROSTER ENGINE — ONE WEEKDAY PER VOLUNTEER
+   AUTO-ROSTER ENGINE - ONE WEEKDAY PER VOLUNTEER
    Runs automatically whenever volunteers/events change.
    Logic:
    1. WEEKDAY ASSIGNMENT (scarcity-first):
@@ -4424,13 +4417,12 @@ function renderRosterIssues(){
       person who could do Thu+Sat is steered to Thursday.
       Ties are broken by placing people on the weekday with the
       fewest assignees so far (load balancing), then by name
-      (deterministic — every device computes the same roster).
+      (deterministic - every device computes the same roster).
    2. WEEKLY ALTERNATION:
       If two or more people share a weekday, they alternate:
       wk1=A, wk2=B, wk3=A… Busy dates are skipped (next person
       in the cycle covers).
-   3. MPH (Fridays): MPH-certified members NEVER take Friday JK —
-      they are reserved for the separate MPH overlay. MPH status is
+   3. MPH (Fridays): MPH-certified members NEVER take Friday JK - they are reserved for the separate MPH overlay. MPH status is
       determined ONLY by the "MPH Certified Member" role pill in
       User Management (never by hidden data flags). The MPH duty is
       assigned per Friday from MPH members, excluding whoever holds
@@ -4452,7 +4444,7 @@ function autoRoster(){
   // counts. Hidden/stale mph flags in old data are ignored, so nobody
   // can be invisibly banned from Friday JK.
   const isMphMember = v => (v.roles||[]).includes('MPH Certified Member');
-  // ── Visible grid range — same maths as renderCal. The engine fills
+  // ── Visible grid range - same maths as renderCal. The engine fills
   // EVERY visible cell, including padding days that belong to the
   // previous/next month, so the calendar never shows gaps. Rotation is
   // phased on the absolute week number, so a padding day shows exactly
@@ -4477,7 +4469,7 @@ function autoRoster(){
     if(slot._auto) delete roster[ds];
   });
   if(!active.length){ _rosterIssues=[]; renderRosterIssues(); renderRotationStrip(null); renderCal(); return; }
-  // ── Step 2: Assign volunteers to weekdays — configurable pool sizes ──
+  // ── Step 2: Assign volunteers to weekdays - configurable pool sizes ──
   // Each weekday runs an N-person rotation, where N is the Owner's
   // "Rotation Pool Sizes" setting in the Admin Panel (default 2).
   // Scarcity-first: people with the fewest available days are placed
@@ -4487,7 +4479,7 @@ function autoRoster(){
   // sits out JK this month and gets MPH priority instead (see Step 4).
   const capOf = i => { const n = parseInt(dayCaps && dayCaps[i]); return (n>=1 && n<=10) ? n : 2; };
   // Availability drives everything, with ONE exception: MPH-certified
-  // members (role pill) are excluded from Friday JK — Friday is their
+  // members (role pill) are excluded from Friday JK - Friday is their
   // MPH day. All other weekdays treat them like anyone else.
   const eligibleDows = v => (v.days||[])
     .map(day=>DAY_NAMES.indexOf(day)).filter(i=>i>=0)
@@ -4514,7 +4506,7 @@ function autoRoster(){
       if(a > b) best = i;
       else if(a === b){
         // Tie: prefer the day fewer people can cover; if still tied,
-        // Friday wins — it must never be left to a single person when
+        // Friday wins - it must never be left to a single person when
         // a Friday-capable volunteer exists.
         if(demand[i] < demand[best]) best = i;
         else if(demand[i] === demand[best] && i === 5 && best !== 5) best = i;
@@ -4523,7 +4515,7 @@ function autoRoster(){
     dayAssignees[best].push(x.v);
   });
   // Rebalance: try to seat overflow people by relocating a flexible member
-  // (someone on a full day who also fits an emptier day) — keeps every
+  // (someone on a full day who also fits an emptier day) - keeps every
   // weekday at its configured size while seating as many volunteers as possible.
   // Anyone who still can't be seated is reported to ownership below.
   const unseated = [];
@@ -4581,12 +4573,12 @@ function autoRoster(){
       }
     }
   }
-  // ── Roster health check — errors for ownership to resolve ──
+  // ── Roster health check - errors for ownership to resolve ──
   _rosterIssues = [];
   unseated.forEach(x=>{
     _rosterIssues.push({
       type:'unseated',
-      text:`${x.v.name} could not be given a duty day — all of their available weekdays (${(x.v.days||[]).join(', ')}) are already at their configured pool size. Increase a pool size in the Admin Panel, adjust availability, or assign the day by hand from the calendar.`
+      text:`${x.v.name} could not be given a duty day - all of their available weekdays (${(x.v.days||[]).join(', ')}) are already at their configured pool size. Increase a pool size in the Admin Panel, adjust availability, or assign the day by hand from the calendar.`
     });
   });
   DAY_NAMES.forEach((day,i)=>{
@@ -4595,22 +4587,22 @@ function autoRoster(){
     if(n===0){
       _rosterIssues.push({
         type:'empty',
-        text:`${day} has nobody available — every ${day} this month will be unassigned.`
+        text:`${day} has nobody available - every ${day} this month will be unassigned.`
       });
     } else if(n===1 && cap>1){
       _rosterIssues.push({
         type:'underfilled',
-        text:`${day} has only 1 person in rotation (${dayAssignees[i][0].name}) of the ${cap} planned — they will be on duty every ${day}.`
+        text:`${day} has only 1 person in rotation (${dayAssignees[i][0].name}) of the ${cap} planned - they will be on duty every ${day}.`
       });
     } else if(n < cap){
       _rosterIssues.push({
         type:'underfilled',
-        text:`${day} has ${n} of the ${cap} planned people in rotation — add availability, or lower the pool size in the Admin Panel.`
+        text:`${day} has ${n} of the ${cap} planned people in rotation - add availability, or lower the pool size in the Admin Panel.`
       });
     }
   });
-  // (banner rendered at the end — Step 3 can add SUP-gender issues)
-  // ── Step 3: JK assignment — fill EVERY visible cell, alternate weekly ──
+  // (banner rendered at the end - Step 3 can add SUP-gender issues)
+  // ── Step 3: JK assignment - fill EVERY visible cell, alternate weekly ──
   const jkCount = {}; // name → number of JK dates in view (for MPH priority)
   gridDates.forEach(dt=>{
     const ds  = dsOf(dt);
@@ -4659,7 +4651,7 @@ function autoRoster(){
       roster[ds]._sup = '';
     }
   });
-  // ── Step 4: MPH overlay (Fridays) — second pass so JK counts are final ──
+  // ── Step 4: MPH overlay (Fridays) - second pass so JK counts are final ──
   // Separate duty layer: MPH-certified + Friday-available, minus whoever
   // already holds JK on that exact date (no double duty on one day).
   // Priority: fewest JK dates first, alternating weekly.
@@ -4775,7 +4767,7 @@ function addMajalis(){
   if(uniformEl) uniformEl.value='';
   renderMajalisCards();renderUpcoming();updateStats();autoRoster();
   auditLog(`Added Majalis: ${name}`, 'majalis', `Date: ${date}`);
-  dbSaveMajalis(newMj).then(()=>toast('Majalis saved!')).catch(()=>toast('Save failed — check connection','err'));
+  dbSaveMajalis(newMj).then(()=>toast('Majalis saved!')).catch(()=>toast('Save failed - check connection','err'));
   // Auto-add 'Paanch Baar Saal' 8 days after any Chandraat
   if(name.toLowerCase().includes('chandraat')){
     const d = new Date(date + 'T12:00');
@@ -4785,7 +4777,7 @@ function addMajalis(){
     majalisEvs.push(pbsMj);
     renderMajalisCards();renderUpcoming();updateStats();autoRoster();
     auditLog('Auto-added Majalis: Paanch Baar Saal', 'majalis', `Date: ${pbsDate} (8 days after ${name})`);
-    dbSaveMajalis(pbsMj).then(()=>toast('Chandraat detected — Paanch Baar Saal added 8 days later!')).catch(()=>toast('Paanch Baar Saal save failed','err'));
+    dbSaveMajalis(pbsMj).then(()=>toast('Chandraat detected - Paanch Baar Saal added 8 days later!')).catch(()=>toast('Paanch Baar Saal save failed','err'));
   }
 }
 function delMajalis(id){
@@ -4818,7 +4810,7 @@ function renderTrainingCards(){
       <div class="mj-list-body">
         <div class="mj-list-name" style="color:#FCD34D;">🎓 ${esc(e.trainee||e.name)}</div>
         <div class="mj-list-meta" style="gap:12px;">
-          <span style="font-size:12px;color:var(--dm);">👤 Trainer: <strong style="color:#FCD34D;">${esc(e.trainer)||'—'}</strong></span>
+          <span style="font-size:12px;color:var(--dm);">👤 Trainer: <strong style="color:#FCD34D;">${esc(e.trainer)||'-'}</strong></span>
           <span style="font-size:12px;color:var(--dm);">${dow}</span>
         </div>
       </div>
@@ -4828,7 +4820,7 @@ function renderTrainingCards(){
 }
 /* ═══════════════════════════════════
    ADDITIONAL EVENTS
-   Anything else on that day — Navroz, a graduation, a visit. They carry no
+   Anything else on that day - Navroz, a graduation, a visit. They carry no
    duty and no volunteer; they exist so the calendar can say what else is on.
    Stored in the `majalis` table under category 'event', which is why adding
    this needed no migration: the table already held trainings the same way.
@@ -4877,7 +4869,7 @@ function addEvent(){
      grows until it pushes the roster out of view, so refuse rather than let
      the calendar quietly degrade. */
   if(avEvents.filter(e=>e.date===date).length>=3){
-    toast('That day already has three events — remove one first','err'); return;
+    toast('That day already has three events - remove one first','err'); return;
   }
   const newEv={id:uid(),name,type:'Event',date,time:'',evcat,category:'event'};
   avEvents.push(newEv);
@@ -4927,8 +4919,8 @@ function renderEventCards(){
 function populateTrainingDropdowns(){
   const juniors   = vols.filter(v=>v.status==='active' && ((v.roles||[]).includes('Junior Team Member') || v.type==='Junior Team Member')).sort((a,b)=>a.name.localeCompare(b.name));
   const supervisors = vols.filter(v=>v.status==='active' && ((v.roles||[]).includes('Supervisor') || v.type==='Supervisor')).sort((a,b)=>a.name.localeCompare(b.name));
-  const traineeOpts = '<option value="">— Select trainee —</option>' + juniors.map(v=>`<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('');
-  const trainerOpts = '<option value="">— Select trainer —</option>' + supervisors.map(v=>`<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('');
+  const traineeOpts = '<option value="">- Select trainee -</option>' + juniors.map(v=>`<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('');
+  const trainerOpts = '<option value="">- Select trainer -</option>' + supervisors.map(v=>`<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('');
   ['trTrainee'].forEach(id=>{
     const el = document.getElementById(id);
     if(el){ el.innerHTML = traineeOpts; }
@@ -4983,12 +4975,12 @@ function renderUpcoming(){
   }).join('');
 }
 /* ═══════════════════════════════════
-   SCREENSHOT — hi-res JPG export
+   SCREENSHOT - hi-res JPG export
 ═══════════════════════════════════ */
 /* WhatsApp re-encodes anything sent as a photo and downscales it to roughly
    1600px on its long edge. This sheet used to leave at 4550px wide, so
    WhatsApp discarded about two thirds of it and then JPEG-compressed what was
-   left — which is exactly why the names arrived smeared. Handing it an image
+   left - which is exactly why the names arrived smeared. Handing it an image
    it does not need to resize means the only damage is one compression pass.
 
    So the export deliberately got SMALLER. Do not "improve" it by raising the
@@ -4997,7 +4989,7 @@ function renderUpcoming(){
 
    Rendering straight at 1600 would be worse again, because html2canvas lays
    text out poorly at fractional scales. Render at 2x and step the canvas down
-   by halves instead — that supersamples the glyphs rather than point-sampling
+   by halves instead - that supersamples the glyphs rather than point-sampling
    them, and comes out sharper than either extreme. */
 const WA_TARGET_W = 1600;
 function avDownscale(src, targetW){
@@ -5031,14 +5023,14 @@ async function downloadRosterPNG(){
     /* font-stretch:normal is load-bearing, not cosmetic. The page sets
        font-stretch:85% on body and this container inherits it, but
        html2canvas builds its canvas font from style/variant/weight/size/family
-       only — font-stretch never reaches the canvas. So the browser laid every
+       only - font-stretch never reaches the canvas. So the browser laid every
        name out at 85% width while the canvas drew it at 100%, and each word
        was painted starting where the condensed layout said the next one began.
        Words overran their neighbours and the spaces vanished: "Noora Sayani"
        came out as "NooraSayani". Only elements with a non-zero letter-spacing
        escaped it, because html2canvas positions those glyph-by-glyph from its
        own measurements instead of from the DOM's. Laying out at normal width
-       changes nothing about the glyphs — they were always drawn that way — it
+       changes nothing about the glyphs - they were always drawn that way - it
        just makes the positions true. */
     const container = document.createElement('div');
     container.style.cssText = `position:fixed;left:-9999px;top:0;width:1820px;background:linear-gradient(160deg,#f8fbff 0%,#eaf3ff 50%,#dceeff 100%);font-family:'Archivo',sans-serif;font-stretch:normal;padding:0;margin:0;`;
@@ -5101,7 +5093,7 @@ async function downloadRosterPNG(){
        types by hand, which is how the two drifted apart: the badges ended up
        overlapping the content and every name lost its spaces. Reading the
        day's data straight out of the arrays and calling the shared renderer
-       removes the whole class of problem — there is nothing left to keep in
+       removes the whole class of problem - there is nothing left to keep in
        sync by hand. */
     document.querySelectorAll('#calBody > div').forEach(cell=>{
       const ds   = cell.dataset.ds || '';
@@ -5115,7 +5107,7 @@ async function downloadRosterPNG(){
       const S    = AV_SKINS.export;
       const kind = avCellKind(mjEv,trEv);
       const out=document.createElement('div');
-      /* Tinted days carry no border — the colour is the edge; plain days get a crisp hairline. */
+      /* Tinted days carry no border - the colour is the edge; plain days get a crisp hairline. */
       const inner=avCellHTML({day:day,mj:mjEv,tr:trEv,evs:evs,ro:ro,isFri:isFri,isOther:isOther},S);
       const mphFade=((isFri||ro._mph_primary)&&!ro._mph_removed)?'linear-gradient(0deg,#EA580C 0,#EA580C 6px,rgba(234,88,12,0.28) 6px,rgba(234,88,12,0) 24px),':'';
       if(kind==='plain' && !isOther){
@@ -5159,7 +5151,7 @@ async function downloadRosterPNG(){
     const out=document.createElement('canvas');
     out.width=canvas.width;out.height=cropH;
     out.getContext('2d').drawImage(canvas,0,0);
-    /* Crop first, then resize — trimming afterwards would leave the blank
+    /* Crop first, then resize - trimming afterwards would leave the blank
        rows in the pixels the downscaler averaged over. */
     const shot = avDownscale(out, WA_TARGET_W);
     const link=document.createElement('a');
@@ -5169,7 +5161,7 @@ async function downloadRosterPNG(){
        point of the exercise. */
     link.href=shot.toDataURL('image/jpeg',0.95);
     link.click();
-    toast(`Saved — ${shot.width}\u00d7${shot.height}, sized for WhatsApp`);
+    toast(`Saved - ${shot.width}\u00d7${shot.height}, sized for WhatsApp`);
   } catch(e){
     console.error(e);
     toast('Screenshot failed: '+e.message,'err');
@@ -5181,7 +5173,7 @@ async function downloadRosterPNG(){
   }
 }
 /* ═══════════════════════════════════════════════════════
-   CSV EXPORT — one row per person, per day
+   CSV EXPORT - one row per person, per day
    Columns: Date · Day · Name · Location & Status ·
             Majalis · Khushiyali · Uniform Status · Other Events
    Period : the roster month's first Monday through the
@@ -5205,7 +5197,7 @@ function csvMjParts(name){
   const base  = raw.replace(/\(\s*K\s*\)\s*$/i,'').trim();
   return { text: CSV_MJ_NAMES[base] || base, isK };
 }
-/* RFC-4180 escaping — wraps in quotes only when needed. */
+/* RFC-4180 escaping - wraps in quotes only when needed. */
 function csvEsc(v){
   const str = (v===null||v===undefined) ? '' : String(v);
   return /[",\r\n]/.test(str) ? '"' + str.replace(/"/g,'""') + '"' : str;
@@ -5229,7 +5221,7 @@ function buildRosterCSV(){
     const mj  = majalisEvs.find(e => e.date === ds);
     const dayName = dt.toLocaleDateString('en-NZ', {weekday:'long'});
     const dateStr = `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
-    // Day-level columns — repeated on every row for that date
+    // Day-level columns - repeated on every row for that date
     let mjCol = '', khCol = '';
     if(mj){
       const p = csvMjParts(mj.name);
@@ -5241,7 +5233,7 @@ function buildRosterCSV(){
     const uniRaw = ((mj && mj.uniform) || '').trim();
     const uniCol = /^casual\b/i.test(uniRaw) ? '' : uniRaw;
     /* The 'Other Events' column has been in the header since the CSV was
-       written and has always gone out empty — there was nothing to put in it.
+       written and has always gone out empty - there was nothing to put in it.
        Additional events are that thing. Category in brackets where one is set,
        so the spreadsheet can be grouped on it. */
     const evCol = avEvents.filter(e => e.date === ds)
@@ -5272,7 +5264,7 @@ function downloadRosterCSV(){
   try{
     const {rows, missing, start, end} = buildRosterCSV();
     if(!rows.length){
-      toast('Nothing to export — no one is rostered in this period','err');
+      toast('Nothing to export - no one is rostered in this period','err');
       return;
     }
     const HEADER = ['Date','Day','Name','Location & Status','Majalis','Khushiyali','Uniform Status','Other Events'];
@@ -5290,8 +5282,8 @@ function downloadRosterCSV(){
     auditLog(`Exported CSV for ${MO[calMo]} ${calYr}`, 'roster',
       `${rows.length} row(s) · ${fd(localDS(start))} to ${fd(localDS(end))}${missing?` · ${missing} unassigned day(s) skipped`:''}`);
     toast(missing
-      ? `✓ CSV saved — ${rows.length} rows · ⚠ ${missing} day(s) had nobody rostered and were skipped`
-      : `✓ CSV saved — ${rows.length} rows`);
+      ? `✓ CSV saved - ${rows.length} rows · ⚠ ${missing} day(s) had nobody rostered and were skipped`
+      : `✓ CSV saved - ${rows.length} rows`);
   } catch(e){
     console.error('CSV export failed:', e);
     toast('CSV export failed: ' + (e.message||e), 'err');
@@ -5315,7 +5307,7 @@ const AUDIT_ICONS = {
   roster:    '📅',
 };
 function auditLog(action, category, detail){
-  // Always log to memory — never skip
+  // Always log to memory - never skip
   const entry = {
     ts:       new Date().toISOString(),
     user_display: window.CU ? CU.display : 'System',
@@ -5328,9 +5320,9 @@ function auditLog(action, category, detail){
   };
   auditLogs.unshift(entry);
   if(auditLogs.length > 500) auditLogs = auditLogs.slice(0, 500);
-  // Always re-render — setTimeout ensures DOM is settled first
+  // Always re-render - setTimeout ensures DOM is settled first
   setTimeout(renderAuditLogs, 0);
-  // Returned so a caller that must not race it — logout, above — can wait.
+  // Returned so a caller that must not race it - logout, above - can wait.
   return dbSaveAuditLog(entry);
 }
 async function dbSaveAuditLog(entry){
@@ -5340,7 +5332,7 @@ async function dbSaveAuditLog(entry){
     const row = {
       ts:           entry.ts,
       username:     entry.username     || '',
-      // entry.user has never existed — the field is user_display, and
+      // entry.user has never existed - the field is user_display, and
       // reading the wrong one saved every AV log line with a blank name.
       user_display: entry.user_display || entry.username || '',
       user_email:   entry.user_email   || '',
@@ -5353,11 +5345,11 @@ async function dbSaveAuditLog(entry){
       detail:       entry.detail       || '',
       data:         entry
     };
-    /* No .select() here, and that is deliberate — see dbStored. Anyone
+    /* No .select() here, and that is deliberate - see dbStored. Anyone
        signed in may write to audit_logs; reading it is scoped by
        my_log_teams(). An INSERT ... RETURNING against a row the SELECT
        policy hides does not return nothing, it raises and rolls the insert
-       back — so asking for the row would have stopped an AV Co-ordinator's
+       back - so asking for the row would have stopped an AV Co-ordinator's
        actions being logged at all. Checking `error` is enough for an
        insert: a refused one raises.
 
@@ -5376,7 +5368,7 @@ let _auditBroken = false;
 /* ── WHAT PEOPLE OPEN ──────────────────────────────────────────────
    One entry per section that holds other people's information, so the
    AV Leads can see who looked as well as who changed. Not the calendar
-   and not the dashboard — those are what everybody uses all day, and
+   and not the dashboard - those are what everybody uses all day, and
    recording them would bury the entries that matter. Kept in its own
    table with a three-month life. */
 const LOGGED_SECTIONS = {
@@ -5389,7 +5381,7 @@ async function logView(section){
   if(_lastView === section) return;         // re-renders are not new visits
   _lastView = section;
   /* Recording a visit must never break the visit, so this one really is
-     best-effort — but best-effort means the console hears about it, not
+     best-effort - but best-effort means the console hears about it, not
      that nothing does. */
   const {error} = await sb.from('view_logs').insert({
     username: CU.user || '', user_display: CU.display || CU.user || '',
@@ -5444,12 +5436,12 @@ async function loadAuditLogs(){
 function renderAuditLogs(){
   const list = document.getElementById('auditList');
   const count = document.getElementById('auditCount');
-  if(!list) return; // Page not in DOM yet — safe to skip
+  if(!list) return; // Page not in DOM yet - safe to skip
   const search = (document.getElementById('auditSearch')?.value||'').toLowerCase();
   const filter = document.getElementById('auditFilter')?.value||'';
   let logs = auditLogs.filter(l => {
     // This page is the AV Team's own record. Entries from the Hub and the
-    // team pages belong to the Hub's log, not here — even for leadership,
+    // team pages belong to the Hub's log, not here - even for leadership,
     // who can read all four. Untagged rows predate the team column and
     // were written from this page, so they stay.
     if(l.team && l.team !== 'AV') return false;
@@ -5497,7 +5489,7 @@ function renderAuditLogs(){
     const rows = dayLogs.map(l => {
       const s = CAT_STYLE[l.category] || DEF;
       const dt = when(l);
-      const timeStr = dt ? dt.toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : '—';
+      const timeStr = dt ? dt.toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : '-';
       const initials = (l.user_display||l.username||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
       // Avatar colour based on username hash
       const hue = [...(l.username||'x')].reduce((acc,c)=>acc+c.charCodeAt(0),0) % 360;
@@ -5548,8 +5540,8 @@ async function confirmClearAllLogs(){
     toast('Only the Owner can clear audit logs.','err');
     return;
   }
-  if(!confirm('Clear ALL audit logs permanently — changes and page visits, every team? This cannot be undone.')) return;
-  /* The old shape was .then(done, done) — the same "cleared" path whether
+  if(!confirm('Clear ALL audit logs permanently - changes and page visits, every team? This cannot be undone.')) return;
+  /* The old shape was .then(done, done) - the same "cleared" path whether
      the delete worked or was refused, which is the worst lie an audit
      trail can be made to tell. Only the Owner may clear this and the rule
      lives in the database, so a refusal is a real possibility here.
@@ -5566,7 +5558,7 @@ async function confirmClearAllLogs(){
         await dbStored(sb.from(t).delete().gte('ts','1970-01-01T00:00:00Z'), true);
         const {data:left, error:re} = await sb.from(t).select('id').limit(1);
         if(re) throw re;
-        if(left && left.length) throw new Error('the database refused it — only the Owner may clear the logs');
+        if(left && left.length) throw new Error('the database refused it - only the Owner may clear the logs');
       }
       setSyncStatus('ok');
     }catch(e){
@@ -5612,7 +5604,7 @@ function toast(msg, type='ok'){
   _toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
 }
 function fd(ds){
-  if(!ds) return '—';
+  if(!ds) return '-';
   const d=new Date(ds+'T12:00');
   return d.toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});
 }
@@ -5657,13 +5649,13 @@ async function apSetMonth(){
   sessionStorage.setItem('jk_calYr', calYr);
   try {
     await saveMonthSetting(calMo, calYr);
-    auditLog(`Set roster month to ${MO[calMo]} ${calYr}`, 'roster', 'Via Admin Panel — applies to all users');
+    auditLog(`Set roster month to ${MO[calMo]} ${calYr}`, 'roster', 'Via Admin Panel - applies to all users');
     autoRoster();
     toast(`✓ Roster set to ${MO[calMo]} ${calYr} for all users`);
     nav(document.querySelector('[data-page=calendar]'));
   } catch(e) {
     console.error('apSetMonth error:', e);
-    toast('Month set locally but DB save failed — check connection','err');
+    toast('Month set locally but DB save failed - check connection','err');
     autoRoster();
     nav(document.querySelector('[data-page=calendar]'));
   } finally {
@@ -5682,7 +5674,7 @@ function apCreateUser(){
   if(!permsChks.length){ toast('Select at least one permission','err'); return; }
   if(!/^[a-zA-Z0-9._-]+$/.test(username)){ toast('Username: only letters, numbers, dots, dashes allowed','err'); return; }
   if(USERS[username]){ toast('Username already exists','err'); return; }
-  const primaryRole = roleFromPerms(permsChks); // highest privilege wins — never 'first checkbox'
+  const primaryRole = roleFromPerms(permsChks); // highest privilege wins - never 'first checkbox'
   const newUserData = { pw: password, role: primaryRole, perms: permsChks, display };
   USERS[username] = newUserData;
   dbSaveUser(username, newUserData);
@@ -5697,7 +5689,7 @@ function apCreateUser(){
 function apDeleteUser(username){
   if(!isOwnerUser()){ toast('Access denied','err'); return; }
   if(username === CU.user){ toast("Can't delete your own account",'err'); return; }
-  // Never delete the last remaining Owner — that would lock everyone out
+  // Never delete the last remaining Owner - that would lock everyone out
   const target = USERS[username];
   if(target && (target.perms||[target.role]).includes('owner')){
     const otherOwners = Object.entries(USERS).filter(([u,d]) => u !== username && (d.perms||[d.role]).includes('owner'));
@@ -5717,7 +5709,7 @@ function apSaveUser(oldUsername){
   const newDisplay  = document.getElementById('ap-edit-display-'+_sid)?.value.trim()||'';
   const newUsername = document.getElementById('ap-edit-username-'+_sid)?.value.trim().toLowerCase()||oldUsername;
   const newPassword = document.getElementById('ap-edit-pw-'+_sid)?.value.trim()||'';
-  // Self-edit keeps existing perms — you cannot change (or lose) your own
+  // Self-edit keeps existing perms - you cannot change (or lose) your own
   // permissions from this panel, which prevents accidental lockouts.
   const isSelfEdit = (oldUsername === CU.user);
   let newPerms = isSelfEdit ? (USERS[oldUsername]?.perms || ['owner']) :
@@ -5725,7 +5717,7 @@ function apSaveUser(oldUsername){
   if(!newPerms.length) newPerms = USERS[oldUsername]?.perms || ['av_team'];
   // app_users is shared with the hub and the team pages, which own perm keys
   // this panel has no checkbox for (facilitator, tl_a, ytl_b, team_a…).
-  // Carry them through untouched — saving here must never revoke someone's
+  // Carry them through untouched - saving here must never revoke someone's
   // team role as a side effect of an AV permission change.
   const unmanaged = (USERS[oldUsername]?.permsAll || []).filter(p => !PERM_KEYS.includes(PERM_LEGACY[p] || p));
   newPerms = newPerms.concat(unmanaged.filter(p => !newPerms.includes(p)));
@@ -5741,13 +5733,13 @@ function apSaveUser(oldUsername){
   if(newUsername !== oldUsername && USERS[newUsername]){
     toast('Username "'+newUsername+'" already exists','err'); return;
   }
-  // If username changed — remove old, add new
+  // If username changed - remove old, add new
   if(newUsername !== oldUsername){
     delete USERS[oldUsername];
   }
   const savedData = { pw: finalPassword, role: newRole, perms: newPerms, display: newDisplay };
   USERS[newUsername] = savedData;
-  // Save to DB — rename if username changed
+  // Save to DB - rename if username changed
   if(newUsername !== oldUsername){
     dbRenameUser(oldUsername, newUsername, savedData);
   } else {
@@ -5768,7 +5760,7 @@ function renderApUserList(){
   const allUsers = Object.entries(USERS);
   if(!allUsers.length){ el.innerHTML=''; return; }
   el.innerHTML = `
-    ${_permsColMissing?`<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:9px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#FCD34D;line-height:1.6;">⚠ <b>Multi-permission accounts can't be saved</b> — the app_users table has no <b>perms</b> column. Each account keeps only its highest role until you add it. See Dashboard › DB Status for the one-line SQL fix.</div>`:''}
+    ${_permsColMissing?`<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:9px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#FCD34D;line-height:1.6;">⚠ <b>Multi-permission accounts can't be saved</b> - the app_users table has no <b>perms</b> column. Each account keeps only its highest role until you add it. See Dashboard › DB Status for the one-line SQL fix.</div>`:''}
     <div style="font-size:11px;font-weight:800;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">All Users (${allUsers.length})</div>
     ${allUsers.map(([u,d])=>{
       const safeId = u.replace(/\./g,'_').replace(/@/g,'_').replace(/[^a-zA-Z0-9_]/g,'_');
@@ -5782,9 +5774,9 @@ function renderApUserList(){
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:800;color:#E8F4FD;">${esc(d.display)}</div>
             <div style="font-size:12px;color:var(--dm);font-family:monospace;margin-bottom:3px;">${esc(u)}</div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap;">${(d.perms||[d.role]).map(p=>({owner:'👑 Owner',av_admin:'🛡 AV Admin',iv_admin:'🛡 IV Admin',av_team:'📹 AV Team',iv_team:'🌿 IV Team'})[p]||esc(p)).map(l=>`<span style="font-size:11px;font-weight:800;background:rgba(75,163,220,0.1);color:#4BA3DC;border:1px solid rgba(75,163,220,0.25);border-radius:10px;padding:2px 7px;">${l}</span>`).join('')}${(d.permsAll||[]).filter(p=>!PERM_KEYS.includes(PERM_LEGACY[p]||p)).map(p=>`<span title="Set in the Hub — this panel leaves it untouched" style="font-size:11px;font-weight:800;background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.28);border-radius:10px;padding:2px 7px;">🔒 ${esc(p)}</span>`).join('')}</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">${(d.perms||[d.role]).map(p=>({owner:'👑 Owner',av_admin:'🛡 AV Admin',iv_admin:'🛡 IV Admin',av_team:'📹 AV Team',iv_team:'🌿 IV Team'})[p]||esc(p)).map(l=>`<span style="font-size:11px;font-weight:800;background:rgba(75,163,220,0.1);color:#4BA3DC;border:1px solid rgba(75,163,220,0.25);border-radius:10px;padding:2px 7px;">${l}</span>`).join('')}${(d.permsAll||[]).filter(p=>!PERM_KEYS.includes(PERM_LEGACY[p]||p)).map(p=>`<span title="Set in the Hub - this panel leaves it untouched" style="font-size:11px;font-weight:800;background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.28);border-radius:10px;padding:2px 7px;">🔒 ${esc(p)}</span>`).join('')}</div>
           </div>
-          <div style="font-size:12px;color:#3A5878;font-family:monospace;background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:4px;letter-spacing:0.06em;" title="Password hidden — open to change it">••••••</div>
+          <div style="font-size:12px;color:#3A5878;font-family:monospace;background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:4px;letter-spacing:0.06em;" title="Password hidden - open to change it">••••••</div>
           <span style="color:var(--dm);font-size:12px;margin-left:4px;">▼</span>
         </div>
         <!-- Edit form (collapsed by default) -->
@@ -5832,13 +5824,13 @@ function toggleUserEdit(safeId){
   document.querySelectorAll('[id^="ap-user-edit-"]').forEach(p => p.style.display='none');
   if(!isOpen) panel.style.display = 'block';
 }
-// Nav — handles all page switching
+// Nav - handles all page switching
 function nav(el){
   if(!el) return;
   // The old Manual Override page now lives on the calendar's day card.
   if(el.dataset && el.dataset.page === 'override') el = document.querySelector('[data-page=calendar]') || el;
   if(!window.CU) return;
-  // Permission checks — must mirror applySession() exactly.
+  // Permission checks - must mirror applySession() exactly.
   const _perms    = CU.perms || [CU.role];
   const _has      = p => _perms.includes(p);
   const _isOwner  = _has('owner','developer') || CU.role === 'owner' || CU.role === 'developer';
@@ -5886,7 +5878,7 @@ function nav(el){
 /* ═══════════════════════════════════
    MY DUTIES
    One list for a person across every division: the AV roster plus every
-   IV team's published events. Divisions are not hard-coded — any team that
+   IV team's published events. Divisions are not hard-coded - any team that
    appears on an IV event gets its own colour and its own line in the key,
    so a newly rolled-out team shows up without a change here.
 ═══════════════════════════════════ */
@@ -5912,14 +5904,14 @@ function mdInit(){
   mdLoadIV().then(()=>{ if(_md.name) mdRender(); });   // also fills the name list
   if(_md.name) mdRender();
 }
-/* The IV side. Only published events (`confirmed`) — a draft roster is a
+/* The IV side. Only published events (`confirmed`) - a draft roster is a
    work in progress and should not reach a volunteer's picture. A refused or
    missing table is reported on the page rather than failing the whole list. */
 async function mdLoadIV(force){
   if(_mdIV&&!force&&Date.now()-_mdIV.t<60000) return _mdIV;
   const out={t:Date.now(),events:[],rosters:{},members:[],safety:[],notes:[]};
   _mdIV=out;
-  if(!sb){ out.notes.push('Offline — IV team duties could not be loaded.'); return out; }
+  if(!sb){ out.notes.push('Offline - IV team duties could not be loaded.'); return out; }
   const t=todayDS(), from=t.slice(0,8)+'01', to=mdAddMonths(t,12);
   try{
     const ev=await sb.from('iv_events').select('*').eq('confirmed',true).gte('date',from).lte('date',to).order('date');
@@ -6096,7 +6088,7 @@ function mdSearch(){
   const partial=all.filter(n=>n.toLowerCase().includes(q.toLowerCase()));
   const name=exact||(partial.length===1?partial[0]:null);
   if(!name){
-    if(partial.length>1){ toast('Multiple matches — please select from the list','err'); mdOnInput(); return; }
+    if(partial.length>1){ toast('Multiple matches - please select from the list','err'); mdOnInput(); return; }
     toast('Name not found','err'); return;
   }
   mdPickName(name);
@@ -6104,7 +6096,7 @@ function mdSearch(){
 /* ── the picture ──
    A fixed 1080px-wide poster built off-screen from the same rows as the
    page, so what is saved is exactly what is listed. Rendered as large as
-   the browser's canvas allows (phones cap the pixel count) — about 3x on a
+   the browser's canvas allows (phones cap the pixel count) - about 3x on a
    normal list, which is what keeps it sharp when zoomed or printed. */
 function mdPosterHTML(){
   const win=mdWindow(), counts=mdDivCounts(_md.items);
@@ -6118,7 +6110,7 @@ function mdPosterHTML(){
     </div>
     <div class="mdp-key"><span style="--c:#fff"><i></i>Total <b>${_md.items.length}</b></span>${counts.map(c=>`<span style="--c:${mdColour(c.div)}"><i></i>${esc(mdDivLabel(c.div))} <b>${c.n}</b></span>`).join('')}</div>
     ${_md.items.length?`<div class="mdl">${_md.items.map(mdRowHTML).join('')}</div>`:`<div class="mdp-empty">No duties in this period.</div>`}
-    <div class="mdp-foot"><span>Rosters may change — check IV Hub for the latest.</span><span style="white-space:nowrap">Updated ${esc(upd)}</span></div>
+    <div class="mdp-foot"><span>Rosters may change - check IV Hub for the latest.</span><span style="white-space:nowrap">Updated ${esc(upd)}</span></div>
   </div>`;
 }
 async function mdMakeCanvas(){
@@ -6145,20 +6137,19 @@ async function mdSaveImage(share){
     if(share&&blob){
       const f=new File([blob],fname,{type:'image/png'});
       if(navigator.canShare&&navigator.canShare({files:[f]})){
-        try{ await navigator.share({files:[f],title:_md.name+' — My Duties'}); return; }
+        try{ await navigator.share({files:[f],title:_md.name+' - My Duties'}); return; }
         catch(e){ if(e&&e.name==='AbortError') return; }
       }
     }
     const link=document.createElement('a');
     link.download=fname; link.href=blob?URL.createObjectURL(blob):canvas.toDataURL('image/png'); link.click();
     toast('✓ Image saved');
-  }catch(e){ console.error(e); toast('Could not make the image — try again','err'); }
+  }catch(e){ console.error(e); toast('Could not make the image - try again','err'); }
   finally{ btn.disabled=false; btn.textContent=label; }
 }
 /* ═══════════════════════════════════
    REALTIME SYNC
-   Supabase Realtime subscriptions —
-   pushes live updates to all connected
+   Supabase Realtime subscriptions - pushes live updates to all connected
    devices whenever any change is made.
 ═══════════════════════════════════ */
 let _realtimeChannels = [];
@@ -6205,10 +6196,10 @@ function handleUserChange(payload){
       }
     }
   } else if(row && row.username){
-    // Full mapping — a live update must never strip the perms array
+    // Full mapping - a live update must never strip the perms array
     USERS[row.username] = dbUserToLocal(row);
     // If OUR account changed, apply the new permissions to this live
-    // session immediately — no refresh or re-login needed.
+    // session immediately - no refresh or re-login needed.
     if(window.CU && CU.user === row.username){
       const fresh = USERS[row.username];
       const before = JSON.stringify(CU.perms||[]);
@@ -6345,7 +6336,7 @@ function handleRosterChange(payload){
     // Don't overwrite a local _manual entry with an older DB version
     // (can happen if realtime echo fires after a manual save)
     if(existing && existing._manual && !incoming._manual){
-      // Keep local manual entry — DB hasn't caught up yet
+      // Keep local manual entry - DB hasn't caught up yet
     } else {
       roster[row.date] = incoming;
     }
@@ -6401,7 +6392,7 @@ async function orResetMonth(){
     if(ds >= start && ds <= end){ delete roster[ds]; cleared++; }
   });
   pauseRealtime(5000);
-  // Delete ALL roster rows in the visible range from the DB — a date-range
+  // Delete ALL roster rows in the visible range from the DB - a date-range
   // delete also removes legacy rows that never loaded into memory (the
   // usual cause of "locked" days the engine refuses to reassign).
   if(sb){
@@ -6414,17 +6405,16 @@ async function orResetMonth(){
     }catch(e){
       console.error('orResetMonth DB error:', e);
       setSyncStatus('error');
-      toast('Month reset locally, but DB cleanup failed — check connection','err');
+      toast('Month reset locally, but DB cleanup failed - check connection','err');
     }
   }
   auditLog('Reset '+monthName+' to auto-roster', 'roster', cleared+' saved day(s) cleared, month regenerated');
   autoRoster();
   renderAll();
-  toast('✓ '+monthName+' reset — roster regenerated');
+  toast('✓ '+monthName+' reset - roster regenerated');
 }
 
-/* The webfont must be rasterised, not merely requested, before a capture —
-   html2canvas draws whatever is loaded at that instant, so a slow font
+/* The webfont must be rasterised, not merely requested, before a capture - html2canvas draws whatever is loaded at that instant, so a slow font
    would silently produce an image in the fallback face. Capped so a
    blocked CDN degrades to a fallback image rather than hanging. */
 async function fontsSettled(ms){
@@ -6519,7 +6509,7 @@ async function fontsSettled(ms){
         // hub-link is the cross-page "Back to Hub" anchor. It lives in the
         // same nav but carries its own class, and skipping it left the AV
         // and Team pages with no way back to the Hub once the sidebar was
-        // hidden — the only exit was the browser's back button.
+        // hidden - the only exit was the browser's back button.
         if(!vis(el)) continue;
         if(group){ groupMenu.appendChild(entry(el)); groupHas=true;
                    if(el.classList.contains('active')) groupBtn.classList.add('on'); }
@@ -6546,7 +6536,7 @@ async function fontsSettled(ms){
     var right=mk('div','tn-right');
 
     /* Signing out lives in the sidebar footer, outside .sb-nav, and the
-       three pages each do it differently — a button, an icon button, a
+       three pages each do it differently - a button, an icon button, a
        span with an onclick. Hiding the sidebar took all of them with it,
        so a desktop user had no way to sign out at all. Whichever one this
        page has gets mirrored here and forwarded to the original, so the
@@ -6576,7 +6566,7 @@ async function fontsSettled(ms){
   }
 
   /* Kept in localStorage so the choice survives a reload, but the bar is
-     shown unless it was explicitly hidden — a missing or unreadable value
+     shown unless it was explicitly hidden - a missing or unreadable value
      always means visible. */
   var KEY='ivhub_topnav_hidden';
   function setHidden(h){

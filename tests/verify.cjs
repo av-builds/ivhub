@@ -246,7 +246,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   for(const [f,perms,ok,tiles,label] of cases){
     const p=await open(f,{width:390,height:800},true);
     const r=await p.evaluate(perms=>{ render(perms); return {ok:!document.getElementById('stOk').classList.contains('hide'), tiles:document.querySelectorAll('#tiles a').length}; },perms);
-    chk(r.ok===ok&&r.tiles===tiles,'pages   '+f+' — '+label,JSON.stringify(r));
+    chk(r.ok===ok&&r.tiles===tiles,'pages   '+f+' - '+label,JSON.stringify(r));
     chk(p.errs.length===0,'pages   '+f+' no page errors'); await p.context().close(); }
 }
 
@@ -598,6 +598,18 @@ for(const file of ['teama.html','teamb.html']){
   chk(r.assigned>0&&r.clash===0,'double   '+file+' build skips people already rostered elsewhere that day',JSON.stringify(r));
   chk(!r.busyFn&&r.busyYes&&!r.busyOtherDay,'double   '+file+' the clash check matches by name and by date only');
   chk(p.errs.length===0,'double   '+file+' no page errors'); await p.context().close(); }
+
+// ── No em dashes anywhere on the pages ──
+{ const bad=[]; for(const f of fs.readdirSync(ROOT).filter(x=>/\.(html|js|css)$/.test(x))){ const txt=fs.readFileSync(path.join(ROOT,f),'utf8'); const n=(txt.match(/\u2014|&mdash;/g)||[]).length; if(n) bad.push(f+':'+n); }
+  chk(bad.length===0,'text    no em dashes left in any page, script or stylesheet',bad.join(' ')); }
+// ── AV Youth Lead role label ──
+{ const p=await open('av.html',{width:1300,height:900});
+  const r=await p.evaluate(()=>{ const o={}; const c=ROLE_CFG.find(x=>x.key==='AV Youth Lead'); o.cfg=!!c&&c.short==='YL';
+    const v={roles:['AV Youth Lead']}; syncVolType(v); o.type=v.type; o.pill=rolePills({id:1,roles:['AV Youth Lead']}).indexOf('role-pill yl')>=0;
+    const w={roles:['AV Youth Lead','Junior Team Member']}; syncVolType(w); o.keepsJunior=w.type==='Junior Team Member'; return o; });
+  chk(r.cfg&&r.pill,'av-role  AV Youth Lead is in the AV roles list with its own pill',JSON.stringify(r));
+  chk(r.type==='AV Youth Lead'&&r.keepsJunior,'av-role  the label does not change how Junior or Supervisor logic reads a person');
+  chk(p.errs.length===0,'av-role  no page errors'); await p.context().close(); }
 
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));

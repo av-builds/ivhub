@@ -26,7 +26,7 @@
     if(T[f]) root.setAttribute('data-team',T[f]);
     /* Name shown on the welcome card: set as a CSS variable so every hero can print it */
     var N={teama:'Team A',teamb:'Team B',av:'AV Team',safety:'Safety & Security'};
-    var nm=N[f]||(document.title||'').split(/\s+[\u2014-]\s+/)[0].trim();
+    var nm=N[f]||(document.title||'').split(/\s+[|\u2014-]\s+/)[0].trim();
     if(T[f]&&nm) root.style.setProperty('--iv-team-name','"'+nm.replace(/["\\]/g,'')+'"');
     window.IV_TEAM_NAME=nm;
     /* Brand mark as the tab icon on every page */
