@@ -629,6 +629,29 @@ for(const [w,touch] of [[1700,false],[390,true]]){
   chk(await p.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'cards   '+w+'px no sideways scroll');
   chk(p.errs.length===0,'cards   '+w+'px no page errors'); await p.context().close(); }
 
+// ── team page top bar: a rail of slanted blocks ──
+for(const [file,w] of [['teama.html',1440],['teamb.html',1101]]){
+  const p=await open(file,{width:w,height:900});
+  await p.evaluate(`(${SEED})(['owner'])`); await p.evaluate("nav('roster')"); await p.waitForTimeout(900);
+  const r=await p.evaluate(()=>{ const bl=[...document.querySelectorAll('#topnav .tn-blk')], row=document.querySelector('#topnav .tn-row').getBoundingClientRect(), rt=document.querySelector('#topnav .tn-right').getBoundingClientRect();
+    return {labels:bl.map(x=>x.innerText.replace(/\s+/g,' ').trim()).join('|'),svg:bl.every(x=>x.querySelector('svg')),h:Math.min(...bl.map(x=>x.offsetHeight)),
+      on:bl.filter(x=>x.classList.contains('on')).map(x=>x.innerText.trim()).join(),first:bl[0].classList.contains('tn-blk-first'),last:bl[bl.length-1].classList.contains('tn-blk-last'),
+      fits:row.right<=rt.left+1,hs:document.documentElement.scrollWidth>document.documentElement.clientWidth}; });
+  chk(r.labels==='Calendar|Roster|Attendance|Numbers|People|Announcements',file+' '+w+'px bar has the six pages as blocks',r.labels);
+  chk(r.svg&&r.h>=44,file+' '+w+'px every block has an icon and a tall hit area',r.h);
+  chk(r.on==='Roster'&&r.first&&r.last,file+' '+w+'px the open page is marked and the ends are squared',r.on);
+  chk(r.fits&&!r.hs,file+' '+w+'px the blocks do not run into the account buttons or scroll sideways');
+  await p.evaluate("var d=document.createElement('div');d.style.height='2500px';document.querySelector('.main').appendChild(d);window.scrollTo(0,600)"); await p.waitForTimeout(700);
+  const sc=await p.evaluate(()=>({on:document.body.classList.contains('tn-scrolled'),bg:getComputedStyle(document.querySelector('#topnav .tn-blk:not(.on)')).backgroundColor,hasIcon:!!document.querySelector('#topnav .tn-blk svg')}));
+  await p.hover('#topnav .tn-blk:not(.on)'); await p.waitForTimeout(500);
+  const hv=await p.evaluate(()=>getComputedStyle(document.querySelector('#topnav .tn-blk:hover')).backgroundColor);
+  await p.evaluate("window.scrollTo(0,0)"); await p.waitForTimeout(700);
+  const top=await p.evaluate(()=>document.body.classList.contains('tn-scrolled'));
+  chk(sc.on&&sc.bg==='rgba(0, 0, 0, 0)'&&sc.hasIcon,file+' '+w+'px scrolled down the block shapes fade but icons and labels stay',sc.bg);
+  chk(hv!=='rgba(0, 0, 0, 0)',file+' '+w+'px a hovered block shows its shape again',hv);
+  chk(!top,file+' '+w+'px back at the top the blocks return');
+  chk(p.errs.length===0,file+' '+w+'px bar no page errors'); await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);

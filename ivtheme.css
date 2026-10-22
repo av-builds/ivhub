@@ -95,6 +95,43 @@ html[data-theme="light"] .tn-out{color:#B3261E;border-color:rgba(179,38,30,.4);}
 .tn-show{border-radius:999px;background:var(--iv-glass);border-color:var(--db);color:var(--dt);}
 .tn-show:hover{background:var(--iv-acs);}
 
+/* ── team pages: the bar is a rail of slanted blocks ─────
+   Full width and attached to the page, each page a block with its icon over its label. Neighbouring blocks share a
+   slope and sit 2px apart; the active one takes the team colour. Scoped to body.tp so the Hub and AV bars keep theirs. */
+@media(min-width:1101px){
+  body.tp .topnav{top:0;left:0;right:0;height:76px;padding:0 24px 0 32px;border-radius:0;background:var(--ds);border:0;border-bottom:1px solid var(--db);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;}
+  body.tp .main{padding-top:104px!important;}
+  body.tp.tn-hidden .main{padding-top:30px!important;}
+  body.tp .tn-row{align-self:stretch;align-items:stretch;flex:0 1 auto;margin:0;padding:0;gap:0;border-radius:0;background:none;}
+  body.tp .tn-b.tn-hub{align-self:center;margin-right:16px;}
+  body.tp .tn-b.tn-blk{flex-direction:column;justify-content:center;gap:6px;height:76px;min-width:104px;padding:0 24px;margin-left:-12px;border-radius:0;box-shadow:none;
+    background:var(--ds2);color:var(--dm);font-size:12.5px;font-weight:700;letter-spacing:.02em;position:relative;
+    clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);}
+  body.tp .tn-b.tn-blk svg{flex:none;}
+  body.tp .tn-b.tn-blk-first{margin-left:0;padding-left:22px;clip-path:polygon(0 0,100% 0,calc(100% - 14px) 100%,0 100%);}
+  body.tp .tn-b.tn-blk-last{padding-right:22px;clip-path:polygon(14px 0,100% 0,100% 100%,0 100%);}
+  body.tp .tn-b.tn-blk-first.tn-blk-last{clip-path:none;}
+  body.tp .tn-b.tn-blk:hover{background:var(--iv-acs);color:var(--dt);}
+  body.tp .tn-b.tn-blk.on{background:var(--iv-ac);color:var(--iv-oa);z-index:2;}
+  body.tp .tn-b.tn-blk:focus-visible{outline:2px solid var(--dt);outline-offset:-5px;}
+  body.tp .tn-blk .tn-bd{position:absolute;top:10px;right:calc(50% - 30px);min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#F87171;color:#2A0C06;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  body.tp .tn-out,body.tp .tn-tog{border-radius:8px;min-height:44px;padding:0 14px;}
+  /* Scrolled: the bar dissolves into the page. Fill and shapes go; icons and labels stay over a soft blur so they
+     remain readable on top of content, the open page keeps the accent colour, and a block's shape returns on hover. */
+  body.tp .topnav{transition:background-color .3s,border-color .3s;}
+  body.tp .tn-b.tn-blk{transition:background-color .25s,color .25s;}
+  body.tp.tn-scrolled .topnav{background:color-mix(in srgb,var(--ds) 45%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border-bottom-color:transparent;}
+  body.tp.tn-scrolled .tn-b.tn-blk{background:transparent;}
+  body.tp.tn-scrolled .tn-b.tn-blk.on{color:var(--iv-ac);}
+  body.tp.tn-scrolled .tn-b.tn-blk:hover,body.tp.tn-scrolled .tn-b.tn-blk.on:hover{background:var(--iv-acs);color:var(--dt);}
+}
+@media(min-width:1101px) and (max-width:1320px){
+  body.tp .topnav{padding:0 14px 0 18px;}
+  body.tp .tn-b.tn-blk{min-width:0;padding:0 18px;}
+  body.tp .tn-who{display:none;}
+}
+@media(prefers-reduced-motion:reduce){body.tp .tn-b.tn-blk,body.tp .topnav{transition:none;}}
+
 /* ── sidebar (phone and tablet) ─────────────────────── */
 .sidebar{background:var(--ds);border-right:1px solid var(--db);box-shadow:var(--iv-sh);}
 .sb-logo{border-bottom-color:var(--db);}
