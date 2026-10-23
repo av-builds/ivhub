@@ -652,6 +652,26 @@ for(const [file,w] of [['teama.html',1440],['teamb.html',1101]]){
   chk(!top,file+' '+w+'px back at the top the blocks return');
   chk(p.errs.length===0,file+' '+w+'px bar no page errors'); await p.context().close(); }
 
+// ── Replacement picker lists everybody on the team ──
+for(const file of ['teama.html','teamb.html']){
+  const p=await open(file,{width:1300,height:900});
+  await p.evaluate(`(${SEED})(['tl_a'])`);
+  const r=await p.evaluate(()=>{ const o={};
+    const ev=EVENTS[0]; selEventId=ev.id; ensureRoster(ev);
+    const duty=dutiesForEvent(ev).find(d=>d.name==='Nandi')||dutiesForEvent(ev)[0];
+    PICKER_CTX={dutyKey:duty.key,arr:'m',idx:null,gender:'Male'}; openPickerModal();
+    const names=()=>[...document.querySelectorAll('#pickList .pick-row .nm')].map(e=>e.innerText);
+    const males=MEMBERS.filter(m=>m.status==='active'&&m.gender==='Male');
+    o.total=males.length; o.listed=names().length;
+    const child=males.find(m=>m.age_group==='child'); const plain=males.find(m=>!m.nandi&&m.age_group==='adult');
+    o.childListed=!!child&&names().indexOf(child.name)>=0;
+    const si=document.getElementById('pickSearch'); si.value=child.name; si.dispatchEvent(new Event('input')); o.childFound=names().indexOf(child.name)>=0;
+    si.value=plain.name; si.dispatchEvent(new Event('input')); o.plainFound=names().indexOf(plain.name)>=0; o.certFlag=/not Nandi certified/.test(document.getElementById('pickList').innerText)||duty.name!=='Nandi';
+    return o; });
+  chk(r.listed===r.total&&r.childListed,'picker   '+file+' lists every active person in the column, children included',JSON.stringify(r));
+  chk(r.childFound&&r.plainFound&&r.certFlag,'picker   '+file+' search finds anyone, and flags those outside the usual fit');
+  chk(p.errs.length===0,'picker   '+file+' no page errors'); await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);
