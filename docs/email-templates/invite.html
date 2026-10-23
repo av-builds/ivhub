@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Your IV Hub invitation</title>
+</head>
+<body style="margin:0;padding:0;background:#EAF0F6;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#0B1B33;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">You have been invited to IV Hub{{ if .Data.role_label }} as {{ .Data.role_label }}{{ end }}. Set your password to get started.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EAF0F6;padding:32px 12px;">
+<tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
+
+  <!-- header -->
+  <tr><td style="background:#04101D;padding:34px 40px 30px;border-radius:20px 20px 0 0;border-bottom:4px solid #4BA3DC;">
+    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+      <td style="vertical-align:middle;padding-right:16px;"><img src="https://av-builds.github.io/ivhub/logo.png" width="56" height="56" alt="Ismaili Volunteers" style="display:block;border-radius:28px;background:#ffffff;"></td>
+      <td style="vertical-align:middle;">
+        <div style="font-size:11px;letter-spacing:3px;font-weight:700;color:#7AAECB;text-transform:uppercase;">Ismaili Volunteers</div>
+        <div style="font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;line-height:1.2;">IV Hub</div>
+        <div style="font-size:13px;color:#9DB7CC;">Auckland Jamatkhana</div>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <!-- body -->
+  <tr><td style="background:#ffffff;padding:40px 40px 8px;">
+    <h1 style="margin:0 0 14px;font-size:26px;line-height:1.25;font-weight:800;letter-spacing:-0.4px;color:#0B1B33;">Welcome{{ if .Data.display }}, {{ .Data.display }}{{ end }}</h1>
+    <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#33475E;">{{ if .Data.invited_by }}{{ .Data.invited_by }} has invited you{{ else }}You have been invited{{ end }} to join IV Hub, the volunteer rostering site for Ismaili Volunteers at Auckland Jamatkhana. Your account is ready. All that is left is to choose a password.</p>
+
+    <!-- role -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F2F7FC;border:1px solid #D3E1EE;border-radius:14px;margin:0 0 28px;">
+      <tr><td style="padding:22px 24px 20px;">
+        <div style="font-size:11px;letter-spacing:2.5px;font-weight:800;color:#00558B;text-transform:uppercase;margin-bottom:8px;">Your role</div>
+        <div style="font-size:22px;font-weight:800;color:#0B1B33;line-height:1.25;">{{ if .Data.role_label }}{{ .Data.role_label }}{{ else }}No role yet{{ end }}</div>
+        {{ if .Data.role_rank }}<div style="display:inline-block;margin:10px 0 12px;padding:4px 12px;background:#00558B;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.4px;border-radius:999px;">{{ .Data.role_rank }}</div>{{ end }}
+        <p style="margin:6px 0 0;font-size:15px;line-height:1.65;color:#33475E;">{{ if .Data.role_explain }}{{ .Data.role_explain }}{{ else }}A Facilitator or leader will give you access soon, and your role will be explained here and on your first sign-in.{{ end }}</p>
+        {{ if .Data.role_extra }}<p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#516782;">{{ .Data.role_extra }}</p>{{ end }}
+      </td></tr>
+      <tr><td style="padding:14px 24px 18px;border-top:1px solid #D3E1EE;">
+        <div style="font-size:13px;line-height:1.6;color:#516782;"><strong style="color:#0B1B33;">How ranks work.</strong> Ranks run from 0, the highest authority, to 10, a volunteer. Anyone ranked above you can manage your account, and your role lets you manage people ranked below you only where it says so above.</div>
+      </td></tr>
+    </table>
+
+    <!-- button -->
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px;"><tr>
+      <td style="background:#00558B;border-radius:10px;"><a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:15px 34px;font-size:16px;font-weight:800;color:#ffffff;text-decoration:none;letter-spacing:0.2px;">Set your password</a></td>
+    </tr></table>
+
+    <!-- steps -->
+    <div style="font-size:11px;letter-spacing:2.5px;font-weight:800;color:#516782;text-transform:uppercase;margin-bottom:12px;">What happens next</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+      <tr><td style="width:34px;vertical-align:top;padding:0 0 12px;"><div style="width:26px;height:26px;border-radius:13px;background:#E1ECF6;color:#00558B;font-size:13px;font-weight:800;text-align:center;line-height:26px;">1</div></td><td style="padding:2px 0 12px;font-size:15px;line-height:1.55;color:#33475E;">Choose a password using the button above.</td></tr>
+      <tr><td style="width:34px;vertical-align:top;padding:0 0 12px;"><div style="width:26px;height:26px;border-radius:13px;background:#E1ECF6;color:#00558B;font-size:13px;font-weight:800;text-align:center;line-height:26px;">2</div></td><td style="padding:2px 0 12px;font-size:15px;line-height:1.55;color:#33475E;">Sign in to IV Hub with this email address.</td></tr>
+      <tr><td style="width:34px;vertical-align:top;"><div style="width:26px;height:26px;border-radius:13px;background:#E1ECF6;color:#00558B;font-size:13px;font-weight:800;text-align:center;line-height:26px;">3</div></td><td style="padding:2px 0 0;font-size:15px;line-height:1.55;color:#33475E;">Open My Duties to see when you are rostered, and add any dates you are away.</td></tr>
+    </table>
+
+    <p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:#516782;">The button does not work? Copy this link into your browser:</p>
+    <p style="margin:0 0 24px;font-size:12px;line-height:1.6;color:#00558B;word-break:break-all;">{{ .ConfirmationURL }}</p>
+  </td></tr>
+
+  <!-- footer -->
+  <tr><td style="background:#F6F9FC;padding:22px 40px 26px;border-radius:0 0 20px 20px;border-top:1px solid #E1E9F1;">
+    <p style="margin:0 0 6px;font-size:12px;line-height:1.6;color:#516782;">This link works once and will expire. If it has expired, ask the person who invited you to send a new one. If you were not expecting this invitation, you can safely ignore this email and no account will be used.</p>
+    <p style="margin:0;font-size:12px;line-height:1.6;color:#7A8CA0;">IV Hub, Ismaili Volunteers, Auckland Jamatkhana</p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
