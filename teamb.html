@@ -3797,13 +3797,19 @@ function renderPickList(){
   const r=ensureRoster(ev); const inEvent=new Set();
   for(const key in (r.assign||{})) for(const p of people(r.assign[key])) if(p.id!=null) inEvent.add(p.id);
   const dhist=cycleDutyHistory(k,ev.id);
-  let cands=MEMBERS.filter(m=>m.status==='active'&&(m.age_group!=='child'||CHILD_ALLOWED.has(d.name))&&(!PICKER_CTX.gender||m.gender===PICKER_CTX.gender));
+  /* Everybody on the team can be searched and picked, whatever their age or certification: a lead replacing
+     a duty knows who is available better than the rules do. The usual fit (age for this duty, Nandi
+     certification) only decides the order, with a note on anyone outside it. */
+  let cands=MEMBERS.filter(m=>m.status==='active'&&(!PICKER_CTX.gender||m.gender===PICKER_CTX.gender));
+  const ageFit=m=>m.age_group!=='child'||CHILD_ALLOWED.has(d.name);
   if(q) cands=cands.filter(m=>m.name.toLowerCase().includes(q));
-  cands.sort((a,b)=>(d.name==='Nandi'?((b.nandi?1:0)-(a.nandi?1:0)):0)||((counts.cyc[a.id]||0)-(counts.cyc[b.id]||0))||((counts.all[a.id]||0)-(counts.all[b.id]||0))||a.name.localeCompare(b.name));
+  cands.sort((a,b)=>((ageFit(b)?1:0)-(ageFit(a)?1:0))||(d.name==='Nandi'?((b.nandi?1:0)-(a.nandi?1:0)):0)||((counts.cyc[a.id]||0)-(counts.cyc[b.id]||0))||((counts.all[a.id]||0)-(counts.all[b.id]||0))||a.name.localeCompare(b.name));
   list.innerHTML=cands.length?cands.map(m=>{
     const flags=(isAway(m,ev.date)?'<span class="pick-flag" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:var(--red-lt)">away</span>':'')+
       (inEvent.has(m.id)?'<span class="pick-flag">in this event</span>':'')+
       ((!REPEAT_ALLOWED_DUTIES.has(d.name)&&dhist[m.id]&&dhist[m.id].has(d.name))?'<span class="pick-flag">did this duty (cycle)</span>':'')+
+      (!ageFit(m)?'<span class="pick-flag">child, not usual for this duty</span>':'')+
+      ((d.name==='Nandi'&&!m.nandi)?'<span class="pick-flag">not Nandi certified</span>':'')+
       ((d.name==='Nandi'&&m.nandi)?'<span class="pick-flag" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.45);color:var(--green-lt)">Nandi ✓</span>':'');
     return '<button class="pick-row" onclick="applyPick('+m.id+')"><span class="nm">'+esc(m.name)+'</span>'+flags+
       '<span class="meta num">cycle '+(counts.cyc[m.id]||0)+' · all '+(counts.all[m.id]||0)+'</span></button>';
