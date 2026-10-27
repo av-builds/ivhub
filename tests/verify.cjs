@@ -67,7 +67,7 @@ const open=async(file,vp,touch)=>{
     o.forceWorks=(await publishIfComplete(ev,{force:true}))===true&&writes===1; setOnCalendar=real;
     o.cantSwitch=!CAN_SWITCH_TEAM();
     return o; });
-  chk(r.menu.join()==='Calendar,Roster,Attendance,Numbers,People,Announcements','menu    one flat list, calendar first',r.menu.join(' / '));
+  chk(r.menu.join()==='Calendar,Checklist,Roster,Attendance,Numbers,People,Announcements','menu    one flat list, calendar first',r.menu.join(' / '));
   chk(r.sections===0,'menu    no General/Management split');
   chk(r.landing==='calendar','landing leaders open on the calendar');
   chk(r.states.some(s=>/^Draft/.test(s))&&r.states.some(s=>/^On the calendar/.test(s))&&r.states.some(s=>/^Not built/.test(s)),'chips   built state is shown in words',r.states.join(' | '));
@@ -669,7 +669,7 @@ for(const [file,w] of [['teama.html',1440],['teamb.html',1101]]){
     return {labels:bl.map(x=>x.innerText.replace(/\s+/g,' ').trim()).join('|'),svg:bl.every(x=>x.querySelector('svg')),h:Math.min(...bl.map(x=>x.offsetHeight)),
       on:bl.filter(x=>x.classList.contains('on')).map(x=>x.innerText.trim()).join(),first:bl[0].classList.contains('tn-blk-first'),last:bl[bl.length-1].classList.contains('tn-blk-last'),
       fits:row.right<=rt.left+1,hs:document.documentElement.scrollWidth>document.documentElement.clientWidth}; });
-  chk(r.labels==='Calendar|Roster|Attendance|Numbers|People|Announcements',file+' '+w+'px bar has the six pages as blocks',r.labels);
+  chk(r.labels==='Calendar|Checklist|Roster|Attendance|Numbers|People|Announcements',file+' '+w+'px bar has the seven pages as blocks',r.labels);
   chk(r.svg&&r.h>=44,file+' '+w+'px every block has an icon and a tall hit area',r.h);
   chk(r.on==='Roster'&&r.first&&r.last,file+' '+w+'px the open page is marked and the ends are squared',r.on);
   chk(r.fits&&!r.hs,file+' '+w+'px the blocks do not run into the account buttons or scroll sideways');
@@ -703,6 +703,62 @@ for(const file of ['teama.html','teamb.html']){
   chk(r.listed===r.total&&r.childListed,'picker   '+file+' lists every active person in the column, children included',JSON.stringify(r));
   chk(r.childFound&&r.plainFound&&r.certFlag,'picker   '+file+' search finds anyone, and flags those outside the usual fit');
   chk(p.errs.length===0,'picker   '+file+' no page errors'); await p.context().close(); }
+
+// ── Checklist: one task at a time on a phone, two taps to clear ──
+for(const file of ['teama.html','teamb.html']){
+  const p=await open(file,{width:390,height:800},true);
+  await p.evaluate(`(${SEED})(['tl_a','tl_b'])`);
+  await p.evaluate("try{localStorage.clear()}catch(e){}; nav('checklist'); renderChecklist()"); await p.waitForTimeout(900);
+  const title=()=>p.evaluate(()=>{const e=document.querySelector('.cl-title');return e?e.innerText:null;});
+  const t0=await title();
+  const sz=await p.evaluate(()=>{const r=e=>Math.round(document.querySelector(e).getBoundingClientRect().height);return {card:r('.cl-card'),btn:r('.cl-acts .cl-b'),seg:r('.cl-seg button'),hs:document.documentElement.scrollWidth>document.documentElement.clientWidth};});
+  chk(t0==='Nandi labelling'&&sz.card>=280&&sz.btn>=48&&sz.seg>=44&&!sz.hs,'check   '+file+' 390px opens on the first task with big targets',JSON.stringify({t0,sz}));
+  await p.tap('#clCard'); await p.waitForTimeout(150);
+  const armed=await p.evaluate(()=>document.getElementById('clCard').classList.contains('armed'));
+  chk(armed&&(await title())===t0,'check   '+file+' one tap only arms the card');
+  await p.waitForTimeout(2700);
+  chk(!(await p.evaluate(()=>document.getElementById('clCard').classList.contains('armed'))),'check   '+file+' the arm times out');
+  await p.tap('#clCard'); await p.tap('#clCard'); await p.waitForTimeout(80);
+  const clearing=await p.evaluate(()=>document.getElementById('clCard').classList.contains('clearing'));
+  await p.waitForTimeout(900);
+  const t1=await title(); const done1=await p.evaluate(()=>CL.done.join());
+  chk(clearing&&t1!==t0&&done1==='nandi-label','check   '+file+' two taps clear it with the animation and move on',t1+' / '+done1);
+  await p.tap('.cl-acts .cl-b:first-child'); await p.waitForTimeout(700);
+  chk((await title())===t0&&(await p.evaluate(()=>CL.done.length))===0,'check   '+file+' Back brings the last task back');
+  await p.tap('.cl-seg[aria-label="Type of night"] button:nth-child(2)'); await p.waitForTimeout(100);
+  const maj=await p.evaluate(()=>({n:clVisible().length,dt:CL.dayType}));
+  await p.tap('.cl-seg[aria-label="Type of night"] button:nth-child(1)');
+  const reg=await p.evaluate(()=>clVisible().length);
+  chk(maj.dt==='majalis'&&maj.n===12&&reg===14,'check   '+file+' Majalis hides the regular-night-only tasks',JSON.stringify({maj,reg}));
+  await p.tap('.cl-seg[aria-label="View"] button:nth-child(2)'); await p.waitForTimeout(200);
+  const rows=await p.evaluate(()=>({n:document.querySelectorAll('.cl-row').length,h:Math.min(...[...document.querySelectorAll('.cl-row')].map(e=>e.offsetHeight)),secs:document.querySelectorAll('.cl-sec').length}));
+  await p.tap('.cl-row[data-k="shoe-count"]'); await p.waitForTimeout(1100);
+  const ticked=await p.evaluate(()=>CL.done.join()+'|'+document.querySelector('.cl-row[data-k="shoe-count"]').classList.contains('done'));
+  chk(rows.n===14&&rows.h>=44&&rows.secs===5&&ticked==='shoe-count|true','check   '+file+' list view groups five stages and ticks work',JSON.stringify({rows,ticked}));
+  await p.evaluate(()=>{ CL.done=clVisible().map(i=>i.key); CL.mode='focus'; clRender(); });
+  chk(await p.evaluate(()=>!!document.querySelector('.cl-bigring')),'check   '+file+' finishing everything shows the all-clear screen');
+  chk(p.errs.length===0,'check   '+file+' no page errors',p.errs.join(';')); await p.context().close(); }
+
+// ── Checklist on a laptop, and each team's own secondary colour ──
+{ const cols={};
+  for(const file of ['teama.html','teamb.html']){
+    const p=await open(file,{width:1440,height:900});
+    await p.evaluate(`(${SEED})(['tl_a','tl_b'])`);
+    await p.evaluate("try{localStorage.clear()}catch(e){}; nav('checklist'); renderChecklist()"); await p.waitForTimeout(900);
+    const r=await p.evaluate(()=>{ const g=document.querySelector('.cl-grid'); const side=document.querySelector('.cl-side'), main=document.querySelector('.cl-main');
+      return {split:!!g&&!!side&&!!main&&side.getBoundingClientRect().right<=main.getBoundingClientRect().left+1,rows:document.querySelectorAll('.cl-side .cl-row').length,
+        card:!!document.getElementById('clCard'),viewToggle:!!document.querySelector('.cl-seg[aria-label="View"]'),
+        sec:getComputedStyle(document.querySelector('.cl-stage b')).color,team:document.documentElement.getAttribute('data-team'),hs:document.documentElement.scrollWidth>document.documentElement.clientWidth}; });
+    cols[file]=r.sec;
+    chk(r.split&&r.rows===14&&r.card&&!r.viewToggle&&!r.hs,'laptop  '+file+' shows the list beside the one-at-a-time card',JSON.stringify(r));
+    await p.dblclick('#clCard'); await p.waitForTimeout(900);
+    const d=await p.evaluate(()=>CL.done.join());
+    await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(700);
+    chk(d==='nandi-label'&&(await p.evaluate(()=>CL.done.length))===0,'laptop  '+file+' double-click clears and the left arrow goes back',d);
+    await p.click('.cl-side .cl-row[data-k="lights"]'); await p.waitForTimeout(100);
+    chk((await p.evaluate(()=>CL.done.join()))==='lights','laptop  '+file+' one click ticks a row in the list');
+    chk(p.errs.length===0,'laptop  '+file+' no page errors',p.errs.join(';')); await p.context().close(); }
+  chk(cols['teama.html']!==cols['teamb.html'],'colour  Team A and Team B use different secondary colours',JSON.stringify(cols)); }
 
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
