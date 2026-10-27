@@ -427,6 +427,26 @@ table.mtab{width:100%;border-collapse:collapse;font-size:13px;}
 .pchip.locked{opacity:.5;padding-right:12px;}
 .pchip-x{width:26px;height:26px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:15px;line-height:1;cursor:pointer;}
 .pchip-x:hover{background:rgba(239,68,68,.5);}
+.rl-ed{border:1px solid var(--db);background:var(--ds2);padding:12px;margin-bottom:14px;}
+.rl-cur{display:flex;flex-wrap:wrap;gap:7px;min-height:34px;align-items:center;}
+.rl-diff{font-size:12.5px;font-weight:700;margin:10px 0 0;min-height:18px;color:var(--dm);}
+.rl-diff .add{color:#22C55E;}.rl-diff .del{color:#EF4444;}
+.rl-find{width:100%;margin:12px 0 8px;background:var(--ds);border:1px solid var(--db);border-radius:var(--r);padding:9px 12px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:14px;outline:none;}
+.rl-grid{max-height:340px;overflow:auto;border-top:1px solid var(--db);}
+.rl-grp{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 2px;border-bottom:1px solid var(--db);}
+.rl-grp .gn{flex:0 0 190px;font-size:13px;font-weight:800;color:var(--dt);}
+.rl-grp .gc{display:block;font-size:10.5px;font-weight:700;color:var(--dm);text-transform:uppercase;letter-spacing:.06em;}
+.rl-lv{display:flex;flex-wrap:wrap;gap:6px;}
+.rl-opt{position:relative;cursor:pointer;}
+.rl-opt input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer;}
+.rl-opt span{display:block;min-height:36px;line-height:36px;padding:0 14px;font-size:12.5px;font-weight:800;color:var(--dm);border:1px solid var(--db);background:var(--ds);}
+.rl-opt:hover span{border-color:var(--blue-lt);color:var(--dt);}
+.rl-opt input:checked + span{background:rgba(0,85,139,.35);border-color:var(--blue-lt);color:#fff;}
+.rl-opt input:checked + span::before{content:"\2713\00a0";}
+.rl-opt input:focus-visible + span{outline:2px solid var(--blue-lt);outline-offset:1px;}
+.rl-opt input:disabled{cursor:not-allowed;}.rl-opt input:disabled + span{opacity:.5;}
+.rl-none{padding:14px 2px;color:var(--dm);font-size:13px;}
+@media(max-width:600px){.rl-grp .gn{flex-basis:100%;}}
 .xperm-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
 .xperm{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--dm);background:var(--ds);border:1px solid var(--db);border-radius:20px;padding:5px 11px;cursor:pointer;user-select:none;transition:all .15s;}
 .xperm input{accent-color:var(--blue2);cursor:pointer;}
@@ -940,6 +960,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <nav class="sb-nav">
       <div class="nav-item active" data-page="dashboard"><span class="ni">⊞</span> Dashboard</div>
       <div class="nav-item" data-page="myduties"><span class="ni">🗓️</span> My Duties</div>
+      <div class="nav-item" data-page="profile"><span class="ni">👤</span> My Profile</div>
 
       <div class="nav-sec" id="secPHMU">PHMU</div>
       <a class="nav-item" id="navTeamA" href="teama.html"><span class="ni">A</span> Team A</a>
@@ -1044,6 +1065,36 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <section class="panel" id="myTeamPanel" style="display:none;animation-delay:.08s;">
         <div><h2 style="margin:0;">My Team</h2><div class="sub" style="margin-top:2px;">How you are doing, and who to speak to.</div></div>
         <div id="myTeamBody" class="sg" style="margin:12px 0 0;"></div>
+      </section>
+    </div>
+
+    <!-- ═══ PAGE: MY PROFILE ═══ -->
+    <div class="page" id="page-profile">
+      <div class="ph">
+        <div><h1>My Profile</h1><p>Your own details. Roles and rank are set by the people above you and cannot be edited here.</p></div>
+      </div>
+      <section class="panel">
+        <h2 style="margin:0 0 4px;">Account</h2>
+        <div class="sub" style="margin-bottom:12px;">The name shown next to your actions across the Hub. Changes are recorded in the audit log.</div>
+        <div class="fg"><label for="pfDisplay">Display name</label><input id="pfDisplay" maxlength="60" autocomplete="name"></div>
+        <div id="pfLocked" class="sub" style="margin:12px 0;"></div>
+        <button class="btn btn-bl" id="pfSaveName">Save name</button>
+      </section>
+      <section class="panel">
+        <h2 style="margin:0 0 4px;">Contact details</h2>
+        <div class="sub" id="pfLinkNote" style="margin-bottom:12px;">Used by your Team Lead for rostering. Only you and the leaders who manage your roster can see these.</div>
+        <div id="pfForm">
+          <div class="fg"><label for="pfPhone">Phone</label><input id="pfPhone" type="tel" maxlength="20" autocomplete="tel"></div>
+          <div class="fg"><label for="pfEmail">Email</label><input id="pfEmail" type="email" maxlength="120" autocomplete="email"></div>
+          <div class="fg"><label for="pfDob">Date of birth</label><input id="pfDob" type="date"></div>
+          <div class="fg"><label for="pfGender">Gender</label><select id="pfGender"><option value="">Not set</option><option>Male</option><option>Female</option></select></div>
+          <button class="btn btn-bl" id="pfSaveDetails">Save details</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2 style="margin:0 0 4px;">Availability</h2>
+        <div class="sub" id="pfAway" style="margin-bottom:12px;"></div>
+        <button class="btn btn-bl" id="pfAwayBtn">Manage away dates</button>
       </section>
     </div>
 
@@ -1637,22 +1688,49 @@ function rpTeam(id){
 }
 const rpValue = id=>{ const l = $(id+'-level'); return (l && !l.disabled && l.value) || ''; };
 const rpTeamChosen = id=>!!(($(id+'-team')||{}).value);
-/* Roles already on an existing account, as removable chips. The hidden
-   checkboxes keep saveProfile reading them exactly as it always did. */
-function pfChip(id, pm, allowed){
-  return '<span class="pchip'+(allowed?'':' locked')+'"'+(allowed?'':' title="Above your authority to change"')+'>'+
-    '<input type="checkbox" name="pf-perm-'+id+'" value="'+pm+'" checked hidden'+(allowed?'':' disabled')+'>'+esc(ROLE_LABELS[pm]||pm)+
-    (allowed?'<button type="button" class="pchip-x" aria-label="Remove '+esc(ROLE_LABELS[pm]||pm)+'" onclick="this.parentNode.remove()">×</button>':'')+'</span>';
+/* Role editor for an existing account: every role the actor may grant is a
+   one-tap toggle, grouped by team, with the current roles and a plain
+   "adding / removing" line above it. Nothing is written until Save. The
+   toggles are the checkboxes saveProfile has always read. */
+function roleEditorHTML(id, perms, grantable, self){
+  const held = new Set(perms);
+  const gs = roleGroups().map(g=>Object.assign({}, g, {levels:g.levels.filter(l=>grantable.includes(l[0]) || held.has(l[0]))})).filter(g=>g.levels.length);
+  const known = new Set(roleGroups().flatMap(g=>g.levels.map(l=>l[0])));
+  const extra = perms.filter(pm=>!known.has(pm));   // legacy keys such as iv_admin: shown, never toggled off
+  const grid = gs.map(g=>'<div class="rl-grp" data-find="'+esc((g.label+' '+g.cat+' '+g.levels.map(l=>l[1]).join(' ')).toLowerCase())+'">'+
+    '<div class="gn"><span class="gc">'+esc(g.cat)+'</span>'+esc(g.label)+'</div><div class="rl-lv">'+
+    g.levels.map(l=>{ const can = grantable.includes(l[0]) && !self;
+      return '<label class="rl-opt"'+(can?'':' title="'+(self?'You cannot change your own roles':'Above your authority to change')+'"')+'><input type="checkbox" name="pf-perm-'+id+'" value="'+l[0]+'"'+(held.has(l[0])?' checked':'')+(can?'':' disabled')+' onchange="rlSync(\''+id+'\')"><span>'+esc(l[1])+'</span></label>'; }).join('')+
+    '</div></div>').join('');
+  return '<div class="rl-ed" id="pf-roles-'+id+'" data-orig="'+esc(perms.join(','))+'" data-extra="'+esc(extra.join(','))+'">'+
+    '<div class="rl-cur" id="rl-cur-'+id+'" aria-live="polite"></div>'+
+    '<div class="rl-diff" id="rl-diff-'+id+'"></div>'+
+    (self?'':'<input class="rl-find" type="search" placeholder="Find a team or role" aria-label="Find a team or role" oninput="rlFind(\''+id+'\',this.value)">')+
+    '<div class="rl-grid" id="rl-grid-'+id+'">'+(grid||'<div class="rl-none">No roles available to you.</div>')+'<div class="rl-none" id="rl-empty-'+id+'" style="display:none;">Nothing matches that search.</div></div>'+
+    '</div>';
 }
-function pfAddRole(id){
-  const pid = 'pfRole-'+id;
-  if(rpTeamChosen(pid) && !rpValue(pid)){ toast('Choose a level for that team.','err'); return; }
-  const pm = rpValue(pid); if(!pm) return;
-  const box = $('pf-roles-'+id);
-  if(box.querySelector('input[value="'+pm+'"]')){ toast('They already have that role.','err'); return; }
-  box.insertAdjacentHTML('beforeend', pfChip(id, pm, true));
-  $(pid+'-team').value = ''; rpTeam(pid);
+function rlFind(id, q){
+  q = String(q||'').trim().toLowerCase(); let n = 0;
+  document.querySelectorAll('#rl-grid-'+id+' .rl-grp').forEach(g=>{ const show = !q || g.getAttribute('data-find').indexOf(q) >= 0; g.style.display = show ? '' : 'none'; if(show) n++; });
+  const e = $('rl-empty-'+id); if(e) e.style.display = n ? 'none' : '';
 }
+function rlSync(id){
+  const box = $('pf-roles-'+id); if(!box) return;
+  const orig = box.getAttribute('data-orig').split(',').filter(Boolean);
+  const extra = box.getAttribute('data-extra').split(',').filter(Boolean);
+  const inputs = [...box.querySelectorAll('input[name="pf-perm-'+id+'"]')];
+  const now = inputs.filter(i=>i.checked).map(i=>i.value);
+  const lab = k=>ROLE_LABELS[k]||k;
+  $('rl-cur-'+id).innerHTML = now.concat(extra).map(k=>{ const i = inputs.find(x=>x.value === k), rm = i && !i.disabled;
+    return '<span class="pchip'+(rm?'':' locked')+'">'+esc(lab(k))+(rm?'<button type="button" class="pchip-x" aria-label="Remove '+esc(lab(k))+'" onclick="rlOff(\''+id+'\',\''+k+'\')">\u00d7</button>':'')+'</span>'; }).join('') ||
+    '<span class="mem-hint">No access yet. Tick a role below.</span>';
+  const add = now.filter(k=>orig.indexOf(k)<0), del = orig.filter(k=>now.indexOf(k)<0 && inputs.some(i=>i.value === k && !i.disabled));
+  $('rl-diff-'+id).innerHTML = (add.length||del.length)
+    ? (add.length?'<span class="add">Adding: '+esc(add.map(lab).join(', '))+'</span>':'')+(add.length&&del.length?' &nbsp;·&nbsp; ':'')+(del.length?'<span class="del">Removing: '+esc(del.map(lab).join(', '))+'</span>':'')+' &nbsp;(press Save to apply)'
+    : 'No role changes.';
+}
+function rlOff(id, k){ const i = document.querySelector('#pf-roles-'+id+' input[value="'+k+'"]'); if(i){ i.checked = false; rlSync(id); } }
+
 /* Roles/perms the current actor may grant (contract) */
 function grantableRoles(){
   const mine = myRank();
@@ -2268,6 +2346,7 @@ function roleLabel(cu){
 const PAGES = {
   dashboard: ()=>true,
   myduties:  ()=>true,   // everyone can see their own duties
+  profile:   ()=>true,   // and edit their own details
   members:   ()=>USERS_ADMIN(),
   logins:    ()=>USERS_ADMIN(),
   stats:     ()=>STATS_VIEW(),
@@ -2296,6 +2375,7 @@ function nav(id){
   else if(id === 'linking') loadLinkingPage();
   else if(id === 'dashboard') loadDashStats();
   else if(id === 'myduties') openMyDuties();
+  else if(id === 'profile') loadProfile();
   else if(id === 'submit') loadSubmitPage();
   else if(id === 'approve') loadApprovePage();
   if(LOGGED_SECTIONS[id]) logView(LOGGED_SECTIONS[id]);
@@ -4265,13 +4345,8 @@ function editProfile(id){
     '<div class="fg"><label>Display name</label><input id="pf-display-'+id+'" value="'+esc(r.display||'')+'"></div>'+
     '<div class="fg"><label>Linked person (Data Management)</label><select id="pf-member-'+id+'">'+memberOptions(r.member_id)+'</select></div>'+
     '</div>'+
-    '<div class="fg"><label>Permissions'+(self?' - you cannot change your own':'')+'</label></div>'+
-    '<div class="pchips" id="pf-roles-'+id+'"'+(self?' style="opacity:.5;pointer-events:none;"':'')+'>'+
-      PERMS_VOCAB.filter(pm=>perms.indexOf(pm)>=0).map(pm=>pfChip(id, pm, grantable.indexOf(pm)>=0)).join('')+
-      (perms.length?'':'<span class="mem-hint">No access yet</span>')+
-    '</div>'+
-    (self?'':'<div class="fg"><label>Add a role</label><div class="rp-row">'+rolePickerHTML('pfRole-'+id, grantable, 'Choose team…')+
-      '<button type="button" class="btn btn-ol" onclick="pfAddRole(\''+id+'\')">Add role</button></div></div>')+
+    '<div class="fg"><label>Roles'+(self?' - you cannot change your own':'')+'</label></div>'+
+    roleEditorHTML(id, perms, grantable, self)+
     '<div class="um-form-acts">'+
       '<button class="btn btn-bl" onclick="saveProfile(\''+id+'\')">Save</button>'+
       '<button class="btn btn-ol" onclick="editProfile(\''+id+'\')">Cancel</button>'+
@@ -4282,6 +4357,7 @@ function editProfile(id){
         '<button class="btn btn-red" onclick="deleteAccount(\''+id+'\')">Remove from Hub</button>')+
     '</div>';
   box.style.display = 'block';
+  rlSync(id);
 }
 async function saveProfile(id){
   const r = PROFILES.find(x=>String(x.id)===String(id)); if(!r) return;
@@ -4336,6 +4412,60 @@ let MY_AWAY = [];
    is not a link and grants nothing: set_my_away still writes only
    through profiles.member_id, so an address can never change anything. */
 let MY_LINKED = false;
+
+/* ═══ MY PROFILE: a person's own display name and contact details ═══ */
+async function loadProfile(){
+  $('pfDisplay').value = CU.display || '';
+  $('pfLocked').innerHTML = 'Role: <b>' + esc(roleLabel(CU)) + '</b>. Sign-in email: <b>' + esc(CU.email || 'not set') + '</b>.';
+  let view = null;
+  if(sb && CU.uid){ try{ const r = await sb.rpc('my_member_view'); view = r.error ? null : r.data; }catch(e){} }
+  const m = view && view.member && view.linked ? view.member : null;
+  MY_MEMBER = view && view.member ? view.member : MY_MEMBER;
+  $('pfForm').style.display = m ? '' : 'none';
+  $('pfLinkNote').textContent = m
+    ? 'Used by your Team Lead for rostering. Only you and the leaders who manage your roster can see these.'
+    : 'Your account is not linked to a member yet, so there are no contact details to edit. Ask your Team Lead to link you.';
+  if(m){
+    $('pfPhone').value = m.phone || ''; $('pfEmail').value = m.email || '';
+    $('pfDob').value = m.dob || ''; $('pfGender').value = m.gender || '';
+  }
+  const away = m && Array.isArray(m.away) ? m.away.filter(d=>d >= new Date().toISOString().slice(0,10)) : [];
+  $('pfAway').textContent = !m ? 'Away dates need your account to be linked to a member.'
+    : away.length ? away.length + ' upcoming away ' + (away.length === 1 ? 'date' : 'dates') + ': ' + away.slice(0,4).join(', ') + (away.length > 4 ? ' and more' : '')
+    : 'No away dates set. The roster can pick you for any day.';
+  $('pfAwayBtn').style.display = m ? '' : 'none';
+}
+async function saveProfileName(){
+  const v = $('pfDisplay').value.trim(), btn = $('pfSaveName');
+  if(v.length < 2){ toast('A name needs at least 2 characters.', 'err'); return; }
+  btn.disabled = true;
+  try{
+    const {data, error} = await sb.rpc('set_my_display', {p_display: v});
+    if(error) throw error;
+    CU.display = data || v;
+    try{ const sess = JSON.parse(localStorage.getItem('ivhub_session')||'{}'); sess.display = CU.display; localStorage.setItem('ivhub_session', JSON.stringify(sess)); }catch(e){}
+    $('tbName').textContent = CU.display; $('heroName').textContent = CU.display; $('uav').textContent = (CU.display.trim()[0] || '·').toUpperCase();
+    toast('Name updated.');
+  }catch(e){ toast(e.message || 'Could not save your name.', 'err'); }
+  btn.disabled = false;
+}
+async function saveProfileDetails(){
+  const btn = $('pfSaveDetails'); btn.disabled = true;
+  try{
+    const {error} = await sb.rpc('set_my_details', {
+      p_phone: $('pfPhone').value, p_email: $('pfEmail').value,
+      p_dob: $('pfDob').value || null, p_gender: $('pfGender').value
+    });
+    if(error) throw error;
+    toast('Details saved.');
+    loadProfile();
+  }catch(e){ toast(e.message || 'Could not save your details.', 'err'); }
+  btn.disabled = false;
+}
+$('pfSaveName').addEventListener('click', saveProfileName);
+$('pfSaveDetails').addEventListener('click', saveProfileDetails);
+$('pfAwayBtn').addEventListener('click', ()=>{ nav('dashboard'); setTimeout(()=>{ const a=$('awayPanel'); if(a) a.scrollIntoView({behavior:'smooth', block:'start'}); }, 150); });
+
 async function loadAway(){
   const panel = $('awayPanel');
   if(!sb || !CU.uid){ panel.style.display = 'none'; return; }
