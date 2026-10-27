@@ -427,6 +427,26 @@ table.mtab{width:100%;border-collapse:collapse;font-size:13px;}
 .pchip.locked{opacity:.5;padding-right:12px;}
 .pchip-x{width:26px;height:26px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:15px;line-height:1;cursor:pointer;}
 .pchip-x:hover{background:rgba(239,68,68,.5);}
+.rl-ed{border:1px solid var(--db);background:var(--ds2);padding:12px;margin-bottom:14px;}
+.rl-cur{display:flex;flex-wrap:wrap;gap:7px;min-height:34px;align-items:center;}
+.rl-diff{font-size:12.5px;font-weight:700;margin:10px 0 0;min-height:18px;color:var(--dm);}
+.rl-diff .add{color:#22C55E;}.rl-diff .del{color:#EF4444;}
+.rl-find{width:100%;margin:12px 0 8px;background:var(--ds);border:1px solid var(--db);border-radius:var(--r);padding:9px 12px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:14px;outline:none;}
+.rl-grid{max-height:340px;overflow:auto;border-top:1px solid var(--db);}
+.rl-grp{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 2px;border-bottom:1px solid var(--db);}
+.rl-grp .gn{flex:0 0 190px;font-size:13px;font-weight:800;color:var(--dt);}
+.rl-grp .gc{display:block;font-size:10.5px;font-weight:700;color:var(--dm);text-transform:uppercase;letter-spacing:.06em;}
+.rl-lv{display:flex;flex-wrap:wrap;gap:6px;}
+.rl-opt{position:relative;cursor:pointer;}
+.rl-opt input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer;}
+.rl-opt span{display:block;min-height:36px;line-height:36px;padding:0 14px;font-size:12.5px;font-weight:800;color:var(--dm);border:1px solid var(--db);background:var(--ds);}
+.rl-opt:hover span{border-color:var(--blue-lt);color:var(--dt);}
+.rl-opt input:checked + span{background:rgba(0,85,139,.35);border-color:var(--blue-lt);color:#fff;}
+.rl-opt input:checked + span::before{content:"\2713\00a0";}
+.rl-opt input:focus-visible + span{outline:2px solid var(--blue-lt);outline-offset:1px;}
+.rl-opt input:disabled{cursor:not-allowed;}.rl-opt input:disabled + span{opacity:.5;}
+.rl-none{padding:14px 2px;color:var(--dm);font-size:13px;}
+@media(max-width:600px){.rl-grp .gn{flex-basis:100%;}}
 .xperm-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
 .xperm{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--dm);background:var(--ds);border:1px solid var(--db);border-radius:20px;padding:5px 11px;cursor:pointer;user-select:none;transition:all .15s;}
 .xperm input{accent-color:var(--blue2);cursor:pointer;}
@@ -1668,22 +1688,49 @@ function rpTeam(id){
 }
 const rpValue = id=>{ const l = $(id+'-level'); return (l && !l.disabled && l.value) || ''; };
 const rpTeamChosen = id=>!!(($(id+'-team')||{}).value);
-/* Roles already on an existing account, as removable chips. The hidden
-   checkboxes keep saveProfile reading them exactly as it always did. */
-function pfChip(id, pm, allowed){
-  return '<span class="pchip'+(allowed?'':' locked')+'"'+(allowed?'':' title="Above your authority to change"')+'>'+
-    '<input type="checkbox" name="pf-perm-'+id+'" value="'+pm+'" checked hidden'+(allowed?'':' disabled')+'>'+esc(ROLE_LABELS[pm]||pm)+
-    (allowed?'<button type="button" class="pchip-x" aria-label="Remove '+esc(ROLE_LABELS[pm]||pm)+'" onclick="this.parentNode.remove()">×</button>':'')+'</span>';
+/* Role editor for an existing account: every role the actor may grant is a
+   one-tap toggle, grouped by team, with the current roles and a plain
+   "adding / removing" line above it. Nothing is written until Save. The
+   toggles are the checkboxes saveProfile has always read. */
+function roleEditorHTML(id, perms, grantable, self){
+  const held = new Set(perms);
+  const gs = roleGroups().map(g=>Object.assign({}, g, {levels:g.levels.filter(l=>grantable.includes(l[0]) || held.has(l[0]))})).filter(g=>g.levels.length);
+  const known = new Set(roleGroups().flatMap(g=>g.levels.map(l=>l[0])));
+  const extra = perms.filter(pm=>!known.has(pm));   // legacy keys such as iv_admin: shown, never toggled off
+  const grid = gs.map(g=>'<div class="rl-grp" data-find="'+esc((g.label+' '+g.cat+' '+g.levels.map(l=>l[1]).join(' ')).toLowerCase())+'">'+
+    '<div class="gn"><span class="gc">'+esc(g.cat)+'</span>'+esc(g.label)+'</div><div class="rl-lv">'+
+    g.levels.map(l=>{ const can = grantable.includes(l[0]) && !self;
+      return '<label class="rl-opt"'+(can?'':' title="'+(self?'You cannot change your own roles':'Above your authority to change')+'"')+'><input type="checkbox" name="pf-perm-'+id+'" value="'+l[0]+'"'+(held.has(l[0])?' checked':'')+(can?'':' disabled')+' onchange="rlSync(\''+id+'\')"><span>'+esc(l[1])+'</span></label>'; }).join('')+
+    '</div></div>').join('');
+  return '<div class="rl-ed" id="pf-roles-'+id+'" data-orig="'+esc(perms.join(','))+'" data-extra="'+esc(extra.join(','))+'">'+
+    '<div class="rl-cur" id="rl-cur-'+id+'" aria-live="polite"></div>'+
+    '<div class="rl-diff" id="rl-diff-'+id+'"></div>'+
+    (self?'':'<input class="rl-find" type="search" placeholder="Find a team or role" aria-label="Find a team or role" oninput="rlFind(\''+id+'\',this.value)">')+
+    '<div class="rl-grid" id="rl-grid-'+id+'">'+(grid||'<div class="rl-none">No roles available to you.</div>')+'<div class="rl-none" id="rl-empty-'+id+'" style="display:none;">Nothing matches that search.</div></div>'+
+    '</div>';
 }
-function pfAddRole(id){
-  const pid = 'pfRole-'+id;
-  if(rpTeamChosen(pid) && !rpValue(pid)){ toast('Choose a level for that team.','err'); return; }
-  const pm = rpValue(pid); if(!pm) return;
-  const box = $('pf-roles-'+id);
-  if(box.querySelector('input[value="'+pm+'"]')){ toast('They already have that role.','err'); return; }
-  box.insertAdjacentHTML('beforeend', pfChip(id, pm, true));
-  $(pid+'-team').value = ''; rpTeam(pid);
+function rlFind(id, q){
+  q = String(q||'').trim().toLowerCase(); let n = 0;
+  document.querySelectorAll('#rl-grid-'+id+' .rl-grp').forEach(g=>{ const show = !q || g.getAttribute('data-find').indexOf(q) >= 0; g.style.display = show ? '' : 'none'; if(show) n++; });
+  const e = $('rl-empty-'+id); if(e) e.style.display = n ? 'none' : '';
 }
+function rlSync(id){
+  const box = $('pf-roles-'+id); if(!box) return;
+  const orig = box.getAttribute('data-orig').split(',').filter(Boolean);
+  const extra = box.getAttribute('data-extra').split(',').filter(Boolean);
+  const inputs = [...box.querySelectorAll('input[name="pf-perm-'+id+'"]')];
+  const now = inputs.filter(i=>i.checked).map(i=>i.value);
+  const lab = k=>ROLE_LABELS[k]||k;
+  $('rl-cur-'+id).innerHTML = now.concat(extra).map(k=>{ const i = inputs.find(x=>x.value === k), rm = i && !i.disabled;
+    return '<span class="pchip'+(rm?'':' locked')+'">'+esc(lab(k))+(rm?'<button type="button" class="pchip-x" aria-label="Remove '+esc(lab(k))+'" onclick="rlOff(\''+id+'\',\''+k+'\')">\u00d7</button>':'')+'</span>'; }).join('') ||
+    '<span class="mem-hint">No access yet. Tick a role below.</span>';
+  const add = now.filter(k=>orig.indexOf(k)<0), del = orig.filter(k=>now.indexOf(k)<0 && inputs.some(i=>i.value === k && !i.disabled));
+  $('rl-diff-'+id).innerHTML = (add.length||del.length)
+    ? (add.length?'<span class="add">Adding: '+esc(add.map(lab).join(', '))+'</span>':'')+(add.length&&del.length?' &nbsp;·&nbsp; ':'')+(del.length?'<span class="del">Removing: '+esc(del.map(lab).join(', '))+'</span>':'')+' &nbsp;(press Save to apply)'
+    : 'No role changes.';
+}
+function rlOff(id, k){ const i = document.querySelector('#pf-roles-'+id+' input[value="'+k+'"]'); if(i){ i.checked = false; rlSync(id); } }
+
 /* Roles/perms the current actor may grant (contract) */
 function grantableRoles(){
   const mine = myRank();
@@ -4298,13 +4345,8 @@ function editProfile(id){
     '<div class="fg"><label>Display name</label><input id="pf-display-'+id+'" value="'+esc(r.display||'')+'"></div>'+
     '<div class="fg"><label>Linked person (Data Management)</label><select id="pf-member-'+id+'">'+memberOptions(r.member_id)+'</select></div>'+
     '</div>'+
-    '<div class="fg"><label>Permissions'+(self?' - you cannot change your own':'')+'</label></div>'+
-    '<div class="pchips" id="pf-roles-'+id+'"'+(self?' style="opacity:.5;pointer-events:none;"':'')+'>'+
-      PERMS_VOCAB.filter(pm=>perms.indexOf(pm)>=0).map(pm=>pfChip(id, pm, grantable.indexOf(pm)>=0)).join('')+
-      (perms.length?'':'<span class="mem-hint">No access yet</span>')+
-    '</div>'+
-    (self?'':'<div class="fg"><label>Add a role</label><div class="rp-row">'+rolePickerHTML('pfRole-'+id, grantable, 'Choose team…')+
-      '<button type="button" class="btn btn-ol" onclick="pfAddRole(\''+id+'\')">Add role</button></div></div>')+
+    '<div class="fg"><label>Roles'+(self?' - you cannot change your own':'')+'</label></div>'+
+    roleEditorHTML(id, perms, grantable, self)+
     '<div class="um-form-acts">'+
       '<button class="btn btn-bl" onclick="saveProfile(\''+id+'\')">Save</button>'+
       '<button class="btn btn-ol" onclick="editProfile(\''+id+'\')">Cancel</button>'+
@@ -4315,6 +4357,7 @@ function editProfile(id){
         '<button class="btn btn-red" onclick="deleteAccount(\''+id+'\')">Remove from Hub</button>')+
     '</div>';
   box.style.display = 'block';
+  rlSync(id);
 }
 async function saveProfile(id){
   const r = PROFILES.find(x=>String(x.id)===String(id)); if(!r) return;
