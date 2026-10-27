@@ -739,6 +739,27 @@ for(const file of ['teama.html','teamb.html']){
   chk(await p.evaluate(()=>!!document.querySelector('.cl-bigring')),'check   '+file+' finishing everything shows the all-clear screen');
   chk(p.errs.length===0,'check   '+file+' no page errors',p.errs.join(';')); await p.context().close(); }
 
+// ── Checklist on a laptop, and each team's own secondary colour ──
+{ const cols={};
+  for(const file of ['teama.html','teamb.html']){
+    const p=await open(file,{width:1440,height:900});
+    await p.evaluate(`(${SEED})(['tl_a','tl_b'])`);
+    await p.evaluate("try{localStorage.clear()}catch(e){}; nav('checklist'); renderChecklist()"); await p.waitForTimeout(900);
+    const r=await p.evaluate(()=>{ const g=document.querySelector('.cl-grid'); const side=document.querySelector('.cl-side'), main=document.querySelector('.cl-main');
+      return {split:!!g&&!!side&&!!main&&side.getBoundingClientRect().right<=main.getBoundingClientRect().left+1,rows:document.querySelectorAll('.cl-side .cl-row').length,
+        card:!!document.getElementById('clCard'),viewToggle:!!document.querySelector('.cl-seg[aria-label="View"]'),
+        sec:getComputedStyle(document.querySelector('.cl-stage b')).color,team:document.documentElement.getAttribute('data-team'),hs:document.documentElement.scrollWidth>document.documentElement.clientWidth}; });
+    cols[file]=r.sec;
+    chk(r.split&&r.rows===14&&r.card&&!r.viewToggle&&!r.hs,'laptop  '+file+' shows the list beside the one-at-a-time card',JSON.stringify(r));
+    await p.dblclick('#clCard'); await p.waitForTimeout(900);
+    const d=await p.evaluate(()=>CL.done.join());
+    await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(700);
+    chk(d==='nandi-label'&&(await p.evaluate(()=>CL.done.length))===0,'laptop  '+file+' double-click clears and the left arrow goes back',d);
+    await p.click('.cl-side .cl-row[data-k="lights"]'); await p.waitForTimeout(100);
+    chk((await p.evaluate(()=>CL.done.join()))==='lights','laptop  '+file+' one click ticks a row in the list');
+    chk(p.errs.length===0,'laptop  '+file+' no page errors',p.errs.join(';')); await p.context().close(); }
+  chk(cols['teama.html']!==cols['teamb.html'],'colour  Team A and Team B use different secondary colours',JSON.stringify(cols)); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);

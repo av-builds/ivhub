@@ -1145,17 +1145,17 @@ span.chip.blank{cursor:default;}
 .cl-date span{font-size:13px;color:var(--dm);}
 .cl-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:14px;background:rgba(2,11,24,.55);border:var(--hairline);}
 .cl-seg button{min-height:44px;border:0;border-radius:10px;background:transparent;color:var(--dm);font-size:14px;font-weight:800;cursor:pointer;transition:background var(--t) var(--ease-out),color var(--t);}
-.cl-seg button[aria-pressed="true"]{background:linear-gradient(135deg,var(--navy),var(--blue2));color:#fff;box-shadow:0 2px 10px rgba(0,85,139,.3);}
+.cl-seg button[aria-pressed="true"]{background:var(--iv-sec,var(--blue2));color:var(--iv-seco,#fff);box-shadow:0 2px 10px var(--iv-secs,rgba(0,85,139,.3));}
 .cl-rail{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:5px;margin:4px 0 6px;}
 .cl-rail i{height:6px;border-radius:3px;background:rgba(75,163,220,.16);overflow:hidden;position:relative;display:block;}
 .cl-rail i::after{content:"";position:absolute;inset:0;background:var(--green);transform:scaleX(var(--f,0));transform-origin:left;transition:transform .5s var(--ease-out);}
-.cl-rail i.cur{background:rgba(75,163,220,.38);}
+.cl-rail i.cur{background:var(--iv-secs,rgba(75,163,220,.38));box-shadow:inset 0 0 0 1px var(--iv-sec,var(--blue-lt));}
 .cl-stage{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:10px 2px 10px;}
-.cl-stage b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-lt);font-weight:900;}
+.cl-stage b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--iv-sec,var(--blue-lt));font-weight:900;}
 .cl-stage span{font-size:13px;color:var(--dm);}
 .cl-stack{position:relative;}
 .cl-card{display:flex;flex-direction:column;gap:14px;width:100%;min-height:clamp(300px,46vh,440px);text-align:left;padding:22px 20px 18px;border-radius:var(--r-xl);cursor:pointer;color:var(--dt);
-  background:var(--ds);background-image:var(--surface-grad);border:1px solid var(--db2);box-shadow:var(--sh-2);
+  background:var(--ds);background-image:var(--surface-grad);border:1px solid var(--iv-sec,var(--db2));box-shadow:var(--sh-2),inset 0 4px 0 var(--iv-sec,transparent);
   touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
   transition:border-color var(--t),box-shadow var(--t),transform var(--t-fast);}
 .cl-card:active{transform:scale(.985);}
@@ -1165,11 +1165,11 @@ span.chip.blank{cursor:default;}
 .cl-card.clearing{pointer-events:none;border-color:var(--green);animation:clOutUp .52s var(--ease-in) forwards;}
 .cl-tags{display:flex;gap:6px;flex-wrap:wrap;min-height:0;}
 .cl-tag{font-size:11.5px;font-weight:800;padding:4px 9px;border-radius:99px;background:var(--gold-bg);border:1px solid var(--gold-bd);color:var(--gold-lt);}
-.cl-tag.reg{background:rgba(75,163,220,.1);border-color:var(--db2);color:var(--blue-lt);}
+.cl-tag.reg{background:var(--iv-secs,rgba(75,163,220,.1));border-color:var(--iv-sec,var(--db2));color:var(--iv-sec,var(--blue-lt));}
 .cl-title{font-size:clamp(24px,7vw,30px);line-height:1.15;font-weight:900;letter-spacing:.005em;}
 .cl-detail{font-size:17px;line-height:1.55;color:var(--dt);opacity:.92;font-weight:600;flex:1;}
 .cl-cta{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:14px;border-top:var(--hairline);font-size:15px;font-weight:800;color:var(--dm);}
-.cl-ring{width:44px;height:44px;flex:none;border-radius:50%;border:2.5px solid var(--db2);display:grid;place-items:center;transition:all var(--t) var(--ease-spring);}
+.cl-ring{width:44px;height:44px;flex:none;border-radius:50%;border:2.5px solid var(--iv-sec,var(--db2));display:grid;place-items:center;transition:all var(--t) var(--ease-spring);}
 .cl-ring svg,.cl-box svg{width:60%;height:60%;fill:none;stroke:#fff;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;}
 .cl-card.armed .cl-ring{background:var(--green);border-color:var(--green);transform:scale(1.1);}
 .cl-card.armed .cl-ring svg{stroke-dashoffset:0;transition:stroke-dashoffset .3s .05s;}
@@ -1183,13 +1183,14 @@ span.chip.blank{cursor:default;}
 .cl-note{margin-top:14px;font-size:12.5px;line-height:1.5;color:var(--dm);text-align:center;}
 .cl-note.warn{color:var(--gold-lt);}
 .cl-sec{margin-bottom:18px;}
-.cl-sec h2{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--blue-lt);font-weight:900;margin:0 2px 8px;}
+.cl-sec h2{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--dm);font-weight:900;margin:0 2px 8px;}
 .cl-sec h2 span{color:var(--dm);font-weight:700;letter-spacing:0;text-transform:none;font-size:13px;}
-.cl-sec.cur h2{color:var(--gold-lt);}
+.cl-sec.cur h2{color:var(--iv-sec,var(--gold-lt));}
+.cl-sec.cur .cl-row:not(.done):first-of-type{border-color:var(--iv-sec,var(--db2));}
 .cl-row{display:flex;align-items:flex-start;gap:14px;width:100%;min-height:64px;padding:14px;margin-bottom:8px;text-align:left;border-radius:var(--r-lg);cursor:pointer;color:var(--dt);
   background:var(--ds);border:var(--hairline);max-height:200px;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .cl-row:active{transform:scale(.99);}
-.cl-box{width:30px;height:30px;flex:none;border-radius:9px;border:2.5px solid var(--db2);display:grid;place-items:center;margin-top:1px;transition:all var(--t) var(--ease-spring);}
+.cl-box{width:30px;height:30px;flex:none;border-radius:9px;border:2.5px solid var(--iv-sec,var(--db2));display:grid;place-items:center;margin-top:1px;transition:all var(--t) var(--ease-spring);}
 .cl-rt{min-width:0;flex:1;}
 .cl-rt .t{font-size:16.5px;font-weight:800;line-height:1.3;}
 .cl-rt .d{font-size:14px;line-height:1.5;color:var(--dm);margin-top:4px;font-weight:600;}
@@ -1211,7 +1212,22 @@ span.chip.blank{cursor:default;}
 @keyframes clRowOut{to{opacity:0;transform:translateX(44px);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:0;min-height:0;border-width:0}}
 @keyframes clPop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
 @keyframes clDraw{to{stroke-dashoffset:0}}
-@media(hover:hover){.cl-row:hover{border-color:var(--blue-lt);}.cl-card:hover{border-color:var(--blue-lt);}}
+@media(hover:hover){.cl-row:hover{border-color:var(--iv-sec,var(--blue-lt));}.cl-card:hover{box-shadow:var(--sh-2),inset 0 4px 0 var(--iv-sec,transparent),0 0 0 3px var(--iv-secs,transparent);}}
+.cl-key{display:none;}
+/* Laptop and desktop: the full list stays on the left, the one-at-a-time card on the right. */
+@media(min-width:1000px) and (hover:hover){
+  .cl-wrap.wide{max-width:1120px;}
+  .cl-grid{display:grid;grid-template-columns:minmax(340px,5fr) 6fr;gap:28px;align-items:start;}
+  .cl-side{max-height:calc(100vh - 230px);overflow-y:auto;padding-right:6px;position:sticky;top:96px;}
+  .cl-main .cl-card{min-height:380px;padding:30px 30px 22px;}
+  .cl-main .cl-title{font-size:34px;}
+  .cl-main .cl-detail{font-size:19px;}
+  .cl-wrap.wide .cl-top{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+  .cl-wrap.wide .cl-top .cl-seg{min-width:340px;}
+  .cl-key{display:block;margin-top:12px;font-size:12.5px;color:var(--dm);text-align:center;}
+  .cl-key kbd{font:inherit;font-weight:900;padding:2px 7px;border-radius:6px;border:var(--hairline);background:rgba(75,163,220,.08);}
+  .cl-wrap.wide .cl-row{min-height:56px;padding:11px 14px;}
+}
 @media(prefers-reduced-motion:reduce){
   .cl-card.in-r,.cl-card.in-l,.cl-card.clearing,.cl-row.ticking,.cl-bigring{animation:none!important;}
   .cl-card.clearing{opacity:0;}.cl-row.ticking{display:none;}
@@ -2882,7 +2898,7 @@ async function boot(){
   /* Arriving from the team switcher: land on the page you were on. */
   try{
     const want=new URLSearchParams(location.search).get('p');
-    if(want&&IS_EDIT&&['calendar','roster','attendance','reports','members','announce'].indexOf(want)>=0){
+    if(want&&IS_EDIT&&['calendar','checklist','roster','attendance','reports','members','announce'].indexOf(want)>=0){
       curPage=want; document.querySelectorAll('.page').forEach(pg=>pg.classList.toggle('active',pg.id==='page-'+want));
       document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===want));
     }
@@ -5411,6 +5427,7 @@ const CL_ITEMS=[
 ];
 const CL={day:null,dayType:'regular',done:[],deferred:[],hist:[],mode:'focus',armed:false,animating:false,
   loaded:false,loading:false,dbOk:true,hasRow:false,by:'',at:null,pending:0,enter:'',_armT:null,_chain:Promise.resolve()};
+const clWide=()=>window.matchMedia&&matchMedia('(min-width:1000px) and (hover:hover)').matches;
 const clReduced=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clLocalKey=()=>'ivhub_cl_'+TEAM_LC+'_'+CL.day;
 function clDefaultDayType(){
@@ -5492,7 +5509,7 @@ function clMode(m){ if(CL.mode===m||CL.animating) return; CL.mode=m; CL.armed=fa
 function clArmUI(on){
   const c=document.getElementById('clCard'); if(!c) return;
   c.classList.toggle('armed',on);
-  const t=document.getElementById('clCta'); if(t) t.textContent=on?'Tap again to clear':'Tap twice to clear';
+  const t=document.getElementById('clCta'); if(t) t.textContent=on?(clWide()?'Click again to clear':'Tap again to clear'):(clWide()?'Click twice to clear':'Tap twice to clear');
   if(on) clBuzz();
 }
 function clTap(){
@@ -5541,55 +5558,73 @@ function clTags(i){
   if(i.reg) h+='<span class="cl-tag reg">Regular day only</span>';
   return h?'<div class="cl-tags">'+h+'</div>':'';
 }
+function clFocusHTML(q,cur,nDone,total,wide){
+  let h='';
+  if(!cur){
+    return '<div class="cl-done"><div class="cl-bigring"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2>All clear</h2><p>Every task is done for tonight.</p>'+
+      '<div class="cl-acts"><button class="cl-b" type="button" onclick="clBack()"'+(CL.hist.length?'':' disabled')+'>Undo last</button>'+
+      (wide?'':'<button class="cl-b" type="button" onclick="clMode(\'list\')">Review list</button>')+'</div></div>';
+  }
+  const st=CL_STAGES.find(s=>s.id===cur.st);
+  h+='<div class="cl-stage"><b>'+esc(st.name)+'</b><span>Task '+(nDone+1)+' of '+total+'</span></div>';
+  h+='<div class="cl-stack"><button type="button" id="clCard" class="cl-card'+(CL.enter?' in-'+CL.enter:'')+'" onclick="clTap()" aria-label="'+esc(cur.title)+'. Press twice to mark done.">'+clTags(cur)+
+    '<div class="cl-title">'+esc(cur.title)+'</div><div class="cl-detail">'+esc(cur.detail||'')+'</div>'+
+    '<div class="cl-cta"><span class="cl-ring">'+CL_CHECK+'</span><span id="clCta">'+(wide?'Click twice to clear':'Tap twice to clear')+'</span></div></button></div>';
+  h+='<div class="cl-acts"><button class="cl-b" type="button" onclick="clBack()"'+(CL.hist.length?'':' disabled')+'>← Back</button>'+
+    '<button class="cl-b" type="button" onclick="clSkip()"'+(q.length>1?'':' disabled')+'>Skip for now →</button>'+
+    (cur.cond?'<button class="cl-b wide" type="button" onclick="clNA()">Not needed today</button>':'')+'</div>';
+  if(wide) h+='<div class="cl-key"><kbd>Enter</kbd> twice to clear · <kbd>←</kbd> back · <kbd>→</kbd> skip</div>';
+  return h;
+}
+function clListHTML(vis,cur){
+  let h='';
+  for(const s of CL_STAGES){
+    const its=vis.filter(i=>i.st===s.id); if(!its.length) continue;
+    const un=its.filter(i=>!clIsDone(i.key)), dn=its.filter(i=>clIsDone(i.key));
+    h+='<section class="cl-sec'+(cur&&cur.st===s.id?' cur':'')+'"><h2>'+esc(s.name)+'<span>'+dn.length+'/'+its.length+'</span></h2>';
+    for(const i of un.concat(dn)){
+      const d1=clIsDone(i.key);
+      h+='<button type="button" class="cl-row'+(d1?' done':'')+'" data-k="'+i.key+'" role="checkbox" aria-checked="'+d1+'" onclick="clToggle(\''+i.key+'\')">'+
+        '<span class="cl-box">'+CL_CHECK+'</span><span class="cl-rt"><div class="t">'+esc(i.title)+'</div>'+(i.detail?'<div class="d">'+esc(i.detail)+'</div>':'')+clTags(i)+'</span></button>';
+    }
+    h+='</section>';
+  }
+  return h;
+}
 function clRender(){
   const el=document.getElementById('body-checklist'); if(!el) return;
+  const wide=clWide();
   const vis=clVisible(), total=vis.length, nDone=vis.filter(i=>clIsDone(i.key)).length;
   const q=clQueue(), cur=q[0]||null;
   const dateTxt=new Date(CL.day+'T12:00:00').toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'short'});
-  let h='<div class="cl-wrap"><div class="cl-top"><div class="cl-date"><h1>Checklist</h1><span>'+esc(TEAM_NAME)+' · '+esc(dateTxt)+'</span></div>';
+  let h='<div class="cl-wrap'+(wide?' wide':'')+'"><div class="cl-top"><div class="cl-date"><h1>Checklist</h1><span>'+esc(TEAM_NAME)+' · '+esc(dateTxt)+' · '+nDone+'/'+total+' done</span></div>';
   h+='<div class="cl-seg" role="group" aria-label="Type of night">'+
     '<button type="button" aria-pressed="'+(CL.dayType==='regular')+'" onclick="clDayType(\'regular\')">Regular night</button>'+
     '<button type="button" aria-pressed="'+(CL.dayType==='majalis')+'" onclick="clDayType(\'majalis\')">Majalis</button></div>';
-  h+='<div class="cl-seg" role="group" aria-label="View">'+
+  if(!wide) h+='<div class="cl-seg" role="group" aria-label="View">'+
     '<button type="button" aria-pressed="'+(CL.mode==='focus')+'" onclick="clMode(\'focus\')">One at a time</button>'+
-    '<button type="button" aria-pressed="'+(CL.mode==='list')+'" onclick="clMode(\'list\')">Full list ('+nDone+'/'+total+')</button></div></div>';
+    '<button type="button" aria-pressed="'+(CL.mode==='list')+'" onclick="clMode(\'list\')">Full list ('+nDone+'/'+total+')</button></div>';
+  h+='</div>';
   h+='<div class="cl-rail" aria-hidden="true">'+CL_STAGES.map(s=>{
     const its=vis.filter(i=>i.st===s.id), d=its.filter(i=>clIsDone(i.key)).length;
     return '<i class="'+(cur&&cur.st===s.id?'cur':'')+'" style="--f:'+(its.length?d/its.length:1)+'"></i>';
   }).join('')+'</div>';
-  if(CL.mode==='focus'){
-    if(!cur){
-      h+='<div class="cl-done"><div class="cl-bigring"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2>All clear</h2><p>Every task is done for tonight.</p>'+
-        '<div class="cl-acts"><button class="cl-b" type="button" onclick="clBack()"'+(CL.hist.length?'':' disabled')+'>Undo last</button><button class="cl-b" type="button" onclick="clMode(\'list\')">Review list</button></div></div>';
-    }else{
-      const st=CL_STAGES.find(s=>s.id===cur.st), idx=nDone+1;
-      h+='<div class="cl-stage"><b>'+esc(st.name)+'</b><span>Task '+idx+' of '+total+'</span></div>';
-      h+='<div class="cl-stack"><button type="button" id="clCard" class="cl-card'+(CL.enter?' in-'+CL.enter:'')+'" onclick="clTap()" aria-label="'+esc(cur.title)+'. Press twice to mark done.">'+clTags(cur)+
-        '<div class="cl-title">'+esc(cur.title)+'</div>'+(cur.detail?'<div class="cl-detail">'+esc(cur.detail)+'</div>':'<div class="cl-detail"></div>')+
-        '<div class="cl-cta"><span class="cl-ring">'+CL_CHECK+'</span><span id="clCta">Tap twice to clear</span></div></button></div>';
-      h+='<div class="cl-acts"><button class="cl-b" type="button" onclick="clBack()"'+(CL.hist.length?'':' disabled')+'>← Back</button>'+
-        '<button class="cl-b" type="button" onclick="clSkip()"'+(q.length>1?'':' disabled')+'>Skip for now →</button>'+
-        (cur.cond?'<button class="cl-b wide" type="button" onclick="clNA()">Not needed today</button>':'')+'</div>';
-    }
-  }else{
-    for(const s of CL_STAGES){
-      const its=vis.filter(i=>i.st===s.id); if(!its.length) continue;
-      const un=its.filter(i=>!clIsDone(i.key)), dn=its.filter(i=>clIsDone(i.key));
-      h+='<section class="cl-sec'+(cur&&cur.st===s.id?' cur':'')+'"><h2>'+esc(s.name)+'<span>'+dn.length+'/'+its.length+'</span></h2>';
-      for(const i of un.concat(dn)){
-        const dn1=clIsDone(i.key);
-        h+='<button type="button" class="cl-row'+(dn1?' done':'')+'" data-k="'+i.key+'" role="checkbox" aria-checked="'+dn1+'" onclick="clToggle(\''+i.key+'\')">'+
-          '<span class="cl-box">'+CL_CHECK+'</span><span class="cl-rt"><div class="t">'+esc(i.title)+'</div>'+(i.detail?'<div class="d">'+esc(i.detail)+'</div>':'')+clTags(i)+'</span></button>';
-      }
-      h+='</section>';
-    }
-    if(!q.length) h+='<div class="cl-note">All clear for tonight.</div>';
-  }
-  if(!CL.dbOk) h+='<div class="cl-note warn">Ticks are saved on this phone only, so the other Team Lead cannot see them. The owner needs to run docs/checklist.sql in Supabase.</div>';
+  if(wide) h+='<div class="cl-grid"><div class="cl-side">'+clListHTML(vis,cur)+'</div><div class="cl-main">'+clFocusHTML(q,cur,nDone,total,true)+'</div></div>';
+  else if(CL.mode==='focus') h+=clFocusHTML(q,cur,nDone,total,false);
+  else{ h+=clListHTML(vis,cur); if(!q.length) h+='<div class="cl-note">All clear for tonight.</div>'; }
+  if(!CL.dbOk) h+='<div class="cl-note warn">Ticks are saved on this device only, so the other Team Lead cannot see them. The owner needs to run docs/checklist.sql in Supabase.</div>';
   else if(CL.by&&CL.at) h+='<div class="cl-note">Last change by '+esc(CL.by)+' at '+esc(new Date(CL.at).toLocaleTimeString('en-NZ',{hour:'numeric',minute:'2-digit',timeZone:'Pacific/Auckland'}))+'</div>';
   h+='</div>';
   CL.enter=''; el.innerHTML=h;
 }
+/* Laptop keys: arrows go back and skip. Enter on the card is its two-press clear. */
+document.addEventListener('keydown',e=>{
+  if(curPage!=='checklist'||CL.animating||e.metaKey||e.ctrlKey||e.altKey) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test((e.target&&e.target.tagName)||'')) return;
+  if(e.key==='ArrowLeft'){ e.preventDefault(); clBack(); }
+  else if(e.key==='ArrowRight'){ e.preventDefault(); clSkip(); }
+});
+if(window.matchMedia) matchMedia('(min-width:1000px) and (hover:hover)').addEventListener('change',()=>{ if(curPage==='checklist'&&CL.loaded&&!CL.animating) clRender(); });
 /* The other Team Lead's phone. Its own channel, so a database without the
    table cannot take the roster's live updates down with it. */
 function subscribeCL(){
