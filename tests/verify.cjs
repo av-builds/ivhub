@@ -300,7 +300,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     for(const role of roles){
       CU={user:'x',display:'X',perms:role==='nobody'?[]:[role],uid:'u'}; COVER_TEAMS.clear(); applyNavVisibility(); await new Promise(r=>setTimeout(r,220));
       const groups={}; document.querySelectorAll('#topnav .tn-group').forEach(g=>{ const n=g.querySelector('.tn-b').textContent.replace('▾','').trim(); groups[n]=[...g.querySelectorAll('.tn-menu .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/^[AB] (?=Team)/,'').replace(/\s*⚠\s*Soon/i,'').replace(/\s+/g,' ').trim()); });
-      const direct=[...document.querySelectorAll('#topnav .tn-row > .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/\s+/g,' ').replace(/\s*⚠\s*Soon/i,'').trim()).filter(x=>!/^(Dashboard|My Duties)$/.test(x));
+      const direct=[...document.querySelectorAll('#topnav .tn-row > .tn-b')].map(b=>b.innerText.replace(/^[^A-Za-z]+/,'').replace(/\s+/g,' ').replace(/\s*⚠\s*Soon/i,'').trim()).filter(x=>!/^(Dashboard|My Duties|My Profile)$/.test(x));
       o[role]={groups,direct};
     } return o; }, Object.keys(MENU));
   for(const role of Object.keys(MENU)){
@@ -529,6 +529,30 @@ for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.htm
   chk(r.auto==='laptop','duties  a desktop browser defaults to the laptop shape',r.auto);
   chk(r.clearedBtn,'duties  no button when nothing is found');
   chk(p.errs.length===0,'duties  no page errors'); await p.context().close(); }
+
+// ── My Profile: own name and contact details ──
+{ const p=await open('index.html',{width:1100,height:900});
+  const r=await p.evaluate(async()=>{ const o={}; const calls=[];
+    CU={user:'x',display:'Aly K',email:'a@x.com',role:'tl_a',perms:['tl_a'],uid:'u1'};
+    sb={rpc:async(n,a)=>{ calls.push([n,a]);
+      if(n==='my_member_view') return {data:{linked:true,member:{id:1,name:'Aly K',phone:'021 111',email:'m@x.com',dob:'2000-01-02',gender:'Male',away:[]}},error:null};
+      if(n==='set_my_display') return {data:a.p_display,error:null};
+      return {data:{},error:null}; }};
+    o.item=!!document.querySelector('.nav-item[data-page="profile"]'); o.allowed=PAGES.profile();
+    nav('profile'); await new Promise(r=>setTimeout(r,200));
+    o.active=document.getElementById('page-profile').classList.contains('active');
+    o.filled=document.getElementById('pfPhone').value==='021 111'&&document.getElementById('pfDisplay').value==='Aly K';
+    o.locked=/Team A Lead/.test(document.getElementById('pfLocked').innerText);
+    o.noRoleInput=!document.querySelector('#page-profile select option[value="director"]');
+    document.getElementById('pfDisplay').value='Aly Kotadia'; document.getElementById('pfSaveName').click(); await new Promise(r=>setTimeout(r,100));
+    o.renamed=document.getElementById('tbName').textContent==='Aly Kotadia';
+    document.getElementById('pfPhone').value='021 222'; document.getElementById('pfSaveDetails').click(); await new Promise(r=>setTimeout(r,100));
+    const d=calls.find(c=>c[0]==='set_my_details'); o.det=d&&d[1].p_phone==='021 222'&&d[1].p_gender==='Male';
+    return o; });
+  chk(r.item&&r.allowed&&r.active,'profile  a My Profile page is open to everyone',JSON.stringify(r));
+  chk(r.filled&&r.locked&&r.noRoleInput,'profile  shows own details, and the role is read-only',JSON.stringify(r));
+  chk(r.renamed&&r.det,'profile  saving calls the name and details functions',JSON.stringify(r));
+  chk(p.errs.length===0,'profile  no page errors'); await p.context().close(); }
 
 // ── Admin Logins revamp ──
 { const p=await open('index.html',{width:1300,height:900});

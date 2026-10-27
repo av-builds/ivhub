@@ -940,6 +940,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <nav class="sb-nav">
       <div class="nav-item active" data-page="dashboard"><span class="ni">⊞</span> Dashboard</div>
       <div class="nav-item" data-page="myduties"><span class="ni">🗓️</span> My Duties</div>
+      <div class="nav-item" data-page="profile"><span class="ni">👤</span> My Profile</div>
 
       <div class="nav-sec" id="secPHMU">PHMU</div>
       <a class="nav-item" id="navTeamA" href="teama.html"><span class="ni">A</span> Team A</a>
@@ -1044,6 +1045,36 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <section class="panel" id="myTeamPanel" style="display:none;animation-delay:.08s;">
         <div><h2 style="margin:0;">My Team</h2><div class="sub" style="margin-top:2px;">How you are doing, and who to speak to.</div></div>
         <div id="myTeamBody" class="sg" style="margin:12px 0 0;"></div>
+      </section>
+    </div>
+
+    <!-- ═══ PAGE: MY PROFILE ═══ -->
+    <div class="page" id="page-profile">
+      <div class="ph">
+        <div><h1>My Profile</h1><p>Your own details. Roles and rank are set by the people above you and cannot be edited here.</p></div>
+      </div>
+      <section class="panel">
+        <h2 style="margin:0 0 4px;">Account</h2>
+        <div class="sub" style="margin-bottom:12px;">The name shown next to your actions across the Hub. Changes are recorded in the audit log.</div>
+        <div class="fg"><label for="pfDisplay">Display name</label><input id="pfDisplay" maxlength="60" autocomplete="name"></div>
+        <div id="pfLocked" class="sub" style="margin:12px 0;"></div>
+        <button class="btn btn-bl" id="pfSaveName">Save name</button>
+      </section>
+      <section class="panel">
+        <h2 style="margin:0 0 4px;">Contact details</h2>
+        <div class="sub" id="pfLinkNote" style="margin-bottom:12px;">Used by your Team Lead for rostering. Only you and the leaders who manage your roster can see these.</div>
+        <div id="pfForm">
+          <div class="fg"><label for="pfPhone">Phone</label><input id="pfPhone" type="tel" maxlength="20" autocomplete="tel"></div>
+          <div class="fg"><label for="pfEmail">Email</label><input id="pfEmail" type="email" maxlength="120" autocomplete="email"></div>
+          <div class="fg"><label for="pfDob">Date of birth</label><input id="pfDob" type="date"></div>
+          <div class="fg"><label for="pfGender">Gender</label><select id="pfGender"><option value="">Not set</option><option>Male</option><option>Female</option></select></div>
+          <button class="btn btn-bl" id="pfSaveDetails">Save details</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2 style="margin:0 0 4px;">Availability</h2>
+        <div class="sub" id="pfAway" style="margin-bottom:12px;"></div>
+        <button class="btn btn-bl" id="pfAwayBtn">Manage away dates</button>
       </section>
     </div>
 
@@ -2268,6 +2299,7 @@ function roleLabel(cu){
 const PAGES = {
   dashboard: ()=>true,
   myduties:  ()=>true,   // everyone can see their own duties
+  profile:   ()=>true,   // and edit their own details
   members:   ()=>USERS_ADMIN(),
   logins:    ()=>USERS_ADMIN(),
   stats:     ()=>STATS_VIEW(),
@@ -2296,6 +2328,7 @@ function nav(id){
   else if(id === 'linking') loadLinkingPage();
   else if(id === 'dashboard') loadDashStats();
   else if(id === 'myduties') openMyDuties();
+  else if(id === 'profile') loadProfile();
   else if(id === 'submit') loadSubmitPage();
   else if(id === 'approve') loadApprovePage();
   if(LOGGED_SECTIONS[id]) logView(LOGGED_SECTIONS[id]);
@@ -4336,6 +4369,60 @@ let MY_AWAY = [];
    is not a link and grants nothing: set_my_away still writes only
    through profiles.member_id, so an address can never change anything. */
 let MY_LINKED = false;
+
+/* ═══ MY PROFILE: a person's own display name and contact details ═══ */
+async function loadProfile(){
+  $('pfDisplay').value = CU.display || '';
+  $('pfLocked').innerHTML = 'Role: <b>' + esc(roleLabel(CU)) + '</b>. Sign-in email: <b>' + esc(CU.email || 'not set') + '</b>.';
+  let view = null;
+  if(sb && CU.uid){ try{ const r = await sb.rpc('my_member_view'); view = r.error ? null : r.data; }catch(e){} }
+  const m = view && view.member && view.linked ? view.member : null;
+  MY_MEMBER = view && view.member ? view.member : MY_MEMBER;
+  $('pfForm').style.display = m ? '' : 'none';
+  $('pfLinkNote').textContent = m
+    ? 'Used by your Team Lead for rostering. Only you and the leaders who manage your roster can see these.'
+    : 'Your account is not linked to a member yet, so there are no contact details to edit. Ask your Team Lead to link you.';
+  if(m){
+    $('pfPhone').value = m.phone || ''; $('pfEmail').value = m.email || '';
+    $('pfDob').value = m.dob || ''; $('pfGender').value = m.gender || '';
+  }
+  const away = m && Array.isArray(m.away) ? m.away.filter(d=>d >= new Date().toISOString().slice(0,10)) : [];
+  $('pfAway').textContent = !m ? 'Away dates need your account to be linked to a member.'
+    : away.length ? away.length + ' upcoming away ' + (away.length === 1 ? 'date' : 'dates') + ': ' + away.slice(0,4).join(', ') + (away.length > 4 ? ' and more' : '')
+    : 'No away dates set. The roster can pick you for any day.';
+  $('pfAwayBtn').style.display = m ? '' : 'none';
+}
+async function saveProfileName(){
+  const v = $('pfDisplay').value.trim(), btn = $('pfSaveName');
+  if(v.length < 2){ toast('A name needs at least 2 characters.', 'err'); return; }
+  btn.disabled = true;
+  try{
+    const {data, error} = await sb.rpc('set_my_display', {p_display: v});
+    if(error) throw error;
+    CU.display = data || v;
+    try{ const sess = JSON.parse(localStorage.getItem('ivhub_session')||'{}'); sess.display = CU.display; localStorage.setItem('ivhub_session', JSON.stringify(sess)); }catch(e){}
+    $('tbName').textContent = CU.display; $('heroName').textContent = CU.display; $('uav').textContent = (CU.display.trim()[0] || '·').toUpperCase();
+    toast('Name updated.');
+  }catch(e){ toast(e.message || 'Could not save your name.', 'err'); }
+  btn.disabled = false;
+}
+async function saveProfileDetails(){
+  const btn = $('pfSaveDetails'); btn.disabled = true;
+  try{
+    const {error} = await sb.rpc('set_my_details', {
+      p_phone: $('pfPhone').value, p_email: $('pfEmail').value,
+      p_dob: $('pfDob').value || null, p_gender: $('pfGender').value
+    });
+    if(error) throw error;
+    toast('Details saved.');
+    loadProfile();
+  }catch(e){ toast(e.message || 'Could not save your details.', 'err'); }
+  btn.disabled = false;
+}
+$('pfSaveName').addEventListener('click', saveProfileName);
+$('pfSaveDetails').addEventListener('click', saveProfileDetails);
+$('pfAwayBtn').addEventListener('click', ()=>{ nav('dashboard'); setTimeout(()=>{ const a=$('awayPanel'); if(a) a.scrollIntoView({behavior:'smooth', block:'start'}); }, 150); });
+
 async function loadAway(){
   const panel = $('awayPanel');
   if(!sb || !CU.uid){ panel.style.display = 'none'; return; }
