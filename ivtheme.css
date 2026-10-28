@@ -127,6 +127,14 @@ html[data-theme="light"] .tn-out{color:#B3261E;border-color:rgba(179,38,30,.4);}
   html[data-theme="light"] body.tp .tn-out{color:#B3261E;border-color:rgba(179,38,30,.4);}
   body.tp .tn-tog{color:var(--dm);}
   body.tp .tn-tog:hover{background:var(--iv-acs);color:var(--dt);}
+  /* The Hub's dropdown categories are blocks too: the wrapper takes the overlap, and Management keeps its permanent tint. */
+  body.tp .tn-row>.tn-group{align-self:stretch;display:flex;margin-left:-12px;}
+  body.tp .tn-row>.tn-group:has(>.tn-blk-first){margin-left:0;}
+  body.tp .tn-group>.tn-b.tn-blk{margin-left:0;}
+  body.tp .tn-b.tn-blk.tn-mgmt{background:color-mix(in srgb,var(--iv-ac) 26%,transparent);color:var(--dt);}
+  body.tp .tn-b.tn-blk .tn-t{display:inline-flex;align-items:center;gap:3px;}
+  /* "Under construction" marker, drawn by CSS so it is not part of the label text */
+  body.tp .tn-b.tn-blk.tn-wip::after{content:"!";position:absolute;top:9px;right:14px;min-width:18px;height:18px;border-radius:9px;background:#F87171;color:#2A0C06;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
   /* scrolled: the shapes fade, the labels and icons stay */
   body.tp.tn-scrolled .topnav{background:color-mix(in srgb,var(--dp) 45%,transparent);border-bottom-color:transparent;}
   body.tp.tn-scrolled .tn-b.tn-blk{background:transparent;}
@@ -137,6 +145,17 @@ html[data-theme="light"] .tn-out{color:#B3261E;border-color:rgba(179,38,30,.4);}
   body.tp .topnav{padding:0 14px 0 18px;}
   body.tp .tn-b.tn-blk{min-width:0;padding:0 18px;}
   body.tp .tn-who{display:none;}
+}
+/* The Hub has up to eight blocks, so it packs them tighter on laptops than a team page does. */
+@media(min-width:1101px) and (max-width:1600px){
+  body.tp-hub .tn-b.tn-blk{min-width:0;padding:0 18px;font-size:12px;gap:5px;}
+  body.tp-hub .tn-b.tn-blk-first{padding-left:18px;}body.tp-hub .tn-b.tn-blk-last{padding-right:18px;}
+  body.tp-hub .topnav{padding:0 16px 0 22px;}
+}
+@media(min-width:1101px) and (max-width:1320px){
+  body.tp-hub .tn-b.tn-blk{padding:0 13px;font-size:11.5px;}
+  body.tp-hub .tn-b.tn-blk svg{width:20px;height:20px;}
+  body.tp-hub .tn-brand{margin-right:8px;}
 }
 @media(prefers-reduced-motion:reduce){body.tp .tn-b.tn-blk,body.tp .topnav{transition:none;}}
 

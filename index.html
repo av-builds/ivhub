@@ -777,10 +777,10 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261021m">
-<script src="ivtheme.js?v=20261021m"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261028b">
+<script src="ivtheme.js?v=20261028b"></script>
 </head>
-<body>
+<body class="tp tp-hub">
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
      The same block sits at the top of index.html, teama.html (and so
      teamb.html) and av.html; change it in all of them together.
@@ -5395,7 +5395,55 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   function vis(el){ return !!el && !el.hidden && getComputedStyle(el).display!=='none'; }
   function mk(tag,cls,html){ var e=document.createElement(tag); e.className=cls; if(html!=null) e.innerHTML=html; return e; }
 
-  function entry(src){
+  /* Same look as the team pages: each top-level entry is a slanted block, a
+     line icon over its label. Only the bar is drawn this way; the sidebar
+     (phones) keeps its emoji, and the dropdown menus keep plain rows. */
+  function ic(d){ return '<svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; }
+  var TP_ICONS={
+    dashboard:ic('<rect x="3" y="3" width="6" height="6" rx="1.2"/><rect x="11" y="3" width="6" height="6" rx="1.2"/><rect x="3" y="11" width="6" height="6" rx="1.2"/><rect x="11" y="11" width="6" height="6" rx="1.2"/>'),
+    duties:ic('<rect x="3" y="4.5" width="14" height="12.5" rx="2"/><path d="M3 8.5h14M7 3v3M13 3v3M7.6 12.4l1.7 1.7 3.2-3.4"/>'),
+    profile:ic('<circle cx="10" cy="7" r="3"/><path d="M4 16.5c.5-3 2.7-4.5 6-4.5s5.5 1.5 6 4.5"/>'),
+    people:ic('<circle cx="7.5" cy="7" r="2.7"/><path d="M2.5 16c.4-2.8 2.5-4.2 5-4.2s4.6 1.4 5 4.2M13 4.6a2.5 2.5 0 010 4.8M14.5 12c1.8.4 3 1.6 3.3 4"/>'),
+    tools:ic('<path d="M12.5 4.2a3.4 3.4 0 00-3.3 4.4L3.8 14a1.6 1.6 0 002.2 2.2l5.4-5.4a3.4 3.4 0 004.4-3.3l-2.1 2.1-2-.5-.5-2 2.1-2.1z"/>'),
+    gear:ic('<circle cx="10" cy="10" r="2.6"/><path d="M10 2.8v2M10 15.2v2M2.8 10h2M15.2 10h2M5 5l1.4 1.4M13.6 13.6L15 15M15 5l-1.4 1.4M6.4 13.6L5 15"/>'),
+    cap:ic('<path d="M2.5 8L10 4.5 17.5 8 10 11.5 2.5 8zM5.5 9.8v3.2c0 1 2 2.2 4.5 2.2s4.5-1.2 4.5-2.2V9.8"/>'),
+    shield:ic('<path d="M10 3l6 2.2v4.3c0 3.6-2.5 6.1-6 7.5-3.5-1.4-6-3.9-6-7.5V5.2L10 3z"/><path d="M7.4 10l1.9 1.9 3.3-3.6"/>'),
+    dot:ic('<circle cx="10" cy="10" r="6.5"/>')
+  };
+  function iconFor(src,label){
+    var pg=src&&src.getAttribute&&src.getAttribute('data-page');
+    if(pg==='dashboard') return TP_ICONS.dashboard;
+    if(pg==='myduties') return TP_ICONS.duties;
+    if(pg==='profile') return TP_ICONS.profile;
+    if(/phmu/i.test(label)) return TP_ICONS.people;
+    if(/ancillary/i.test(label)) return TP_ICONS.tools;
+    if(/management/i.test(label)) return TP_ICONS.gear;
+    if(/training/i.test(label)) return TP_ICONS.cap;
+    if(/safety/i.test(label)) return TP_ICONS.shield;
+    return TP_ICONS.dot;
+  }
+  function labelOf(src){
+    var c=src.cloneNode(true), x=c.querySelectorAll('.ni,.ntag,.nbadge');
+    for(var i=0;i<x.length;i++) x[i].parentNode.removeChild(x[i]);
+    return c.textContent.replace(/\s+/g,' ').trim();
+  }
+  function block(src,label,caret){
+    var warn=src&&src.querySelector&&src.querySelector('.ntag');
+    var b=mk('button','tn-b tn-blk'+(warn?' tn-wip':''),iconFor(src,label)+'<span class="tn-t">'+esc(label)+(caret?'<span class="tn-caret">\u25be</span>':'')+'</span>');
+    if(warn) b.title='Under construction';
+    return b;
+  }
+  function entry(src,top){
+    if(top&&!src.classList.contains('hub-link')){
+      var blk=block(src,labelOf(src));
+      if(src.classList.contains('active')) blk.classList.add('on');
+      blk.addEventListener('click',function(ev){
+        ev.stopPropagation(); closeAll();
+        if(src.tagName==='A'&&src.getAttribute('href')) (window.ivGo||function(u){location.href=u;})(src.getAttribute('href'));
+        else src.click();
+      });
+      return blk;
+    }
     var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':'')+(src.classList.contains('nav-sub')?' tn-sub':''),src.innerHTML);
     if(src.classList.contains('active')) b.classList.add('on');
     b.addEventListener('click',function(ev){
@@ -5435,8 +5483,8 @@ window.addEventListener('DOMContentLoaded', async ()=>{
         if(!vis(el)) continue;
         group=mk('div','tn-group');
         var secName=el.textContent.trim();
-        groupBtn=mk('button','tn-b'+(/^management$/i.test(secName)?' tn-mgmt':''),
-                    secName+'<span class="tn-caret">▾</span>');
+        groupBtn=block(el,secName,true);
+        if(/^management$/i.test(secName)) groupBtn.classList.add('tn-mgmt');
         groupMenu=mk('div','tn-menu');
         /* Opens on hover, and still on click for touch screens and
            keyboards, which have no hover at all. A short delay on leaving
@@ -5465,13 +5513,15 @@ window.addEventListener('DOMContentLoaded', async ()=>{
         if(!vis(el)) continue;
         // A standalone category (Training & Development, Safety & Security)
         // sits on the bar itself instead of inside the group before it.
-        if(el.classList.contains('nav-solo')){ flush(); row.appendChild(entry(el)); continue; }
+        if(el.classList.contains('nav-solo')){ flush(); row.appendChild(entry(el,true)); continue; }
         if(group){ groupMenu.appendChild(entry(el)); groupHas=true;
                    if(el.classList.contains('active')) groupBtn.classList.add('on'); }
-        else row.appendChild(entry(el));
+        else row.appendChild(entry(el,true));
       }
     }
     flush();
+    var blks=row.querySelectorAll('.tn-blk');
+    if(blks.length){ blks[0].classList.add('tn-blk-first'); blks[blks.length-1].classList.add('tn-blk-last'); }
     bar.innerHTML='';
     var brand=mk('div','tn-brand','');
     var logo=document.querySelector('.sb-logo-img, .sb-logo img, .sidebar img');
@@ -5545,6 +5595,14 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     var nav=document.querySelector('.sb-nav'); if(!nav) return;
     restore();
     build();
+    /* Past the top of the page the blocks fade out, leaving just the icons and labels (same as the team pages). */
+    var scrolled=false, sraf=0;
+    function onScroll(){
+      var y=window.pageYOffset||document.documentElement.scrollTop||0, n=scrolled?y>8:y>40;
+      if(n!==scrolled){ scrolled=n; document.body.classList.toggle('tn-scrolled',n); }
+    }
+    window.addEventListener('scroll',function(){ if(!sraf) sraf=requestAnimationFrame(function(){ sraf=0; onScroll(); }); },{passive:true});
+    onScroll();
     try{
       new MutationObserver(schedule).observe(nav.closest('.sidebar')||nav,
         {childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
