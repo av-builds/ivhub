@@ -1514,7 +1514,7 @@ function denyAccess(kind){
    nothing at all, while the Hub and the AV page both recorded it. */
 async function signOut(){
   try{ await auditLog('Signed out','login',(CU&&(CU.display||CU.user)||'Someone')+' signed out of '+TEAM_NAME); }catch(e){}
-  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  try{ if(sb) await sb.auth.signOut({scope:'local'}); }catch(e){}
   try{ localStorage.removeItem('ivhub_session'); }catch(e){}
   ivGo('index.html');
 }

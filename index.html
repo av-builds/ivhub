@@ -2143,10 +2143,10 @@ async function authBootstrap(){
     if(!sess || !sess.user) return false;
     AUTH_USER = sess.user;
     MY_PROFILE = await fetchMyProfile(sess.user.id);
-    if(!MY_PROFILE){ await sb.auth.signOut(); return false; }
+    if(!MY_PROFILE){ await sb.auth.signOut({scope:'local'}); return false; }
     const cu = sessionFromProfile(sess.user, MY_PROFILE);
     if(!cu.perms.length){
-      await sb.auth.signOut();
+      await sb.auth.signOut({scope:'local'});
       $('loginErr').textContent = 'Your account has no access yet - ask an Owner to grant permissions.';
       return false;
     }
@@ -2206,9 +2206,9 @@ async function authLogin(email, pw){
   const {data, error} = await sb.auth.signInWithPassword({ email: email, password: pw });
   if(error){ err.textContent = /confirm/i.test(error.message||'') ? 'Check your email and set your password first.' : 'Incorrect email or password.'; return false; }
   const prof = await fetchMyProfile(data.user.id);
-  if(!prof){ await sb.auth.signOut(); err.textContent = 'No profile for this account - run SETUP-AUTH.sql.'; return false; }
+  if(!prof){ await sb.auth.signOut({scope:'local'}); err.textContent = 'No profile for this account - run SETUP-AUTH.sql.'; return false; }
   const cu = sessionFromProfile(data.user, prof);
-  if(!cu.perms.length){ await sb.auth.signOut(); err.textContent = 'Your account has no access yet - ask an Owner to grant permissions.'; return false; }
+  if(!cu.perms.length){ await sb.auth.signOut({scope:'local'}); err.textContent = 'Your account has no access yet - ask an Owner to grant permissions.'; return false; }
   AUTH_USER = data.user; MY_PROFILE = prof;
   startSession(cu);
   return true;
@@ -2288,10 +2288,14 @@ async function doLogin(){
    the access token at send time, not at call time - so signOut() could clear
    it first and the insert would arrive as an anonymous request, which the
    log's insert policy rejects. Sign-outs went unrecorded whenever it lost
-   that race. Awaiting in order removes the race entirely. */
+   that race. Awaiting in order removes the race entirely.
+   scope:'local' everywhere: supabase-js defaults to 'global', which ends
+   every session the account has. Signing out in one tab then killed the
+   others mid-task - a half-filled invite came back "sign-in expired" with
+   a token that was still in date. */
 async function doLogout(){
   await auditLog('Signed out', 'login', (CU.display || CU.user || 'Someone') + ' signed out');
-  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  try{ if(sb) await sb.auth.signOut({scope:'local'}); }catch(e){}
   AUTH_USER = null; MY_PROFILE = null;
   localStorage.removeItem('ivhub_session');
   CU = { perms: [] };
