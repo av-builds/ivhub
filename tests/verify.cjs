@@ -119,7 +119,8 @@ const open=async(file,vp,touch)=>{
     const r12=JSON.stringify(ROSTERS[12]);
     pubs=[]; await runGenerate(k,false);
     o.pubs=pubs.join();
-    o.newDayUp=pubs.join()==='+13'&&EVENTS.find(e=>e.id===13).confirmed===true;
+    // Only this test's days: the seeded Friday two days out lands in the same cycle on some dates.
+    o.newDayUp=pubs.filter(x=>+x.slice(1)>=11).join()==='+13'&&EVENTS.find(e=>e.id===13).confirmed===true;
     o.hiddenStayHidden=!EVENTS.find(e=>e.id===11).confirmed&&!EVENTS.find(e=>e.id===14).confirmed;
     o.liveUntouched=JSON.stringify(ROSTERS[12])===r12;
     o.summary=!!q('.cv-sum .gp.receipt')&&/Cycle summary/.test(q('.cv-sum').textContent);
@@ -683,6 +684,32 @@ for(const [file,w] of [['teama.html',1440],['teamb.html',1101]]){
   chk(hv!=='rgba(0, 0, 0, 0)',file+' '+w+'px a hovered block shows its shape again',hv);
   chk(!top,file+' '+w+'px back at the top the blocks return');
   chk(p.errs.length===0,file+' '+w+'px bar no page errors'); await p.context().close(); }
+
+// ── Youth Congregation button adds and removes the MPH duties ──
+for(const file of ['teama.html','teamb.html']){
+  const p=await open(file,{width:1300,height:900});
+  await p.evaluate(`(${SEED})(['tl_a','tl_b'])`);
+  const r=await p.evaluate(async()=>{ const o={}; const writes=[];
+    const ok={data:[{}],error:null};
+    const chain=(t)=>{ const c=new Proxy(function(){},{get:(_,k)=>k==='then'?(res,rej)=>Promise.resolve(ok).then(res,rej):(...a)=>{ if(k==='update'||k==='upsert') writes.push([t,k,a[0]]); return c; },apply:()=>c}); return c; };
+    sb={from:t=>chain(t),rpc:async()=>ok,channel:()=>({on(){return this;},subscribe(){return this;}}),removeChannel(){}};
+    window.confirm=()=>true;
+    const mph=ev=>dutiesForEvent(ev).filter(d=>d.section==='mph').length;
+    const ev1=EVENTS[0], ev2=EVENTS[1];
+    o.onShows=mph(ev1); o.pbsNone=mph(ev2);
+    ev1.youth=false; o.offHides=mph(ev1); ev1.youth=true;
+    o.placedBefore=YOUTH_DUTIES.reduce((n,x)=>n+people(ROSTERS[1].assign[DUTY_INFO[x].key]).length,0);
+    selEventId=1; await toggleYouth();
+    o.afterOff=ev1.youth===false&&mph(ev1)===0;
+    o.cleared=YOUTH_DUTIES.every(x=>!ROSTERS[1].assign[DUTY_INFO[x].key]);
+    o.wroteFlag=writes.some(w=>w[0]==='iv_events'&&w[2]&&w[2].youth===false);
+    await toggleYouth(); o.afterOn=ev1.youth===true&&mph(ev1)===3;
+    o.wroteOn=writes.some(w=>w[0]==='iv_events'&&w[2]&&w[2].youth===true);
+    return o; });
+  chk(r.onShows===3&&r.pbsNone===0&&r.offHides===0,'youth    '+file+' MPH duties follow the Friday Youth flag',JSON.stringify(r));
+  chk(r.placedBefore>0&&r.afterOff&&r.cleared&&r.wroteFlag,'youth    '+file+' turning it off saves, removes the MPH duties and takes people off them',JSON.stringify(r));
+  chk(r.afterOn&&r.wroteOn,'youth    '+file+' turning it back on saves and brings the duties back',JSON.stringify(r));
+  chk(p.errs.length===0,'youth    '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Replacement picker lists everybody on the team ──
 for(const file of ['teama.html','teamb.html']){
