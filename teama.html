@@ -1761,13 +1761,19 @@ const DUTIES={
   eid:          ['Nandi Labelling','Number 1','Shoe Entrance','Prayer Hall Entrance','Seating & Discipline','Sukreet','Ghatpaat Closing','Safety Exit Door/Discipline','Nandi','Nandi Set-up','Nandi Centre','Nandi Trolley','Nandi Distribution','Nandi Line','Nandi Passing'],
   navroz:       ['Nandi Labelling','Number 1','Prayer Hall Entrance','Shoe Entrance','Seating & Discipline','Sukreet','Ghatpaat Closing','Safety Exit Door/Discipline','Nandi','Nandi Set-up','Nandi Centre','Nandi Trolley','Nandi Distribution','Water Station','Nandi Line','Nandi Passing'],
 };
-// REC (MPH) Congregation section - dates set in the AV file, rendered as its own table:
+// REC (MPH) Congregation section - switched per Friday by the Youth Congregation button, rendered as its own table:
 const YOUTH_DUTIES=['MPH Hall Entrance','Seating & Discipline (Youth)','Sukreet & Ghatpaat Closing (Youth)'];
-/* REC (MPH) Congregation dates - owned by the AV file (Add-ons → REC Congregation
-   Dates) and shared by both teams via app_settings.rec_dates. A date in this set
-   gets a REC section on the roster and its own table on the printed sheet. */
-let REC_DATES=new Set();
-function recApplies(ev){ return REC_DATES.has(ev.date); }
+/* The MPH duties follow the Friday's own Youth Congregation flag
+   (iv_events.youth), which is what the button on the roster changes. They
+   used to follow a separate date list kept on the AV page; nobody ever set
+   it, so the button saved but no roster ever gained or lost a duty.
+   A past Friday only shows the section if people were actually on it, so
+   history does not suddenly read as short. */
+function recApplies(ev){
+  if(!ev||ev.type!=='friday'||!ev.youth) return false;
+  if(String(ev.date||'')>=nzTodayISO()) return true;
+  const r=ROSTERS[ev.id]; return !!(r&&r.assign&&YOUTH_DUTIES.some(n=>people(r.assign[DUTY_INFO[n].key]).length));
+}
 function recName(n){ return String(n||'').replace(/\s*\(Youth\)\s*$/,''); }
 // Storage keys (kept compatible with previously saved iv_roster data) + minimum slots for UNASSIGNED chips.
 const DUTY_INFO={
@@ -2007,12 +2013,11 @@ const ANN_LIMIT=200;      // a feed, not an archive
 async function loadAll(){
   if(!sb) return;
   const q=async(fn)=>{ try{ return await fn(); }catch(e){ return {error:e}; } };
-  const [st,me,ev,an,rec]=await Promise.all([
+  const [st,me,ev,an]=await Promise.all([
     q(()=>sb.from('iv_settings').select('*').eq('key','chandraat_overrides')),
     q(()=>sb.from('iv_members').select('*').eq('team',PAGE_TEAM)),
     q(()=>sb.from('iv_events').select('*').eq('team',PAGE_TEAM).order('date')),
     q(()=>sb.from('announcements').select('*').eq('team',PAGE_TEAM).order('created_at',{ascending:false}).limit(ANN_LIMIT)),
-    q(()=>sb.from('app_settings').select('*').eq('key','rec_dates')),
   ]);
   if(st.error){ console.warn('iv_settings:',st.error.message||st.error); if(tableMissing(st.error))DB_MISSING=true; }
   else (st.data||[]).forEach(r=>{
@@ -2055,13 +2060,6 @@ async function loadAll(){
   else (ro.data||[]).forEach(r=>{ ROSTERS[r.event_id]=r.data||{assign:{},manual:{}}; });
   if(an.error){ console.warn('announcements:',an.error.message||an.error); if(tableMissing(an.error))DB_MISSING=true; ANNS=[]; }
   else ANNS=an.data||[];
-  REC_DATES=new Set();
-  if(rec&&!rec.error&&Array.isArray(rec.data)&&rec.data[0]&&rec.data[0].value){
-    try{ let v=rec.data[0].value; if(typeof v==='string') v=JSON.parse(v);
-      if(v&&!Array.isArray(v)&&Array.isArray(v.dates)) v=v.dates;
-      (Array.isArray(v)?v:[]).forEach(d=>{ d=String(d||'').trim(); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) REC_DATES.add(d); });
-    }catch(e){ console.warn('rec_dates parse:',e); }
-  } else if(rec&&rec.error){ console.warn('rec_dates:',rec.error.message||rec.error); }
   ATTEND={};
   if(at.error){ console.warn('iv_attendance:',at.error.message||at.error); }
   else (at.data||[]).forEach(r=>{ (ATTEND[r.event_id]=ATTEND[r.event_id]||{})[r.member_id]={status:r.status,marked_by:r.marked_by,marked_at:r.marked_at}; });
@@ -3968,14 +3966,19 @@ async function removeSlot(dutyKey,arrName,idx){
     loud ? 'err' : 'ok');
 }
 async function toggleYouth(){
-  const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
-  ev.youth=!ev.youth;
+  const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)||ev.type!=='friday') return;
+  const next=!ev.youth;
+  const r=ROSTERS[ev.id], keys=YOUTH_DUTIES.map(n=>DUTY_INFO[n].key);
+  const placed=r&&r.assign?keys.reduce((n,k)=>n+people(r.assign[k]).length,0):0;
+  if(!next&&placed&&!confirm('Turn off Youth Congregation for '+fmtNice(ev.date)+'?\n\n'+placed+' '+(placed===1?'person is':'people are')+' on the MPH duties. They will be taken off.')) return;
   pauseRT(4000);
-  if(!await dbWrite('Changing the Youth setting', ()=>sb.from('iv_events').update({youth:ev.youth}).eq('id',ev.id))){
-    ev.youth=!ev.youth;      // put it back; the database did not take it
-  }
-  auditLog('youth-toggle','events',ev.name+' '+ev.date+' › '+(ev.youth?'ON':'OFF'));
+  if(!await dbWrite('Changing the Youth setting', ()=>sb.from('iv_events').update({youth:next}).eq('id',ev.id))) return;
+  ev.youth=next;
+  // Nobody stays rostered on a duty that no longer exists, or My Duties would still show it.
+  if(!next&&r&&placed){ keys.forEach(k=>{ delete r.assign[k]; if(r.manual) delete r.manual[k]; if(r.warn) delete r.warn[k]; }); await saveRoster(ev.id); }
+  auditLog('youth-toggle','events',ev.name+' '+ev.date+' › '+(next?'ON':'OFF'));
   renderRoster();
+  toast(next?'Youth Congregation on - the three MPH duties are added. Fill them or rebuild the roster.':'Youth Congregation off - the MPH duties are removed.');
 }
 /* Putting a roster on the calendar, or taking it back off.
 
@@ -4104,7 +4107,7 @@ function openAddEvent(){
     '<div class="frow"><label class="flabel" for="aeType">Type</label><select id="aeType" onchange="aeTypeChanged()">'+types.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join('')+'</select></div>'+
     '<div class="frow"><label class="flabel" for="aeName">Event name</label><input type="text" id="aeName" value="Friday Majlis"><datalist id="eidNames">'+EID_NAMES.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist></div>'+
     '<div class="frow"><label class="flabel" for="aeUniform">Uniform</label><select id="aeUniform"><option>Casual</option><option>Formal</option></select></div>'+
-    '<div class="frow"><label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="aeYouth" checked style="width:auto"> Youth Congregation (MPH section)</label></div>'+
+    '<div class="frow" id="aeYouthRow"><label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="aeYouth" checked style="width:auto"> Youth Congregation (MPH section)</label></div>'+
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" onclick="submitAddEvent()">Add Event</button></div>');
   aeDateChanged();
 }
@@ -4146,12 +4149,13 @@ function aeTypeChanged(){
   }
   if(uniEl) uniEl.value=FORMAL_TYPES.includes(type)?'Formal':'Casual';
   if(yEl) yEl.checked=(type==='friday');
+  const yRow=box.querySelector('#aeYouthRow'); if(yRow) yRow.style.display=type==='friday'?'':'none';   // Fridays only
 }
 async function submitAddEvent(){
   const box=document.getElementById('dcard');
   const date=(box.querySelector('#aeDate')||{}).value; const type=(box.querySelector('#aeType')||{}).value||'custom';
   const name=((box.querySelector('#aeName')||{}).value||'').trim(); const uniform=(box.querySelector('#aeUniform')||{}).value||'Casual';
-  const youth=!!(box.querySelector('#aeYouth')||{}).checked;
+  const youth=type==='friday'&&!!(box.querySelector('#aeYouth')||{}).checked;
   if(!date) return toast('Pick a date','err'); if(!name) return toast('Enter an event name','err');
   const k=cycleForDate(date);
   if(teamForCycle(k)!==PAGE_TEAM) return toast('That date is in Team '+OTHER_TEAM+"'s cycle",'err');
