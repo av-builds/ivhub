@@ -40,7 +40,7 @@ const open=async(file,vp,touch)=>{
   const ctx=await b.newContext({viewport:vp,isMobile:!!touch,hasTouch:!!touch}); const p=await ctx.newPage();
   // The suite runs the pages offline. Where the CDN is reachable, Supabase
   // loads, finds no session and redirects to the Hub mid-test, so block it.
-  await ctx.route(u=>!String(u).startsWith(BASE),r=>r.abort());
+  await ctx.route(u=>!String(u).startsWith(BASE)||/demo-db\.js/.test(String(u)),r=>r.abort());   // demo branch: the stand-in database too, so pages run as the suite expects
   p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
   await p.goto(BASE+'/'+file,{waitUntil:'domcontentloaded'});
   await p.addStyleTag({content:'.noaccess{display:none!important}#loginScreen{display:none!important}'});

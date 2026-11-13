@@ -5,8 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Abeshafa Paat Group | IV Hub</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<script src="demo-db.js"></script>
 <style>
 :root{--dp:#020B18;--ds:#071628;--ds2:#0D2040;--dt:#E8F4FD;--dm:#7AAECB;--db:rgba(75,163,220,.18);
   --blue:#00558B;--blue2:#1976D2;--blue-lt:#4BA3DC;--navy:#0C2461;--gold:#FCD34D;--red:#F87171;--r:12px;}
@@ -50,6 +49,8 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
 </style>
 <link rel="stylesheet" href="ivtheme.css?v=20261021m">
+<link rel="stylesheet" href="ivdemo-gen.css">
+<link rel="stylesheet" href="ivdemo.css">
 <script src="ivtheme.js?v=20261021m"></script>
 </head>
 <body>
@@ -69,7 +70,7 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
         <a class="hub" href="index.html?hub=1">Back to the Hub</a>
       </div>
       <div id="stOk" class="hide">
-        <div class="ico" aria-hidden="true">📖</div>
+        <div class="ico" aria-hidden="true"></div>
         <div class="badge">Under construction</div>
         <h1>Abeshafa Paat Group</h1>
         <p class="lede" id="okLede">This page is being built. When it's ready it will appear here - nothing for you to do in the meantime.</p>
@@ -83,7 +84,7 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
 <script>
 const SB_URL = 'https://ysmkqvceezrjcrlixlii.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzbWtxdmNlZXpyamNybGl4bGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjk4NzcsImV4cCI6MjA5Mzg0NTg3N30.YHx-q-nR8qfFvk2dZnEg5knK6eDK-zCbPlyxPDknK4w';
-const PAGE = {"kind":"team","name":"Abeshafa Paat Group","icon":"📖","parent":{"name":"Paat Team","file":"paat.html"},"teams":[],"roles":[["ab_lead","Abeshafa Paat Lead"],["ab_alead","Abeshafa Paat Assistant Lead"],["ab_team","Abeshafa Paat Volunteer"],["pt_lead","Paat Team Lead"],["pt_alead","Paat Assistant Team Lead"]],"divPerms":["pt_lead","pt_alead"],"top":["owner","developer","director","deputy_director","phmu_lead","iv_admin"],"topLabel":{"owner":"Owner","developer":"Developer","director":"Director","deputy_director":"Deputy Director","phmu_lead":"PHMU Lead","iv_admin":"Director"}};
+const PAGE = {"kind":"team","name":"Abeshafa Paat Group","icon":"","parent":{"name":"Paat Team","file":"paat.html"},"teams":[],"roles":[["ab_lead","Abeshafa Paat Lead"],["ab_alead","Abeshafa Paat Assistant Lead"],["ab_team","Abeshafa Paat Volunteer"],["pt_lead","Paat Team Lead"],["pt_alead","Paat Assistant Team Lead"]],"divPerms":["pt_lead","pt_alead"],"top":["owner","developer","director","deputy_director","phmu_lead","iv_admin"],"topLabel":{"owner":"Owner","developer":"Developer","director":"Director","deputy_director":"Deputy Director","phmu_lead":"PHMU Lead","iv_admin":"Director"}};
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const show = id => ['stLoad','stDeny','stOk'].forEach(s=>$(s).classList.toggle('hide', s!==id));

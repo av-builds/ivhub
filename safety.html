@@ -6,8 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Safety &amp; Security | IV Hub</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<script src="demo-db.js"></script>
 <style>
 :root{--dp:#020B18;--ds:#071628;--ds2:#0D2040;--dt:#E8F4FD;--dm:#7AAECB;--db:rgba(75,163,220,.18);
   --blue:#00558B;--blue2:#1976D2;--blue-lt:#4BA3DC;--navy:#0C2461;--gold:#FCD34D;--red:#F87171;--green:#4ADE80;--r:12px;}
@@ -109,6 +108,8 @@ select,input[type=number]{width:100%;min-height:44px;padding:0 12px;border-radiu
 @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
 </style>
 <link rel="stylesheet" href="ivtheme.css?v=20261021m">
+<link rel="stylesheet" href="ivdemo-gen.css">
+<link rel="stylesheet" href="ivdemo.css">
 <script src="ivtheme.js?v=20261021m"></script>
 </head>
 <body>
@@ -139,11 +140,11 @@ select,input[type=number]{width:100%;min-height:44px;padding:0 12px;border-radiu
           <div class="mo" id="monthLbl"></div>
           <button class="nav" id="next" aria-label="Next month">›</button>
           <span class="sp"></span>
-          <button class="hub" id="btnSettings">⚙ People &amp; numbers</button>
-          <button class="hub primary" id="btnAuto">✨ Auto-fill month</button>
+          <button class="hub" id="btnSettings">People &amp; numbers</button>
+          <button class="hub primary" id="btnAuto">Auto-fill month</button>
         </div>
         <div class="cal" id="cal"></div>
-        <div class="legend"><span><i style="background:#4ADE80"></i>Full</span><span><i style="background:#F59E0B"></i>Short</span><span><i style="background:#F87171"></i>Nobody</span><span>🔒 Locked by hand</span></div>
+        <div class="legend"><span><i style="background:#4ADE80"></i>Full</span><span><i style="background:#F59E0B"></i>Short</span><span><i style="background:#F87171"></i>Nobody</span><span>Locked by hand</span></div>
       </div>
       <div id="memView" class="hide">
         <h1 style="font-size:20px">My duties</h1>
@@ -152,9 +153,9 @@ select,input[type=number]{width:100%;min-height:44px;padding:0 12px;border-radiu
       </div>
     </section>
 
-    <section class="card panel hide" id="tab-drill"><div class="tape"></div><div class="empty"><div style="font-size:42px">🚨</div><h1>Evacuation &amp; Drill / Emergency</h1><p class="lede">Under construction.</p></div></section>
-    <section class="card panel hide" id="tab-inside"><div class="tape"></div><div class="empty"><div style="font-size:42px">🏠</div><h1>Inside Safety</h1><p class="lede">Under construction.</p></div></section>
-    <section class="card panel hide" id="tab-risk"><div class="tape"></div><div class="empty"><div style="font-size:42px">📋</div><h1>JK Risk &amp; Compliance</h1><p class="lede">Under construction.</p></div></section>
+    <section class="card panel hide" id="tab-drill"><div class="tape"></div><div class="empty"><div style="font-size:42px"></div><h1>Evacuation &amp; Drill / Emergency</h1><p class="lede">Under construction.</p></div></section>
+    <section class="card panel hide" id="tab-inside"><div class="tape"></div><div class="empty"><div style="font-size:42px"></div><h1>Inside Safety</h1><p class="lede">Under construction.</p></div></section>
+    <section class="card panel hide" id="tab-risk"><div class="tape"></div><div class="empty"><div style="font-size:42px"></div><h1>JK Risk &amp; Compliance</h1><p class="lede">Under construction.</p></div></section>
   </div>
 </main>
 <div id="sheetHost"></div>
@@ -284,7 +285,7 @@ function renderCal(){
     const r = S.roster[ds], people = (r && r.people) || [], need = S.head[dowName(d)] != null ? S.head[dowName(d)] : DEFAULT_HEAD;
     const cls = people.length >= need && need > 0 ? 'full' : people.length ? 'part' : (need > 0 ? 'none' : 'full');
     h += '<button type="button" class="cell mgr '+cls+(d.getMonth()!==S.m?' out':'')+(ds===today?' today':'')+'" data-ds="'+ds+'">'+
-      '<div class="d"><span>'+d.getDate()+(r&&r.manual?' <span class="lock">🔒</span>':'')+'</span><span class="n">'+people.length+'/'+need+'</span></div>'+
+      '<div class="d"><span>'+d.getDate()+(r&&r.manual?' <span class="lock">Locked</span>':'')+'</span><span class="n">'+people.length+'/'+need+'</span></div>'+
       people.slice(0,3).map(n=>'<div class="pn">'+esc(n)+'</div>').join('')+
       (people.length>3?'<div class="pn">+'+(people.length-3)+' more</div>':'')+'</button>';
   }
@@ -321,7 +322,7 @@ function openDay(ds){
   const need = S.head[dowName(d)] != null ? S.head[dowName(d)] : DEFAULT_HEAD;
   const free = S.pool.filter(p=>r.people.indexOf(p.name) < 0);
   openSheet('<h2>'+d.toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long'})+'</h2>'+
-    '<div class="sub">'+r.people.length+' of '+need+' on duty'+(r.manual?' · 🔒 locked by hand':'')+'</div>'+
+    '<div class="sub">'+r.people.length+' of '+need+' on duty'+(r.manual?' · locked by hand':'')+'</div>'+
     (r.people.length ? r.people.map((n,i)=>'<div class="person"><span>'+esc(n)+'</span><button class="x" data-rm="'+i+'" aria-label="Remove '+esc(n)+'">✕</button></div>').join('') : '<div class="empty" style="padding:14px">Nobody on duty yet.</div>')+
     '<div class="row"><select id="addSel"><option value="">Add a person…</option>'+free.map(p=>'<option value="'+esc(p.name)+'">'+esc(p.name)+((p.away||[]).indexOf(ds)>=0?' (away)':'')+'</option>').join('')+'</select>'+
     '<button class="hub primary" id="addBtn">Add</button></div>'+

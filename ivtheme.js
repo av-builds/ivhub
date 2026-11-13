@@ -8,7 +8,7 @@
   function apply(v){
     root.setAttribute('data-theme',v);
     var m=document.querySelector('meta[name=theme-color]');
-    if(m) m.setAttribute('content', v==='light' ? '#F3F6FB' : '#050B16');
+    if(m) m.setAttribute('content', v==='light' ? '#F5F2EB' : '#101418');
     var b=document.getElementById('ivThemeBtn');
     if(b){
       b.setAttribute('aria-label', v==='light' ? 'Switch to dark mode' : 'Switch to light mode');
@@ -18,7 +18,10 @@
   }
   var SUN='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   var MOON='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>';
-  apply(saved()==='light' ? 'light' : 'dark');
+  /* Demo: follow the device unless the person has chosen. */
+  var pref=saved();
+  if(pref!=='light'&&pref!=='dark') pref=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
+  apply(pref);
   /* Secondary colour by page. Unlisted pages get none; pages still waiting for a colour keep the old pink. */
   (function(){
     var f=(location.pathname.split('/').pop()||'index.html').replace(/\.html$/,'').toLowerCase();
@@ -173,6 +176,16 @@
       else if(tries>60) clearInterval(iv);
     },500);
   }
-  function boot(){ mount(); welcome(); homeLogo(); growVeil(); banner(); }
+  /* Demo: says plainly that this is sample data, and carries the legal links. */
+  function demoNote(){
+    if(document.querySelector('.ivd-note')||!window.IVDEMO) return;
+    var n=document.createElement('div'); n.className='ivd-note'; n.setAttribute('role','note'); n.setAttribute('data-html2canvas-ignore','true');
+    n.innerHTML='<span><b>Demo.</b> Sample people and events.<span class="ivd-long"> Changes stay in this browser tab.</span></span>'+
+      '<button type="button" id="ivdReset">Reset sample data</button><span class="sp"></span>'+
+      '<a href="terms.html">Terms</a><a href="privacy.html">Privacy</a>';
+    document.body.appendChild(n);
+    n.querySelector('#ivdReset').addEventListener('click',function(){ if(confirm('Put the sample data back to how it started and sign out?')) IVDEMO.reset(); });
+  }
+  function boot(){ mount(); welcome(); homeLogo(); banner(); demoNote(); }
   if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);
 })();
