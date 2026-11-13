@@ -423,13 +423,27 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
   chk(r.autoRows>=28,'safety  auto-fill saves a row per unlocked day',String(r.autoRows));
   chk(/With Ben/.test(r.mine)&&r.volMgr&&r.volMem,'safety  a volunteer sees only their own duties',r.mine);
   chk(p.errs.length===0,'safety  roster no page errors'); await p.context().close(); }
-{ const p=await open('av.html',{width:1200,height:900});
-  const r=await p.evaluate(()=>{ const T=todayDS(); const d=new Date(T+'T12:00'); d.setDate(d.getDate()+2); const ds=localDS(d);
-    _mdIV={t:Date.now(),events:[],rosters:{},members:[],notes:[],safety:[{date:ds,data:{people:['Ana Ali','Ben Khan'],manual:false}}]};
-    roster={}; trainings=[]; majalisEvs=[]; _md={name:'Ana Ali',range:3,past:false,items:[],notes:[]};
-    const items=mdCollect('Ana Ali',mdWindow()); return {n:items.length, t:items[0]&&items[0].title, div:items[0]&&items[0].div, label:mdDivLabel('SS'), sub:items[0]&&items[0].subs.join()}; });
-  chk(r.n===1&&r.div==='SS'&&/Safety/.test(r.t)&&r.label==='Safety'&&/Ben Khan/.test(r.sub),'safety  duties show in My Duties with the others on the day',JSON.stringify(r));
-  chk(p.errs.length===0,'safety  my duties no page errors'); await p.context().close(); }
+// ── AV Team: the Team-page bar, no My Duties or Duty Stats ──
+{ const p=await open('av.html',{width:1440,height:900});
+  const r=await p.evaluate(async()=>{ const o={};
+    o.gone=!document.getElementById('page-myduties')&&!document.getElementById('page-stats')&&!document.querySelector('[data-page="myduties"],[data-page="stats"]')&&typeof mdInit==='undefined'&&typeof renderStats==='undefined';
+    o.flat=!document.querySelector('.sb-nav .nav-sec');
+    document.getElementById('app')&&(document.getElementById('app').style.display='block');
+    document.querySelectorAll('.sb-nav .nav-item').forEach(n=>n.style.display='flex');
+    await new Promise(r=>setTimeout(r,300));
+    const blks=[...document.querySelectorAll('#topnav .tn-blk')];
+    o.labels=blks.map(b=>b.innerText.trim()).join('|'); o.icons=blks.every(b=>b.querySelector('svg'));
+    o.ends=blks.length&&blks[0].classList.contains('tn-blk-first')&&blks[blks.length-1].classList.contains('tn-blk-last');
+    o.noDropdown=!document.querySelector('#topnav .tn-group'); o.hub=!!document.querySelector('#topnav .tn-hub');
+    o.on=(document.querySelector('#topnav .tn-blk.on')||{}).innerText;
+    o.h=blks.length?blks[0].getBoundingClientRect().height:0;
+    o.ac=getComputedStyle(document.getElementById('topnav')).getPropertyValue('--iv-ac').trim();
+    return o; });
+  chk(r.gone,'av-bar  My Duties and Duty Stats are gone from the AV page',JSON.stringify(r));
+  chk(r.flat&&r.noDropdown&&r.hub,'av-bar  one flat menu: no category dropdowns, Back to Hub kept',JSON.stringify(r));
+  chk(r.labels==='Dashboard|Roster|People|Add-ons|Audit Logs|Admin'&&r.icons&&r.ends&&r.h>=44,'av-bar  each page is its own block with an icon, as on the Team pages',r.labels);
+  chk(r.on==='Dashboard'&&/8EA8E1/i.test(r.ac),'av-bar  the open page is marked and the bar uses the AV colour',r.on+' '+r.ac);
+  chk(p.errs.length===0,'av-bar  no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Under Construction tags ──
 { const p=await open('index.html',{width:1300,height:900});

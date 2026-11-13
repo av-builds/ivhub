@@ -59,6 +59,11 @@ body{font-variant-numeric:tabular-nums;font-weight:700;font-stretch:85%;font-fam
 /* Back to Hub - cross-page link into the IV Hub shell */
 .hub-link{display:flex;align-items:center;gap:9px;padding:9px 11px;margin:0 0 10px;border:1px solid var(--db);border-radius:7px;color:var(--blue-lt);font-size:13px;font-weight:800;text-decoration:none;transition:all .18s;white-space:nowrap;}
 .hub-link:hover{background:rgba(75,163,220,.08);border-color:rgba(75,163,220,.45);}
+/* The top bar is tinted with the AV colour rather than the Hub blue. */
+body.tp #topnav{--iv-ac:#8EA8E1;--iv-acs:rgba(142,168,225,.16);}
+html[data-theme="light"] body.tp #topnav{--iv-ac:#4A68B5;--iv-acs:rgba(74,104,181,.12);}
+/* AV keeps Dashboard as its own block (the shared theme hides that item and sends the logo there instead). */
+html body.tp .sb-nav .nav-item[data-page="dashboard"]{display:flex!important;}
 .nav-sec{font-size:11px;font-weight:800;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;padding:9px 11px 4px;margin-top:4px;}
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:7px;cursor:pointer;color:var(--dm);font-size:13px;font-weight:600;transition:all .18s;border:1px solid transparent;}
 .nav-item:hover{background:var(--ds2);color:var(--dt);}
@@ -864,7 +869,7 @@ tr:hover td{background:var(--ds2);}
 .btn-bl::after{content:'';position:absolute;top:0;bottom:0;width:38%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);transform:translateX(-130%) skewX(-18deg);}
 .btn-bl:hover::after{animation:sheen .7s ease;}
 /* ── Inputs ── */
-.wi:focus,.ws:focus,#mdSearch:focus{box-shadow:0 0 0 3px rgba(75,163,220,.12);}
+.wi:focus,.ws:focus{box-shadow:0 0 0 3px rgba(75,163,220,.12);}
 .wi,.ws{transition:border-color .2s,box-shadow .2s;}
 /* ── Rotation strip chips ── */
 #rotationStrip>div{transition:transform .2s cubic-bezier(.16,1,.3,1),border-color .2s;}
@@ -875,16 +880,15 @@ tr:hover td{background:var(--ds2);}
 h1,h2,h3,
 .ph h1,.llogo h1,.sb-logo h2,.r-title .big,.r-nav h2,.mbox h3,
 .dn,.sc-v,.mj-list-d,.ev-d,
-.md-vol-name,.md-card-date,.md-sum-val,.md-cap-title,
 .dash-greet,.dash-clock{
   font-family:'Archivo',sans-serif!important;
   letter-spacing:0.005em;
 }
-.dn,.sc-v,.mj-list-d,.md-card-date,.md-sum-val,.dash-clock{font-variant-numeric:tabular-nums;}
+.dn,.sc-v,.mj-list-d,.dash-clock{font-variant-numeric:tabular-nums;}
 /* Numeral cleanup - the old condensed-font tracking made numbers cramped.
    Archivo needs neutral spacing and honest weights. */
 .dn{font-weight:900!important;letter-spacing:0!important;}
-.sc-v,.md-sum-val,.md-card-date,.mj-list-d,.ev-d,.dash-clock,.mj-list-yr,.mj-list-mo{letter-spacing:0!important;}
+.sc-v,.mj-list-d,.ev-d,.dash-clock,.mj-list-yr,.mj-list-mo{letter-spacing:0!important;}
 .r-title .big{letter-spacing:-.5px!important;}
 .r-nav h2{letter-spacing:0.06em!important;}
 .duty-name{letter-spacing:0;}
@@ -938,257 +942,7 @@ html{scroll-behavior:smooth;}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation:none!important;transition:none!important;}
 }
-/* ═══════════════════════════════════
-   MY DUTIES PAGE
-═══════════════════════════════════ */
-.md-hero{
-  background:linear-gradient(135deg,#020B18 0%,#071628 50%,#050D1C 100%);
-  border:1px solid rgba(75,163,220,0.15);
-  border-radius:16px;
-  padding:32px 36px 28px;
-  margin-bottom:22px;
-  position:relative;
-  overflow:visible;
-}
-.md-hero::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 10% 50%,rgba(0,85,139,0.2) 0%,transparent 55%),
-             radial-gradient(ellipse at 85% 20%,rgba(75,163,220,0.07) 0%,transparent 50%);
-  pointer-events:none;
-  border-radius:16px;
-}
-.md-hero-inner{position:relative;z-index:1;}
-.md-hero-title{
-  font-family:'Archivo',sans-serif;font-size:14px;font-weight:800;
-  text-transform:uppercase;letter-spacing:0.06em;color:rgba(179,229,252,0.55);
-  margin-bottom:10px;
-}
-.md-search-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.md-search-wrap{
-  position:relative;flex:1;min-width:220px;max-width:480px;
-}
-.md-search-wrap::before{
-  content:'⌕';position:absolute;left:14px;top:50%;transform:translateY(-50%);
-  font-size:19px;color:rgba(75,163,220,0.5);pointer-events:none;z-index:1;
-}
-#mdSearch{
-  width:100%;
-  background:rgba(6,15,30,0.8);
-  border:1px solid rgba(75,163,220,0.25);
-  border-radius:12px;
-  padding:13px 16px 13px 42px;
-  color:#E8F4FD;
-  font-family:'Archivo',sans-serif;font-size:16px;font-weight:600;
-  outline:none;
-  transition:border-color .2s,box-shadow .2s;
-  backdrop-filter:blur(4px);
-}
-#mdSearch::placeholder{color:rgba(122,174,203,0.4);}
-#mdSearch:focus{border-color:rgba(75,163,220,0.6);box-shadow:0 0 0 3px rgba(75,163,220,0.08);}
-.md-search-btn{
-  background:linear-gradient(135deg,#00558B,#1976D2);
-  color:#fff;border:none;border-radius:10px;
-  padding:13px 22px;font-family:'Archivo',sans-serif;
-  font-weight:800;font-size:14px;cursor:pointer;
-  white-space:nowrap;
-  transition:all .18s;
-  box-shadow:0 4px 14px rgba(0,85,139,0.35);
-}
-.md-search-btn:hover{box-shadow:0 6px 20px rgba(0,85,139,0.55);transform:translateY(-1px);}
-.md-dropdown{
-  position:absolute;top:calc(100% + 6px);left:0;right:0;
-  background:#071628;border:1px solid rgba(75,163,220,0.3);
-  border-radius:10px;z-index:9999;
-  box-shadow:0 16px 40px rgba(0,0,0,0.7);
-  overflow:hidden;display:none;
-  max-height:220px;overflow-y:auto;
-}
-.md-dropdown.open{display:block;animation:fadeIn .15s ease;}
-.md-drop-item{
-  padding:10px 16px;font-size:14px;color:#E8F4FD;cursor:pointer;
-  transition:background .12s;font-weight:600;
-  border-bottom:1px solid rgba(75,163,220,0.06);
-}
-.md-drop-item:last-child{border-bottom:none;}
-.md-drop-item:hover,.md-drop-item.selected{background:rgba(75,163,220,0.1);color:#4BA3DC;}
-/* Results area */
-#mdResults{display:none;}
-/* ── My Duties: unified list + poster ── */
-.mdl-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;}
-.mdl-chip{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--db);background:transparent;color:var(--dm);font:800 12px 'Archivo',sans-serif;cursor:pointer;transition:all .18s;}
-.mdl-chip:hover{border-color:var(--blue-lt);color:var(--blue-lt);}
-.mdl-chip.on{background:rgba(75,163,220,.16);border-color:var(--blue-lt);color:#fff;}
-.mdl-toggle{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font:700 12px 'Archivo',sans-serif;color:var(--dm);cursor:pointer;min-height:36px;}
-.mdl-toggle input{width:18px;height:18px;accent-color:#4BA3DC;}
-.mdl{display:flex;flex-direction:column;gap:10px;}
-.mdl-row{--c:#4BA3DC;font-size:14px;display:flex;gap:1.1em;align-items:stretch;padding:.85em 1.1em .85em .85em;border-radius:1em;
-  background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.08);position:relative;overflow:hidden;}
-.mdl-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.3em;background:var(--c);}
-.mdl-row.past{opacity:.5;}
-.mdl-date{flex:0 0 4.4em;text-align:center;display:flex;flex-direction:column;justify-content:center;padding-left:.35em;}
-.mdl-dow{font:800 .72em 'Archivo',sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--c);}
-.mdl-day{font:900 2.2em/1 'Archivo',sans-serif;color:#fff;margin:.05em 0;}
-.mdl-mo{font:800 .72em 'Archivo',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dm);}
-.mdl-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.4em;}
-.mdl-top{display:flex;align-items:center;gap:.6em;flex-wrap:wrap;}
-.mdl-div{font:900 .7em 'Archivo',sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:.3em .7em;border-radius:999px;background:var(--c);color:#04121f;}
-.mdl-title{font:900 1.2em/1.2 'Archivo',sans-serif;color:#F2F9FF;overflow-wrap:anywhere;}
-.mdl-sub{font-size:.92em;color:#A9C9DD;overflow-wrap:anywhere;}
-.mdl-sub b{color:#E8F4FD;}
-.mdl-tags{display:flex;flex-wrap:wrap;gap:.45em;}
-.mdl-tag{font:800 .76em 'Archivo',sans-serif;letter-spacing:.04em;padding:.28em .75em;border-radius:999px;background:rgba(255,255,255,.08);color:#CFE8F7;}
-.mdl-tag.today{background:rgba(52,211,153,.18);color:#6EE7B7;}
-.md-sum-card{--c:#4BA3DC;}
-.md-sum-card::before{background:var(--c)!important;}
-.md-sum-card .md-sum-val{color:var(--c)!important;}
-.md-sum-sub{font-size:11px;color:var(--dm);margin-top:4px;font-weight:700;}
-#mdNotes .mdl-note{font-size:12.5px;font-weight:700;color:#FBBF24;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:8px 12px;margin-bottom:10px;}
-#mdPosterHost{position:fixed;left:-20000px;top:0;pointer-events:none;}
-.mdposter{width:1080px;box-sizing:border-box;padding:56px 56px 44px;font-size:20px;background:radial-gradient(900px 500px at 85% -5%,rgba(0,85,139,.35),transparent 60%),#020B18;color:#E8F4FD;font-family:'Archivo',sans-serif;}
-.mdposter .mdl-row{font-size:20px;}
-.mdp-head{display:flex;align-items:center;gap:24px;margin-bottom:26px;}
-.mdp-head img{width:92px;height:92px;border-radius:50%;background:#fff;flex-shrink:0;}
-.mdp-kick{font:800 15px 'Archivo',sans-serif;letter-spacing:.3em;text-transform:uppercase;color:#4BA3DC;}
-.mdp-name{font:900 52px/1.05 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.02em;color:#fff;margin:6px 0;overflow-wrap:anywhere;}
-.mdp-range{font:700 18px 'Archivo',sans-serif;color:#9FC4DB;}
-.mdp-key{display:flex;flex-wrap:wrap;gap:12px 28px;padding:18px 22px;margin-bottom:26px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);}
-.mdp-key span{display:inline-flex;align-items:center;gap:10px;font:800 17px 'Archivo',sans-serif;color:#E8F4FD;}
-.mdp-key i{width:14px;height:14px;border-radius:50%;background:var(--c);display:inline-block;}
-.mdp-key b{color:var(--c);font-size:22px;}
-.mdposter .mdl{gap:14px;}
-.mdp-foot{margin-top:34px;padding-top:20px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;gap:20px;font:700 15px/1.5 'Archivo',sans-serif;color:#7AAECB;}
-.mdp-empty{text-align:center;padding:60px 0;font:700 22px 'Archivo',sans-serif;color:#7AAECB;}
-@media (max-width:600px){.mdl-row{font-size:13px;}.mdl-toggle{margin-left:0;}}
-@media (hover:none),(max-width:820px){
-  .md-screenshot-btn{min-height:44px;}
-  .mdl-chip{height:40px;}
-  .mdl-toggle{min-height:44px;}
-  .md-search-btn{min-height:44px;}
-}
 
-.md-results-hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:16px;flex-wrap:wrap;gap:10px;
-}
-.md-vol-name{
-  font-family:'Archivo',sans-serif;font-size:26px;font-weight:900;
-  text-transform:uppercase;letter-spacing:0.04em;
-  background:linear-gradient(135deg,#fff 20%,#90CAF9 70%,#4BA3DC 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.md-month-badge{
-  background:rgba(75,163,220,0.1);border:1px solid rgba(75,163,220,0.25);
-  border-radius:20px;padding:5px 14px;
-  font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#4BA3DC;
-}
-.md-screenshot-btn{
-  display:inline-flex;align-items:center;gap:7px;
-  background:linear-gradient(135deg,#7C3AED,#6D28D9);
-  color:#fff;border:none;border-radius:9px;
-  padding:9px 18px;font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;
-  cursor:pointer;box-shadow:0 4px 14px rgba(109,40,217,0.35);
-  transition:all .18s;
-}
-.md-screenshot-btn:hover{box-shadow:0 6px 20px rgba(109,40,217,0.55);transform:translateY(-1px);}
-/* Summary bar */
-.md-summary{
-  display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;
-}
-.md-sum-card{
-  background:var(--ds);border:1px solid var(--db);border-radius:10px;
-  padding:12px 18px;flex:1;min-width:120px;position:relative;overflow:hidden;
-}
-.md-sum-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.md-sum-card.jk::before{background:linear-gradient(90deg,#00558B,#4BA3DC);}
-.md-sum-card.mph::before{background:linear-gradient(90deg,#7C3AED,#C4B5FD);}
-.md-sum-card.sup::before{background:linear-gradient(90deg,#065F46,#34D399);}
-.md-sum-card.tr::before{background:linear-gradient(90deg,#92400E,#FCD34D);}
-.md-sum-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--dm);margin-bottom:4px;}
-.md-sum-val{font-family:'Archivo',sans-serif;font-size:28px;font-weight:900;line-height:1;}
-.md-sum-card.jk .md-sum-val{color:#4BA3DC;}
-.md-sum-card.mph .md-sum-val{color:#C4B5FD;}
-.md-sum-card.sup .md-sum-val{color:#34D399;}
-.md-sum-card.tr .md-sum-val{color:#FCD34D;}
-/* Duty cards grid */
-.md-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:12px;
-}
-.md-duty-card{
-  background:#050D1C;
-  border:1px solid rgba(75,163,220,0.1);
-  border-radius:13px;
-  padding:16px 18px;
-  position:relative;
-  overflow:hidden;
-  transition:border-color .18s,transform .18s;
-}
-.md-duty-card:hover{border-color:rgba(75,163,220,0.3);transform:translateY(-2px);}
-.md-duty-card::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
-  border-radius:3px 0 0 3px;
-}
-.md-duty-card.type-jk::before{background:linear-gradient(180deg,#00558B,#4BA3DC);}
-.md-duty-card.type-mph::before{background:linear-gradient(180deg,#7C3AED,#C4B5FD);}
-.md-duty-card.type-sup::before{background:linear-gradient(180deg,#065F46,#34D399);}
-.md-duty-card.type-tr-trainer::before{background:linear-gradient(180deg,#92400E,#FCD34D);}
-.md-duty-card.type-tr-trainee::before{background:linear-gradient(180deg,#7F1D1D,#F87171);}
-.md-card-date{
-  font-family:'Archivo',sans-serif;font-size:28px;font-weight:900;
-  color:#E8F4FD;line-height:1;margin-bottom:3px;
-}
-.md-card-dow{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--dm);margin-bottom:10px;}
-.md-card-type{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;
-  padding:3px 9px;border-radius:20px;margin-bottom:10px;
-}
-.md-card-type.jk{background:rgba(0,85,139,0.18);color:#4BA3DC;border:1px solid rgba(75,163,220,0.25);}
-.md-card-type.mph{background:rgba(124,58,237,0.18);color:#C4B5FD;border:1px solid rgba(124,58,237,0.3);}
-.md-card-type.sup{background:rgba(6,95,70,0.25);color:#34D399;border:1px solid rgba(52,211,153,0.3);}
-.md-card-type.tr-trainer{background:rgba(146,64,14,0.25);color:#FCD34D;border:1px solid rgba(245,158,11,0.3);}
-.md-card-type.tr-trainee{background:rgba(127,29,29,0.25);color:#F87171;border:1px solid rgba(248,113,113,0.3);}
-.md-card-detail{font-size:12px;color:var(--dm);line-height:1.6;margin-top:4px;}
-.md-card-detail b{color:#E8F4FD;font-weight:700;}
-.md-mj-tag{
-  display:inline-flex;align-items:center;gap:4px;
-  background:rgba(0,85,139,0.1);border:1px solid rgba(75,163,220,0.15);
-  border-radius:6px;padding:3px 8px;font-size:11px;font-weight:800;
-  text-transform:uppercase;letter-spacing:0.06em;color:#4BA3DC;
-  margin-top:7px;
-}
-.md-empty{
-  text-align:center;padding:60px 20px;
-  font-size:15px;color:var(--dm);line-height:1.8;
-}
-.md-empty .md-empty-icon{font-size:40px;margin-bottom:14px;opacity:0.5;}
-/* Screenshot capture area */
-#mdCapture{
-  background:#020B18;
-  border-radius:14px;
-  overflow:hidden;
-}
-.md-cap-hdr{
-  background:linear-gradient(135deg,#050E1E,#0A1E3E);
-  padding:20px 26px 16px;
-  border-bottom:1px solid rgba(75,163,220,0.15);
-}
-.md-cap-title{
-  font-family:'Archivo',sans-serif;font-size:22px;font-weight:900;
-  text-transform:uppercase;letter-spacing:0.06em;
-  background:linear-gradient(135deg,#fff 20%,#4BA3DC 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.md-cap-sub{font-size:12px;color:rgba(122,174,203,0.6);margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;}
-@media(max-width:768px){
-  .md-hero{padding:20px 18px;}
-  .md-search-row{flex-direction:column;align-items:stretch;}
-  .md-search-wrap{max-width:100%;}
-  .md-screenshot-btn{font-size:12px;padding:7px 12px;}
-  .md-grid{grid-template-columns:1fr;}
-  .md-summary{gap:7px;}
-}
 b,strong{font-weight:900;} /*_iv_bold_lift*/
 input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;font-stretch:inherit;} /*_iv_form_inherit*/
 /* ── DESKTOP TOP NAVIGATION ──────────────────────────────────────────
@@ -1262,7 +1016,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 <link rel="stylesheet" href="ivtheme.css?v=20261021m">
 <script src="ivtheme.js?v=20261021m"></script>
 </head>
-<body>
+<body class="tp">
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
      The same block sits at the top of index.html, teama.html (and so
      teamb.html) and av.html; change it in all of them together.
@@ -1407,20 +1161,14 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
     <nav class="sb-nav">
       <!-- Cross-page link back into the IV Hub shell -->
       <a class="hub-link" href="index.html"><span class="hl-t">Back to Hub</span></a>
-      <!-- ── GENERAL ── -->
-      <div class="nav-sec">General</div>
-      <div class="nav-item active" data-page="dashboard" onclick="nav(this)"><span class="ni">⊞</span> Dashboard</div>
-      <div class="nav-item nav-volunteer" data-page="calendar" onclick="nav(this)"><span class="ni">📅</span> Monthly Roster</div>
-      <div class="nav-item nav-volunteer" data-page="myduties" onclick="nav(this)"><span class="ni">🗓️</span> My Duties</div>
-      <div class="nav-item nav-admin" data-page="stats" onclick="nav(this)"><span class="ni">📊</span> Duty Stats</div>
-      <!-- ── AV MANAGEMENT ── -->
-      <div class="nav-sec nav-admin">AV Management</div>
-      <div class="nav-item nav-admin" data-page="volunteers" onclick="nav(this)"><span class="ni">👥</span> User Management</div>
-      <div class="nav-item nav-admin" data-page="events" onclick="nav(this)"><span class="ni">🕌</span> Add-ons</div>
-      <!-- ── MANAGEMENT ── -->
-      <div class="nav-sec nav-any-admin">Management</div>
-      <div class="nav-item nav-any-admin" data-page="audit" onclick="nav(this)"><span class="ni">🔍</span> Audit Logs</div>
-      <div class="nav-item nav-admin" data-page="adminpanel" onclick="nav(this)"><span class="ni">⚙️</span> Admin Panel</div>
+      <!-- One flat list, the same as the Team pages: each page is its own block
+           on the laptop bar. My Duties and Duty Stats live on the Hub. -->
+      <div class="nav-item active" data-page="dashboard" onclick="nav(this)"><span class="ni">⊞</span><span class="nt">Dashboard</span></div>
+      <div class="nav-item nav-volunteer" data-page="calendar" onclick="nav(this)"><span class="ni">📅</span><span class="nt">Roster</span></div>
+      <div class="nav-item nav-admin" data-page="volunteers" onclick="nav(this)"><span class="ni">👥</span><span class="nt">People</span></div>
+      <div class="nav-item nav-admin" data-page="events" onclick="nav(this)"><span class="ni">🕌</span><span class="nt">Add-ons</span></div>
+      <div class="nav-item nav-any-admin" data-page="audit" onclick="nav(this)"><span class="ni">🔍</span><span class="nt">Audit Logs</span></div>
+      <div class="nav-item nav-admin" data-page="adminpanel" onclick="nav(this)"><span class="ni">⚙️</span><span class="nt">Admin</span></div>
     </nav>
     <div class="sb-bot">
       <div class="uchip">
@@ -1546,55 +1294,6 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <div class="r-ftr-r" id="rFtrR"></div>
         </div>
       </div>
-    </div>
-    <!-- MY DUTIES -->
-    <div class="page" id="page-myduties">
-      <div class="ph">
-        <div><h1>My Duties</h1><p>Search a name to see every upcoming duty across Ismaili Volunteers</p></div>
-      </div>
-      <!-- Search hero -->
-      <div class="md-hero">
-        <div class="md-hero-inner">
-          <div class="md-hero-title">🗓️ Find Your Duties</div>
-          <div class="md-search-row">
-            <div class="md-search-wrap">
-              <input id="mdSearch" type="text" placeholder="Start typing your name…" autocomplete="off"
-                oninput="mdOnInput()" onkeydown="mdOnKey(event)" onfocus="mdShowDrop()" onblur="setTimeout(mdHideDrop,200)">
-              <div class="md-dropdown" id="mdDropdown"></div>
-            </div>
-            <button class="md-search-btn" onclick="mdSearch()">Search Duties</button>
-          </div>
-        </div>
-      </div>
-      <!-- Results -->
-      <div id="mdResults">
-        <div class="md-results-hdr">
-          <div>
-            <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--dm);margin-bottom:4px;">Showing duties for</div>
-            <div class="md-vol-name" id="mdVolName">-</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <div class="md-month-badge" id="mdRangeBadge">-</div>
-            <button class="md-screenshot-btn" id="mdSaveBtn" onclick="mdSaveImage(false)">📷 Save image</button>
-            <button class="md-screenshot-btn md-share" id="mdShareBtn" onclick="mdSaveImage(true)" style="display:none">Share</button>
-          </div>
-        </div>
-        <div class="mdl-chips" role="group" aria-label="How far ahead">
-          <button type="button" class="mdl-chip" data-r="3" onclick="mdSetRange(3)">Next 3 months</button>
-          <button type="button" class="mdl-chip" data-r="6" onclick="mdSetRange(6)">Next 6 months</button>
-          <button type="button" class="mdl-chip" data-r="12" onclick="mdSetRange(12)">Next 12 months</button>
-          <label class="mdl-toggle"><input type="checkbox" id="mdPast" onchange="mdSetPast(this.checked)"> Include earlier this month</label>
-        </div>
-        <div class="md-summary" id="mdSummary"></div>
-        <div id="mdNotes"></div>
-        <div id="mdList" class="mdl"></div>
-        <div id="mdEmpty" class="md-empty" style="display:none;">
-          <div class="md-empty-icon">🔍</div>
-          <div>No duties found for <b id="mdEmptyName"></b> between <b id="mdEmptyRange"></b>.</div>
-          <div style="margin-top:8px;font-size:13px;">Try a longer range, or check the Monthly Roster for the full schedule.</div>
-        </div>
-      </div>
-      <div id="mdPosterHost" aria-hidden="true"></div>
     </div>
     <!-- USER MANAGEMENT -->
     <div class="page admin-page" id="page-volunteers">
@@ -1949,30 +1648,6 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
             <button class="btn btn-da" onclick="confirmClearAllLogs()" style="font-size:14px;padding:9px 20px;">🗑 Clear All Audit Logs</button>
           </div>
         </div>
-      </div>
-    </div>
-    <!-- DUTY STATS -->
-    <div class="page" id="page-stats">
-      <div class="ph">
-        <div><h1>📊 Duty Stats</h1><p>Who's doing what - totals, fairness and availability</p></div>
-        <div class="ha">
-          <button class="btn btn-ol btn-sm st-scope" data-s="month" onclick="stSetScope('month')">This Month</button>
-          <button class="btn btn-ol btn-sm st-scope" data-s="all" onclick="stSetScope('all')">All Time</button>
-        </div>
-      </div>
-      <div class="ib" id="stNote">Counts come from the roster records - "All Time" covers every month saved in the database.</div>
-      <div class="tw" style="margin-bottom:16px;">
-        <div style="padding:12px 16px;border-bottom:1px solid var(--db);">
-          <h3 style="font-family:'Archivo',sans-serif;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;">Per-Person Totals <span id="stScopeLabel" style="font-size:12px;color:var(--dm);font-weight:700;"></span></h3>
-        </div>
-        <table>
-          <thead><tr><th>Volunteer</th><th>JK</th><th>MPH</th><th>SUP</th><th>Training</th><th>Busy dates</th><th>Total duties</th></tr></thead>
-          <tbody id="stTable"></tbody>
-        </table>
-      </div>
-      <div class="iv-panel">
-        <div class="iv-ph"><span>⚖️</span> Fairness - Total Duties per Person</div>
-        <div class="iv-pb" id="stBars"></div>
       </div>
     </div>
   </main>
@@ -2784,7 +2459,7 @@ async function dbRenameUser(oldUsername, newUsername, data){
    'owner'    – full access (all sections)
    'av_admin' – AV Management + Audit Logs
    'iv_admin' – IV Management + Audit Logs
-   'av_team'  – AV section (Monthly Roster + My Duties)
+   'av_team'  – AV section (Dashboard + Roster)
    'iv_team'  – IV section
    Users can hold multiple perms simultaneously.
    The session is the hub-wide `ivhub_session`
@@ -3238,69 +2913,6 @@ function renderDashboard(){
         ${_rosterIssues.length>4?`<div style="font-size:12px;color:#7A4A4A;margin-top:4px;">+ ${_rosterIssues.length-4} more - see the Monthly Roster page</div>`:''}
       </div>`;
     } else { di.style.display='none'; di.innerHTML=''; }
-  }
-}
-/* ═══════════════════════════════════
-   DUTY STATS - totals, fairness, busy
-═══════════════════════════════════ */
-let _stScope='month';
-function stSetScope(s){ _stScope=s; renderStats(); }
-function computeStats(scope){
-  const inMonth = ds => { const d=new Date(ds+'T12:00'); return d.getMonth()===calMo && d.getFullYear()===calYr; };
-  const ok = ds => scope==='all' ? true : inMonth(ds);
-  const S={};
-  const get=n=>{ if(!S[n]) S[n]={jk:0,mph:0,sup:0,tr:0,busy:0}; return S[n]; };
-  Object.entries(roster).forEach(([ds,r])=>{
-    if(!ok(ds)) return;
-    if(r._primary)      get(r._primary).jk++;
-    if(r._sup)          get(r._sup).sup++;
-    if(!r._mph_removed && r._mph_primary)  get(r._mph_primary).mph++;
-    if(!r._mph_removed && r._mph_primary2) get(r._mph_primary2).mph++;
-  });
-  trainings.forEach(t=>{
-    if(!ok(t.date)) return;
-    if(t.trainer) get(t.trainer).tr++;
-    if(t.trainee) get(t.trainee).tr++;
-  });
-  vols.forEach(v=>{
-    get(v.name).busy += (v.bds||'').split(',').map(s=>s.trim()).filter(Boolean).filter(ok).length;
-  });
-  return S;
-}
-function renderStats(){
-  const tbl=document.getElementById('stTable');
-  if(!tbl) return;
-  // scope button highlight
-  document.querySelectorAll('.st-scope').forEach(b=>{
-    const on=b.dataset.s===_stScope;
-    b.style.borderColor=on?'var(--blue-lt)':'';
-    b.style.color=on?'var(--blue-lt)':'';
-  });
-  const lbl=document.getElementById('stScopeLabel');
-  if(lbl) lbl.textContent = _stScope==='all' ? '- all time (saved records)' : `- ${MO[calMo]} ${calYr}`;
-  const S=computeStats(_stScope);
-  const rows=Object.entries(S)
-    .map(([name,s])=>({name,...s,total:s.jk+s.mph+s.sup+s.tr}))
-    .sort((a,b)=> b.total-a.total || a.name.localeCompare(b.name));
-  if(!rows.length){ tbl.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--dm);padding:16px;font-size:12px;">No duty records yet.</td></tr>`; }
-  else tbl.innerHTML=rows.map(r=>`<tr>
-    <td><strong>${esc(r.name)}</strong></td>
-    <td>${r.jk||''}</td><td>${r.mph||''}</td><td>${r.sup||''}</td><td>${r.tr||''}</td>
-    <td style="color:${r.busy?'#F87171':'inherit'};">${r.busy||''}</td>
-    <td><strong style="color:#4BA3DC;">${r.total}</strong></td>
-  </tr>`).join('');
-  // fairness bars
-  const bars=document.getElementById('stBars');
-  if(bars){
-    const max=Math.max(1,...rows.map(r=>r.total));
-    bars.innerHTML = rows.length ? rows.map(r=>`
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-        <div style="width:150px;font-size:12px;font-weight:700;color:#E8F4FD;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;">${esc(r.name)}</div>
-        <div style="flex:1;background:rgba(255,255,255,0.04);border-radius:5px;height:16px;overflow:hidden;">
-          <div style="width:${Math.round(r.total/max*100)}%;height:100%;background:linear-gradient(90deg,#00558B,#4BA3DC);border-radius:5px;min-width:${r.total?'4px':'0'};"></div>
-        </div>
-        <div style="width:26px;font-family:'Archivo',sans-serif;font-size:14px;font-weight:900;color:#4BA3DC;">${r.total}</div>
-      </div>`).join('') : '<div style="text-align:center;color:var(--dm);font-size:13px;padding:12px;">No data yet.</div>';
   }
 }
 function showDebugInfo(){
@@ -4434,8 +4046,8 @@ function renderRosterIssues(){
    5. Manual overrides (_manual / _mph_manual / _mph_removed)
       are never touched.
    6. When an AV Admin/Owner is signed in, the generated month is
-      persisted to the DB (debounced) so Duty Stats "All Time"
-      reflects real history.
+      persisted to the DB (debounced) so the saved history
+      is real.
 ═══════════════════════════════════════════════════════ */
 function autoRoster(){
   const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -4678,7 +4290,7 @@ function autoRoster(){
   if(typeof renderDashboard==='function') renderDashboard();
   renderCal();
 }
-/* ── Persist the generated month so Duty Stats "All Time" is accurate ──
+/* ── Persist the generated month so the saved roster history is accurate ──
    Only AV Admins / Owner write; debounced to avoid write storms; realtime
    is paused around the write so our own echo doesn't bounce back. */
 let _persistTimer = null;
@@ -5374,7 +4986,7 @@ let _auditBroken = false;
    recording them would bury the entries that matter. Kept in its own
    table with a three-month life. */
 const LOGGED_SECTIONS = {
-  volunteers:'User Management', events:'Add-ons', stats:'Duty Stats',
+  volunteers:'User Management', events:'Add-ons',
   audit:'Audit Logs', adminpanel:'Admin Panel'
 };
 let _lastView = null;
@@ -5844,8 +5456,8 @@ function nav(el){
   const _canReadLog = LOG_READ_KEYS.some(k=>_has(k));
   // Enforce page access per section (AV-only build)
   const pg = el.dataset.page;
-  const _avTeamPages  = ['calendar','myduties'];              // volunteers: roster + own duties
-  const _avAdminPages = ['volunteers','events','stats'];
+  const _avTeamPages  = ['calendar'];                         // volunteers: the roster
+  const _avAdminPages = ['volunteers','events'];
   if(pg === 'adminpanel' && !_isAvAdmin) return;
   if(pg === 'audit' && !_canReadLog) return;
   if(_avAdminPages.includes(pg) && !_isAvAdmin) return;
@@ -5860,8 +5472,6 @@ function nav(el){
   el.classList.add('active');
   if(LOGGED_SECTIONS[pg]) logView(LOGGED_SECTIONS[pg]);
   if(el.dataset.page === 'audit') renderAuditLogs();
-  if(el.dataset.page === 'myduties') mdInit();
-  if(el.dataset.page === 'stats') renderStats();
   if(el.dataset.page === 'dashboard' && typeof renderDashboard==='function') renderDashboard();
   if(el.dataset.page === 'adminpanel'){
     // AV admins get the Reset Month panel only; the owner gets everything.
@@ -5876,278 +5486,6 @@ function nav(el){
     renderApUserList();
   }
   if(window.innerWidth<=768) closeSidebar();
-}
-/* ═══════════════════════════════════
-   MY DUTIES
-   One list for a person across every division: the AV roster plus every
-   IV team's published events. Divisions are not hard-coded - any team that
-   appears on an IV event gets its own colour and its own line in the key,
-   so a newly rolled-out team shows up without a change here.
-═══════════════════════════════════ */
-let _md={name:'',range:3,past:false,items:[],notes:[]};
-let _mdIV=null, _mdDrop=-1;
-const MD_DIV_COLOURS={av:'#4BA3DC',A:'#34D399',B:'#F472B6',SS:'#FB923C'};
-const MD_SPARE=['#FB923C','#A78BFA','#FACC15','#2DD4BF','#E879F9','#A3E635'];
-function mdColour(div){
-  if(MD_DIV_COLOURS[div]) return MD_DIV_COLOURS[div];
-  let h=0; String(div).split('').forEach(c=>{ h=(h*31+c.charCodeAt(0))>>>0; });
-  return MD_DIV_COLOURS[div]=MD_SPARE[h%MD_SPARE.length];
-}
-function mdDivLabel(div){ return div==='av'?'AV':div==='SS'?'Safety':'Team '+div; }
-function mdNorm(s){ return String(s||'').trim().replace(/\s+/g,' ').toLowerCase(); }
-function mdAddMonths(ds,n){ const d=new Date(ds+'T12:00'); d.setMonth(d.getMonth()+n); return localDS(d); }
-function mdWindow(){
-  const t=todayDS();
-  return {start:_md.past?t.slice(0,8)+'01':t, end:mdAddMonths(t,_md.range)};
-}
-function mdInit(){
-  const sh=document.getElementById('mdShareBtn');
-  if(sh&&typeof navigator.canShare==='function'&&typeof navigator.share==='function') sh.style.display='';
-  mdLoadIV().then(()=>{ if(_md.name) mdRender(); });   // also fills the name list
-  if(_md.name) mdRender();
-}
-/* The IV side. Only published events (`confirmed`) - a draft roster is a
-   work in progress and should not reach a volunteer's picture. A refused or
-   missing table is reported on the page rather than failing the whole list. */
-async function mdLoadIV(force){
-  if(_mdIV&&!force&&Date.now()-_mdIV.t<60000) return _mdIV;
-  const out={t:Date.now(),events:[],rosters:{},members:[],safety:[],notes:[]};
-  _mdIV=out;
-  if(!sb){ out.notes.push('Offline - IV team duties could not be loaded.'); return out; }
-  const t=todayDS(), from=t.slice(0,8)+'01', to=mdAddMonths(t,12);
-  try{
-    const ev=await sb.from('iv_events').select('*').eq('confirmed',true).gte('date',from).lte('date',to).order('date');
-    if(ev.error) throw ev.error;
-    out.events=ev.data||[];
-    const ids=out.events.map(e=>e.id);
-    for(let i=0;i<ids.length;i+=200){
-      const r=await sb.from('iv_roster').select('event_id,data').in('event_id',ids.slice(i,i+200));
-      if(r.error) throw r.error;
-      (r.data||[]).forEach(x=>{ out.rosters[x.event_id]=x.data; });
-    }
-  }catch(e){
-    console.warn('My Duties: IV events:',e);
-    out.events=[]; out.rosters={};
-    out.notes.push('IV team duties could not be loaded ('+((e&&e.message)||'no access')+').');
-  }
-  /* Safety & Security keeps its own roster. Quiet if the table is not there
-     or this person may not read it. */
-  try{
-    const sr=await sb.from('safety_roster').select('date,data').gte('date',from).lte('date',to);
-    if(!sr.error) out.safety=sr.data||[];
-  }catch(e){}
-  try{
-    const m=await sb.from('iv_members').select('id,name,team,status');
-    if(!m.error) out.members=m.data||[];
-  }catch(e){}
-  return out;
-}
-function mdPeople(a){ return [].concat(a&&a.m||[],a&&a.f||[],a&&a.x||[]); }
-function mdDutyLabel(key){
-  const k=String(key).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-  const map={nandi_labelling:'Nandi Labelling',number_1:'Number 1',ph_entrance:'Prayer Hall Entrance',shoe_entrance:'Shoe Entrance',seating:'Seating & Discipline',sukreet:'Sukreet',ghatpaat_closing:'Ghatpaat Closing',safety_exit:'Safety Exit Door/Discipline',nandi:'Nandi',nandi_setup:'Nandi Set-up',nandi_centre:'Nandi Centre',nandi_trolley:'Nandi Trolley',nandi_distribution:'Nandi Distribution',chai:'Chai Station',chai_packup:'Chai Station Pack-up',water_station:'Water Station',nandi_line:'Nandi Line',nandi_passing:'Nandi Passing',mph_paat_windup:'MPH Paat Windup',mph_entrance:'MPH Hall Entrance',mph_seating:'Seating & Discipline',mph_sukreet:'Sukreet & Ghatpaat Closing'};
-  return map[key]||k;
-}
-function mdAllNames(){
-  const set=new Set();
-  vols.forEach(v=>{ if(v.name) set.add(v.name.trim()); });
-  Object.values(roster).forEach(ro=>{
-    [ro._primary,ro._sup,ro._mph_primary,ro._mph_primary2].forEach(n=>{ if(n) set.add(String(n).trim()); });
-  });
-  trainings.forEach(t=>{ if(t.trainer) set.add(t.trainer.trim()); if(t.trainee) set.add(t.trainee.trim()); });
-  if(_mdIV){
-    _mdIV.members.forEach(m=>{ if(m.name&&m.status!=='inactive') set.add(m.name.trim()); });
-    (_mdIV.safety||[]).forEach(r=>((r.data&&r.data.people)||[]).forEach(n=>{ if(n) set.add(String(n).trim()); }));
-    Object.values(_mdIV.rosters).forEach(r=>{ Object.values((r&&r.assign)||{}).forEach(a=>mdPeople(a).forEach(p=>{ if(p&&p.name) set.add(String(p.name).trim()); })); });
-  }
-  return [...set].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
-}
-function mdCollect(name,win){
-  const target=mdNorm(name), items=[];
-  const is=n=>mdNorm(n)===target;
-  /* ── AV ── */
-  const dates=new Set(Object.keys(roster)); trainings.forEach(t=>dates.add(t.date));
-  [...dates].filter(ds=>ds>=win.start&&ds<=win.end).forEach(ds=>{
-    const ro=roster[ds]||{}, tr=trainings.find(e=>e.date===ds), mj=majalisEvs.find(e=>e.date===ds);
-    const trainer=tr&&is(tr.trainer), trainee=tr&&is(tr.trainee);
-    const tag=mj?['🕌 '+mj.name]:[];
-    const push=(title,subs)=>items.push({ds,div:'av',title,subs:subs||[],tags:tag.slice()});
-    const jk=ro._primary||getJKP(ro);
-    if(jk&&is(jk)&&!trainer) push('Jamātkhana duty',ro._sup?['Supervised by <b>'+esc(ro._sup)+'</b>']:[]);
-    if(ro._sup&&is(ro._sup)) push('Supervising',jk&&!is(jk)?['On duty with <b>'+esc(jk)+'</b>']:[]);
-    if(!ro._mph_removed&&(is(ro._mph_primary)||is(ro._mph_primary2))){
-      const partner=is(ro._mph_primary)?ro._mph_primary2:ro._mph_primary;
-      push('MPH congregation duty',partner?['With <b>'+esc(partner)+'</b>']:[]);
-    }
-    if(trainer) push('Training · Trainer',['Trainee: <b>'+esc(tr.trainee)+'</b>']);
-    if(trainee) push('Training · Trainee',['Trainer: <b>'+esc(tr.trainer)+'</b>']);
-  });
-  /* ── IV teams ── */
-  if(_mdIV){
-    (_mdIV.safety||[]).filter(r=>r.date>=win.start&&r.date<=win.end).forEach(r=>{
-      const ppl=(r.data&&r.data.people)||[];
-      if(!ppl.some(n=>is(n))) return;
-      const others=ppl.filter(n=>!is(n));
-      items.push({ds:r.date,div:'SS',title:'Safety & Security duty',subs:others.length?['With <b>'+others.map(esc).join(', ')+'</b>']:[],tags:[]});
-    });
-    const ids=new Set(_mdIV.members.filter(m=>is(m.name)).map(m=>m.id));
-    _mdIV.events.filter(e=>e.date>=win.start&&e.date<=win.end).forEach(e=>{
-      const div=String(e.team||'?');
-      const assign=(_mdIV.rosters[e.id]||{}).assign||{};
-      const duties=[];
-      Object.keys(assign).forEach(k=>{
-        if(mdPeople(assign[k]).some(p=>p&&((p.id!=null&&ids.has(p.id))||is(p.name)))) duties.push(mdDutyLabel(k));
-      });
-      const tags=[]; if(e.uniform) tags.push('👔 '+e.uniform);
-      if(duties.length) items.push({ds:e.date,div,title:[...new Set(duties)].join(' · '),subs:['<b>'+esc(e.name)+'</b>'],tags});
-      if(e.cover_name&&is(e.cover_name)) items.push({ds:e.date,div,title:'Covering the event',subs:['<b>'+esc(e.name)+'</b>'],tags:tags.slice()});
-    });
-  }
-  items.sort((a,b)=>a.ds.localeCompare(b.ds)||(a.div==='av'?-1:1)-(b.div==='av'?-1:1));
-  return items;
-}
-function mdRowHTML(it){
-  const d=new Date(it.ds+'T12:00'), today=todayDS();
-  const tags=it.tags.concat(it.ds===today?['TODAY']:[]).map(t=>`<span class="mdl-tag${t==='TODAY'?' today':''}">${esc(t)}</span>`).join('');
-  return `<div class="mdl-row${it.ds<today?' past':''}" style="--c:${mdColour(it.div)}">
-    <div class="mdl-date"><span class="mdl-dow">${d.toLocaleDateString('en-NZ',{weekday:'short'})}</span><span class="mdl-day">${d.getDate()}</span><span class="mdl-mo">${MOS[d.getMonth()]}</span></div>
-    <div class="mdl-body">
-      <div class="mdl-top"><span class="mdl-div">${esc(mdDivLabel(it.div))}</span><span class="mdl-title">${esc(it.title)}</span></div>
-      ${it.subs.map(x=>`<div class="mdl-sub">${x}</div>`).join('')}
-      ${tags?`<div class="mdl-tags">${tags}</div>`:''}
-    </div></div>`;
-}
-function mdDivCounts(items){
-  const m={}; items.forEach(i=>{ m[i.div]=(m[i.div]||0)+1; });
-  return Object.keys(m).sort((a,b)=>a==='av'?-1:b==='av'?1:a.localeCompare(b)).map(d=>({div:d,n:m[d]}));
-}
-function mdRangeText(win){
-  const f=ds=>new Date(ds+'T12:00').toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});
-  return f(win.start)+' – '+f(win.end);
-}
-function mdRender(){
-  if(!_md.name) return;
-  const win=mdWindow();
-  _md.items=mdCollect(_md.name,win);
-  _md.notes=(_mdIV&&_mdIV.notes)||[];
-  document.querySelectorAll('.mdl-chip').forEach(b=>b.classList.toggle('on',+b.dataset.r===_md.range));
-  const pc=document.getElementById('mdPast'); if(pc) pc.checked=_md.past;
-  document.getElementById('mdVolName').textContent=_md.name;
-  document.getElementById('mdRangeBadge').textContent=mdRangeText(win);
-  const counts=mdDivCounts(_md.items);
-  const av=_md.items.filter(i=>i.div==='av');
-  const avBits=[['JK',/^Jamātkhana/],['MPH',/^MPH/],['Sup',/^Supervising/],['Training',/^Training/]]
-    .map(([l,re])=>[l,av.filter(i=>re.test(i.title)).length]).filter(x=>x[1]).map(x=>x[0]+' '+x[1]).join(' · ');
-  document.getElementById('mdSummary').innerHTML=
-    `<div class="md-sum-card" style="--c:#fff"><div class="md-sum-label">Total duties</div><div class="md-sum-val">${_md.items.length}</div></div>`+
-    counts.map(c=>`<div class="md-sum-card" style="--c:${mdColour(c.div)}"><div class="md-sum-label">${esc(mdDivLabel(c.div))}</div><div class="md-sum-val">${c.n}</div>${c.div==='av'&&avBits?`<div class="md-sum-sub">${avBits}</div>`:''}</div>`).join('');
-  document.getElementById('mdNotes').innerHTML=_md.notes.map(n=>`<div class="mdl-note">⚠️ ${esc(n)}</div>`).join('');
-  const list=document.getElementById('mdList'), empty=document.getElementById('mdEmpty');
-  if(!_md.items.length){
-    list.innerHTML=''; empty.style.display='block';
-    document.getElementById('mdEmptyName').textContent=_md.name;
-    document.getElementById('mdEmptyRange').textContent=mdRangeText(win);
-  } else { empty.style.display='none'; list.innerHTML=_md.items.map(mdRowHTML).join(''); }
-  document.getElementById('mdResults').style.display='block';
-}
-async function mdRunSearch(name){
-  _md.name=name;
-  await mdLoadIV(true);
-  mdRender();
-}
-function mdSetRange(n){ _md.range=n; mdRender(); }
-function mdSetPast(v){ _md.past=!!v; mdRender(); }
-/* ── search box ── */
-function mdOnInput(){
-  _mdDrop=-1;
-  const q=document.getElementById('mdSearch').value.trim().toLowerCase();
-  if(!q){ mdHideDrop(); return; }
-  const matches=mdAllNames().filter(n=>n.toLowerCase().includes(q));
-  const dd=document.getElementById('mdDropdown');
-  if(!matches.length){ dd.innerHTML='<div class="md-drop-item" style="color:var(--dm);cursor:default;">No matches found</div>'; dd.classList.add('open'); return; }
-  dd.innerHTML=matches.slice(0,10).map(n=>`<div class="md-drop-item" data-name="${esc(n)}" onmousedown="mdPickName(this.dataset.name)">${esc(n)}</div>`).join('');
-  dd.classList.add('open');
-}
-function mdOnKey(e){
-  const items=document.getElementById('mdDropdown').querySelectorAll('.md-drop-item[data-name]');
-  if(e.key==='ArrowDown'){ e.preventDefault(); _mdDrop=Math.min(_mdDrop+1,items.length-1); mdHighlightDrop(items); }
-  else if(e.key==='ArrowUp'){ e.preventDefault(); _mdDrop=Math.max(_mdDrop-1,0); mdHighlightDrop(items); }
-  else if(e.key==='Enter'){ e.preventDefault(); if(_mdDrop>=0&&items[_mdDrop]) mdPickName(items[_mdDrop].dataset.name); else mdSearch(); }
-  else if(e.key==='Escape') mdHideDrop();
-}
-function mdHighlightDrop(items){
-  items.forEach((it,i)=>it.classList.toggle('selected',i===_mdDrop));
-  if(items[_mdDrop]) items[_mdDrop].scrollIntoView({block:'nearest'});
-}
-function mdShowDrop(){ if(document.getElementById('mdSearch').value.trim()) mdOnInput(); }
-function mdHideDrop(){ document.getElementById('mdDropdown').classList.remove('open'); }
-function mdPickName(name){ document.getElementById('mdSearch').value=name; mdHideDrop(); mdRunSearch(name); }
-function mdSearch(){
-  const q=document.getElementById('mdSearch').value.trim();
-  if(!q){ toast('Type a name to search','err'); return; }
-  const all=mdAllNames();
-  const exact=all.find(n=>n.toLowerCase()===q.toLowerCase());
-  const partial=all.filter(n=>n.toLowerCase().includes(q.toLowerCase()));
-  const name=exact||(partial.length===1?partial[0]:null);
-  if(!name){
-    if(partial.length>1){ toast('Multiple matches - please select from the list','err'); mdOnInput(); return; }
-    toast('Name not found','err'); return;
-  }
-  mdPickName(name);
-}
-/* ── the picture ──
-   A fixed 1080px-wide poster built off-screen from the same rows as the
-   page, so what is saved is exactly what is listed. Rendered as large as
-   the browser's canvas allows (phones cap the pixel count) - about 3x on a
-   normal list, which is what keeps it sharp when zoomed or printed. */
-function mdPosterHTML(){
-  const win=mdWindow(), counts=mdDivCounts(_md.items);
-  const upd=new Date().toLocaleString('en-NZ',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'});
-  return `<div class="mdposter" id="mdPoster">
-    <div class="mdp-head">
-      <img src="${window.IV_LOGO}" alt="">
-      <div><div class="mdp-kick">Ismaili Volunteers · My Duties</div>
-        <div class="mdp-name">${esc(_md.name)}</div>
-        <div class="mdp-range">${esc(mdRangeText(win))}</div></div>
-    </div>
-    <div class="mdp-key"><span style="--c:#fff"><i></i>Total <b>${_md.items.length}</b></span>${counts.map(c=>`<span style="--c:${mdColour(c.div)}"><i></i>${esc(mdDivLabel(c.div))} <b>${c.n}</b></span>`).join('')}</div>
-    ${_md.items.length?`<div class="mdl">${_md.items.map(mdRowHTML).join('')}</div>`:`<div class="mdp-empty">No duties in this period.</div>`}
-    <div class="mdp-foot"><span>Rosters may change - check IV Hub for the latest.</span><span style="white-space:nowrap">Updated ${esc(upd)}</span></div>
-  </div>`;
-}
-async function mdMakeCanvas(){
-  const host=document.getElementById('mdPosterHost');
-  host.innerHTML=mdPosterHTML();
-  const el=document.getElementById('mdPoster');
-  try{
-    await fontsSettled();
-    await Promise.all([...el.querySelectorAll('img')].map(i=>i.decode?i.decode().catch(()=>{}):1));
-    const h=el.offsetHeight, w=el.offsetWidth;
-    const scale=Math.max(1,Math.min(3,Math.sqrt(16e6/(w*h))));
-    return await html2canvas(el,{backgroundColor:'#020B18',scale,useCORS:true,logging:false});
-  } finally { host.innerHTML=''; }
-}
-async function mdSaveImage(share){
-  if(!_md.name){ toast('Search for a name first','err'); return; }
-  if(typeof html2canvas==='undefined'){ toast('Image library not loaded','err'); return; }
-  const btn=document.getElementById(share?'mdShareBtn':'mdSaveBtn'), label=btn.textContent;
-  btn.disabled=true; btn.textContent='Preparing…';
-  try{
-    const canvas=await mdMakeCanvas();
-    const fname=`my-duties-${_md.name.replace(/\s+/g,'-')}-${todayDS()}.png`;
-    const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
-    if(share&&blob){
-      const f=new File([blob],fname,{type:'image/png'});
-      if(navigator.canShare&&navigator.canShare({files:[f]})){
-        try{ await navigator.share({files:[f],title:_md.name+' - My Duties'}); return; }
-        catch(e){ if(e&&e.name==='AbortError') return; }
-      }
-    }
-    const link=document.createElement('a');
-    link.download=fname; link.href=blob?URL.createObjectURL(blob):canvas.toDataURL('image/png'); link.click();
-    toast('✓ Image saved');
-  }catch(e){ console.error(e); toast('Could not make the image - try again','err'); }
-  finally{ btn.disabled=false; btn.textContent=label; }
 }
 /* ═══════════════════════════════════
    REALTIME SYNC
@@ -6227,8 +5565,8 @@ function handleUserChange(payload){
           const ok = pg==='dashboard'
             || (pg==='adminpanel' && isAvAdmin)
             || (pg==='audit' && canReadLog)
-            || (['volunteers','events','stats'].includes(pg) && isAvAdmin)
-            || (['calendar','myduties'].includes(pg) && isAvTeam);
+            || (['volunteers','events'].includes(pg) && isAvAdmin)
+            || (['calendar'].includes(pg) && isAvTeam);
           if(!ok) nav(document.querySelector('[data-page=dashboard]'));
         }
       }
@@ -6454,7 +5792,26 @@ async function fontsSettled(ms){
   function vis(el){ return !!el && !el.hidden && getComputedStyle(el).display!=='none'; }
   function mk(tag,cls,html){ var e=document.createElement(tag); e.className=cls; if(html!=null) e.innerHTML=html; return e; }
 
+  /* Each page is a slanted block with a line icon over its label, drawn the
+     same way as the Team pages. The sidebar keeps its emoji. */
+  function ic(d){ return '<svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; }
+  var TP_ICONS={
+    dashboard:ic('<rect x="3" y="3" width="6" height="6" rx="1.2"/><rect x="11" y="3" width="6" height="6" rx="1.2"/><rect x="3" y="11" width="6" height="6" rx="1.2"/><rect x="11" y="11" width="6" height="6" rx="1.2"/>'),
+    calendar:ic('<rect x="3" y="4.5" width="14" height="12.5" rx="2"/><path d="M3 8.5h14M7 3v3M13 3v3"/>'),
+    volunteers:ic('<circle cx="7.5" cy="7" r="2.7"/><path d="M2.5 16c.4-2.8 2.5-4.2 5-4.2s4.6 1.4 5 4.2M13 4.6a2.5 2.5 0 010 4.8M14.5 12c1.8.4 3 1.6 3.3 4"/>'),
+    events:ic('<rect x="3.5" y="3.5" width="13" height="13" rx="3"/><path d="M10 7v6M7 10h6"/>'),
+    audit:ic('<circle cx="8.5" cy="8.5" r="5"/><path d="M12.2 12.2L17 17"/>'),
+    adminpanel:ic('<path d="M4 6h12M4 14h12"/><circle cx="8" cy="6" r="1.8"/><circle cx="12.5" cy="14" r="1.8"/>')
+  };
   function entry(src){
+    var pg=src.getAttribute('data-page');
+    if(document.body.classList.contains('tp')&&pg&&TP_ICONS[pg]){
+      var nt=src.querySelector('.nt');
+      var blk=mk('button','tn-b tn-blk',TP_ICONS[pg]+'<span class="tn-t">'+(nt?nt.textContent.trim():pg)+'</span>');
+      if(src.classList.contains('active')) blk.classList.add('on');
+      blk.addEventListener('click',function(ev){ ev.stopPropagation(); closeAll(); src.click(); });
+      return blk;
+    }
     var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':''),src.innerHTML);
     if(src.classList.contains('active')) b.classList.add('on');
     b.addEventListener('click',function(ev){
@@ -6519,6 +5876,8 @@ async function fontsSettled(ms){
       }
     }
     flush();
+    var blks=row.querySelectorAll('.tn-blk');
+    if(blks.length){ blks[0].classList.add('tn-blk-first'); blks[blks.length-1].classList.add('tn-blk-last'); }
     bar.innerHTML='';
     var brand=mk('div','tn-brand','');
     var logo=document.querySelector('.sb-logo-img, .sb-logo img, .sidebar img');
@@ -6592,6 +5951,15 @@ async function fontsSettled(ms){
     var nav=document.querySelector('.sb-nav'); if(!nav) return;
     restore();
     build();
+    /* Past the top of the page the blocks fade out, leaving just the icons and labels; each block's shape
+       comes back on hover. Two thresholds so it does not flicker at the edge. */
+    var scrolled=false, sraf=0;
+    function onScroll(){
+      var y=window.pageYOffset||document.documentElement.scrollTop||0, n=scrolled?y>8:y>40;
+      if(n!==scrolled){ scrolled=n; document.body.classList.toggle('tn-scrolled',n); }
+    }
+    window.addEventListener('scroll',function(){ if(!sraf) sraf=requestAnimationFrame(function(){ sraf=0; onScroll(); }); },{passive:true});
+    onScroll();
     try{
       new MutationObserver(schedule).observe(nav.closest('.sidebar')||nav,
         {childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
