@@ -499,6 +499,13 @@ button.chip.un:hover{background:rgba(239,68,68,.22);border-color:var(--red-lt);}
 .lead-tag{display:inline-block;background:rgba(252,211,77,.16);border:1px solid rgba(252,211,77,.4);
   color:var(--gold-lt);border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:900;margin-left:6px;}
 .att-row.unmarked{border-left:3px solid var(--gold-lt);}
+.walkin-tag{display:inline-block;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.45);color:var(--green-lt);border-radius:6px;padding:1px 7px;font-size:10.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;margin-left:6px;vertical-align:middle;}
+.att-rm{background:none;border:1px solid var(--db);color:var(--dm);border-radius:6px;width:30px;height:30px;font-size:15px;cursor:pointer;margin-left:6px;}
+.att-rm:hover{border-color:var(--red-lt);color:var(--red-lt);}
+.wi-list{max-height:220px;overflow:auto;border:1px solid var(--db);border-radius:8px;margin-top:6px;}
+.wi-opt{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.04);color:var(--dt);padding:9px 12px;font:inherit;font-size:13.5px;cursor:pointer;}
+.wi-opt:hover,.wi-opt.on{background:rgba(0,85,139,.3);}
+.wi-opt small{color:var(--dm);margin-left:6px;}
 .att-key.present{color:var(--green-lt);} .att-key.late{color:var(--gold-lt);}
 .att-key.excused{color:#C4B5FD;} .att-key.absent{color:var(--red-lt);}
 .att-seg-present{background:var(--green);} .att-seg-late{background:var(--gold);}
@@ -2062,7 +2069,7 @@ async function loadAll(){
   else ANNS=an.data||[];
   ATTEND={};
   if(at.error){ console.warn('iv_attendance:',at.error.message||at.error); }
-  else (at.data||[]).forEach(r=>{ (ATTEND[r.event_id]=ATTEND[r.event_id]||{})[r.member_id]={status:r.status,marked_by:r.marked_by,marked_at:r.marked_at}; });
+  else (at.data||[]).forEach(r=>{ (ATTEND[r.event_id]=ATTEND[r.event_id]||{})[r.member_id]=attRec(r); });
   // hub-sync status line
   const hs=document.getElementById('hubSyncStatus');
   if(hs){ if(me.error){ hs.textContent='⚠ Hub membership unavailable - '+(me.error.message||me.error); hs.style.color='var(--gold-lt)'; }
@@ -2575,10 +2582,19 @@ function memberReliability(memberId){
    refused took the tick off the screen, said nothing, and put it back on
    the next reload. Whoever marked the register saw it work twice and had
    no way to know it had not. */
+/* One attendance mark as held in memory. Walk-ins carry their duty and the
+   uniform tick with them; everybody else is just a status. */
+function attRec(r){
+  const o={status:r.status,marked_by:r.marked_by,marked_at:r.marked_at};
+  if(r.walk_in){ o.walk_in=true; o.walk_in_duty=r.walk_in_duty||''; o.in_uniform=!!r.in_uniform; }
+  return o;
+}
 async function markAttendance(eventId,memberId,status){
   if(!IS_EDIT) return;
   const cur=attStatus(eventId,memberId);
   const rec=ATTEND[eventId]=ATTEND[eventId]||{};
+  const wasWalkIn=!!(rec[memberId]&&rec[memberId].walk_in);
+  if(cur===status&&wasWalkIn){ toast('Use \u00d7 to take a walk-in off the list.'); return; }
   if(cur===status){                                   // tapping the same mark clears it
     if(sb&&!DB_MISSING){
       pauseRT(1200);
@@ -2601,7 +2617,7 @@ async function markAttendance(eventId,memberId,status){
           marked_by:CU.user,marked_at:new Date().toISOString()}));
       if(!ok){ renderAttendance(); return; }
     }
-    rec[memberId]={status:status,marked_by:CU.user,marked_at:new Date().toISOString()};
+    rec[memberId]=Object.assign({},rec[memberId]||{},{status:status,marked_by:CU.user,marked_at:new Date().toISOString()});
   }
   /* Keep the lifetime total in step. It is counted by the database on
      load, so without this the reliability figure on the member card
@@ -4723,7 +4739,102 @@ function attendanceRoll(ev){
   });
   // Rostered first, then leads who are only here to supervise.
   out.sort((a,b)=>(b.duties.length?1:0)-(a.duties.length?1:0)||a.m.name.localeCompare(b.m.name));
-  return out;
+  return out.concat(walkInRows(ATTEND[ev.id]||{}, MEMBERS, out));
+}
+/* People a lead added on the night. They are not on the roster, so they
+   only exist as attendance marks; listed after everyone who was rostered. */
+function walkInRows(att, members, already){
+  const have=new Set(already.map(r=>r.m.id)), out=[];
+  for(const id in att){
+    const a=att[id]; if(!a||!a.walk_in||have.has(+id)) continue;
+    const m=members.find(x=>x.id===+id); if(!m) continue;
+    out.push({m:m, duties:a.walk_in_duty?[a.walk_in_duty]:[], walkIn:true});
+  }
+  return out.sort((a,b)=>a.m.name.localeCompare(b.m.name));
+}
+
+/* ── WALK-INS ──
+   Somebody who was not rostered turns up in uniform and the lead gives them
+   a duty. They are added to tonight's register as Present, with the duty
+   and the uniform tick kept on the mark. The roster and duty counts are not
+   changed. Only on the day of the event, and only for this team's people. */
+const isEventDay=ev=>!!ev&&ev.date===nzTodayISO();
+let WI_CTX=null;   // {ev, members, roll, after}
+function openWalkIn(ctx){
+  WI_CTX=ctx; const ev=ctx.ev;
+  const duties=[...new Set(dutiesForEvent(ev).map(d=>recName(d.name)))];
+  oM('<h3>Add a walk-in</h3>'+
+    '<div class="ib" style="margin-bottom:12px">For someone who was not rostered but has turned up in uniform and been given a duty. They are marked Present for '+esc(ev.name)+' tonight. The roster is not changed.</div>'+
+    '<div class="frow"><label class="flabel" for="wiFind">Who</label><input type="search" id="wiFind" placeholder="Type a name" autocomplete="off" oninput="wiList()">'+
+      '<div class="wi-list" id="wiList" role="listbox" aria-label="Team members"></div><input type="hidden" id="wiWho"></div>'+
+    '<div class="frow"><label class="flabel" for="wiDuty">Duty</label><select id="wiDuty" onchange="document.getElementById(\'wiOtherRow\').style.display=this.value===\'__other\'?\'\':\'none\'">'+
+      '<option value="">Choose the duty they are doing</option>'+duties.map(n=>'<option>'+esc(n)+'</option>').join('')+'<option value="__other">Other\u2026</option></select></div>'+
+    '<div class="frow" id="wiOtherRow" style="display:none"><label class="flabel" for="wiOther">Other duty</label><input type="text" id="wiOther" maxlength="60" placeholder="What are they doing?"></div>'+
+    '<div class="frow"><label style="display:inline-flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer"><input type="checkbox" id="wiUniform" style="width:auto"> They are in uniform</label></div>'+
+    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" id="wiSave" onclick="saveWalkIn()">Add as Present</button></div>');
+  wiList();
+  setTimeout(()=>{ const f=document.getElementById('wiFind'); if(f) f.focus(); },50);
+}
+function wiList(){
+  const c=WI_CTX; if(!c) return;
+  const q=(document.getElementById('wiFind').value||'').trim().toLowerCase(), pick=+document.getElementById('wiWho').value||null;
+  const onRoll=new Set(c.roll.map(r=>r.m.id));
+  const pool=c.members.filter(m=>m.status==='active'&&!onRoll.has(m.id)&&(!q||String(m.name||'').toLowerCase().includes(q)))
+    .sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  document.getElementById('wiList').innerHTML=pool.length
+    ? pool.slice(0,60).map(m=>'<button type="button" role="option" class="wi-opt'+(m.id===pick?' on':'')+'" aria-selected="'+(m.id===pick)+'" onclick="wiPick('+m.id+')">'+esc(m.name)+'<small>'+esc([m.gender,m.age_group].filter(Boolean).join(' \u00b7 '))+'</small></button>').join('')
+    : '<div class="empty-note" style="padding:12px">'+(q?'Nobody on the team matches that name. Add new people in Data Management on the Hub first.':'Everyone on the team is already on tonight\u2019s list.')+'</div>';
+}
+function wiPick(id){
+  const m=WI_CTX.members.find(x=>x.id===id); if(!m) return;
+  document.getElementById('wiWho').value=id; document.getElementById('wiFind').value=m.name; wiList();
+}
+async function saveWalkIn(){
+  const c=WI_CTX; if(!c) return; const ev=c.ev;
+  const id=+document.getElementById('wiWho').value||null;
+  let duty=document.getElementById('wiDuty').value;
+  if(duty==='__other') duty=(document.getElementById('wiOther').value||'').trim();
+  if(!id) return toast('Pick who has turned up','err');
+  if(!duty) return toast('Choose the duty they are doing','err');
+  if(!document.getElementById('wiUniform').checked) return toast('Walk-ins must be in uniform to be counted','err');
+  if(!isEventDay(ev)) return toast('Walk-ins can only be added on the day of the event','err');
+  if(!sb||DB_MISSING) return toast('Could not add the walk-in - no database connection','err');
+  const btn=document.getElementById('wiSave'); btn.disabled=true;
+  const now=new Date().toISOString();
+  const row={event_id:ev.id,member_id:id,status:'present',marked_by:CU.user,marked_at:now,walk_in:true,walk_in_duty:duty,in_uniform:true};
+  pauseRT(1500);
+  const ok=await dbWrite('Adding the walk-in', ()=>sb.from('iv_attendance').upsert(row));
+  btn.disabled=false;
+  if(!ok) return;
+  cM();
+  const name=(c.members.find(m=>m.id===id)||{}).name||id;
+  auditLog('walk-in','attendance','Team '+ev.team+' '+ev.date+' - '+name+' added as a walk-in on '+duty+' (in uniform)');
+  toast(name+' added as Present');
+  c.after(id, attRec(row));
+}
+/* Takes a walk-in back off the night's list - for one added by mistake. */
+async function removeWalkIn(ev, id, att, members, after){
+  const name=(members.find(m=>m.id===id)||{}).name||id;
+  if(!isEventDay(ev)) return toast('Walk-ins can only be changed on the day of the event','err');
+  if(!confirm('Take '+name+' off tonight\u2019s list?\n\nTheir walk-in attendance will be deleted.')) return;
+  if(!sb||DB_MISSING) return toast('Could not remove - no database connection','err');
+  pauseRT(1200);
+  const ok=await dbWrite('Removing the walk-in', ()=>sb.from('iv_attendance').delete().eq('event_id',ev.id).eq('member_id',id),
+    {verify: ()=>sb.from('iv_attendance').select('event_id').eq('event_id',ev.id).eq('member_id',id)});
+  if(!ok) return;
+  const was=att[id]&&att[id].status; delete att[id];
+  auditLog('walk-in','attendance','Team '+ev.team+' '+ev.date+' - '+name+' removed from the walk-ins');
+  after(id, was);
+}
+function addWalkInHere(){
+  const ev=EVENTS.find(e=>e.id===attEventId); if(!ev||!IS_EDIT) return;
+  openWalkIn({ev:ev, members:MEMBERS, roll:attendanceRoll(ev), after:(id,rec)=>{
+    (ATTEND[ev.id]=ATTEND[ev.id]||{})[id]=rec; bumpTotals(id,null,'present'); renderAttendance(); }});
+}
+function removeWalkInHere(id){
+  const ev=EVENTS.find(e=>e.id===attEventId); if(!ev||!IS_EDIT) return;
+  const att=ATTEND[ev.id]=ATTEND[ev.id]||{};
+  return removeWalkIn(ev, id, att, MEMBERS, (mid,was)=>{ bumpTotals(mid,was,null); renderAttendance(); });
 }
 
 const ATT_OPTS=[
@@ -4901,7 +5012,7 @@ async function loadCovering(){
       sb.from('iv_members').select('*').in('team',teams),
     ]);
     const rosters={}; (ro||[]).forEach(r=>rosters[r.event_id]=r.data);
-    const att={}; (at||[]).forEach(a=>{ (att[a.event_id]=att[a.event_id]||{})[a.member_id]={status:a.status}; });
+    const att={}; (at||[]).forEach(a=>{ (att[a.event_id]=att[a.event_id]||{})[a.member_id]=attRec(a); });
     COVERING=mine.map(e=>({ev:e,roster:rosters[e.id]||{assign:{}},att:att[e.id]||{},members:me||[]}));
   }catch(e){ console.warn('loadCovering:',e.message||e); }
 }
@@ -4915,18 +5026,20 @@ function renderCoverPanels(){
        '<div class="pnl-h">\u{1F91D} Covering \u00b7 Team '+esc(ev.team)+' \u00b7 '+esc(fmtNice(ev.date))+
        ' <span class="ct">'+esc(ev.name)+'</span></div><div class="pnl-b">'+
        '<div class="ib" style="margin-bottom:12px">You are standing in for this event only. Marking attendance and swapping people here changes Team '+esc(ev.team)+'\u2019s roster for '+esc(fmtNice(ev.date))+' and nothing else.</div>';
-    const roll=coverRoll(c);
+    const roll=coverRoll(c), wiOpen=isEventDay(ev);
     const marked=roll.filter(r=>c.att[r.m.id]&&c.att[r.m.id].status).length;
-    h+='<div style="font-weight:800;margin-bottom:8px">'+marked+' of '+roll.length+' marked</div>';
+    h+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px"><div style="font-weight:800">'+marked+' of '+roll.length+' marked</div>'+
+       (wiOpen?'<button class="btn btn-bl btn-sm" style="margin-left:auto" onclick="addCoverWalkIn('+ci+')">\uFF0B Add walk-in</button>':'')+'</div>';
     roll.forEach(function(r){
       const st=c.att[r.m.id]&&c.att[r.m.id].status;
-      h+='<div class="att-row'+(st?'':' unmarked')+'"><div class="att-nm">'+esc(r.m.name)+
+      h+='<div class="att-row'+(st?'':' unmarked')+'"><div class="att-nm">'+esc(r.m.name)+(r.walkIn?'<span class="walkin-tag">Walk-in</span>':'')+
          '<div class="att-duties">'+(r.duties.length
             ? r.duties.map(d=>'<span class="duty-chip">'+esc(recName(d))+'</span>').join('')
             : '<span class="duty-chip none">No duty</span>')+'</div></div>'+
          '<div class="att-seg">'+ATT_OPTS.map(o=>
            '<button class="att-btn '+o.k+(st===o.k?' on':'')+'" title="'+o.label+
            '" onclick="markCoverAttendance('+ci+','+r.m.id+',\''+o.k+'\')">'+o.code+'</button>').join('')+
+         (r.walkIn&&wiOpen?'<button class="att-rm" title="Take '+esc(r.m.name)+' off the list" aria-label="Remove walk-in '+esc(r.m.name)+'" onclick="removeCoverWalkIn('+ci+','+r.m.id+')">\u00d7</button>':'')+
          '</div></div>';
     });
     h+='</div></div>';
@@ -4954,12 +5067,22 @@ function coverRoll(c){
     out.push({m:m,duties:hit.duties});
   });
   out.sort((a,b)=>a.m.name.localeCompare(b.m.name));
-  return out;
+  return out.concat(walkInRows(c.att, (c.members||[]).filter(m=>m.team===c.ev.team), out));
+}
+function addCoverWalkIn(ci){
+  const c=COVERING[ci]; if(!c) return;
+  openWalkIn({ev:c.ev, members:(c.members||[]).filter(m=>m.team===c.ev.team), roll:coverRoll(c),
+    after:(id,rec)=>{ c.att[id]=rec; renderDashboard(); }});
+}
+function removeCoverWalkIn(ci,id){
+  const c=COVERING[ci]; if(!c) return;
+  return removeWalkIn(c.ev, id, c.att, c.members||[], ()=>renderDashboard());
 }
 
 async function markCoverAttendance(ci,memberId,status){
   const c=COVERING[ci]; if(!c) return;
   const cur=c.att[memberId]&&c.att[memberId].status;
+  if(cur===status&&c.att[memberId].walk_in){ toast('Use \u00d7 to take a walk-in off the list.'); return; }
   const next=(cur===status)?null:status;
   if(!sb||DB_MISSING){ toast('Could not save attendance - no database connection','err'); return; }
   // Hold the realtime listener off, as markAttendance does. Without it
@@ -4978,7 +5101,7 @@ async function markCoverAttendance(ci,memberId,status){
         {verify: ()=>sb.from('iv_attendance').select('event_id')
                        .eq('event_id',c.ev.id).eq('member_id',memberId)});
   if(!ok){ renderDashboard(); return; }
-  if(next) c.att[memberId]={status:next}; else delete c.att[memberId];
+  if(next) c.att[memberId]=Object.assign({},c.att[memberId]||{},{status:next}); else delete c.att[memberId];
   renderDashboard();
   auditLog('cover-attendance','attendance','Team '+c.ev.team+' '+c.ev.date+' - '+
     ((c.members.find(m=>m.id===memberId)||{}).name||memberId)+': '+(next||'cleared'));
@@ -5044,6 +5167,8 @@ function renderAttendance(){
   if(!ev){ h+='<div class="empty-note">No events to record attendance for.</div>'; el.innerHTML=h; return; }
 
   const roll=attendanceRoll(ev);
+  const walkInOpen=IS_EDIT&&isEventDay(ev);
+  if(walkInOpen) h+='<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-bl btn-sm" onclick="addWalkInHere()">\uFF0B Add walk-in</button></div>';
   if(ev.confirmed && !SEEN[ev.id]) loadSeen(ev.id).then(()=>{ if(curPage==='attendance') renderAttendance(); });
   const rec=ATTEND[ev.id]||{};
   if(!roll.length){
@@ -5092,9 +5217,10 @@ function renderAttendance(){
       ? r.duties.map(d=>'<span class="duty-chip">'+esc(recName(d))+'</span>').join('')
       : '<span class="duty-chip none">'+(r.lead?'Supervising':'No duty')+'</span>';
     h+='<div class="att-row'+(st?'':' unmarked')+'">'+
-       '<div class="att-nm">'+esc(m.name)+(r.lead?' <span class="lead-tag">Lead</span>':'')+
+       '<div class="att-nm">'+esc(m.name)+(r.lead?' <span class="lead-tag">Lead</span>':'')+(r.walkIn?'<span class="walkin-tag" title="Added on the day, in uniform">Walk-in</span>':'')+
          '<div class="att-duties">'+duties+'</div></div>'+
-       '<div class="att-seg">'+ATT_OPTS.map(btn).join('')+'</div></div>';
+       '<div class="att-seg">'+ATT_OPTS.map(btn).join('')+
+         (r.walkIn&&walkInOpen?'<button class="att-rm" title="Take '+esc(m.name)+' off the list" aria-label="Remove walk-in '+esc(m.name)+'" onclick="removeWalkInHere('+m.id+')">\u00d7</button>':'')+'</div></div>';
   });
   h+='</div>';
   el.innerHTML=h;
@@ -5134,15 +5260,16 @@ function renderReports(){
      person on two duties at one event counts twice, because that is two
      duties done.                                                        */
 function attendanceStats(memberId, k){
-  let P=0,L=0,J=0,N=0;
+  let P=0,L=0,J=0,N=0,W=0;
   const evs = (k==null) ? EVENTS : eventsInCycle(k);
   evs.forEach(ev=>{
-    const st=(ATTEND[ev.id]||{})[memberId]&&ATTEND[ev.id][memberId].status;
+    const a=(ATTEND[ev.id]||{})[memberId], st=a&&a.status;
+    if(a&&a.walk_in&&(st==='present'||st==='late')) W++;
     if(st==='present') P++; else if(st==='late') L++;
     else if(st==='excused') J++; else if(st==='absent') N++;
   });
   const attDen=P+L+N, lateDen=P+L;
-  return {P:P,L:L,J:J,N:N,
+  return {P:P,L:L,J:J,N:N,W:W,
     marked:P+L+J+N,
     rate:      attDen ? Math.round((P+L)/attDen*100) : null,
     lateness:  lateDen ? Math.round(L/lateDen*100)   : null};
@@ -5187,7 +5314,7 @@ function renderAttendanceReport(k){
     '<th>Member</th><th title="(Present + Late) as a share of Present, Late and Not present. Justified absences are excluded.">Attendance rate</th>'+
     '<th title="Late as a share of the times they turned up.">Lateness rate</th>'+
     '<th title="Total duty slots they have been given.">Duty days completed</th>'+
-    '<th>P</th><th>L</th><th>J</th><th>N</th></tr></thead><tbody>';
+    '<th>P</th><th>L</th><th>J</th><th>N</th><th title="Turned up unrostered, in uniform, and were given a duty on the day. Already counted in P and L.">Walk-ins</th></tr></thead><tbody>';
   rows.forEach(r=>{
     const good=r.s.rate!=null&&r.s.rate>=90, bad=r.s.rate!=null&&r.s.rate<70;
     h+='<tr><td style="font-weight:800">'+esc(r.m.name)+'</td>'+
@@ -5195,7 +5322,7 @@ function renderAttendanceReport(k){
        '<td style="font-weight:800;color:'+((r.s.lateness||0)>25?'var(--gold-lt)':'var(--dt)')+'">'+pct(r.s.lateness)+'</td>'+
        '<td class="num" style="font-weight:800">'+r.d.total+'</td>'+
        '<td class="num">'+r.s.P+'</td><td class="num">'+r.s.L+'</td>'+
-       '<td class="num">'+r.s.J+'</td><td class="num">'+r.s.N+'</td></tr>';
+       '<td class="num">'+r.s.J+'</td><td class="num">'+r.s.N+'</td><td class="num">'+(r.s.W||'')+'</td></tr>';
   });
   return h+'</tbody></table></div></div>'+
     '<div class="ib" style="margin-top:12px">A justified absence is left out of the attendance rate entirely - giving notice costs nothing. Lateness is measured against the times someone actually turned up, so missing an event cannot make them look more punctual. A dash means they have never been rostered.</div>';
