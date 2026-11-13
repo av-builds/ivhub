@@ -48,6 +48,52 @@
     document.body.appendChild(b);
     apply(root.getAttribute('data-theme'));
   }
+  /* Full screen, on every page. Uses the browser's own full screen, so the tab
+     bar and address bar go and the page fills the display.
+     Browsers leave full screen whenever the page changes, and will only enter it
+     again from a tap or key press. So the choice is remembered for the tab, and
+     the first tap on the next page puts it back; Esc or the button turns it off.
+     iPhone Safari has no full screen for web pages, so there the button is not
+     shown rather than shown and broken. */
+  var FS_KEY='iv_fullscreen', fsUnloading=false;
+  var FS_ON='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>';
+  var FS_OFF='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h5V4M20 9h-5V4M4 15h5v5M20 15h-5v5"/></svg>';
+  function fsEl(){ return document.fullscreenElement||document.webkitFullscreenElement||null; }
+  function fsCan(){ var d=document.documentElement; return !!((document.fullscreenEnabled||document.webkitFullscreenEnabled)&&(d.requestFullscreen||d.webkitRequestFullscreen)); }
+  function fsEnter(){ var d=document.documentElement, f=d.requestFullscreen||d.webkitRequestFullscreen; try{ var r=f.call(d); if(r&&r.catch) r.catch(function(){}); }catch(e){} }
+  function fsExit(){ var f=document.exitFullscreen||document.webkitExitFullscreen; try{ var r=f&&f.call(document); if(r&&r.catch) r.catch(function(){}); }catch(e){} }
+  function fsPref(v){ try{ if(v===undefined) return sessionStorage.getItem(FS_KEY)==='1'; if(v) sessionStorage.setItem(FS_KEY,'1'); else sessionStorage.removeItem(FS_KEY); }catch(e){} return !!v; }
+  function fsPaint(){
+    var b=document.getElementById('ivFsBtn'); if(!b) return;
+    var on=!!fsEl();
+    b.setAttribute('aria-pressed',on?'true':'false');
+    b.setAttribute('aria-label',on?'Leave full screen':'Full screen');
+    b.setAttribute('title',on?'Leave full screen':'Full screen');
+    b.innerHTML=on?FS_OFF:FS_ON;
+  }
+  function mountFs(){
+    if(document.getElementById('ivFsBtn')||!fsCan()) return;
+    var b=document.createElement('button');
+    b.id='ivFsBtn'; b.type='button'; b.className='iv-theme-btn iv-fs-btn';
+    b.setAttribute('data-html2canvas-ignore','true');
+    b.addEventListener('click',function(){
+      if(fsEl()){ fsPref(false); fsExit(); } else { fsPref(true); fsEnter(); }
+    });
+    document.body.appendChild(b); fsPaint();
+    document.addEventListener('fullscreenchange',onFs); document.addEventListener('webkitfullscreenchange',onFs);
+    window.addEventListener('pagehide',function(){ fsUnloading=true; });
+    window.addEventListener('pageshow',function(){ fsUnloading=false; fsPaint(); });
+    // Back in after a page change: the next tap or key press is the gesture the browser needs.
+    if(fsPref()&&!fsEl()){
+      var again=function(){ document.removeEventListener('pointerdown',again,true); document.removeEventListener('keydown',again,true); if(fsPref()&&!fsEl()) fsEnter(); };
+      document.addEventListener('pointerdown',again,true); document.addEventListener('keydown',again,true);
+    }
+  }
+  function onFs(){
+    fsPaint();
+    // Left by Esc or the browser, not by moving to another page: stop bringing it back.
+    if(!fsEl()&&!fsUnloading) fsPref(false);
+  }
   /* Pages without a welcome card of their own (Safety, division pages) get one at the top of their signed-in view. */
   function welcome(){
     var ok=document.getElementById('stOk');
@@ -173,6 +219,6 @@
       else if(tries>60) clearInterval(iv);
     },500);
   }
-  function boot(){ mount(); welcome(); homeLogo(); growVeil(); banner(); }
+  function boot(){ mount(); mountFs(); welcome(); homeLogo(); growVeil(); banner(); }
   if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);
 })();

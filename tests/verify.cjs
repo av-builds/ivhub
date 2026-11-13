@@ -765,6 +765,23 @@ for(const file of ['teama.html','teamb.html']){
   chk(r.notOtherDays,'walkin  '+file+' no Add walk-in on any other day');
   chk(p.errs.length===0,'walkin  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
+// ── Full screen button on every page ──
+for(const file of ['index.html','teama.html','teamb.html','av.html','safety.html','setup.html']){
+  const ctx=await b.newContext({viewport:{width:1300,height:900}}); const p=await ctx.newPage(); p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
+  await ctx.route(u=>!String(u).startsWith(BASE),r=>r.abort());
+  await p.goto(BASE+'/'+file,{waitUntil:'domcontentloaded'}); await p.waitForTimeout(1500);
+  const r=await p.evaluate(async()=>{ const o={}; const bt=document.getElementById('ivFsBtn'); o.has=!!bt;
+    if(!bt) return o;
+    o.label=bt.getAttribute('aria-label'); o.size=bt.getBoundingClientRect().width>=44;
+    const th=document.getElementById('ivThemeBtn').getBoundingClientRect(), f=bt.getBoundingClientRect();
+    o.clear=f.right<=th.left||f.left>=th.right||f.bottom<=th.top||f.top>=th.bottom;
+    let called=0; document.documentElement.requestFullscreen=function(){ called++; return Promise.resolve(); };
+    bt.click(); o.asked=called===1&&sessionStorage.getItem('iv_fullscreen')==='1';
+    return o; });
+  chk(r.has&&r.label==='Full screen'&&r.size&&r.clear,'fullscr '+file+' has a full screen button, 44px or more, clear of the theme button',JSON.stringify(r));
+  chk(r.asked,'fullscr '+file+' pressing it asks the browser for full screen and remembers the choice',JSON.stringify(r));
+  chk(p.errs.length===0,'fullscr '+file+' no page errors',JSON.stringify(p.errs)); await ctx.close(); }
+
 // ── Replacement picker lists everybody on the team ──
 for(const file of ['teama.html','teamb.html']){
   const p=await open(file,{width:1300,height:900});

@@ -61,7 +61,13 @@ body{
 .iv-theme-btn:hover{border-color:var(--iv-ac);transform:rotate(18deg) scale(1.06);}
 .iv-theme-btn:active{transform:scale(.9);}
 @media(max-width:1100px){.iv-theme-btn{top:12px;bottom:auto;right:12px;width:44px;height:44px;}}
-@media print{.iv-theme-btn{display:none;}}
+/* Full screen button: left of the theme button, so it stays clear of the Needs attention pill above it. */
+.iv-fs-btn{right:74px;}
+/* Above the sign-in screen (z-index 1000), so full screen and the theme switch work there too. */
+.iv-theme-btn{z-index:1001;}
+.iv-fs-btn:hover{transform:scale(1.06);}
+@media(max-width:1100px){.iv-fs-btn{top:12px;bottom:auto;right:64px;}}
+@media print{.iv-theme-btn,.iv-fs-btn{display:none;}}
 
 /* ── top navigation (laptop) ────────────────────────── */
 @media(min-width:1101px){
