@@ -711,6 +711,46 @@ for(const file of ['teama.html','teamb.html']){
   chk(r.afterOn&&r.wroteOn,'youth    '+file+' turning it back on saves and brings the duties back',JSON.stringify(r));
   chk(p.errs.length===0,'youth    '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
+// ── Walk-ins on the attendance page ──
+for(const file of ['teama.html','teamb.html']){
+  const p=await open(file,{width:1300,height:900});
+  await p.evaluate(`(${SEED})(['tl_a','tl_b'])`);
+  const r=await p.evaluate(async()=>{ const o={}; const writes=[];
+    const ok={data:[{}],error:null};
+    // A delete, and the read-back that follows it, find nothing left.
+    let gone=false;
+    const chain=(t)=>{ let wrote=false; const c=new Proxy(function(){},{get:(_,k)=>k==='then'?(res,rej)=>Promise.resolve(gone&&!wrote?{data:[],error:null}:ok).then(res,rej):(...a)=>{ if(k==='upsert'){ writes.push([t,k,a[0]]); wrote=true; gone=false; } if(k==='delete'){ writes.push([t,k,a[0]]); gone=true; } return c; },apply:()=>c}); return c; };
+    sb={from:t=>chain(t),rpc:async()=>ok,channel:()=>({on(){return this;},subscribe(){return this;}}),removeChannel(){}};
+    window.confirm=()=>true; ATTEND={};
+    MEMBERS.push({id:90,name:'Walk In',status:'active',gender:'Male',age_group:'adult',away:[],prefs:{}},{id:91,name:'Also Free',status:'active',gender:'Female',age_group:'youth',away:[],prefs:{}});
+    const q=s=>document.querySelector(s);
+    nav('attendance'); attEventId=1; renderAttendance();
+    const before=attendanceRoll(EVENTS[0]).length;
+    o.btn=!!q('#body-attendance [onclick="addWalkInHere()"]');
+    addWalkInHere();
+    const onRoll=new Set(attendanceRoll(EVENTS[0]).map(x=>x.m.id));
+    const opts=[...document.querySelectorAll('#wiList .wi-opt')]; o.excludesRostered=opts.length>0&&opts.length===MEMBERS.filter(m=>!onRoll.has(m.id)).length;
+    const who=MEMBERS.find(m=>!onRoll.has(m.id));
+    const f=q('#wiFind'); f.value=who.name; f.dispatchEvent(new Event('input')); q('#wiList .wi-opt').click();
+    q('#wiDuty').value='Shoe Entrance';
+    await saveWalkIn(); o.needsUniform=writes.length===0;
+    q('#wiUniform').checked=true; await saveWalkIn();
+    const w=writes.find(x=>x[1]==='upsert'); o.row=!!w&&w[2].walk_in===true&&w[2].in_uniform===true&&w[2].walk_in_duty==='Shoe Entrance'&&w[2].status==='present'&&w[2].member_id===who.id;
+    o.listed=attendanceRoll(EVENTS[0]).length===before+1&&/walk-in/i.test(q('#body-attendance').innerText);
+    o.counts=attendanceStats(who.id).P===1&&attendanceStats(who.id).W===1;
+    o.rosterSame=!people(ROSTERS[1].assign[DUTY_INFO['Shoe Entrance'].key]).some(x=>x.id===who.id);
+    await markAttendance(1,who.id,'present'); o.retapKept=!!ATTEND[1][who.id];
+    await markAttendance(1,who.id,'late'); o.lateKeeps=ATTEND[1][who.id].walk_in===true&&ATTEND[1][who.id].status==='late';
+    await removeWalkInHere(who.id); o.removed=!ATTEND[1][who.id]&&attendanceRoll(EVENTS[0]).length===before;
+    attEventId=2; renderAttendance(); o.notOtherDays=!q('#body-attendance [onclick="addWalkInHere()"]');
+    return o; });
+  chk(r.btn&&r.excludesRostered,'walkin  '+file+' on the day, leads can add a walk-in from the team, minus those already rostered',JSON.stringify(r));
+  chk(r.needsUniform&&r.row,'walkin  '+file+' the uniform tick is required and the mark saves as Present with the duty',JSON.stringify(r));
+  chk(r.listed&&r.counts&&r.rosterSame,'walkin  '+file+' the walk-in is listed, tagged and counted; the roster is untouched',JSON.stringify(r));
+  chk(r.retapKept&&r.lateKeeps&&r.removed,'walkin  '+file+' re-tapping does not drop a walk-in, Late keeps the tag, and x removes it',JSON.stringify(r));
+  chk(r.notOtherDays,'walkin  '+file+' no Add walk-in on any other day');
+  chk(p.errs.length===0,'walkin  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
+
 // ── Replacement picker lists everybody on the team ──
 for(const file of ['teama.html','teamb.html']){
   const p=await open(file,{width:1300,height:900});
