@@ -281,7 +281,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     CU={user:'x',display:'X',perms:['facilitator'],uid:'u'}; o.facTeams=rpGroups(grantableRoles()).map(g=>g.id).join();
     o.spec=SPEC_TEAMS.map(t=>t.id).join(); o.chips=(specChipsHTML(['COOKING','XYZ'],'').match(/spec-chip active/g)||[]).length;
     return o; });
-  chk(r.cats==='Leadership|PHMU|Training & Development|Safety & Security|Ancillary Services','roles   picker groups follow the four categories',r.cats);
+  chk(r.cats==='Leadership|PHMU|Training|Safety|Ancillary Services','roles   picker groups follow the four categories',r.cats);
   chk(r.cooking==='ck_lead,ck_alead,ck_team','roles   a team offers Team Lead, Assistant Team Lead and Volunteer',r.cooking);
   chk(r.beforeLevel===''&&r.afterLevel==='ck_lead','roles   no role until a level is chosen',r.beforeLevel+' / '+r.afterLevel);
   chk(r.facTeams==='A,B','roles   a facilitator is still offered Teams A and B only',r.facTeams);
@@ -793,6 +793,24 @@ for(const file of ['index.html','teama.html','teamb.html','av.html','safety.html
   chk(r.has&&r.label==='Full screen'&&r.size&&r.clear,'fullscr '+file+' has a full screen button, 44px or more, clear of the theme button',JSON.stringify(r));
   chk(r.asked,'fullscr '+file+' pressing it asks the browser for full screen and remembers the choice',JSON.stringify(r));
   chk(p.errs.length===0,'fullscr '+file+' no page errors',JSON.stringify(p.errs)); await ctx.close(); }
+
+// ── Hub: the Team-page bar, with dropdown categories ──
+for(const w of [1440,1101]){
+  const p=await open('index.html',{width:w,height:900});
+  const r=await p.evaluate(async()=>{ const o={};
+    CU={user:'x',display:'Owner',perms:['owner'],uid:'u'}; try{ recomputeAccess(); }catch(e){} document.getElementById('app').style.display='block'; try{ applyNavVisibility(); }catch(e){}
+    await new Promise(r=>setTimeout(r,500));
+    const blks=[...document.querySelectorAll('#topnav .tn-row .tn-blk')];
+    o.labels=blks.map(b=>b.innerText.replace(/[\u25be]/g,'').replace(/\s+/g,' ').trim()).join('|');
+    o.icons=blks.every(b=>b.querySelector('svg')); o.ends=blks[0].classList.contains('tn-blk-first')&&blks[blks.length-1].classList.contains('tn-blk-last');
+    o.h=blks[0].getBoundingClientRect().height; o.body=document.body.classList.contains('tp');
+    const g=document.querySelector('#topnav .tn-group'); g.dispatchEvent(new Event('mouseenter'));
+    o.menu=g.classList.contains('open')&&g.querySelectorAll('.tn-menu .tn-b').length>0;
+    o.brand=!!document.querySelector('#topnav .tn-brand')&&!document.querySelector('#topnav .tn-hub');
+    return o; });
+  chk(/^Dashboard\|My Duties\|My Profile\|PHMU/.test(r.labels)&&/Management$/.test(r.labels)&&r.icons&&r.ends&&r.h>=44,'hub-bar '+w+'px pages and categories are blocks with icons, Management last',r.labels);
+  chk(r.menu&&r.brand&&r.body,'hub-bar '+w+'px a category block opens its dropdown; no Back to Hub button',JSON.stringify(r));
+  chk(p.errs.length===0,'hub-bar '+w+'px no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Replacement picker lists everybody on the team ──
 for(const file of ['teama.html','teamb.html']){

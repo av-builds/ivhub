@@ -777,10 +777,10 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261113a">
-<script src="ivtheme.js?v=20261113a"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261114a">
+<script src="ivtheme.js?v=20261114a"></script>
 </head>
-<body>
+<body class="tp">
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
      The same block sits at the top of index.html, teama.html (and so
      teamb.html) and av.html; change it in all of them together.
@@ -5395,7 +5395,51 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   function vis(el){ return !!el && !el.hidden && getComputedStyle(el).display!=='none'; }
   function mk(tag,cls,html){ var e=document.createElement(tag); e.className=cls; if(html!=null) e.innerHTML=html; return e; }
 
-  function entry(src){
+  /* Pages and categories are slanted blocks with a line icon over the label,
+     drawn the same way as the Team pages. Inside a dropdown the entries stay
+     as plain rows. */
+  function ic(d){ return '<svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; }
+  var TP_ICONS={
+    dashboard:ic('<rect x="3" y="3" width="6" height="6" rx="1.2"/><rect x="11" y="3" width="6" height="6" rx="1.2"/><rect x="3" y="11" width="6" height="6" rx="1.2"/><rect x="11" y="11" width="6" height="6" rx="1.2"/>'),
+    myduties:ic('<rect x="3" y="4.5" width="14" height="12.5" rx="2"/><path d="M3 8.5h14M7 3v3M13 3v3"/>'),
+    profile:ic('<circle cx="10" cy="7" r="3"/><path d="M4 17c.5-3.2 3-5 6-5s5.5 1.8 6 5"/>'),
+    phmu:ic('<circle cx="7.5" cy="7" r="2.7"/><path d="M2.5 16c.4-2.8 2.5-4.2 5-4.2s4.6 1.4 5 4.2M13 4.6a2.5 2.5 0 010 4.8M14.5 12c1.8.4 3 1.6 3.3 4"/>'),
+    ancillary:ic('<path d="M12.5 4.5a3.5 3.5 0 00-4.4 4.4L3.5 13.5a1.6 1.6 0 002.3 2.3l4.6-4.6a3.5 3.5 0 004.4-4.4l-2.2 2.2-1.8-.4-.4-1.8z"/>'),
+    management:ic('<path d="M4 6h12M4 14h12"/><circle cx="8" cy="6" r="1.8"/><circle cx="12.5" cy="14" r="1.8"/>'),
+    training:ic('<path d="M2.5 8L10 4.5 17.5 8 10 11.5z"/><path d="M5.5 9.5v4c1.2 1.2 2.8 1.8 4.5 1.8s3.3-.6 4.5-1.8v-4"/>'),
+    safety:ic('<path d="M10 3l6 2.3v4.4c0 3.6-2.4 6-6 7.3-3.6-1.3-6-3.7-6-7.3V5.3z"/><path d="M7.3 10l2 2 3.4-3.6"/>'),
+    other:ic('<rect x="3.5" y="3.5" width="13" height="13" rx="3"/>')
+  };
+  function iconFor(key,label){
+    if(TP_ICONS[key]) return TP_ICONS[key];
+    var t=String(label||'').toLowerCase();
+    if(/training/.test(t)) return TP_ICONS.training;
+    if(/safety|security/.test(t)) return TP_ICONS.safety;
+    if(/ancillary/.test(t)) return TP_ICONS.ancillary;
+    if(/management/.test(t)) return TP_ICONS.management;
+    if(/phmu/.test(t)) return TP_ICONS.phmu;
+    return TP_ICONS.other;
+  }
+  function labelOf(src){
+    var c=src.cloneNode(true);
+    Array.prototype.forEach.call(c.querySelectorAll('.ni,.ntag,.nbadge'),function(n){ n.parentNode.removeChild(n); });
+    return c.textContent.replace(/\s+/g,' ').trim();
+  }
+  function block(src){
+    var lab=labelOf(src), blk=mk('button','tn-b tn-blk',iconFor(src.getAttribute('data-page'),lab)+'<span class="tn-t"></span>');
+    // Long division names are shortened on the block and given in full as its title, so eight blocks still fit a small laptop.
+    var SHORT={'Training & Development':'Training','Safety & Security':'Safety'};
+    blk.querySelector('.tn-t').textContent=SHORT[lab]||lab; if(SHORT[lab]) blk.title=lab;
+    if(src.classList.contains('active')) blk.classList.add('on');
+    blk.addEventListener('click',function(ev){
+      ev.stopPropagation(); closeAll();
+      if(src.tagName==='A'&&src.getAttribute('href')) (window.ivGo||function(u){location.href=u;})(src.getAttribute('href'));
+      else src.click();
+    });
+    return blk;
+  }
+  function entry(src,asBlock){
+    if(asBlock) return block(src);
     var b=mk('button','tn-b'+(src.classList.contains('hub-link')?' tn-hub':'')+(src.classList.contains('nav-sub')?' tn-sub':''),src.innerHTML);
     if(src.classList.contains('active')) b.classList.add('on');
     b.addEventListener('click',function(ev){
@@ -5435,8 +5479,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
         if(!vis(el)) continue;
         group=mk('div','tn-group');
         var secName=el.textContent.trim();
-        groupBtn=mk('button','tn-b'+(/^management$/i.test(secName)?' tn-mgmt':''),
-                    secName+'<span class="tn-caret">▾</span>');
+        groupBtn=mk('button','tn-b tn-blk',iconFor('',secName)+'<span class="tn-t">'+secName+'<span class="tn-caret">\u25be</span></span>');
         groupMenu=mk('div','tn-menu');
         /* Opens on hover, and still on click for touch screens and
            keyboards, which have no hover at all. A short delay on leaving
@@ -5465,13 +5508,15 @@ window.addEventListener('DOMContentLoaded', async ()=>{
         if(!vis(el)) continue;
         // A standalone category (Training & Development, Safety & Security)
         // sits on the bar itself instead of inside the group before it.
-        if(el.classList.contains('nav-solo')){ flush(); row.appendChild(entry(el)); continue; }
+        if(el.classList.contains('nav-solo')){ flush(); row.appendChild(entry(el,true)); continue; }
         if(group){ groupMenu.appendChild(entry(el)); groupHas=true;
                    if(el.classList.contains('active')) groupBtn.classList.add('on'); }
-        else row.appendChild(entry(el));
+        else row.appendChild(entry(el,true));
       }
     }
     flush();
+    var blks=row.querySelectorAll('.tn-blk');
+    if(blks.length){ blks[0].classList.add('tn-blk-first'); blks[blks.length-1].classList.add('tn-blk-last'); }
     bar.innerHTML='';
     var brand=mk('div','tn-brand','');
     var logo=document.querySelector('.sb-logo-img, .sb-logo img, .sidebar img');
@@ -5545,6 +5590,15 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     var nav=document.querySelector('.sb-nav'); if(!nav) return;
     restore();
     build();
+    /* Past the top of the page the blocks fade out, leaving just the icons and labels; each block's shape
+       comes back on hover. Two thresholds so it does not flicker at the edge. */
+    var scrolled=false, sraf=0;
+    function onScroll(){
+      var y=window.pageYOffset||document.documentElement.scrollTop||0, n=scrolled?y>8:y>40;
+      if(n!==scrolled){ scrolled=n; document.body.classList.toggle('tn-scrolled',n); }
+    }
+    window.addEventListener('scroll',function(){ if(!sraf) sraf=requestAnimationFrame(function(){ sraf=0; onScroll(); }); },{passive:true});
+    onScroll();
     try{
       new MutationObserver(schedule).observe(nav.closest('.sidebar')||nav,
         {childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});

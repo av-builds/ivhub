@@ -972,3 +972,17 @@ html[data-theme="light"] .hm-c-av{--hc:#4A68B5;--hco:#fff;}html[data-theme="ligh
   .hm-strip.n2 .hm-pc:last-child{clip-path:polygon(0 0,100% 0,100% 100%,40px 100%);padding:32px 36px 32px 96px;}
 }
 @media(prefers-reduced-motion:reduce){.hm-portal,.hm-pc,.hm-rowlink svg,.hm-cta svg,.hm-rings i,.hm-duty{transition:none;animation:none;}}
+
+/* The Hub's bar takes its colour from the deep sea blue chosen for the Hub home page, as each Team page takes its own. */
+html[data-team="deepsea"] body.tp #topnav{--iv-ac:var(--iv-sec);--iv-acs:var(--iv-secs);}
+/* A category block opens a dropdown; the arrow sits beside its label. */
+body.tp .tn-group{display:flex;align-items:stretch;}
+body.tp .tn-b.tn-blk .tn-caret{margin-left:5px;opacity:.7;}
+/* The Hub keeps Dashboard as its own block (elsewhere the logo is the way home and the item is hidden). */
+html[data-team="deepsea"] body.tp .sb-nav .nav-item[data-page="dashboard"]{display:flex!important;}
+@media(min-width:1101px) and (max-width:1320px){
+  body.tp .tn-b.tn-blk{padding:0 14px;font-size:12px;}
+  body.tp .tn-b.tn-blk-first{padding-left:16px;}
+  body.tp .tn-b.tn-blk-last{padding-right:16px;}
+  body.tp .tn-brand{margin-right:10px;}
+}
