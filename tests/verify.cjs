@@ -741,27 +741,39 @@ for(const file of ['teama.html','teamb.html']){
     nav('attendance'); attEventId=1; renderAttendance();
     const before=attendanceRoll(EVENTS[0]).length;
     o.btn=!!q('#body-attendance [onclick="addWalkInHere()"]');
-    addWalkInHere();
+    // The other team's people come from the database; here, two stand-ins.
+    const mine=MEMBERS.slice(), tm=PAGE_TEAM==='A'?'B':'A';
+    sb.from=(tb)=>tb==='iv_members'?{select:async()=>({data:mine.map(m=>Object.assign({},m,{team:PAGE_TEAM})).concat([{id:95,name:'Other Team Person',team:tm,status:'active',gender:'Female',age_group:'adult'},{id:96,name:'Other Team Two',team:tm,status:'active',gender:'Male',age_group:'youth'}]),error:null})}:chain(tb);
+    await addWalkInHere();
+    o.otherTeamListed=!!ALL_MEMBERS&&[...document.querySelectorAll('#wiList .wi-opt')].some(x=>/Other Team Person/.test(x.innerText)&&/Team (A|B)/.test(x.innerText));
+    cM(); sb.from=(tb)=>chain(tb);
+    await addWalkInHere();
     const onRoll=new Set(attendanceRoll(EVENTS[0]).map(x=>x.m.id));
-    const opts=[...document.querySelectorAll('#wiList .wi-opt')]; o.excludesRostered=opts.length>0&&opts.length===MEMBERS.filter(m=>!onRoll.has(m.id)).length;
+    const opts=[...document.querySelectorAll('#wiList .wi-opt')]; o.excludesRostered=opts.length>0&&opts.length===walkInPool().filter(m=>m.status==='active'&&!onRoll.has(m.id)).length&&!opts.some(x=>onRoll.has(+/wiPick\((\d+)\)/.exec(x.getAttribute('onclick'))[1]));
     const who=MEMBERS.find(m=>!onRoll.has(m.id));
     const f=q('#wiFind'); f.value=who.name; f.dispatchEvent(new Event('input')); q('#wiList .wi-opt').click();
     q('#wiDuty').value='Shoe Entrance';
     await saveWalkIn(); o.needsUniform=writes.length===0;
     q('#wiUniform').checked=true; await saveWalkIn();
     const w=writes.find(x=>x[1]==='upsert'); o.row=!!w&&w[2].walk_in===true&&w[2].in_uniform===true&&w[2].walk_in_duty==='Shoe Entrance'&&w[2].status==='present'&&w[2].member_id===who.id;
-    o.listed=attendanceRoll(EVENTS[0]).length===before+1&&/walk-in/i.test(q('#body-attendance').innerText);
+    // a second walk-in: from the other team, with no duty at all
+    await addWalkInHere(); const f2=q('#wiFind'); f2.value='Other Team Person'; f2.dispatchEvent(new Event('input')); q('#wiList .wi-opt').click();
+    q('#wiUniform').checked=true; await saveWalkIn();
+    const w2=writes.filter(x=>x[1]==='upsert').pop(); o.noDutyRow=!!w2&&w2[2].member_id===95&&w2[2].walk_in===true&&!w2[2].walk_in_duty&&w2[2].in_uniform===true&&w2[2].status==='present';
+    o.otherShown=/Other Team Person/.test(q('#body-attendance').innerText)&&/No duty/.test(q('#body-attendance').innerText);
+    o.listed=attendanceRoll(EVENTS[0]).length===before+2&&/walk-in/i.test(q('#body-attendance').innerText);
     o.counts=attendanceStats(who.id).P===1&&attendanceStats(who.id).W===1;
     o.rosterSame=!people(ROSTERS[1].assign[DUTY_INFO['Shoe Entrance'].key]).some(x=>x.id===who.id);
     await markAttendance(1,who.id,'present'); o.retapKept=!!ATTEND[1][who.id];
     await markAttendance(1,who.id,'late'); o.lateKeeps=ATTEND[1][who.id].walk_in===true&&ATTEND[1][who.id].status==='late';
-    await removeWalkInHere(who.id); o.removed=!ATTEND[1][who.id]&&attendanceRoll(EVENTS[0]).length===before;
+    await removeWalkInHere(who.id); o.removed=!ATTEND[1][who.id]&&attendanceRoll(EVENTS[0]).length===before+1;
     attEventId=2; renderAttendance(); o.notOtherDays=!q('#body-attendance [onclick="addWalkInHere()"]');
     return o; });
-  chk(r.btn&&r.excludesRostered,'walkin  '+file+' on the day, leads can add a walk-in from the team, minus those already rostered',JSON.stringify(r));
+  chk(r.btn&&r.excludesRostered,'walkin  '+file+' on the day, leads can add a walk-in from either team, minus those already on the list',JSON.stringify(r));
   chk(r.needsUniform&&r.row,'walkin  '+file+' the uniform tick is required and the mark saves as Present with the duty',JSON.stringify(r));
   chk(r.listed&&r.counts&&r.rosterSame,'walkin  '+file+' the walk-in is listed, tagged and counted; the roster is untouched',JSON.stringify(r));
   chk(r.retapKept&&r.lateKeeps&&r.removed,'walkin  '+file+' re-tapping does not drop a walk-in, Late keeps the tag, and x removes it',JSON.stringify(r));
+  chk(r.otherTeamListed&&r.noDutyRow&&r.otherShown,'walkin  '+file+' a walk-in can be from either team and needs no duty',JSON.stringify(r));
   chk(r.notOtherDays,'walkin  '+file+' no Add walk-in on any other day');
   chk(p.errs.length===0,'walkin  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 

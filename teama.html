@@ -2032,6 +2032,7 @@ async function loadAll(){
   });
   if(me.error){ console.warn('iv_members:',me.error.message||me.error); if(tableMissing(me.error))DB_MISSING=true; MEMBERS=[]; }
   else MEMBERS=(me.data||[]).map(normMember).sort((a,b)=>a.name.localeCompare(b.name));
+  ALL_MEMBERS=null;   // walk-ins read both teams; fetched again on next use so edits show
   if(ev.error){ console.warn('iv_events:',ev.error.message||ev.error); if(tableMissing(ev.error))DB_MISSING=true; EVENTS=[]; }
   else EVENTS=ev.data||[];
   const evIds=EVENTS.map(e=>e.id);
@@ -4739,10 +4740,26 @@ function attendanceRoll(ev){
   });
   // Rostered first, then leads who are only here to supervise.
   out.sort((a,b)=>(b.duties.length?1:0)-(a.duties.length?1:0)||a.m.name.localeCompare(b.m.name));
-  return out.concat(walkInRows(ATTEND[ev.id]||{}, MEMBERS, out));
+  const att=ATTEND[ev.id]||{};
+  if(!ALL_MEMBERS&&Object.keys(att).some(id=>att[id]&&att[id].walk_in&&!MEMBERS.some(m=>m.id===+id)))
+    loadAllMembers().then(()=>{ if(curPage==='attendance') renderAttendance(); });
+  return out.concat(walkInRows(att, walkInPool(), out));
 }
 /* People a lead added on the night. They are not on the roster, so they
    only exist as attendance marks; listed after everyone who was rostered. */
+/* Walk-ins can come from either team, so the page needs the other team's
+   people as well as its own. Fetched once, on the first walk-in. */
+let ALL_MEMBERS=null, _allMembersP=null;
+function loadAllMembers(){
+  if(ALL_MEMBERS) return Promise.resolve(ALL_MEMBERS);
+  if(!sb||DB_MISSING) return Promise.resolve(MEMBERS);
+  return _allMembersP=_allMembersP||Promise.resolve(sb.from('iv_members').select('*')).then(function(r){
+    _allMembersP=null;
+    if(r&&r.error){ console.warn('walk-in members:',r.error.message||r.error); return MEMBERS; }
+    return ALL_MEMBERS=(r.data||[]).map(normMember);
+  },function(){ _allMembersP=null; return MEMBERS; });
+}
+const walkInPool=()=>ALL_MEMBERS||MEMBERS;
 function walkInRows(att, members, already){
   const have=new Set(already.map(r=>r.m.id)), out=[];
   for(const id in att){
@@ -4764,11 +4781,11 @@ function openWalkIn(ctx){
   WI_CTX=ctx; const ev=ctx.ev;
   const duties=[...new Set(dutiesForEvent(ev).map(d=>recName(d.name)))];
   oM('<h3>Add a walk-in</h3>'+
-    '<div class="ib" style="margin-bottom:12px">For someone who was not rostered but has turned up in uniform and been given a duty. They are marked Present for '+esc(ev.name)+' tonight. The roster is not changed.</div>'+
+    '<div class="ib" style="margin-bottom:12px">For someone who was not rostered but has turned up in uniform. They can be from either team, and a duty is optional. They are marked Present for '+esc(ev.name)+' tonight. The roster is not changed.</div>'+
     '<div class="frow"><label class="flabel" for="wiFind">Who</label><input type="search" id="wiFind" placeholder="Type a name" autocomplete="off" oninput="wiList()">'+
-      '<div class="wi-list" id="wiList" role="listbox" aria-label="Team members"></div><input type="hidden" id="wiWho"></div>'+
-    '<div class="frow"><label class="flabel" for="wiDuty">Duty</label><select id="wiDuty" onchange="document.getElementById(\'wiOtherRow\').style.display=this.value===\'__other\'?\'\':\'none\'">'+
-      '<option value="">Choose the duty they are doing</option>'+duties.map(n=>'<option>'+esc(n)+'</option>').join('')+'<option value="__other">Other\u2026</option></select></div>'+
+      '<div class="wi-list" id="wiList" role="listbox" aria-label="Members of either team"></div><input type="hidden" id="wiWho"></div>'+
+    '<div class="frow"><label class="flabel" for="wiDuty">Duty (optional)</label><select id="wiDuty" onchange="document.getElementById(\'wiOtherRow\').style.display=this.value===\'__other\'?\'\':\'none\'">'+
+      '<option value="">No duty</option>'+duties.map(n=>'<option>'+esc(n)+'</option>').join('')+'<option value="__other">Other\u2026</option></select></div>'+
     '<div class="frow" id="wiOtherRow" style="display:none"><label class="flabel" for="wiOther">Other duty</label><input type="text" id="wiOther" maxlength="60" placeholder="What are they doing?"></div>'+
     '<div class="frow"><label style="display:inline-flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer"><input type="checkbox" id="wiUniform" style="width:auto"> They are in uniform</label></div>'+
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" id="wiSave" onclick="saveWalkIn()">Add as Present</button></div>');
@@ -4782,8 +4799,8 @@ function wiList(){
   const pool=c.members.filter(m=>m.status==='active'&&!onRoll.has(m.id)&&(!q||String(m.name||'').toLowerCase().includes(q)))
     .sort((a,b)=>String(a.name).localeCompare(String(b.name)));
   document.getElementById('wiList').innerHTML=pool.length
-    ? pool.slice(0,60).map(m=>'<button type="button" role="option" class="wi-opt'+(m.id===pick?' on':'')+'" aria-selected="'+(m.id===pick)+'" onclick="wiPick('+m.id+')">'+esc(m.name)+'<small>'+esc([m.gender,m.age_group].filter(Boolean).join(' \u00b7 '))+'</small></button>').join('')
-    : '<div class="empty-note" style="padding:12px">'+(q?'Nobody on the team matches that name. Add new people in Data Management on the Hub first.':'Everyone on the team is already on tonight\u2019s list.')+'</div>';
+    ? pool.slice(0,60).map(m=>'<button type="button" role="option" class="wi-opt'+(m.id===pick?' on':'')+'" aria-selected="'+(m.id===pick)+'" onclick="wiPick('+m.id+')">'+esc(m.name)+'<small>'+esc([m.gender,m.age_group,'Team '+m.team].filter(Boolean).join(' \u00b7 '))+'</small></button>').join('')
+    : '<div class="empty-note" style="padding:12px">'+(q?'Nobody in either team matches that name. Add new people in Data Management on the Hub first.':'Everyone is already on tonight\u2019s list.')+'</div>';
 }
 function wiPick(id){
   const m=WI_CTX.members.find(x=>x.id===id); if(!m) return;
@@ -4795,20 +4812,19 @@ async function saveWalkIn(){
   let duty=document.getElementById('wiDuty').value;
   if(duty==='__other') duty=(document.getElementById('wiOther').value||'').trim();
   if(!id) return toast('Pick who has turned up','err');
-  if(!duty) return toast('Choose the duty they are doing','err');
   if(!document.getElementById('wiUniform').checked) return toast('Walk-ins must be in uniform to be counted','err');
   if(!isEventDay(ev)) return toast('Walk-ins can only be added on the day of the event','err');
   if(!sb||DB_MISSING) return toast('Could not add the walk-in - no database connection','err');
   const btn=document.getElementById('wiSave'); btn.disabled=true;
   const now=new Date().toISOString();
-  const row={event_id:ev.id,member_id:id,status:'present',marked_by:CU.user,marked_at:now,walk_in:true,walk_in_duty:duty,in_uniform:true};
+  const row={event_id:ev.id,member_id:id,status:'present',marked_by:CU.user,marked_at:now,walk_in:true,walk_in_duty:duty||null,in_uniform:true};
   pauseRT(1500);
   const ok=await dbWrite('Adding the walk-in', ()=>sb.from('iv_attendance').upsert(row));
   btn.disabled=false;
   if(!ok) return;
   cM();
   const name=(c.members.find(m=>m.id===id)||{}).name||id;
-  auditLog('walk-in','attendance','Team '+ev.team+' '+ev.date+' - '+name+' added as a walk-in on '+duty+' (in uniform)');
+  auditLog('walk-in','attendance','Team '+ev.team+' '+ev.date+' - '+name+' added as a walk-in '+(duty?'on '+duty:'with no duty')+' (in uniform)');
   toast(name+' added as Present');
   c.after(id, attRec(row));
 }
@@ -4826,15 +4842,16 @@ async function removeWalkIn(ev, id, att, members, after){
   auditLog('walk-in','attendance','Team '+ev.team+' '+ev.date+' - '+name+' removed from the walk-ins');
   after(id, was);
 }
-function addWalkInHere(){
+async function addWalkInHere(){
   const ev=EVENTS.find(e=>e.id===attEventId); if(!ev||!IS_EDIT) return;
-  openWalkIn({ev:ev, members:MEMBERS, roll:attendanceRoll(ev), after:(id,rec)=>{
+  await loadAllMembers();
+  openWalkIn({ev:ev, members:walkInPool(), roll:attendanceRoll(ev), after:(id,rec)=>{
     (ATTEND[ev.id]=ATTEND[ev.id]||{})[id]=rec; bumpTotals(id,null,'present'); renderAttendance(); }});
 }
 function removeWalkInHere(id){
   const ev=EVENTS.find(e=>e.id===attEventId); if(!ev||!IS_EDIT) return;
   const att=ATTEND[ev.id]=ATTEND[ev.id]||{};
-  return removeWalkIn(ev, id, att, MEMBERS, (mid,was)=>{ bumpTotals(mid,was,null); renderAttendance(); });
+  return removeWalkIn(ev, id, att, walkInPool(), (mid,was)=>{ bumpTotals(mid,was,null); renderAttendance(); });
 }
 
 const ATT_OPTS=[
@@ -5014,6 +5031,7 @@ async function loadCovering(){
     const rosters={}; (ro||[]).forEach(r=>rosters[r.event_id]=r.data);
     const att={}; (at||[]).forEach(a=>{ (att[a.event_id]=att[a.event_id]||{})[a.member_id]=attRec(a); });
     COVERING=mine.map(e=>({ev:e,roster:rosters[e.id]||{assign:{}},att:att[e.id]||{},members:me||[]}));
+    if(COVERING.some(c=>Object.keys(c.att).some(id=>c.att[id].walk_in))) await loadAllMembers();   // so a walk-in from the other team has a name
   }catch(e){ console.warn('loadCovering:',e.message||e); }
 }
 
@@ -5067,16 +5085,17 @@ function coverRoll(c){
     out.push({m:m,duties:hit.duties});
   });
   out.sort((a,b)=>a.m.name.localeCompare(b.m.name));
-  return out.concat(walkInRows(c.att, (c.members||[]).filter(m=>m.team===c.ev.team), out));
+  return out.concat(walkInRows(c.att, walkInPool(), out));
 }
-function addCoverWalkIn(ci){
+async function addCoverWalkIn(ci){
   const c=COVERING[ci]; if(!c) return;
-  openWalkIn({ev:c.ev, members:(c.members||[]).filter(m=>m.team===c.ev.team), roll:coverRoll(c),
+  await loadAllMembers();
+  openWalkIn({ev:c.ev, members:walkInPool(), roll:coverRoll(c),
     after:(id,rec)=>{ c.att[id]=rec; renderDashboard(); }});
 }
 function removeCoverWalkIn(ci,id){
   const c=COVERING[ci]; if(!c) return;
-  return removeWalkIn(c.ev, id, c.att, c.members||[], ()=>renderDashboard());
+  return removeWalkIn(c.ev, id, c.att, walkInPool(), ()=>renderDashboard());
 }
 
 async function markCoverAttendance(ci,memberId,status){
