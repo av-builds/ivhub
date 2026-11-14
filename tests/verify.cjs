@@ -262,7 +262,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     return o; });
   chk(/Overview/.test(r.head.groups['Ancillary Services']||'')&&/Maintenance/.test(r.head.groups['Ancillary Services']||'')&&!r.head.groups['PHMU'],'topbar  a division head sees Ancillary Services with its teams',JSON.stringify(r.head.groups));
   chk(/Cooking/.test(r.cook.groups['Ancillary Services']||'')&&!/Maintenance/.test(r.cook.groups['Ancillary Services']||''),'topbar  a team volunteer sees only their team',JSON.stringify(r.cook.groups));
-  chk(r.safety.direct.some(x=>/Safety & Security/.test(x))&&!r.safety.groups['PHMU'],'topbar  Safety & Security stands alone on the bar',r.safety.direct.join('|'));
+  chk(r.safety.direct.some(x=>/Safety/.test(x))&&!r.safety.groups['PHMU'],'topbar  Safety & Security stands alone on the bar',r.safety.direct.join('|'));
   chk(/Team A/.test(r.tl.groups['PHMU']||'')&&!r.tl.groups['Ancillary Services'],'topbar  a Team A lead sees PHMU with Team A only',JSON.stringify(r.tl.groups));
   chk(/Paat Team/.test(r.paat.groups['PHMU']||'')&&/Abeshafa/.test(r.paat.groups['PHMU']||''),'topbar  a Paat group member sees the Paat Team group under PHMU',r.paat.groups['PHMU']);
   chk(['PHMU','Ancillary Services'].every(k=>r.dir.groups[k])&&r.dir.direct.some(x=>/Training/.test(x))&&r.dir.direct.some(x=>/Safety/.test(x)),'topbar  a director sees all four categories');
@@ -281,7 +281,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     CU={user:'x',display:'X',perms:['facilitator'],uid:'u'}; o.facTeams=rpGroups(grantableRoles()).map(g=>g.id).join();
     o.spec=SPEC_TEAMS.map(t=>t.id).join(); o.chips=(specChipsHTML(['COOKING','XYZ'],'').match(/spec-chip active/g)||[]).length;
     return o; });
-  chk(r.cats==='Leadership|PHMU|Training|Safety|Ancillary Services','roles   picker groups follow the four categories',r.cats);
+  chk(r.cats==='Leadership|PHMU|Training & Development|Safety & Security|Ancillary Services','roles   picker groups follow the four categories',r.cats);
   chk(r.cooking==='ck_lead,ck_alead,ck_team','roles   a team offers Team Lead, Assistant Team Lead and Volunteer',r.cooking);
   chk(r.beforeLevel===''&&r.afterLevel==='ck_lead','roles   no role until a level is chosen',r.beforeLevel+' / '+r.afterLevel);
   chk(r.facTeams==='A,B','roles   a facilitator is still offered Teams A and B only',r.facTeams);
@@ -294,7 +294,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     'team_a':'', 'team_b':'', 'tl_a':'PHMU:Team A', 'ytl_b':'PHMU:Team B', 'facilitator':'PHMU:Team A,Team B',
     'av_team':'PHMU:AV Team', 'av_admin':'PHMU:AV Team',
     'pt_lead':'PHMU:Paat Team,Abeshafa Paat Group,Sukreet Paat Group', 'ab_team':'PHMU:Abeshafa Paat Group',
-    'td_lead':'+Training & Development', 'ss_alead':'+Safety & Security',
+    'td_lead':'+Training', 'ss_alead':'+Safety',
     'an_lead':'Ancillary Services:Overview,Maintenance,Cooking Team,Cleaning Volunteers', 'mt_team':'Ancillary Services:Maintenance', 'ck_alead':'Ancillary Services:Cooking Team',
     'phmu_lead':'ALL','director':'ALL','owner':'ALL','nobody':'' };
   const got=await p.evaluate(async roles=>{ const o={};
