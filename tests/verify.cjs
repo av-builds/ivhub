@@ -262,7 +262,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     return o; });
   chk(/Overview/.test(r.head.groups['Ancillary Services']||'')&&/Maintenance/.test(r.head.groups['Ancillary Services']||'')&&!r.head.groups['PHMU'],'topbar  a division head sees Ancillary Services with its teams',JSON.stringify(r.head.groups));
   chk(/Cooking/.test(r.cook.groups['Ancillary Services']||'')&&!/Maintenance/.test(r.cook.groups['Ancillary Services']||''),'topbar  a team volunteer sees only their team',JSON.stringify(r.cook.groups));
-  chk(r.safety.direct.some(x=>/Safety & Security/.test(x))&&!r.safety.groups['PHMU'],'topbar  Safety & Security stands alone on the bar',r.safety.direct.join('|'));
+  chk(r.safety.direct.some(x=>/Safety/.test(x))&&!r.safety.groups['PHMU'],'topbar  Safety & Security stands alone on the bar',r.safety.direct.join('|'));
   chk(/Team A/.test(r.tl.groups['PHMU']||'')&&!r.tl.groups['Ancillary Services'],'topbar  a Team A lead sees PHMU with Team A only',JSON.stringify(r.tl.groups));
   chk(/Paat Team/.test(r.paat.groups['PHMU']||'')&&/Abeshafa/.test(r.paat.groups['PHMU']||''),'topbar  a Paat group member sees the Paat Team group under PHMU',r.paat.groups['PHMU']);
   chk(['PHMU','Ancillary Services'].every(k=>r.dir.groups[k])&&r.dir.direct.some(x=>/Training/.test(x))&&r.dir.direct.some(x=>/Safety/.test(x)),'topbar  a director sees all four categories');
@@ -294,7 +294,7 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     'team_a':'', 'team_b':'', 'tl_a':'PHMU:Team A', 'ytl_b':'PHMU:Team B', 'facilitator':'PHMU:Team A,Team B',
     'av_team':'PHMU:AV Team', 'av_admin':'PHMU:AV Team',
     'pt_lead':'PHMU:Paat Team,Abeshafa Paat Group,Sukreet Paat Group', 'ab_team':'PHMU:Abeshafa Paat Group',
-    'td_lead':'+Training & Development', 'ss_alead':'+Safety & Security',
+    'td_lead':'+Training', 'ss_alead':'+Safety',
     'an_lead':'Ancillary Services:Overview,Maintenance,Cooking Team,Cleaning Volunteers', 'mt_team':'Ancillary Services:Maintenance', 'ck_alead':'Ancillary Services:Cooking Team',
     'phmu_lead':'ALL','director':'ALL','owner':'ALL','nobody':'' };
   const got=await p.evaluate(async roles=>{ const o={};
@@ -741,29 +741,76 @@ for(const file of ['teama.html','teamb.html']){
     nav('attendance'); attEventId=1; renderAttendance();
     const before=attendanceRoll(EVENTS[0]).length;
     o.btn=!!q('#body-attendance [onclick="addWalkInHere()"]');
-    addWalkInHere();
+    // The other team's people come from the database; here, two stand-ins.
+    const mine=MEMBERS.slice(), tm=PAGE_TEAM==='A'?'B':'A';
+    sb.from=(tb)=>tb==='iv_members'?{select:async()=>({data:mine.map(m=>Object.assign({},m,{team:PAGE_TEAM})).concat([{id:95,name:'Other Team Person',team:tm,status:'active',gender:'Female',age_group:'adult'},{id:96,name:'Other Team Two',team:tm,status:'active',gender:'Male',age_group:'youth'}]),error:null})}:chain(tb);
+    await addWalkInHere();
+    o.otherTeamListed=!!ALL_MEMBERS&&[...document.querySelectorAll('#wiList .wi-opt')].some(x=>/Other Team Person/.test(x.innerText)&&/Team (A|B)/.test(x.innerText));
+    cM(); sb.from=(tb)=>chain(tb);
+    await addWalkInHere();
     const onRoll=new Set(attendanceRoll(EVENTS[0]).map(x=>x.m.id));
-    const opts=[...document.querySelectorAll('#wiList .wi-opt')]; o.excludesRostered=opts.length>0&&opts.length===MEMBERS.filter(m=>!onRoll.has(m.id)).length;
+    const opts=[...document.querySelectorAll('#wiList .wi-opt')]; o.excludesRostered=opts.length>0&&opts.length===walkInPool().filter(m=>m.status==='active'&&!onRoll.has(m.id)).length&&!opts.some(x=>onRoll.has(+/wiPick\((\d+)\)/.exec(x.getAttribute('onclick'))[1]));
     const who=MEMBERS.find(m=>!onRoll.has(m.id));
     const f=q('#wiFind'); f.value=who.name; f.dispatchEvent(new Event('input')); q('#wiList .wi-opt').click();
     q('#wiDuty').value='Shoe Entrance';
     await saveWalkIn(); o.needsUniform=writes.length===0;
     q('#wiUniform').checked=true; await saveWalkIn();
     const w=writes.find(x=>x[1]==='upsert'); o.row=!!w&&w[2].walk_in===true&&w[2].in_uniform===true&&w[2].walk_in_duty==='Shoe Entrance'&&w[2].status==='present'&&w[2].member_id===who.id;
-    o.listed=attendanceRoll(EVENTS[0]).length===before+1&&/walk-in/i.test(q('#body-attendance').innerText);
+    // a second walk-in: from the other team, with no duty at all
+    await addWalkInHere(); const f2=q('#wiFind'); f2.value='Other Team Person'; f2.dispatchEvent(new Event('input')); q('#wiList .wi-opt').click();
+    q('#wiUniform').checked=true; await saveWalkIn();
+    const w2=writes.filter(x=>x[1]==='upsert').pop(); o.noDutyRow=!!w2&&w2[2].member_id===95&&w2[2].walk_in===true&&!w2[2].walk_in_duty&&w2[2].in_uniform===true&&w2[2].status==='present';
+    o.otherShown=/Other Team Person/.test(q('#body-attendance').innerText)&&/No duty/.test(q('#body-attendance').innerText);
+    o.listed=attendanceRoll(EVENTS[0]).length===before+2&&/walk-in/i.test(q('#body-attendance').innerText);
     o.counts=attendanceStats(who.id).P===1&&attendanceStats(who.id).W===1;
     o.rosterSame=!people(ROSTERS[1].assign[DUTY_INFO['Shoe Entrance'].key]).some(x=>x.id===who.id);
     await markAttendance(1,who.id,'present'); o.retapKept=!!ATTEND[1][who.id];
     await markAttendance(1,who.id,'late'); o.lateKeeps=ATTEND[1][who.id].walk_in===true&&ATTEND[1][who.id].status==='late';
-    await removeWalkInHere(who.id); o.removed=!ATTEND[1][who.id]&&attendanceRoll(EVENTS[0]).length===before;
+    await removeWalkInHere(who.id); o.removed=!ATTEND[1][who.id]&&attendanceRoll(EVENTS[0]).length===before+1;
     attEventId=2; renderAttendance(); o.notOtherDays=!q('#body-attendance [onclick="addWalkInHere()"]');
     return o; });
-  chk(r.btn&&r.excludesRostered,'walkin  '+file+' on the day, leads can add a walk-in from the team, minus those already rostered',JSON.stringify(r));
+  chk(r.btn&&r.excludesRostered,'walkin  '+file+' on the day, leads can add a walk-in from either team, minus those already on the list',JSON.stringify(r));
   chk(r.needsUniform&&r.row,'walkin  '+file+' the uniform tick is required and the mark saves as Present with the duty',JSON.stringify(r));
   chk(r.listed&&r.counts&&r.rosterSame,'walkin  '+file+' the walk-in is listed, tagged and counted; the roster is untouched',JSON.stringify(r));
   chk(r.retapKept&&r.lateKeeps&&r.removed,'walkin  '+file+' re-tapping does not drop a walk-in, Late keeps the tag, and x removes it',JSON.stringify(r));
+  chk(r.otherTeamListed&&r.noDutyRow&&r.otherShown,'walkin  '+file+' a walk-in can be from either team and needs no duty',JSON.stringify(r));
   chk(r.notOtherDays,'walkin  '+file+' no Add walk-in on any other day');
   chk(p.errs.length===0,'walkin  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
+
+// ── Full screen button on every page ──
+for(const file of ['index.html','teama.html','teamb.html','av.html','safety.html','setup.html']){
+  const ctx=await b.newContext({viewport:{width:1300,height:900}}); const p=await ctx.newPage(); p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
+  await ctx.route(u=>!String(u).startsWith(BASE),r=>r.abort());
+  await p.goto(BASE+'/'+file,{waitUntil:'domcontentloaded'}); await p.waitForTimeout(1500);
+  const r=await p.evaluate(async()=>{ const o={}; const bt=document.getElementById('ivFsBtn'); o.has=!!bt;
+    if(!bt) return o;
+    o.label=bt.getAttribute('aria-label'); o.size=bt.getBoundingClientRect().width>=44;
+    const th=document.getElementById('ivThemeBtn').getBoundingClientRect(), f=bt.getBoundingClientRect();
+    o.clear=f.right<=th.left||f.left>=th.right||f.bottom<=th.top||f.top>=th.bottom;
+    let called=0; document.documentElement.requestFullscreen=function(){ called++; return Promise.resolve(); };
+    bt.click(); o.asked=called===1&&sessionStorage.getItem('iv_fullscreen')==='1';
+    return o; });
+  chk(r.has&&r.label==='Full screen'&&r.size&&r.clear,'fullscr '+file+' has a full screen button, 44px or more, clear of the theme button',JSON.stringify(r));
+  chk(r.asked,'fullscr '+file+' pressing it asks the browser for full screen and remembers the choice',JSON.stringify(r));
+  chk(p.errs.length===0,'fullscr '+file+' no page errors',JSON.stringify(p.errs)); await ctx.close(); }
+
+// ── Hub: the Team-page bar, with dropdown categories ──
+for(const w of [1440,1101]){
+  const p=await open('index.html',{width:w,height:900});
+  const r=await p.evaluate(async()=>{ const o={};
+    CU={user:'x',display:'Owner',perms:['owner'],uid:'u'}; try{ recomputeAccess(); }catch(e){} document.getElementById('app').style.display='block'; try{ applyNavVisibility(); }catch(e){}
+    await new Promise(r=>setTimeout(r,500));
+    const blks=[...document.querySelectorAll('#topnav .tn-row .tn-blk')];
+    o.labels=blks.map(b=>b.innerText.replace(/[\u25be]/g,'').replace(/\s+/g,' ').trim()).join('|');
+    o.icons=blks.every(b=>b.querySelector('svg')); o.ends=blks[0].classList.contains('tn-blk-first')&&blks[blks.length-1].classList.contains('tn-blk-last');
+    o.h=blks[0].getBoundingClientRect().height; o.body=document.body.classList.contains('tp');
+    const g=document.querySelector('#topnav .tn-group'); g.dispatchEvent(new Event('mouseenter'));
+    o.menu=g.classList.contains('open')&&g.querySelectorAll('.tn-menu .tn-b').length>0;
+    o.brand=!!document.querySelector('#topnav .tn-brand')&&!document.querySelector('#topnav .tn-hub');
+    return o; });
+  chk(/^Dashboard\|My Duties\|My Profile\|PHMU/.test(r.labels)&&/Management$/.test(r.labels)&&r.icons&&r.ends&&r.h>=44,'hub-bar '+w+'px pages and categories are blocks with icons, Management last',r.labels);
+  chk(r.menu&&r.brand&&r.body,'hub-bar '+w+'px a category block opens its dropdown; no Back to Hub button',JSON.stringify(r));
+  chk(p.errs.length===0,'hub-bar '+w+'px no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Replacement picker lists everybody on the team ──
 for(const file of ['teama.html','teamb.html']){
