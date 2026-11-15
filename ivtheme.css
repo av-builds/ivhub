@@ -986,3 +986,24 @@ html[data-team="deepsea"] body.tp .sb-nav .nav-item[data-page="dashboard"]{displ
   body.tp .tn-b.tn-blk-last{padding-right:16px;}
   body.tp .tn-brand{margin-right:10px;}
 }
+
+/* ── dropdowns unfold as a stack of parallelograms ──────
+   Each entry is a slanted block, the same slant as the bar, hanging under its category block. They are all as wide
+   as the widest entry and drop down one after another. No box around them. Division captions stay as plain text. */
+body.tp .tn-menu{width:max-content;min-width:240px;max-width:340px;padding:0;margin:0;background:none;border:0;border-radius:0;box-shadow:none;
+  top:calc(100% + 2px);left:0;opacity:1;transform:none;transition:none;display:none;flex-direction:column;gap:2px;}
+body.tp .tn-group.open .tn-menu{display:flex;}
+@starting-style{body.tp .tn-group.open .tn-menu{opacity:1;transform:none;}}
+body.tp .tn-menu .tn-b{width:100%;box-sizing:border-box;justify-content:flex-start;height:44px;padding:0 30px 0 26px;margin:0;border-radius:0;box-shadow:none;
+  background:color-mix(in srgb,var(--ds2) 96%,var(--dt));color:var(--dm);font-size:13.5px;font-weight:700;text-align:left;
+  clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);}
+body.tp .tn-menu .tn-b.tn-sub{padding-left:40px;font-size:13px;}
+body.tp .tn-menu .tn-b:hover{background:color-mix(in srgb,var(--iv-ac) 22%,var(--ds2));color:var(--dt);}
+body.tp .tn-menu .tn-b.on{background:color-mix(in srgb,var(--iv-ac) 30%,var(--ds2));color:var(--dt);}
+body.tp .tn-menu .tn-b:focus-visible{outline:2px solid var(--dt);outline-offset:-4px;}
+body.tp .tn-menu .tn-cap{padding:8px 4px 2px 26px;}
+@media(prefers-reduced-motion:no-preference){
+  body.tp .tn-group.open .tn-menu>*{animation:tnUnfold .22s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*55ms);}
+}
+@keyframes tnUnfold{from{opacity:0;transform:translateY(-14px) skewX(-6deg);}to{opacity:1;transform:none;}}
+body.tp .tn-menu>*{translate:var(--lean,0px) 0;}
