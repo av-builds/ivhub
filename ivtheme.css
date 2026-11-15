@@ -996,7 +996,7 @@ body.tp .tn-group.open .tn-menu{display:flex;}
 @starting-style{body.tp .tn-group.open .tn-menu{opacity:1;transform:none;}}
 body.tp .tn-menu .tn-b{width:100%;box-sizing:border-box;justify-content:flex-start;height:44px;padding:0 30px 0 26px;margin:0;border-radius:0;box-shadow:none;
   background:color-mix(in srgb,var(--ds2) 96%,var(--dt));color:var(--dm);font-size:13.5px;font-weight:700;text-align:left;
-  clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);}
+  clip-path:polygon(var(--sl) 0,100% 0,calc(100% - var(--sl)) 100%,0 100%);}
 body.tp .tn-menu .tn-b.tn-sub{padding-left:40px;font-size:13px;}
 body.tp .tn-menu .tn-b:hover{background:color-mix(in srgb,var(--iv-ac) 22%,var(--ds2));color:var(--dt);}
 body.tp .tn-menu .tn-b.on{background:color-mix(in srgb,var(--iv-ac) 30%,var(--ds2));color:var(--dt);}
@@ -1007,3 +1007,5 @@ body.tp .tn-menu .tn-cap{padding:8px 4px 2px 26px;}
 }
 @keyframes tnUnfold{from{opacity:0;transform:translateY(-14px) skewX(-6deg);}to{opacity:1;transform:none;}}
 body.tp .tn-menu>*{translate:var(--lean,0px) 0;}
+/* The dropdown blocks lean at the same angle as the category block above them: 14px over its 72px height, so 8.5px over 44px. */
+body.tp .tn-menu{--sl:8.5px;}

@@ -777,7 +777,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261115b">
+<link rel="stylesheet" href="ivtheme.css?v=20261115d">
 <script src="ivtheme.js?v=20261114a"></script>
 </head>
 <body class="tp">
@@ -5451,20 +5451,16 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     return b;
   }
 
-  /* The dropdown is a stack of parallelograms. Each is shifted along the slant so that
-     their slanted edges, and the category block's own, run on as one straight diagonal
-     instead of zigzagging. The slant is 14px over a 44px block; measured here because
-     the horizontal start depends on where the category block sits. */
-  var SLANT=14, BLOCK_H=44;
+  /* The dropdown is a stack of parallelograms hanging from the right edge of its
+     category block: the top right corner of every entry sits where the category
+     block's slanted right edge ends at its bottom, so the first entry continues
+     that edge and the rest line up beneath it. The stack extends to the left. */
+  var SLANT=14;
   function lean(g,btn){
     var menu=g.querySelector('.tn-menu'); if(!menu||!document.body.classList.contains('tp')) return;
-    var mr=menu.getBoundingClientRect(), br=btn.getBoundingClientRect(), y=0;
-    var base=br.left-mr.left;                       // the category block's bottom left corner, from the menu's left edge
-    Array.prototype.forEach.call(menu.children,function(c){
-      var x=base-SLANT-((y+2)*SLANT/BLOCK_H);       // 2px is the gap under the category block
-      c.style.setProperty('--lean',x.toFixed(1)+'px');
-      y+=c.offsetHeight+2;
-    });
+    var mr=menu.getBoundingClientRect(), br=btn.getBoundingClientRect();
+    var x=(br.right-SLANT)-mr.right;               // entries are as wide as the menu, so this moves them all the same distance
+    Array.prototype.forEach.call(menu.children,function(c){ c.style.setProperty('--lean',x.toFixed(1)+'px'); });
   }
   function closeAll(){
     var g=document.querySelectorAll('.tn-group.open');
