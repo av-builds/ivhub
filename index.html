@@ -777,7 +777,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261115d">
+<link rel="stylesheet" href="ivtheme.css?v=20261115e">
 <script src="ivtheme.js?v=20261114a"></script>
 </head>
 <body class="tp">
@@ -5451,16 +5451,22 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     return b;
   }
 
-  /* The dropdown is a stack of parallelograms hanging from the right edge of its
-     category block: the top right corner of every entry sits where the category
-     block's slanted right edge ends at its bottom, so the first entry continues
-     that edge and the rest line up beneath it. The stack extends to the left. */
-  var SLANT=14;
+  /* The dropdown is a stack of parallelograms on one straight diagonal. The first
+     entry's top left corner sits at the category block's bottom left corner, and
+     each entry after it starts where the one above it ends, so the left edges run
+     down as a single slanted line at the category block's own angle. The slant
+     (8.5px over 44px) is the category block's 14px over 72px. */
+  var SLANT=8.5, BLOCK_H=44;
   function lean(g,btn){
     var menu=g.querySelector('.tn-menu'); if(!menu||!document.body.classList.contains('tp')) return;
-    var mr=menu.getBoundingClientRect(), br=btn.getBoundingClientRect();
-    var x=(br.right-SLANT)-mr.right;               // entries are as wide as the menu, so this moves them all the same distance
-    Array.prototype.forEach.call(menu.children,function(c){ c.style.setProperty('--lean',x.toFixed(1)+'px'); });
+    var mr=menu.getBoundingClientRect(), br=btn.getBoundingClientRect(), y=0;
+    var base=br.left-mr.left;                       // the category block's bottom left corner, from the menu's left edge
+    Array.prototype.forEach.call(menu.children,function(c){
+      var h=c.offsetHeight||BLOCK_H;
+      var x=base-SLANT-((y+2)*SLANT/BLOCK_H);       // 2px is the gap under the category block
+      c.style.setProperty('--lean',x.toFixed(1)+'px');
+      y+=h+2;
+    });
   }
   function closeAll(){
     var g=document.querySelectorAll('.tn-group.open');
