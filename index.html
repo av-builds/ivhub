@@ -777,8 +777,11 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261114a">
+<link rel="stylesheet" href="ivtheme.css?v=20261118b">
+<link rel="stylesheet" href="ivshape.base.css?v=20261118b">
+<link rel="stylesheet" href="ivshape.css?v=20261118b">
 <script src="ivtheme.js?v=20261114a"></script>
+<script src="ivmenu.js?v=20261114a"></script>
 </head>
 <body class="tp">
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
@@ -5451,6 +5454,23 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     return b;
   }
 
+  /* The dropdown is a stack of parallelograms on one straight diagonal. The first
+     entry's top left corner sits at the category block's bottom left corner, and
+     each entry after it starts where the one above it ends, so the left edges run
+     down as a single slanted line at the category block's own angle. The slant
+     (8.5px over 44px) is the category block's 14px over 72px. */
+  var SLANT=8.5, BLOCK_H=44;
+  function lean(g,btn){
+    var menu=g.querySelector('.tn-menu'); if(!menu||!document.body.classList.contains('tp')) return;
+    var mr=menu.getBoundingClientRect(), br=btn.getBoundingClientRect(), y=0;
+    var base=br.left-mr.left;                       // the category block's bottom left corner, from the menu's left edge
+    Array.prototype.forEach.call(menu.children,function(c){
+      var h=c.offsetHeight||BLOCK_H;
+      var x=base-SLANT-((y+2)*SLANT/BLOCK_H);       // 2px is the gap under the category block
+      c.style.setProperty('--lean',x.toFixed(1)+'px');
+      y+=h+2;
+    });
+  }
   function closeAll(){
     var g=document.querySelectorAll('.tn-group.open');
     for(var i=0;i<g.length;i++) g[i].classList.remove('open');
@@ -5462,6 +5482,8 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     var row=mk('div','tn-row'); var group=null, groupBtn=null, groupMenu=null, groupHas=false;
 
     function flush(){
+      // Each entry knows its place in the stack, so they can unfold one after another.
+      if(group&&groupHas) Array.prototype.forEach.call(groupMenu.children,function(c,n){ c.style.setProperty('--i',n); });
       if(group&&groupHas) row.appendChild(group);
       group=null; groupBtn=null; groupMenu=null; groupHas=false;
     }
@@ -5487,7 +5509,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
            its way down. */
         (function(g,b){
           var shut;
-          function open(){ clearTimeout(shut); closeAll(); g.classList.add('open'); }
+          function open(){ clearTimeout(shut); closeAll(); g.classList.add('open'); lean(g,b); }
           function later(){ clearTimeout(shut); shut=setTimeout(function(){ g.classList.remove('open'); }, 220); }
           g.addEventListener('mouseenter', open);
           g.addEventListener('mouseleave', later);

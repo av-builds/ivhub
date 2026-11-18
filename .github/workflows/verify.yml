@@ -16,13 +16,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
       - run: npm install
+      # The cache is only a download shortcut. It was keyed on package.json, whose "^1.40.0" lets
+      # Playwright move to a newer release that wants a newer browser build than the cached one,
+      # so a cache hit could leave the browser missing. Installing every run is a no-op when the
+      # right build is already there and fetches it when it is not.
       - uses: actions/cache@v4
-        id: browser-cache
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
-      - if: steps.browser-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-      - if: steps.browser-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+      - run: npx playwright install --with-deps chromium
       - run: npm test

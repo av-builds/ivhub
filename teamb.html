@@ -1241,8 +1241,11 @@ span.chip.blank{cursor:default;}
   .cl-bigring svg{animation:none;stroke-dashoffset:0;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261114a">
+<link rel="stylesheet" href="ivtheme.css?v=20261118b">
+<link rel="stylesheet" href="ivshape.base.css?v=20261118b">
+<link rel="stylesheet" href="ivshape.css?v=20261118b">
 <script src="ivtheme.js?v=20261114a"></script>
+<script src="ivmenu.js?v=20261114a"></script>
 </head>
 <body class="tp">
 <!-- ── IV HUB LOADING SCREEN ─────────────────────────────────────────
@@ -1447,6 +1450,17 @@ let CAN_MOVE=!!CU&&hasPerm(...MOVE_PERMS);
    pages. Switching keeps you on the same page (Roster A to Roster B) rather
    than dropping you on the other team's front door. */
 window.CAN_SWITCH_TEAM=()=>hasPerm(...IV_TOP,'facilitator');
+/* On the laptop bar the team name opens a stack under it; the dialog below is for phones, where the name is in the side menu. */
+function openTeamMenu(anchor){
+  if(!window.CAN_SWITCH_TEAM()) return;
+  if(!window.IVP) return openTeamSwitch();
+  const other=PAGE_TEAM==='A'?'B':'A';
+  IVP.popup(anchor,[
+    {label:'Team '+PAGE_TEAM+' (you are here)',on:true,disabled:true},
+    {label:'Switch to Team '+other,run:()=>ivGo('team'+other.toLowerCase()+'.html?p='+curPage)},
+    {label:'Back to the Hub',run:()=>ivGo('index.html')}
+  ],{role:'menu',minWidth:230});
+}
 function openTeamSwitch(){
   if(!window.CAN_SWITCH_TEAM()) return;
   const other=PAGE_TEAM==='A'?'B':'A';
@@ -3796,9 +3810,17 @@ function chipHTML(ev,dutyKey,arrName,idx,p,locked){
   const note=away?'<span class="chip-note">away</span>':'';
   const nm=esc(p.name||'?');
   if(locked) return '<span class="chip'+(away?' away':'')+'">'+nm+note+'</span>';
-  return '<button class="chip'+(away?' away':'')+'" aria-label="'+nm+' - change or remove" '+
-    'onclick="openPicker(\''+escJs(dutyKey)+'\',\''+escJs(arrName)+'\','+idx+')">'+
+  return '<button class="chip'+(away?' away':'')+'" aria-haspopup="menu" aria-label="'+nm+' - change or remove" '+
+    'onclick="openChipPop(this,\''+escJs(dutyKey)+'\',\''+escJs(arrName)+'\','+idx+')">'+
     nm+note+'<span class="chip-more" aria-hidden="true">⋯</span></button>';
+}
+/* A person on the roster opens a small stack: swap them, or take them off the duty. */
+function openChipPop(btn,dutyKey,arrName,idx){
+  if(!window.IVP) return openPicker(dutyKey,arrName,idx);
+  IVP.popup(btn,[
+    {label:'Swap for someone else',run:()=>openPicker(dutyKey,arrName,idx)},
+    {label:'Remove from this duty',danger:true,run:()=>confirmRemoveSlot(dutyKey,arrName,idx)}
+  ],{role:'menu',minWidth:230});
 }
 /* One tap on a person opens this. It carries the two actions that used to
    be hover-only, and the two things the roster never told anybody: whether
@@ -6078,8 +6100,8 @@ async function fontsSettled(ms){
       sw.textContent=_bt.replace(/\s*\u25be$/,'')+' \u25be';
       sw.title='Switch team';
       sw.setAttribute('role','button'); sw.setAttribute('tabindex','0');
-      sw.addEventListener('click',function(ev){ ev.stopPropagation(); closeAll(); openTeamSwitch(); });
-      sw.addEventListener('keydown',function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); ev.stopPropagation(); closeAll(); openTeamSwitch(); } });
+      sw.addEventListener('click',function(ev){ ev.stopPropagation(); closeAll(); openTeamMenu(sw); });
+      sw.addEventListener('keydown',function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); ev.stopPropagation(); closeAll(); openTeamMenu(sw); } });
       brand.appendChild(sw);
     } else brand.appendChild(document.createTextNode(_bt));
     /* The brand doubles as the way home, so the pages do not each need a
