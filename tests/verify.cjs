@@ -814,6 +814,8 @@ for(const w of [1440,1101]){
     return o; });
   chk(/^Dashboard\|My Duties\|My Profile\|PHMU/.test(r.labels)&&/Management$/.test(r.labels)&&r.icons&&r.ends&&r.h>=44,'hub-bar '+w+'px pages and categories are blocks with icons, Management last',r.labels);
   chk(r.menu&&r.brand&&r.body,'hub-bar '+w+'px a category block opens its dropdown; no Back to Hub button',JSON.stringify(r));
+  const vis=await p.evaluate(()=>{ const g=document.querySelector('#topnav .tn-group'); g.dispatchEvent(new Event('mouseenter')); const it=g.querySelector('.tn-menu .tn-b'); const r=it.getBoundingClientRect(); const top=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2); return {hit:!!top&&(top===it||it.contains(top)),bar:getComputedStyle(document.getElementById('topnav')).clipPath}; });
+  chk(vis.hit&&vis.bar==='none','hub-bar '+w+'px a dropdown entry is actually on screen (the bar is not clipped around it)',JSON.stringify(vis));
   chk(p.errs.length===0,'hub-bar '+w+'px no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Everything is a parallelogram ──

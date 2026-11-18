@@ -1241,10 +1241,11 @@ span.chip.blank{cursor:default;}
   .cl-bigring svg{animation:none;stroke-dashoffset:0;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261118i">
-<link rel="stylesheet" href="ivshape.base.css?v=20261118i">
-<link rel="stylesheet" href="ivshape.css?v=20261118i">
-<link rel="stylesheet" href="ivtype.css?v=20261118i">
+<link rel="stylesheet" href="ivtheme.css?v=20261119a">
+<link rel="stylesheet" href="ivshape.base.css?v=20261119a">
+<link rel="stylesheet" href="ivshape.css?v=20261119a">
+<link rel="stylesheet" href="ivtype.css?v=20261119a">
+<link rel="stylesheet" href="ivfix.css?v=20261119a">
 <script src="ivtheme.js?v=20261114a"></script>
 <script src="ivmenu.js?v=20261114a"></script>
 </head>
@@ -5498,7 +5499,7 @@ function renderLeaderboard(){
   h+='<div class="tw"><div class="pnl-h">'+esc(lbDuty)+' <span class="ct">'+
      rows.reduce((t,r)=>t+r.n,0)+' times, across '+rows.filter(r=>r.n).length+' people</span></div><div class="pnl-b">';
   rows.forEach(function(r,i){
-    h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;opacity:'+(r.n?1:.45)+'">'+
+    h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;opacity:'+(r.n?1:.7)+'">'+
        '<div class="num" style="width:26px;color:var(--dm);font-weight:800">'+(lbSort==='name'?'':(i+1))+'</div>'+
        '<div style="width:190px;font-size:13px;font-weight:800">'+esc(r.m.name)+'</div>'+
        '<div style="flex:1;background:var(--ds2);border-radius:5px;height:18px;overflow:hidden">'+

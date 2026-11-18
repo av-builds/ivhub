@@ -33,7 +33,7 @@ def rules(text):
 
 # Only what has to stay as it is: the seal and logo, people's pictures, the top bar and menus (shaped by hand in ivtheme.css),
 # pseudo-elements and decoration that is not a box.
-KEEP=re.compile(r'\bavatar|\.uav|logo|seal|\.hm-faces|\.hm-rings|spinner|scroll|\.tn-|\.ivp|\.md-sug|link-sugg|\.wi-|role-menu|\.bell-pop|\.bell-row|iv-banner|ivb-|skel|\.sk\b|\.sk-|\.chk\b|checkbox|radio')
+KEEP=re.compile(r'\.spin\b|\.topnav|\.cl-note|\.al-link|\bavatar|\.uav|logo|seal|\.hm-faces|\.hm-rings|spinner|scroll|\.tn-|\.ivp|\.md-sug|link-sugg|\.wi-|role-menu|\.bell-pop|\.bell-row|iv-banner|ivb-|skel|\.sk\b|\.sk-|\.chk\b|checkbox|radio')
 BIG=re.compile(r'panel|pnl|card|tile|\.tw\b|modal|dcard|\.sc\b|lbox|hero|-box|\bbox\b|\.ib\b|hint|banner|cover|drawer|\.um-|rl-ed|dp-|\.sg\b|stat|\.vc\b|mem-card|ev-card|cy-card|mj-list-card|md-sum')
 SMALL=re.compile(r'chip|tag|pill|badge|\bbdg|count|\bcap\b|\.ct\b|att-btn|att-key|lead-tag|duty-chip|role-pill|nbadge')
 BTN=re.compile(r'btn|button|\.pill|\.add-')

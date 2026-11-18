@@ -433,7 +433,7 @@ html body.tp .sb-nav .nav-item[data-page="dashboard"]{display:flex!important;}
 }
 .mph-card .duty-lbl{color:#8B5CF6;border-left-color:#7C3AED;}
 .mph-card .duty-name{font-size:15px;color:#DDD6FE;}
-.mph-card .duty-unassigned{font-size:15px;color:#6D4BA0;font-style:italic;}
+.mph-card .duty-unassigned{font-size:15px;color:var(--dm);font-style:italic;}
 /* Busy block */
 .busy-block{
   background:rgba(127,29,29,0.2);
@@ -451,7 +451,7 @@ html body.tp .sb-nav .nav-item[data-page="dashboard"]{display:flex!important;}
 }
 .r-ftr-l,.r-ftr-r{
   font-family:'Archivo',sans-serif;font-size:11px;font-weight:800;
-  text-transform:uppercase;letter-spacing:0.06em;color:#2A5070;
+  text-transform:uppercase;letter-spacing:0.06em;color:#7FA3C4;
 }
 /* ─── MANAGEMENT PANELS ─── */
 .iv-panel{background:var(--ds);border:1px solid var(--db);border-radius:12px;overflow:hidden;}
@@ -1013,10 +1013,11 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   body.tn-hidden .tn-show{display:inline-flex;}
 }
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261118i">
-<link rel="stylesheet" href="ivshape.base.css?v=20261118i">
-<link rel="stylesheet" href="ivshape.css?v=20261118i">
-<link rel="stylesheet" href="ivtype.css?v=20261118i">
+<link rel="stylesheet" href="ivtheme.css?v=20261119a">
+<link rel="stylesheet" href="ivshape.base.css?v=20261119a">
+<link rel="stylesheet" href="ivshape.css?v=20261119a">
+<link rel="stylesheet" href="ivtype.css?v=20261119a">
+<link rel="stylesheet" href="ivfix.css?v=20261119a">
 <script src="ivtheme.js?v=20261114a"></script>
 <script src="ivmenu.js?v=20261114a"></script>
 </head>
@@ -1599,7 +1600,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
               <div><div style="font-size:11px;font-weight:800;color:#A78BFA;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Sun</div><input type="number" id="ap-cap-0" class="wi" style="width:64px;" min="1" max="10" value="2"></div>
               <button class="btn btn-bl" style="background:linear-gradient(135deg,#4C1D95,#6D28D9);height:38px;" onclick="apSaveDayCaps()">Save Pool Sizes</button>
             </div>
-            <div style="font-size:12px;color:#6D4BA0;margin-top:10px;font-style:italic;">Tip: a size bigger than the number of people actually available for that day just shows a warning - it never breaks the roster.</div>
+            <div style="font-size:12px;color:var(--dm);margin-top:10px;font-style:italic;">Tip: a size bigger than the number of people actually available for that day just shows a warning - it never breaks the roster.</div>
           </div>
         </div>
       </div>
@@ -2914,7 +2915,7 @@ function renderDashboard(){
       di.innerHTML=`<div style="background:linear-gradient(160deg,#1A0606,#2D0A0A);border:1px solid rgba(239,68,68,0.35);border-radius:12px;padding:12px 16px;">
         <div style="font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:#FCA5A5;margin-bottom:6px;">⚠️ ${_rosterIssues.length} roster issue${_rosterIssues.length!==1?'s':''} - ${MO[calMo]} ${calYr}</div>
         ${_rosterIssues.slice(0,4).map(i=>`<div style="font-size:12px;color:#FECACA;line-height:1.6;padding:2px 0;">• ${esc(i.text)}</div>`).join('')}
-        ${_rosterIssues.length>4?`<div style="font-size:12px;color:#7A4A4A;margin-top:4px;">+ ${_rosterIssues.length-4} more - see the Monthly Roster page</div>`:''}
+        ${_rosterIssues.length>4?`<div style="font-size:12px;color:#C99A9A;margin-top:4px;">+ ${_rosterIssues.length-4} more - see the Monthly Roster page</div>`:''}
       </div>`;
     } else { di.style.display='none'; di.innerHTML=''; }
   }
@@ -3002,7 +3003,7 @@ const AV_SKINS={
     rule:{plain:'#2A5570', mj:'#16A34A', tr:'#C88A1E', both:'#DC2650'},
     name:'#FFFFFF', nameSh:'0 1px 4px rgba(0,0,0,0.35)',
     evFg:'#9FC4DA', jkFg:'#6A9AB0', jkRule:'#3A6A80',
-    mphFg:'#A06010', mphRule:'#7A4A00', mphAc:'#E8C060', mphBc:'#C8A040',
+    mphFg:'#C88A1E', mphRule:'#7A4A00', mphAc:'#E8C060', mphBc:'#C8A040',
     trFg:'#E0B060', unassigned:'#F87171', dash:'#5A7A90', supBg:'rgba(0,85,139,0.12)', supFg:'#6A9EC0',
   },
   /* The printed sheet is compressed, re-shared and often looked at on paper,
@@ -3794,7 +3795,7 @@ function vmDayDots(v){
     `<span title="${d}" style="width:14px;height:14px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;
       ${(v.days||[]).includes(d)
         ? 'background:rgba(75,163,220,0.25);color:#4BA3DC;border:1px solid rgba(75,163,220,0.45);'
-        : 'background:rgba(255,255,255,0.03);color:#3A5878;border:1px solid rgba(255,255,255,0.06);'}">${d[0]}</span>`).join('')}</span>`;
+        : 'background:rgba(255,255,255,0.03);color:#8FAEC8;border:1px solid rgba(255,255,255,0.06);'}">${d[0]}</span>`).join('')}</span>`;
 }
 function renderVolCards(){
   const c=document.getElementById('volCards');if(!c)return;
@@ -3860,7 +3861,7 @@ function renderVolCards(){
         <div class="ar"><label>Roles</label>${rolePills(v)}</div>
         <div class="ar"><label>Weekly Availability ${noDays?'<span style="color:#FCA5A5;text-transform:none;letter-spacing:0;">- none set: not in rotation!</span>':''}</label><div class="dr">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(day=>`<label class="day-tog"><input type="checkbox" value="${day}"${(v.days||[]).includes(day)?' checked':''} onchange="uDays(${v.id})"><span>${day}</span></label>`).join('')}</div></div>
         <div class="ar" style="margin-top:10px;">
-          <label>Busy Dates <span style="font-weight:600;text-transform:none;letter-spacing:0;color:#4A6A80;font-size:11px;">(dates this person is unavailable)</span></label>
+          <label>Busy Dates <span style="font-weight:600;text-transform:none;letter-spacing:0;color:#8FA9BF;font-size:11px;">(dates this person is unavailable)</span></label>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
             <input type="date" id="bd-input-${v.id}" class="wi" style="max-width:160px;font-size:13px;padding:6px 9px;">
             <button onclick="addBusyDate(${v.id})" style="background:rgba(75,163,220,0.1);border:1px solid rgba(75,163,220,0.25);color:#4BA3DC;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">+ Add</button>
@@ -3875,7 +3876,7 @@ function renderVolCards(){
         </div>
         <div class="vf" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:11px;padding-top:10px;border-top:1px solid var(--db);">
           <button class="btn btn-da btn-sm" onclick="rmVol(${v.id})">🗑 Remove</button>
-          <span style="font-size:12px;color:#4A6A80;font-style:italic;">Removing someone from the AV Team is done in the Hub - untick <b>AV Team</b> in Home › User Management.</span>
+          <span style="font-size:12px;color:#8FA9BF;font-style:italic;">Removing someone from the AV Team is done in the Hub - untick <b>AV Team</b> in Home › User Management.</span>
         </div>
       </div>
     </div>`;
@@ -4021,7 +4022,7 @@ function renderRosterIssues(){
           <span style="font-size:13px;flex-shrink:0;margin-top:1px;">${icons[i.type]||'•'}</span>
           <span style="font-size:13px;color:#FECACA;line-height:1.6;">${esc(i.text)}</span>
         </div>`).join('')}
-      <div style="font-size:12px;color:#7A4A4A;margin-top:8px;font-style:italic;">Only AV Admins and the Owner can see this banner. Fix via User Management (availability) or by clicking the day on the calendar (specific days).</div>
+      <div style="font-size:12px;color:#C99A9A;margin-top:8px;font-style:italic;">Only AV Admins and the Owner can see this banner. Fix via User Management (availability) or by clicking the day on the calendar (specific days).</div>
     </div>`;
 }
 /* ═══════════════════════════════════════════════════════
@@ -5131,17 +5132,17 @@ function renderAuditLogs(){
               </span>
             </div>
             <div style="font-size:13px;font-weight:700;color:#C8DFF0;margin-bottom:2px;">${esc(l.action)}</div>
-            ${l.detail ? `<div style="font-size:12px;color:#4A6A80;margin-top:2px;padding-left:8px;border-left:2px solid rgba(75,163,220,0.2);">${esc(l.detail)}</div>` : ''}
+            ${l.detail ? `<div style="font-size:12px;color:#8FA9BF;margin-top:2px;padding-left:8px;border-left:2px solid rgba(75,163,220,0.2);">${esc(l.detail)}</div>` : ''}
           </div>
           <!-- Time -->
           <div style="flex-shrink:0;text-align:right;">
-            <div style="font-size:12px;font-family:monospace;color:#3A5878;letter-spacing:0.03em;">${timeStr}</div>
+            <div style="font-size:12px;font-family:monospace;color:#8FAEC8;letter-spacing:0.03em;">${timeStr}</div>
           </div>
         </div>`;
     }).join('');
     return `
       <div style="padding:8px 18px 4px;background:rgba(4,12,26,0.6);border-bottom:1px solid rgba(75,163,220,0.06);
-           font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#2A5070;
+           font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#7FA3C4;
            position:sticky;top:0;z-index:2;">
         ${day}
       </div>
@@ -5394,7 +5395,7 @@ function renderApUserList(){
             <div style="font-size:12px;color:var(--dm);font-family:monospace;margin-bottom:3px;">${esc(u)}</div>
             <div style="display:flex;gap:4px;flex-wrap:wrap;">${(d.perms||[d.role]).map(p=>({owner:'👑 Owner',av_admin:'🛡 AV Admin',iv_admin:'🛡 IV Admin',av_team:'📹 AV Team',iv_team:'🌿 IV Team'})[p]||esc(p)).map(l=>`<span style="font-size:11px;font-weight:800;background:rgba(75,163,220,0.1);color:#4BA3DC;border:1px solid rgba(75,163,220,0.25);border-radius:10px;padding:2px 7px;">${l}</span>`).join('')}${(d.permsAll||[]).filter(p=>!PERM_KEYS.includes(PERM_LEGACY[p]||p)).map(p=>`<span title="Set in the Hub - this panel leaves it untouched" style="font-size:11px;font-weight:800;background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.28);border-radius:10px;padding:2px 7px;">🔒 ${esc(p)}</span>`).join('')}</div>
           </div>
-          <div style="font-size:12px;color:#3A5878;font-family:monospace;background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:4px;letter-spacing:0.06em;" title="Password hidden - open to change it">••••••</div>
+          <div style="font-size:12px;color:#8FAEC8;font-family:monospace;background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:4px;letter-spacing:0.06em;" title="Password hidden - open to change it">••••••</div>
           <span style="color:var(--dm);font-size:12px;margin-left:4px;">▼</span>
         </div>
         <!-- Edit form (collapsed by default) -->
