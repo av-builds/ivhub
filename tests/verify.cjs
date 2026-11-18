@@ -137,6 +137,9 @@ const open=async(file,vp,touch)=>{
     /* Manual edit: any slot opens the name search; a filled one can be left blank. */
     openDay(11,true);
     const filled=q('#day-11 .cellwrap button.chip:not(.blank):not(.add)'); filled.click();
+    // A person on the roster opens a small stack first: Swap, or Remove.
+    o.chipMenu=!!document.querySelector('.ivp-pop .ivp-opt')&&/Swap for someone else/.test(document.querySelector('.ivp-pop').textContent)&&/Remove from this duty/.test(document.querySelector('.ivp-pop').textContent);
+    [...document.querySelectorAll('.ivp-pop .ivp-opt')].find(b=>/Swap/.test(b.textContent)).click();
     o.pickFilled=!!document.querySelector('#dcard #pickSearch')&&/Leave blank/.test(document.getElementById('dcard').textContent);
     cM();
     q('#day-11 .chip.blank').click();
@@ -163,7 +166,8 @@ const open=async(file,vp,touch)=>{
   chk(r.midOnlyNew&&r.midOthersSame,'midcycle only the new day is built; nothing else changes');
   chk(r.midNote&&r.midOpen,'midcycle the summary says so and the new day is opened');
   chk(r.hide,'calendar hiding a day takes it off the calendar');
-  chk(r.pickFilled,'edit    a filled slot opens the name search, with Leave blank');
+  chk(r.chipMenu,'edit    a filled slot opens a menu: swap or remove');
+  chk(r.pickFilled,'edit    swapping opens the name search, with Leave blank');
   chk(r.pickBlank,'edit    a blank slot opens the name search');
   chk(r.editNoPublish,'edit    a hand edit does not put a hidden day back up');
   chk(r.jump,'roster  links that name an event open its day in the cycle');
@@ -811,6 +815,22 @@ for(const w of [1440,1101]){
   chk(/^Dashboard\|My Duties\|My Profile\|PHMU/.test(r.labels)&&/Management$/.test(r.labels)&&r.icons&&r.ends&&r.h>=44,'hub-bar '+w+'px pages and categories are blocks with icons, Management last',r.labels);
   chk(r.menu&&r.brand&&r.body,'hub-bar '+w+'px a category block opens its dropdown; no Back to Hub button',JSON.stringify(r));
   chk(p.errs.length===0,'hub-bar '+w+'px no page errors',JSON.stringify(p.errs)); await p.context().close(); }
+
+// ── Everything is a parallelogram ──
+for(const file of ['index.html','teama.html','av.html']){
+  const p=await open(file,{width:1300,height:900});
+  await p.evaluate(()=>{ document.body.insertAdjacentHTML('beforeend','<div id="shapeProbe"><button class="btn btn-bl">B</button><span class="chip">c</span><div class="panel">p</div><select id="shapeSel"><option>One</option><option>Two</option></select><input type="text"><textarea></textarea><table><tr><td>t</td></tr></table></div>'); });
+  const r=await p.evaluate(()=>{ const cp=s=>{ const e=document.querySelector('#shapeProbe '+s); return e?getComputedStyle(e).clipPath:'missing'; }, rd=s=>getComputedStyle(document.querySelector('#shapeProbe '+s)).borderTopLeftRadius;
+    const o={}; for(const s of ['.btn','.chip','.panel','select','input','textarea','tr']) o[s]=cp(s)!=='none'&&/polygon/.test(cp(s));
+    o.noRound=['.btn','.chip','.panel','select','input'].every(s=>rd(s)==='0px'); return o; });
+  chk(Object.values(r).every(Boolean),'shapes  '+file+' buttons, chips, panels, selects, text boxes and table rows are parallelograms',JSON.stringify(r));
+  const q=await p.evaluate(async()=>{ const o={}; const sel=document.getElementById('shapeSel'); sel.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,button:0})); await new Promise(r=>setTimeout(r,60));
+    const pop=document.querySelector('.ivp-pop'); o.open=!!pop&&pop.querySelectorAll('.ivp-opt').length===2&&/polygon/.test(getComputedStyle(pop.querySelector('.ivp-opt')).clipPath);
+    o.sameWidth=pop&&new Set([...pop.querySelectorAll('.ivp-opt')].map(b=>Math.round(b.getBoundingClientRect().width))).size===1;
+    let ch=0; sel.addEventListener('change',()=>ch++); pop.querySelectorAll('.ivp-opt')[1].click(); await new Promise(r=>setTimeout(r,60));
+    o.picked=sel.value==='Two'&&ch===1&&!document.querySelector('.ivp-pop'); return o; });
+  chk(q.open&&q.sameWidth&&q.picked,'shapes  '+file+' a dropdown field opens a list of same-width parallelograms and picking one changes the real select',JSON.stringify(q));
+  chk(p.errs.length===0,'shapes  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Replacement picker lists everybody on the team ──
 for(const file of ['teama.html','teamb.html']){

@@ -1009,3 +1009,54 @@ body.tp .tn-menu .tn-cap{padding:8px 4px 2px 26px;}
 body.tp .tn-menu>*{translate:var(--lean,0px) 0;}
 /* The dropdown blocks lean at the same angle as the category block above them: 14px over its 72px height, so 8.5px over 44px. */
 body.tp .tn-menu{--sl:8.5px;}
+
+/* ═══ MENUS AS PARALLELOGRAMS ═══════════════════════════
+   Anything that opens a menu is a slanted block and so is each entry in the menu. The slant is 8.5px over
+   44px, the same angle as the top bar's blocks (14px over 72px). See ivmenu.js. */
+:root{--ivp-sl:8.5px;--ivp-poly:polygon(var(--ivp-sl) 0,100% 0,calc(100% - var(--ivp-sl)) 100%,0 100%);}
+
+/* dropdown fields: the closed box is a parallelogram, filled rather than outlined (an outline would be cut at the slant) */
+select:not([multiple]):not([size]):not([data-native]){clip-path:var(--ivp-poly);border:0!important;border-radius:0!important;
+  background-color:var(--ds2)!important;color:var(--dt);min-height:44px;padding-left:20px!important;padding-right:34px!important;cursor:pointer;}
+select:not([multiple]):not([size]):not([data-native]):hover{background-color:color-mix(in srgb,var(--iv-ac) 14%,var(--ds2))!important;}
+select:not([multiple]):not([size]):not([data-native]):focus-visible,select.ivp-open{box-shadow:inset 0 -3px 0 var(--iv-ac)!important;outline:0!important;}
+@media(pointer:coarse){select:not([multiple]):not([size]):not([data-native]){min-height:44px;}}
+
+/* the popup */
+.ivp-pop{position:fixed;z-index:3000;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:calc(100vw - 16px);box-sizing:border-box;}
+.ivp-pop.ivp-scroll{overflow-y:auto;overscroll-behavior:contain;padding-right:2px;}
+.ivp-pop.ivp-up{flex-direction:column;}
+.ivp-opt{display:flex;align-items:center;gap:10px;min-height:44px;box-sizing:border-box;width:100%;flex:none;text-align:left;
+  padding:0 30px 0 26px;border:0;border-radius:0;background:color-mix(in srgb,var(--dt) 11%,var(--ds2));color:var(--dt);font:inherit;font-size:14px;font-weight:700;cursor:pointer;
+  clip-path:var(--ivp-poly);white-space:nowrap;translate:var(--lean,0px) 0;}
+.ivp-opt.two{flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;padding-top:7px;padding-bottom:7px;white-space:normal;}
+.ivp-opt .ivp-s{color:var(--dm);font-size:12px;font-weight:600;}
+.ivp-opt:hover,.ivp-opt:focus-visible{background:color-mix(in srgb,var(--iv-ac) 22%,var(--ds2));color:var(--dt);outline:0;}
+.ivp-opt.on{background:color-mix(in srgb,var(--iv-ac) 30%,var(--ds2));color:var(--dt);}
+.ivp-opt.danger{color:var(--bad,#E5A0A0);}
+.ivp-opt:disabled{opacity:.5;cursor:default;}
+.ivp-cap{padding:6px 4px 0 26px;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--dm);}
+@media(prefers-reduced-motion:no-preference){
+  .ivp-pop .ivp-opt{animation:ivpDrop .2s cubic-bezier(.2,.8,.2,1) both;}
+  .ivp-pop .ivp-opt:nth-child(2){animation-delay:.04s}.ivp-pop .ivp-opt:nth-child(3){animation-delay:.08s}.ivp-pop .ivp-opt:nth-child(4){animation-delay:.12s}
+  .ivp-pop .ivp-opt:nth-child(5){animation-delay:.16s}.ivp-pop .ivp-opt:nth-child(n+6){animation-delay:.2s}
+}
+@keyframes ivpDrop{from{opacity:0;}to{opacity:1;}}
+
+/* the lists the pages already had */
+.bell-pop{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;display:none;flex-direction:column;gap:2px;}
+.bell-pop.open{display:flex;}
+.bell-row{clip-path:var(--ivp-poly);border:0!important;border-radius:0!important;background:var(--ds2)!important;padding:9px 30px 9px 26px!important;}
+.bell-row:hover{background:color-mix(in srgb,var(--iv-ac) 22%,var(--ds2))!important;}
+.bell-fab{clip-path:var(--ivp-poly);border-radius:0!important;border:0!important;padding-left:24px!important;padding-right:28px!important;}
+.md-sug,.link-sugg{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;}
+.md-sug.open{display:flex;flex-direction:column;gap:2px;}
+.md-sug-i,.link-sugg>*,.wi-opt{clip-path:var(--ivp-poly);border-radius:0!important;background:var(--ds2)!important;padding-left:26px!important;padding-right:30px!important;border:0!important;}
+.md-sug-i:hover,.md-sug-i.sel,.link-sugg>*:hover,.wi-opt:hover,.wi-opt.on{background:color-mix(in srgb,var(--iv-ac) 24%,var(--ds2))!important;}
+.wi-list{border:0!important;border-radius:0!important;display:flex;flex-direction:column;gap:2px;}
+.role-menu{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;display:flex;flex-direction:column;gap:2px;}
+.role-menu-item{clip-path:var(--ivp-poly);border-radius:0!important;background:var(--ds2)!important;padding-left:26px!important;padding-right:30px!important;}
+.role-menu-item:hover{background:color-mix(in srgb,var(--iv-ac) 22%,var(--ds2))!important;}
+.tn-team{clip-path:var(--ivp-poly);border-radius:0!important;padding:6px 16px!important;background:color-mix(in srgb,var(--dt) 7%,transparent);}
+.tn-team:hover{background:var(--iv-acs)!important;}
+.chip[onclick*="openChipPop"]{cursor:pointer;}
