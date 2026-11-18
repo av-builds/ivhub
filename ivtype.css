@@ -588,3 +588,6 @@ html[data-theme="light"] [style*="color:#94A3B8"],html[data-theme="light"] [styl
 /* the top bar is left to its own rules above, so its weights are set here */
 .tn-brand{font-weight:700!important;}
 .tn-out,.tn-tog,.tn-show,.tn-hub,.tn-b,.tn-who,.tn-menu .tn-b{font-weight:600!important;}
+/* chips and tags stay on one line; a row of them wraps between chips, not inside one */
+.duty-chip,.chip,.bdg,.count-chip,.pchip,.lead-tag,.walkin-tag,.att-key{white-space:nowrap;}
+.att-duties,.cellwrap,.mem-tags,.pchips{display:flex;flex-wrap:wrap;gap:4px 6px;}
