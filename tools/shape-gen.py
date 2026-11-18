@@ -77,5 +77,8 @@ for g in ('big','mid','small'):
     # first match in a group wins; later groups override earlier ones only where a selector appears twice
     for s_ in sels:
         out.append('%s{--ivp-sl:%s;clip-path:var(--ivp-poly);border-radius:0!important;border-color:transparent!important;box-shadow:none!important}'%(s_,slant[g]))
+# Small shapes: space inside, so no text touches a cut corner.
+for s_ in sorted(groups['small']):
+    out.append('%s{padding-left:calc(var(--ivp-sl) + 7px)!important;padding-right:calc(var(--ivp-sl) + 7px)!important}'%s_)
 open(os.path.join(ROOT,'ivshape.css'),'w',encoding='utf-8').write('\n'.join(out)+'\n')
 print({k:len(v) for k,v in groups.items()})

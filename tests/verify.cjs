@@ -832,6 +832,21 @@ for(const file of ['index.html','teama.html','av.html']){
   chk(q.open&&q.sameWidth&&q.picked,'shapes  '+file+' a dropdown field opens a list of same-width parallelograms and picking one changes the real select',JSON.stringify(q));
   chk(p.errs.length===0,'shapes  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
+// ── Type scale: nothing tiny, nothing shouting ──
+for(const file of ['teama.html','index.html','av.html']){
+  const p=await open(file,{width:1300,height:900});
+  const r=await p.evaluate(()=>{ const o={tiny:[],heavy:[],lh:0}; const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    while(w.nextNode()){ const t=w.currentNode, el=t.parentElement, tx=t.textContent.trim(); if(!tx||!el||/^(SCRIPT|STYLE)$/.test(el.tagName)) continue;
+      const cs=getComputedStyle(el); if(cs.display==='none'||cs.visibility==='hidden'||!el.getBoundingClientRect().width) continue;
+      if(parseFloat(cs.fontSize)<12&&!/^(▾|⇤|✓|×)$/.test(tx)) o.tiny.push(el.className+':'+tx.slice(0,16)+':'+cs.fontSize);
+      if(+cs.fontWeight>=800&&parseFloat(cs.fontSize)<40) o.heavy.push(el.className+':'+cs.fontWeight);
+    }
+    const b=getComputedStyle(document.body); o.body=parseFloat(b.fontSize)>=15&&parseFloat(b.lineHeight)/parseFloat(b.fontSize)>=1.4; return o; });
+  chk(r.tiny.length===0,'type    '+file+' no text under 12px',r.tiny.slice(0,6).join(' | '));
+  chk(r.heavy.length===0,'type    '+file+' no text at the two heaviest weights below display size',r.heavy.slice(0,6).join(' | '));
+  chk(r.body,'type    '+file+' body text is 15px with at least 1.4 line spacing');
+  await p.context().close(); }
+
 // ── Replacement picker lists everybody on the team ──
 for(const file of ['teama.html','teamb.html']){
   const p=await open(file,{width:1300,height:900});

@@ -1,0 +1,32 @@
+/* hand-written readability fixes, appended to ivtype.css by tools/type-gen.py */
+.towner{color:var(--dt)!important;background:color-mix(in srgb,var(--iv-ac) 35%,var(--ds))!important;font-weight:600!important;}
+.cal-cell.out .dnum,.cal-cell.out .towner{color:var(--dm)!important;opacity:1!important;}
+.cal-cell.out,.cal-cell.out.theirs{opacity:.72!important;}   /* the other team's days: dimmed, but still readable */
+.cal-cell.out .dnum,.cal-cell.out .towner{color:var(--dt)!important;}
+.lhint,.lhint *{color:var(--dm)!important;opacity:1!important;}
+.lhint a,#lnkReset{color:var(--blue-lt)!important;text-decoration:underline;}
+.cl-acts .cl-b:disabled{opacity:.7!important;color:var(--dm)!important;}
+.cyc-tag,.cy-count,.cy-dates,.cy-line{color:var(--dm)!important;opacity:1!important;}
+.btn,.btn-bl,.btn-gr,.lbtn{text-shadow:none;}
+.btn[style*="linear-gradient"],button[style*="linear-gradient"]{color:#fff!important;}   /* a dark gradient written into the button needs light text */
+.cal-ev{padding-left:calc(var(--ivp-sl) + 6px)!important;padding-right:calc(var(--ivp-sl) + 6px)!important;}
+
+/* light theme: status colours that were written for a dark page are too pale on paper */
+html[data-theme="light"] .bdg-ok,html[data-theme="light"] .count-chip,html[data-theme="light"] .att-key.present{color:#14633A!important;}
+html[data-theme="light"] .bdg-warn,html[data-theme="light"] .bdg-bad,html[data-theme="light"] .btn-da,html[data-theme="light"] .att-key.absent,html[data-theme="light"] .cal-st b{color:#9A2B2B!important;}
+html[data-theme="light"] .bdg-gd,html[data-theme="light"] .att-key.late,html[data-theme="light"] .lead-tag{color:#7A4E0A!important;}
+html[data-theme="light"] .att-key.excused{color:#3B3FA0!important;}
+html[data-theme="light"] .pill,html[data-theme="light"] .ae-hint,html[data-theme="light"] .cl-seg button{color:var(--dt)!important;}
+html[data-theme="light"] .pill.on{color:#14633A!important;}
+html[data-theme="light"] .cy-sec,html[data-theme="light"] .cy-count,html[data-theme="light"] .cy-dates,html[data-theme="light"] .cy-line,html[data-theme="light"] .cyc-tag,html[data-theme="light"] .cl-tag,html[data-theme="light"] .cal-st{color:#3F5470!important;}
+html[data-theme="light"] .td-k,html[data-theme="light"] .hm-k,html[data-theme="light"] .on .hm-k{color:#1F5C3A!important;}
+html[data-theme="light"] .cal-ev{color:var(--dt)!important;}
+html[data-theme="light"] .cal-ev.st-lv{color:#fff!important;}
+html[data-theme="light"] h2,html[data-theme="light"] .cl-b{color:var(--dt)!important;}
+html[data-theme="light"] .cy-sec,html[data-theme="light"] .cy-count,html[data-theme="light"] .cy-dates,html[data-theme="light"] .cy-line,html[data-theme="light"] .cyc-tag{color:#2F435C!important;}
+html[data-theme="light"] .hm-cta,html[data-theme="light"] .hm-cta *{color:#fff!important;}
+html[data-theme="light"] .hm-tabs .on,html[data-theme="light"] .hm-tabs button.on{color:#fff!important;}
+html[data-theme="light"] [style*="color:#94A3B8"],html[data-theme="light"] [style*="color:#7AAECB"],html[data-theme="light"] [style*="color:#64748B"]{color:var(--dm)!important;}
+/* the top bar is left to its own rules above, so its weights are set here */
+.tn-brand{font-weight:700!important;}
+.tn-out,.tn-tog,.tn-show,.tn-hub,.tn-b,.tn-who,.tn-menu .tn-b{font-weight:600!important;}
