@@ -56,3 +56,25 @@ create policy app_users_read on public.app_users for select to authenticated
 drop policy if exists app_users_write on public.app_users;
 create policy app_users_write on public.app_users for all to authenticated
   using (public.my_rank() <= 2) with check (public.my_rank() <= 2);
+
+-- ===================================================================
+-- NOTE on block 2 above: the pw neutralisation (pw = '-') is APPLIED (0 rows differ).
+-- The app_users policies on live are can_manage_accounts() for select/all and were
+-- deliberately NOT tightened (live main still needs them). The policy statements
+-- in block 2 are intentionally not applied.
+-- ===================================================================
+
+-- ===================================================================
+-- 3. rank_of(jsonb): division roles (mirrors defRole/PERM_RANK in index.html)
+-- STATUS: APPLIED (migration hardening_01_rank_of_division_roles)
+-- ===================================================================
+-- xx_lead -> 6, xx_alead -> 7 for pt,td,ss,an,ab,sk,mt,ck,cl; ab/sk/mt/ck/cl _team -> 10.
+-- index.html defines no xx_vol key and no _team for the four divisions, so none added.
+-- Everything else in the function is unchanged.
+
+-- ===================================================================
+-- 4. docs/checklist.sql (iv_checklist, checklist_can, checklist_set)
+-- STATUS: NOT APPLIED. apply_migration (hardening_02_checklist) was held for a
+-- confirmation that nobody answered and timed out. Verified afterwards that
+-- iv_checklist and both functions do not exist. Steps 3-12 not started.
+-- ===================================================================
