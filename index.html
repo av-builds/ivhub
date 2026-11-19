@@ -125,6 +125,36 @@ html{scroll-behavior:smooth;}
 .btn-red{background:rgba(192,57,43,.14);color:#ff9b8f;border:1px solid rgba(192,57,43,.4);}
 .btn-red:hover{background:rgba(192,57,43,.24);}
 
+/* ─── SATADA ─── */
+.sa-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;}
+.sa-note{font-size:13px;color:var(--dm);line-height:1.55;margin:4px 0 14px;max-width:70ch;}
+.sa-hint{font-size:13px;font-weight:800;margin:8px 0 16px;}
+.sa-hint.ok{color:#86E49A;}.sa-hint.bad{color:var(--gold-lt);}
+.sa-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin:6px 0 14px;}
+.sa-tile{background:var(--ds2);border:1px solid var(--db);border-radius:12px;padding:12px 8px 10px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:0;}
+.sa-dn{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--dm);}
+.sa-dd{font-size:15px;font-weight:900;color:var(--dt);white-space:nowrap;}
+.sa-pair{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;}
+.sa-pick{min-height:48px;border-radius:9px;border:1px solid var(--db);background:transparent;color:var(--dm);font-size:17px;font-weight:900;cursor:pointer;transition:all .15s;}
+.sa-pick:hover{color:var(--dt);border-color:var(--blue-lt);}
+.sa-pick.t-a.on{background:rgba(134,228,154,.16);color:#86E49A;border-color:rgba(134,228,154,.55);}
+.sa-pick.t-b.on{background:rgba(238,111,92,.16);color:#EE6F5C;border-color:rgba(238,111,92,.55);}
+.sa-own{display:inline-block;align-self:center;font-size:12px;font-weight:900;padding:4px 11px;border-radius:99px;border:1px solid;letter-spacing:.04em;}
+.sa-own.t-a{background:rgba(134,228,154,.14);color:#86E49A;border-color:rgba(134,228,154,.4);}
+.sa-own.t-b{background:rgba(238,111,92,.14);color:#EE6F5C;border-color:rgba(238,111,92,.4);}
+.sa-st{font-size:11.5px;font-weight:800;color:var(--dm);line-height:1.3;min-height:30px;}
+.sa-st.has{color:var(--gold-lt);}
+.sa-mv{justify-content:center;min-height:44px;padding:8px 6px;}
+.sa-sum{font-size:14px;font-weight:900;color:var(--dt);margin:4px 0 8px;}
+.sa-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.sa-head h2{margin-bottom:0;}
+.sa-badge{display:inline-block;}
+.sa-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px;}
+html[data-theme="light"] .sa-hint.ok,html[data-theme="light"] .sa-pick.t-a.on,html[data-theme="light"] .sa-own.t-a{color:#1B6B3A;}
+html[data-theme="light"] .sa-pick.t-b.on,html[data-theme="light"] .sa-own.t-b{color:#A8402F;}
+@media(max-width:700px){.sa-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}.sa-pick{min-height:52px;}}
+@media(max-width:420px){.sa-strip{gap:6px;}.sa-tile{padding:10px 5px 8px;}.sa-dd{font-size:13px;}}
+
 /* ─── HERO ─── */
 .hero{background:linear-gradient(135deg,#020B18 0%,#071628 50%,#050D1C 100%);border:1px solid rgba(75,163,220,.15);
   border-radius:16px;padding:30px 34px;margin-bottom:22px;position:relative;overflow:hidden;animation:fadeUp .45s ease backwards;}
@@ -983,6 +1013,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="nav-item" id="navSubmit" data-page="submit"><span class="ni">⚡</span> Rapid Link <span class="ntag" id="navRapidTag" data-tip="UNDER CONSTRUCTION">⚠ Soon</span></div>
       <div class="nav-item" id="navMembers" data-page="members"><span class="ni">👥</span> Data Management</div>
       <div class="nav-item" id="navLogins" data-page="logins"><span class="ni">🔑</span> Admin Logins</div>
+      <div class="nav-item" id="navSatada" data-page="satada"><span class="ni">🌙</span> Satada</div>
       <div class="nav-item" id="navVLogins" data-page="vlogins"><span class="ni">🙋</span> Volunteer Logins</div>
       <div class="nav-item" id="navLinking" data-page="linking"><span class="ni">🔗</span> Account Linking<span class="nbadge" id="navLinkingCount" style="display:none;">0</span></div>
       <div class="nav-item" id="navAdmin" data-page="admin"><span class="ni">⚙️</span> Admin Panel</div>
@@ -1193,6 +1224,15 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         </div>
         <div id="mList"></div>
       </section>
+    </div>
+
+    <!-- ═══ PAGE: SATADA (facilitator and above: a majalis every night for a week) ═══ -->
+    <div class="page" id="page-satada">
+      <div class="ph">
+        <div><h1>Satada</h1><p>A majalis every night, Sunday to Saturday. Set which team runs each night here; the team pages then roster their own nights.</p></div>
+      </div>
+      <section class="panel" id="saWeeks"></section>
+      <section class="panel" id="saMain"></section>
     </div>
 
     <!-- ═══ PAGE: ADMIN LOGINS (accounts - former Manage Users modal) ═══ -->
@@ -2394,6 +2434,7 @@ const PAGES = {
   profile:   ()=>true,   // and edit their own details
   members:   ()=>USERS_ADMIN(),
   logins:    ()=>USERS_ADMIN(),
+  satada:    ()=>USERS_ADMIN(),   // facilitator and above
   stats:     ()=>STATS_VIEW(),
   admin:     ()=>hasPerm('owner','developer'),
   audit:     ()=>AUDIT_VIEW(),
@@ -2414,6 +2455,7 @@ function nav(id){
   closeSidebar();
   if(id === 'members') loadMembers();
   else if(id === 'logins'){ refreshUserRows(); if(!(mRows && mRows.length)) loadMembers(); }
+  else if(id === 'satada') loadSatadaPage();
   else if(id === 'vlogins') loadVLogins();
   else if(id === 'admin') loadAdminPanel();
   else if(id === 'audit') renderAuditPage();
@@ -2556,6 +2598,7 @@ function applyNavVisibility(){
   const tag = document.querySelector('.sb-nav #navSubmit .ntag'); if(tag) tag.style.display = rapidOpen() ? 'none' : '';
   item('navMembers', mm);
   item('navLogins', mm);
+  item('navSatada', mm);
   item('navLinking', mm);
   item('navAdmin', ow);
   item('navAudit', au);
@@ -4123,6 +4166,303 @@ async function deleteAccount(id){
     await refreshUserRows();
   }catch(e){ toast('Could not remove: '+(e.message||e),'err'); }
 }
+/* ═══ SATADA (Management > Satada) ═══════════════════════════════════
+   A majalis every night, Sunday to Saturday. Stored as seven ordinary
+   iv_events rows of type 'satada' named 'Satada - Sunday' ... 'Satada -
+   Saturday'; iv_events.team is the team that owns that NIGHT. The week is
+   derived, never stored. Facilitator and above (USERS_ADMIN) only: this
+   page is where a satada is created, where each night's team is set and
+   changed, and where it is deleted. The team pages only roster the nights.
+
+   Decisions, so they are not rediscovered:
+   - Each night replaces its date's automatic Friday Majlis / Paanch Baar
+     Saal, only after the list is shown, and only when nothing is rostered or
+     marked on it. A date holding anything else (a roster, attendance, or an
+     event that is not one of those two) is kept and gets no satada night.
+   - The week is read from the database again before writing, so a regular
+     event or satada made a moment ago by somebody else is seen.
+   - A night's team is not changed after the night, or once attendance is
+     marked; a night with a roster only moves if the roster is cleared in the
+     same step, because the people on it belong to the old team's lead.
+   - Deleting removes all seven. The cycle's own Friday and Paanch Baar Saal
+     come back on the next automatic run of a team page. */
+const SA_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const saDow = iso=>new Date(iso+'T12:00:00').getDay();
+const saWeekStart = iso=>addDaysISO(iso, -saDow(iso));
+const saAlt = ()=>[0,1,2,3,4,5,6].map(i=>i%2===0 ? 'A' : 'B');
+const SA = {weeks:{}, rost:{}, att:{}, sel:null, form:false, date:'', owners:saAlt(), busy:false, err:'', loaded:false};
+function saNextSunday(){ const t = todayNZ(); return addDaysISO(t, (7 - saDow(t)) % 7); }
+function saPeople(data){
+  const ids = [], a = (data && data.assign) || {};
+  for(const k in a){ const v = a[k] || {}; [].concat(v.m||[], v.f||[], v.x||[]).forEach(p=>{ if(p && p.id != null && ids.indexOf(p.id) < 0) ids.push(p.id); }); }
+  return ids.length;
+}
+const saStatus = w=>{ const t = todayNZ(); return addDaysISO(w,6) < t ? 'Finished' : (w <= t ? 'Under way' : 'Upcoming'); };
+const saRange = w=>fmtDM(w) + ' to ' + fmtDM(addDaysISO(w,6));
+function saValidate(iso){
+  if(!iso) return 'Pick the Sunday the satada starts on.';
+  if(saDow(iso) !== 0) return fmtLong(iso) + ' is not a Sunday. A satada runs Sunday to Saturday.';
+  if(addDaysISO(iso,6) < todayNZ()) return 'That week has already finished.';
+  if((SA.weeks[iso]||[]).length) return 'Satada nights already exist in the week of ' + fmtDM(iso) + '.';
+  return '';
+}
+/* Reads every satada night, which nights hold a roster, and which have
+   attendance. Safe to call at any time; it re-renders the page. */
+async function saReload(){
+  if(!sb){ SA.err = 'No database connection.'; saRender(); return false; }
+  const ev = await sb.from('iv_events').select('*').eq('type','satada').order('date');
+  if(ev.error){ SA.err = 'Could not read the satadas - ' + (ev.error.message || ev.error); saRender(); return false; }
+  const rows = ev.data || [], ids = rows.map(e=>e.id), rost = {}, att = {};
+  if(ids.length){
+    const [ro, at] = await Promise.all([
+      sb.from('iv_roster').select('event_id,data').in('event_id', ids),
+      sb.from('iv_attendance').select('event_id,status').in('event_id', ids)]);
+    const bad = ro.error || at.error;
+    if(bad){ SA.err = 'Could not check the rosters - ' + (bad.message || bad); saRender(); return false; }
+    (ro.data||[]).forEach(r=>{ const n = saPeople(r.data); if(n) rost[r.event_id] = n; });
+    (at.data||[]).forEach(r=>{ if(r.status) att[r.event_id] = (att[r.event_id]||0) + 1; });
+  }
+  const weeks = {};
+  rows.forEach(e=>{ (weeks[saWeekStart(e.date)] = weeks[saWeekStart(e.date)] || []).push(e); });
+  Object.keys(weeks).forEach(w=>weeks[w].sort((a,b)=>a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  SA.weeks = weeks; SA.rost = rost; SA.att = att; SA.err = ''; SA.loaded = true;
+  if(!SA.form && !(SA.sel && weeks[SA.sel])){
+    const ws = Object.keys(weeks).sort(), t = todayNZ();
+    SA.sel = ws.find(w=>addDaysISO(w,6) >= t) || ws[ws.length-1] || null;
+    if(!SA.sel) SA.form = true;
+  }
+  saRender();
+  return true;
+}
+function loadSatadaPage(){
+  if(!PAGES.satada()) return;
+  SA.err = ''; saRender(); return saReload();
+}
+function saRender(){
+  const wk = $('saWeeks'), main = $('saMain'); if(!wk || !main) return;
+  const ws = Object.keys(SA.weeks).sort().reverse();
+  wk.innerHTML = '<h2>Satadas</h2><div class="sa-chips">' +
+    ws.map(w=>'<button class="chip'+(!SA.form && SA.sel === w ? ' active' : '')+'" onclick="saPick(\''+esc(w)+'\')">'+esc(saRange(w))+' · '+esc(saStatus(w))+'</button>').join('') +
+    '<button class="btn btn-bl" id="saNewBtn" onclick="saNew()">+ New satada</button></div>' +
+    (ws.length ? '' : '<div class="sb-empty">'+(SA.loaded ? 'No satada yet.' : 'Loading.')+'</div>');
+  if(SA.err){ main.innerHTML = '<div class="um-warn" style="display:block">'+esc(SA.err)+'</div><div class="sa-acts"><button class="btn btn-ol" onclick="saReload()">Try again</button></div>'; return; }
+  if(!SA.loaded){ main.innerHTML = ''; return; }
+  if(SA.form){ main.innerHTML = saFormHTML(); saFormUpdate(); return; }
+  main.innerHTML = SA.sel && SA.weeks[SA.sel] ? saPanelHTML(SA.sel) : '';
+}
+function saPick(w){ SA.form = false; SA.sel = w; saRender(); }
+function saNew(){
+  SA.form = true; SA.date = saNextSunday(); SA.owners = saAlt();
+  while(SA.date && (SA.weeks[SA.date]||[]).length) SA.date = addDaysISO(SA.date, 7);
+  saRender();
+}
+function saCancelForm(){ SA.form = false; if(!SA.sel || !SA.weeks[SA.sel]){ const ws = Object.keys(SA.weeks).sort(); SA.sel = ws[ws.length-1] || null; } if(!SA.sel) SA.form = true; saRender(); }
+
+/* ── The form: a Sunday, then seven tiles each set to Team A or Team B ── */
+function saTileHTML(i){
+  return '<div class="sa-tile" id="saT'+i+'"><div class="sa-dn">'+esc(SA_DAYS[i].slice(0,3))+'</div><div class="sa-dd" id="saTD'+i+'">&nbsp;</div>'+
+    '<div class="sa-pair" role="group" aria-label="Team for '+esc(SA_DAYS[i])+'">'+
+    ['A','B'].map(t=>'<button type="button" class="sa-pick t-'+t.toLowerCase()+'" id="saT'+i+t+'" aria-pressed="false" aria-label="'+esc(SA_DAYS[i])+' to Team '+t+'" onclick="saSet('+i+',\''+t+'\')">'+t+'</button>').join('')+
+    '</div></div>';
+}
+function saFormHTML(){
+  if(!SA.date){ SA.date = saNextSunday(); while((SA.weeks[SA.date]||[]).length) SA.date = addDaysISO(SA.date, 7); }
+  return '<h2>New satada</h2><p class="sa-note">A majalis every night, Sunday to Saturday. For that week the normal cycle makes no Friday Majlis or Paanch Baar Saal. Pick the Sunday, then choose which team runs each night.</p>'+
+    '<div class="fg" style="max-width:260px"><label for="saDate">Sunday the satada starts</label>'+
+    '<input type="date" id="saDate" value="'+esc(SA.date)+'" min="'+esc(saWeekStart(todayNZ()))+'" oninput="saDate(this.value)" onchange="saDate(this.value)"></div>'+
+    '<div class="sa-hint" id="saHint"></div>'+
+    '<div class="fg"><label>Team for each night</label></div>'+
+    '<div class="sa-strip" id="saStrip">'+[0,1,2,3,4,5,6].map(saTileHTML).join('')+'</div>'+
+    '<div class="sa-sum" id="saSum" aria-live="polite"></div>'+
+    '<div class="sa-acts"><button class="btn btn-ol" onclick="saAltAll()">Alternate A and B</button><button class="btn btn-ol" onclick="saClearAll()">Clear all</button>'+
+    '<span style="flex:1"></span>'+(Object.keys(SA.weeks).length ? '<button class="btn btn-ol" onclick="saCancelForm()">Cancel</button>' : '')+
+    '<button class="btn btn-bl" id="saGo" onclick="saSubmit()">Create Satada</button></div>';
+}
+function saCounts(owners){ const c = {A:0, B:0, none:0}; owners.forEach(o=>{ if(o === 'A' || o === 'B') c[o]++; else c.none++; }); return c; }
+function saSumText(owners){
+  const c = saCounts(owners), n = x=>x + ' night' + (x === 1 ? '' : 's');
+  return 'Team A: ' + n(c.A) + ' · Team B: ' + n(c.B) + (c.none ? ' · ' + c.none + ' not set' : '');
+}
+function saFormUpdate(){
+  const hint = $('saHint'), go = $('saGo'); if(!hint || !go) return;
+  const err = saValidate(SA.date), ok = !err;
+  hint.className = 'sa-hint ' + (ok ? 'ok' : 'bad');
+  hint.textContent = ok ? 'OK: ' + fmtDM(SA.date) + ' to ' + fmtDM(addDaysISO(SA.date,6)) : 'Not allowed: ' + err;
+  const sun = ok || (SA.date && saDow(SA.date) === 0);
+  for(let i=0;i<7;i++){
+    const d = $('saTD'+i); if(d) d.textContent = sun ? fmtDM(addDaysISO(SA.date,i)) : '-';
+    ['A','B'].forEach(t=>{ const b = $('saT'+i+t); if(b){ const on = SA.owners[i] === t; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); } });
+  }
+  $('saSum').textContent = saSumText(SA.owners);
+  const full = SA.owners.every(o=>o === 'A' || o === 'B');
+  go.disabled = !(ok && full);
+  go.title = go.disabled ? (ok ? 'Give all seven nights a team first' : err) : '';
+}
+function saDate(v){ SA.date = v || ''; saFormUpdate(); }
+function saSet(i, t){ SA.owners[i] = t; saFormUpdate(); }
+function saAltAll(){ SA.owners = saAlt(); saFormUpdate(); }
+function saClearAll(){ SA.owners = [null,null,null,null,null,null,null]; saFormUpdate(); }
+
+/* Reads the whole week from the database, not the copy on screen: regular
+   events are not loaded here at all, and another facilitator may have just
+   made a satada. Returns {err} or the plan. */
+async function saPlan(sun, owners){
+  const bad = saValidate(sun); if(bad) return {err: bad};
+  if(!sb) return {err: 'Could not add the satada - no database connection'};
+  const sat = addDaysISO(sun, 6);
+  const wk = await sb.from('iv_events').select('*').gte('date', sun).lte('date', sat);
+  if(wk.error) return {err: 'Could not read that week - ' + (wk.error.message || wk.error)};
+  const have = wk.data || [];
+  if(have.some(e=>e.type === 'satada')) return {err: 'Satada nights already exist in the week of ' + fmtDM(sun) + '.'};
+  const busy = new Set();
+  if(have.length){
+    const ids = have.map(e=>e.id);
+    const [ro, at] = await Promise.all([sb.from('iv_roster').select('event_id').in('event_id', ids), sb.from('iv_attendance').select('event_id').in('event_id', ids)]);
+    if(ro.error || at.error) return {err: 'Could not check the rosters in that week - ' + (((ro.error || at.error).message) || '')};
+    (ro.data||[]).forEach(r=>busy.add(r.event_id)); (at.data||[]).forEach(r=>busy.add(r.event_id));
+  }
+  const rows = [], del = [], skip = [];
+  for(let i=0;i<7;i++){
+    const d = addDaysISO(sun, i), regs = have.filter(e=>e.date === d);
+    const hold = regs.find(e=>busy.has(e.id) || (e.type !== 'friday' && e.type !== 'pbs'));
+    if(hold){ skip.push({date:d, name:hold.name, team:hold.team, why: busy.has(hold.id) ? 'it already has a roster or attendance' : 'it is not an automatic event'}); continue; }
+    regs.forEach(e=>del.push(e));
+    rows.push({team:owners[i], date:d, name:'Satada - ' + SA_DAYS[i], type:'satada', uniform:'Casual', youth:i === 5, confirmed:false});
+  }
+  if(!rows.length) return {err: 'Every date in that week already holds a roster or another event, so no satada night could be made.'};
+  return {sun:sun, rows:rows, del:del, skip:skip};
+}
+async function saSubmit(){
+  if(!USERS_ADMIN() || SA.busy) return;
+  const sun = SA.date, owners = SA.owners.slice();
+  const bad = saValidate(sun); if(bad) return toast(bad, 'err');
+  if(!owners.every(o=>o === 'A' || o === 'B')) return toast('Give all seven nights a team first.', 'err');
+  SA.busy = true;
+  try{
+    const plan = await saPlan(sun, owners);
+    if(plan.err) return toast(plan.err, 'err');
+    if(plan.del.length || plan.skip.length){
+      const L = [];
+      if(plan.del.length) L.push('These regular events in that week will be replaced:', ...plan.del.map(e=>'  ' + fmtDM(e.date) + ' - ' + e.name + ' (Team ' + e.team + ')'), '');
+      if(plan.skip.length) L.push('These dates are kept as they are, so they get no satada night:', ...plan.skip.map(x=>'  ' + fmtDM(x.date) + ' - ' + x.name + ': ' + x.why), '');
+      L.push(plan.rows.length + ' satada night' + (plan.rows.length === 1 ? '' : 's') + ' will be created.');
+      if(!confirm('Create this satada?\n\n' + L.join('\n'))) return;
+    }
+    await saRun(plan);
+  } finally { SA.busy = false; }
+}
+async function saRun(plan){
+  if(plan.del.length){
+    const ids = plan.del.map(e=>e.id);
+    if(!await dbWrite('Replacing the regular events in that week', ()=>sb.from('iv_events').delete().in('id', ids),
+        {verify: ()=>sb.from('iv_events').select('id').in('id', ids)})) return;
+  }
+  /* One insert for all of the nights. */
+  const rows = await dbWriteRows('Creating the satada nights', ()=>sb.from('iv_events').insert(plan.rows));
+  if(!rows){
+    if(plan.del.length) await dbWrite('Putting the replaced events back', ()=>sb.from('iv_events').insert(plan.del));
+    return saReload();
+  }
+  auditLog('add-satada', 'events', 'Satada ' + plan.sun + ' - ' + rows.map(r=>r.date.slice(5) + ' Team ' + r.team).join(', ') +
+    (plan.del.length ? '; replaced ' + plan.del.length + ' regular event' + (plan.del.length === 1 ? '' : 's') : '') +
+    (plan.skip.length ? '; kept ' + plan.skip.length + ' date' + (plan.skip.length === 1 ? '' : 's') + ' as they were' : ''));
+  SA.form = false; SA.sel = plan.sun;
+  await saReload();
+  toast('Satada created - ' + rows.length + ' night' + (rows.length === 1 ? '' : 's'));
+}
+
+/* ── The management panel for one satada: stays open ── */
+function saPanelHTML(w){
+  const evs = SA.weeks[w] || [], today = todayNZ();
+  const tiles = evs.map(e=>{
+    const i = saDow(e.date), n = SA.rost[e.id] || 0, att = SA.att[e.id] || 0, past = e.date < today, to = e.team === 'A' ? 'B' : 'A';
+    const state = att ? 'Attendance marked' : past ? 'Night has passed' : n ? 'Roster: ' + n + ' ' + (n === 1 ? 'person' : 'people') : 'No roster yet';
+    return '<div class="sa-tile" data-id="'+esc(e.id)+'"><div class="sa-dn">'+esc(SA_DAYS[i].slice(0,3))+'</div><div class="sa-dd">'+esc(fmtDM(e.date))+'</div>'+
+      '<span class="sa-own t-'+esc(e.team.toLowerCase())+'">Team '+esc(e.team)+'</span>'+
+      '<div class="sa-st'+(att || past ? '' : n ? ' has' : '')+'">'+esc(state)+'</div>'+
+      '<button class="btn btn-ol sa-mv" onclick="saOwner('+Number(e.id)+',\''+to+'\')" aria-label="Move '+esc(SA_DAYS[i])+' to Team '+to+'">To '+to+'</button></div>';
+  }).join('');
+  return '<div class="sa-head"><h2>Satada: '+esc(saRange(w))+'</h2><span class="al-pill sa-badge">'+esc(saStatus(w))+'</span></div>'+
+    '<div class="sa-sum" id="saSum">'+esc(saSumText(evs.map(e=>e.team)))+'</div>'+
+    '<div class="sa-strip" id="saStrip">'+tiles+'</div>'+
+    '<p class="sa-note">Tap a night\'s button to give it to the other team. A night with a roster only moves if the roster is cleared; a night that has passed, or has attendance marked, cannot move. Changes show on both team pages straight away.</p>'+
+    '<div class="sa-acts"><button class="btn btn-ol" onclick="saSwap(\''+esc(w)+'\')">Swap A and B for the whole week</button><span style="flex:1"></span>'+
+    '<button class="btn btn-red" onclick="saDelete(\''+esc(w)+'\')">Delete this satada</button></div>';
+}
+const saFlat = ()=>[].concat(...Object.keys(SA.weeks).map(w=>SA.weeks[w]));
+async function saOwner(id, to){
+  if(!USERS_ADMIN() || SA.busy || (to !== 'A' && to !== 'B')) return;
+  SA.busy = true;
+  try{
+    if(!await saReload()) return;                 // the rules below are judged on what the database holds now
+    const ev = saFlat().find(e=>e.id === id); if(!ev || ev.team === to) return;
+    if(ev.date < todayNZ()) return toast('That night has already passed, so its team cannot change.', 'err');
+    if(SA.att[id]) return toast('Attendance has already been marked for that night, so its team cannot change.', 'err');
+    const n = SA.rost[id] || 0, patch = {team: to}, was = ev.team;
+    if(n){
+      if(!confirm(ev.name + ' (' + fmtDM(ev.date) + ') already has a roster of ' + n + ' ' + (n === 1 ? 'person' : 'people') + ' from Team ' + was +
+          '.\n\nMoving it to Team ' + to + ' with them still on it would leave volunteers rostered by a lead who is not theirs.\n\nClear the roster and move the night to Team ' + to + '?')) return;
+      if(!await dbWrite('Clearing the roster', ()=>sb.from('iv_roster').delete().eq('event_id', id),
+          {verify: ()=>sb.from('iv_roster').select('event_id').eq('event_id', id)})) return;
+      patch.confirmed = false;
+    }
+    if(!await dbWrite('Changing the team', ()=>sb.from('iv_events').update(patch).eq('id', id))) { await saReload(); return; }
+    auditLog('satada-owner', 'events', ev.name + ' ' + ev.date + ' - Team ' + was + ' to Team ' + to + (n ? ' (roster cleared)' : ''));
+    await saReload();
+    toast(ev.name + ' is now Team ' + to + '\'s');
+  } finally { SA.busy = false; }
+}
+/* Every night that can still move goes to the other team; nights that have
+   passed or hold attendance stay. One confirmation covers the week. */
+async function saSwap(w){
+  if(!USERS_ADMIN() || SA.busy) return;
+  SA.busy = true;
+  try{
+    if(!await saReload()) return;
+    const evs = SA.weeks[w] || []; if(!evs.length) return;
+    const today = todayNZ();
+    const move = evs.filter(e=>e.date >= today && !SA.att[e.id]), stay = evs.filter(e=>move.indexOf(e) < 0);
+    if(!move.length) return toast('Every night of this satada has passed or has attendance, so none can move.', 'err');
+    const clear = move.filter(e=>SA.rost[e.id]);
+    const msg = 'Swap Team A and Team B for ' + move.length + ' night' + (move.length === 1 ? '' : 's') + ' of the week of ' + fmtDM(w) + '?' +
+      (clear.length ? '\n\nThese nights have rosters, which are cleared: ' + clear.map(e=>fmtDM(e.date) + ' (' + SA.rost[e.id] + ')').join(', ') + '.' : '') +
+      (stay.length ? '\n\nThese stay as they are (passed or attendance marked): ' + stay.map(e=>fmtDM(e.date)).join(', ') + '.' : '');
+    if(!confirm(msg)) return;
+    if(clear.length){
+      const cids = clear.map(e=>e.id);
+      if(!await dbWrite('Clearing the rosters', ()=>sb.from('iv_roster').delete().in('event_id', cids),
+          {verify: ()=>sb.from('iv_roster').select('event_id').in('event_id', cids)})) { await saReload(); return; }
+      if(!await dbWrite('Taking the cleared nights off the calendar', ()=>sb.from('iv_events').update({confirmed:false}).in('id', cids))) { await saReload(); return; }
+    }
+    for(const t of ['A','B']){
+      const ids = move.filter(e=>e.team !== t).map(e=>e.id); if(!ids.length) continue;
+      if(!await dbWrite('Changing the teams', ()=>sb.from('iv_events').update({team:t}).in('id', ids))) { await saReload(); return; }
+    }
+    auditLog('satada-swap', 'events', 'Satada ' + w + ' - swapped ' + move.map(e=>e.date.slice(5) + ' Team ' + e.team + ' to Team ' + (e.team === 'A' ? 'B' : 'A')).join(', ') +
+      (clear.length ? '; cleared ' + clear.length + ' roster' + (clear.length === 1 ? '' : 's') : '') + (stay.length ? '; ' + stay.length + ' kept' : ''));
+    await saReload();
+    toast('Teams swapped for ' + move.length + ' night' + (move.length === 1 ? '' : 's'));
+  } finally { SA.busy = false; }
+}
+async function saDelete(w){
+  if(!USERS_ADMIN() || SA.busy) return;
+  SA.busy = true;
+  try{
+    if(!await saReload()) return;
+    const evs = SA.weeks[w] || []; if(!evs.length) return;
+    const held = evs.filter(e=>SA.rost[e.id] || SA.att[e.id]);
+    if(!confirm('Delete this satada?\n\nAll ' + evs.length + ' nights of the week of ' + fmtDM(w) + ' are deleted, for both teams. The regular Friday Majlis and Paanch Baar Saal come back on the next automatic run. This cannot be undone.' +
+        (held.length ? '\n\n' + held.length + ' night' + (held.length === 1 ? ' has' : 's have') + ' a roster or attendance, which are deleted with them: ' + held.map(e=>fmtDM(e.date) + ' (Team ' + e.team + ')').join(', ') + '.' : ''))) return;
+    const ids = evs.map(e=>e.id);
+    if(!await dbWrite('Deleting the satada', ()=>sb.from('iv_events').delete().in('id', ids),
+        {verify: ()=>sb.from('iv_events').select('id').in('id', ids)})) { await saReload(); return; }
+    auditLog('delete-satada', 'events', 'Satada ' + w + ' - removed ' + ids.length + ' nights');
+    SA.sel = null;
+    await saReload();
+    toast('Satada deleted');
+  } finally { SA.busy = false; }
+}
+
 /* ═══ LOGIN MANAGEMENT (Supabase Auth accounts) ═══ */
 let PROFILES = [];
 async function refreshUserRows(){
@@ -4404,7 +4744,7 @@ function alPreview(){
       ['Team A', hasPerm(...IV_TOP,'facilitator','tl_a','ytl_a','team_a')],
       ['Team B', hasPerm(...IV_TOP,'facilitator','tl_b','ytl_b','team_b')],
       ['AV Team', hasPerm(...IV_TOP,'av_admin','av_atl','av_yatl','av_coord','av_team')],
-      ['Data Management', !!PAGES.members()], ['Admin Logins', !!PAGES.logins()],
+      ['Data Management', !!PAGES.members()], ['Admin Logins', !!PAGES.logins()], ['Satada', !!PAGES.satada()],
       ['Duty Stats', !!PAGES.stats()], ['Audit Logs', !!PAGES.audit()]];
   }finally{ CU.perms = saved; }
   box.innerHTML = '<h5>What they will be able to open · '+esc(ROLE_LABELS[roleId]||roleId)+'</h5><ul>'+
