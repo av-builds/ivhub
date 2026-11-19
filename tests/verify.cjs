@@ -285,10 +285,10 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     CU={user:'x',display:'X',perms:['facilitator'],uid:'u'}; o.facTeams=rpGroups(grantableRoles()).map(g=>g.id).join();
     o.spec=SPEC_TEAMS.map(t=>t.id).join(); o.chips=(specChipsHTML(['COOKING','XYZ'],'').match(/spec-chip active/g)||[]).length;
     return o; });
-  chk(r.cats==='Leadership|PHMU|Training & Development|Safety & Security|Ancillary Services','roles   picker groups follow the four categories',r.cats);
+  chk(r.cats==='Leadership|PHMU|Weekday|Training & Development|Safety & Security|Ancillary Services','roles   picker groups follow the four categories plus Weekday',r.cats);
   chk(r.cooking==='ck_lead,ck_alead,ck_team','roles   a team offers Team Lead, Assistant Team Lead and Volunteer',r.cooking);
   chk(r.beforeLevel===''&&r.afterLevel==='ck_lead','roles   no role until a level is chosen',r.beforeLevel+' / '+r.afterLevel);
-  chk(r.facTeams==='A,B','roles   a facilitator is still offered Teams A and B only',r.facTeams);
+  chk(r.facTeams==='A,B,WD','roles   a facilitator is offered Teams A and B, and the Weekday Team Lead role, only',r.facTeams);
   chk(/COOKING/.test(r.spec)&&/ABESHAFA/.test(r.spec)&&r.chips===2,'roles   User Management can assign every team, and keeps unknown values',r.spec);
   chk(p.errs.length===0,'roles   no page errors'); await p.context().close(); }
 
@@ -1001,7 +1001,7 @@ for(const file of ['teama.html','teamb.html']){
   chk(p.errs.length===0,'walkin  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Full screen button on every page ──
-for(const file of ['index.html','teama.html','teamb.html','av.html','safety.html','setup.html']){
+for(const file of ['index.html','teama.html','teamb.html','av.html','safety.html','setup.html','weekday.html']){
   const ctx=await b.newContext({viewport:{width:1300,height:900}}); const p=await ctx.newPage(); p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
   await ctx.route(u=>!String(u).startsWith(BASE),r=>r.abort());
   await p.goto(BASE+'/'+file,{waitUntil:'domcontentloaded'}); await p.waitForTimeout(1500);
@@ -1054,7 +1054,7 @@ for(const file of ['index.html','teama.html','av.html']){
   chk(p.errs.length===0,'shapes  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Type scale: nothing tiny, nothing shouting ──
-for(const file of ['teama.html','index.html','av.html']){
+for(const file of ['teama.html','index.html','av.html','weekday.html']){
   const p=await open(file,{width:1300,height:900});
   const r=await p.evaluate(()=>{ const o={tiny:[],heavy:[],lh:0}; const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
     while(w.nextNode()){ const t=w.currentNode, el=t.parentElement, tx=t.textContent.trim(); if(!tx||!el||/^(SCRIPT|STYLE)$/.test(el.tagName)) continue;
@@ -1143,6 +1143,194 @@ for(const file of ['teama.html','teamb.html']){
     chk((await p.evaluate(()=>CL.done.join()))==='lights','laptop  '+file+' one click ticks a row in the list');
     chk(p.errs.length===0,'laptop  '+file+' no page errors',p.errs.join(';')); await p.context().close(); }
   chk(cols['teama.html']!==cols['teamb.html'],'colour  Team A and Team B use different secondary colours',JSON.stringify(cols)); }
+
+// ── Weekday Team Lead: weekday.html, the Hub role, nav, Weekday Attendance, My Profile ──
+const WD_STUB=`(seed)=>{ const DB=Object.assign({profiles:[],iv_wd_shifts:[],iv_wd_attendance:[]},seed||{}); const calls=[]; let nid=100;
+  const from=t=>{ const st={op:'select',f:[],eqs:[],pay:null,sel:false,single:false}; DB[t]=DB[t]||[];
+    const q={ select(){st.sel=true;return q;}, insert(x){st.op='insert';st.pay=x;return q;}, update(x){st.op='update';st.pay=x;return q;}, delete(){st.op='delete';return q;}, upsert(x){st.op='upsert';st.pay=x;return q;},
+      eq(c,v){st.eqs.push([c,v]);st.f.push(r=>r[c]===v);return q;}, gte(c,v){st.f.push(r=>r[c]>=v);return q;}, lte(c,v){st.f.push(r=>r[c]<=v);return q;}, order(){return q;}, limit(){return q;}, maybeSingle(){st.single=true;return q;},
+      then(res,rej){ const rows=DB[t], hit=rows.filter(r=>st.f.every(f=>f(r))); let out;
+        calls.push({t,op:st.op,eqs:st.eqs,pay:st.pay});
+        if(st.op==='select') out={data:st.single?(hit[0]?Object.assign({},hit[0]):null):hit.map(r=>Object.assign({},r)),error:null};
+        else if(st.op==='insert'){ const x=Object.assign({},st.pay);
+          const dupe=t==='iv_wd_attendance'?rows.some(r=>r.date===x.date&&r.member_id===x.member_id&&r.duty===x.duty):t==='iv_wd_shifts'?rows.some(r=>r.date===x.date):false;
+          if(dupe) out={data:null,error:{message:'duplicate key value violates unique constraint',code:'23505'}};
+          else { if(t==='iv_wd_attendance'){ x.id=nid++; x.added_by_name='Lead One'; x.created_at=new Date().toISOString(); } rows.push(x); out={data:st.sel?[Object.assign({},x)]:null,error:null}; } }
+        else if(st.op==='update'){ hit.forEach(r=>Object.assign(r,st.pay)); out={data:st.sel?hit.map(r=>Object.assign({},r)):null,error:null}; }
+        else if(st.op==='delete'){ if(window.__refuseDelete){ out={data:[],error:null}; } else { hit.forEach(r=>rows.splice(rows.indexOf(r),1)); out={data:st.sel?hit.map(r=>Object.assign({},r)):null,error:null}; } }
+        else out={data:null,error:null};
+        return Promise.resolve(out).then(res,rej); } };
+    return q; };
+  const people=[{id:1,name:'Aly Kotadia',team:'A',cannot:['Nandi Line','nandi_passing']},{id:2,name:'Alia Ladha',team:'B',cannot:[]},{id:3,name:'Zahra Ali',team:null,cannot:[]}];
+  const sb={ auth:{getSession:async()=>({data:{session:{user:{id:'u1',email:'lead@x'}}}}),signOut:async()=>({})}, from,
+    rpc:async(n,a)=>{ calls.push({t:'rpc:'+n,op:'rpc',eqs:[],pay:a}); if(n!=='wd_member_search') return {data:null,error:{message:'no'}}; const s=String(a.q).toLowerCase(); return {data:people.filter(p=>p.name.toLowerCase().indexOf(s)>=0),error:null}; },
+    channel:()=>({on(){return this;},subscribe(){return this;}}), removeChannel(){} };
+  window.__DB=DB; window.__calls=calls; window.supabase={createClient:()=>sb}; }`;
+const openWd=async(perms,seed,vp)=>{
+  const ctx=await b.newContext({viewport:vp||{width:390,height:800},isMobile:true,hasTouch:true}); const p=await ctx.newPage();
+  await ctx.route(u=>!String(u).startsWith(BASE),r=>r.abort());
+  p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
+  await p.addInitScript(`(${WD_STUB})(${JSON.stringify(Object.assign({profiles:[{id:'u1',perms:perms,display:'Lead One'}]},seed||{}))});`);
+  await p.goto(BASE+'/weekday.html',{waitUntil:'domcontentloaded'}); await p.waitForTimeout(1200); return p; };
+{ const p=await openWd(['team_a']);
+  const r=await p.evaluate(()=>({deny:!document.getElementById('wdDeny').classList.contains('hide'),ok:!document.getElementById('wdOk').classList.contains('hide'),txt:document.getElementById('wdDeny').innerText}));
+  chk(r.deny&&!r.ok&&/No access/.test(r.txt),'weekday plain volunteer gets the no-access screen',JSON.stringify(r));
+  chk(p.errs.length===0,'weekday no-access no page errors',p.errs.join(';')); await p.context().close(); }
+{ const p=await openWd(['wd_tl','team_a']);
+  const today=await p.evaluate(()=>nzTodayISO());
+  const sel=s=>p.evaluate(s=>{ const e=document.querySelector(s); return e?e.innerText:null; },s);
+  chk(await p.evaluate(()=>!document.getElementById('wdOk').classList.contains('hide'))&&/Nobody yet|nobody yet/i.test(await sel('#leadBar'))&&/can only see names, teams and duties a person cannot do/.test(await sel('#privNote')),'weekday a lead sees the page, the empty lead banner and the privacy note');
+  const hs=await p.evaluate(()=>({h:document.documentElement.scrollWidth<=document.documentElement.clientWidth,theme:!!document.getElementById('ivThemeBtn'),fs:!!document.getElementById('ivFsBtn'),out:!!document.getElementById('btnOut'),logo:!!document.querySelector('.top img'),css:['ivtheme.css','ivshape.base.css','ivshape.css','ivtype.css','ivfix.css'].every(f=>!!document.querySelector('link[href^="'+f+'"]'))}));
+  chk(hs.h&&hs.theme&&hs.out&&hs.logo&&hs.css,'weekday phone width: no sideways scroll, logo, theme button, sign out, shared css linked',JSON.stringify(hs));
+  await p.fill('#q','a'); await p.waitForTimeout(500);
+  chk((await p.evaluate(()=>window.__calls.filter(c=>c.t==='rpc:wd_member_search').length))===0,'weekday one letter does not search');
+  await p.fill('#q','al'); await p.waitForTimeout(600);
+  const s1=await p.evaluate(()=>({n:document.querySelectorAll('.hit').length,first:document.querySelector('.hit').innerText.replace(/\s+/g,' '),cant:[...document.querySelectorAll('.hit .chip.cant')].map(e=>e.innerText)}));
+  chk(s1.n===3&&/Aly Kotadia/.test(s1.first)&&/Team A/.test(s1.first)&&s1.cant.join('|')==='Cannot do: Nandi Line|Cannot do: Nandi Passing','weekday search shows name, team chip and red Cannot do chips (names or keys)',JSON.stringify(s1));
+  await p.click('.hit[data-i="0"]'); await p.waitForTimeout(200);
+  const d1=await p.evaluate(()=>{ const ins=[...document.querySelectorAll('#dutyOpts input[name="duty"]')]; const nl=ins.find(i=>i.value==='Nandi Line'), np=ins.find(i=>i.value==='Nandi Passing'), su=ins.find(i=>i.value==='Sukreet');
+    nl.click(); const stay=!nl.checked; return {n:ins.length,nl:nl.disabled,np:np.disabled,su:su.disabled,stay,add:document.getElementById('pkAdd').disabled,other:ins[ins.length-1].value,role:document.querySelector('.sheet').getAttribute('role')}; });
+  chk(d1.n===23&&d1.nl&&d1.np&&!d1.su&&d1.stay&&d1.add&&d1.other==='__other'&&d1.role==='dialog','weekday picker lists all 22 duties plus Other, cannot-do duties are disabled and cannot be chosen',JSON.stringify(d1));
+  await p.click('#dutyOpts input[value="Sukreet"]'); await p.click('#pkAdd'); await p.waitForTimeout(400);
+  const a1=await p.evaluate(()=>({rows:window.__DB.iv_wd_attendance.slice(),shift:window.__DB.iv_wd_shifts.slice(),list:document.getElementById('list').innerText.replace(/\s+/g,' '),lead:document.getElementById('leadNames').innerText,join:document.getElementById('btnJoin').classList.contains('hide')}));
+  chk(a1.rows.length===1&&a1.rows[0].duty==='Sukreet'&&a1.rows[0].member_id===1&&a1.rows[0].date===today&&a1.rows[0].member_name==='Aly Kotadia'&&/Extra Duty/.test(a1.list)&&/Added by Lead One/.test(a1.list),'weekday add writes an iv_wd_attendance row for today with the chosen duty, labelled Extra Duty',JSON.stringify(a1.rows));
+  chk(a1.shift.length===1&&a1.shift[0].leads.join()==='Lead One'&&a1.lead==='Lead One'&&a1.join,'weekday adding the first entry puts the lead on the shift and hides Join',JSON.stringify(a1.shift));
+  await p.click('.hit[data-i="0"]'); await p.click('#dutyOpts input[value="Sukreet"]'); await p.click('#pkAdd'); await p.waitForTimeout(300);
+  const dp=await p.evaluate(()=>({msg:document.getElementById('pickMsg').innerText,n:window.__DB.iv_wd_attendance.length,open:!!document.querySelector('.sheet')}));
+  chk(/already has Sukreet/.test(dp.msg)&&dp.n===1&&dp.open,'weekday a duplicate duty gets a friendly message and no second row',JSON.stringify(dp));
+  await p.click('#dutyOpts input[value="__other"]'); await p.fill('#otherDuty','Nandi Line'); await p.waitForTimeout(100);
+  chk(await p.evaluate(()=>document.getElementById('pkAdd').disabled&&/cannot do Nandi Line/.test(document.getElementById('pickMsg').innerText)),'weekday typing a cannot-do duty under Other is blocked too');
+  await p.fill('#otherDuty','Door Greeter'); await p.click('#pkAdd'); await p.waitForTimeout(300);
+  chk((await p.evaluate(()=>window.__DB.iv_wd_attendance.map(r=>r.duty).join('|')))==='Sukreet|Door Greeter','weekday one person can have several extra duties the same day, including a typed one');
+  await p.click('[data-rm]'); await p.waitForTimeout(300);
+  chk((await p.evaluate(()=>window.__DB.iv_wd_attendance.map(r=>r.duty).join('|')))==='Door Greeter'&&(await p.evaluate(()=>document.querySelectorAll('.entry').length))===1,'weekday remove deletes the row and the list follows');
+  await p.evaluate(()=>{ window.__refuseDelete=true; }); await p.click('[data-rm]'); await p.waitForTimeout(300);
+  chk((await p.evaluate(()=>window.__DB.iv_wd_attendance.length))===1&&/refused/.test(await p.evaluate(()=>document.querySelector('.toast').innerText)),'weekday a delete the database silently refuses is reported, not shown as done');
+  await p.evaluate(()=>{ window.__refuseDelete=false; });
+  await p.click('#btnClose'); await p.waitForTimeout(200);
+  const c1=await p.evaluate(()=>({t:document.querySelector('.sheet').innerText.replace(/\s+/g,' '),role:document.querySelector('.sheet').getAttribute('role'),modal:document.querySelector('.sheet').getAttribute('aria-modal')}));
+  chk(/Close up for today\? This submits 1 entry to Attendance\./.test(c1.t)&&/Cancel/.test(c1.t)&&/Confirm and submit/.test(c1.t)&&c1.role==='dialog'&&c1.modal==='true','weekday Close Up opens a proper dialog with the count, Cancel and Confirm and submit',c1.t);
+  await p.click('#cuCancel'); await p.waitForTimeout(100);
+  chk(await p.evaluate(()=>!document.querySelector('.sheet')&&!window.__DB.iv_wd_shifts[0].closed_at),'weekday Cancel closes the dialog and submits nothing');
+  await p.click('#btnClose'); await p.click('#cuGo'); await p.waitForTimeout(400);
+  const c2=await p.evaluate(()=>({sh:Object.assign({},window.__DB.iv_wd_shifts[0]),st:document.getElementById('closeStatus').innerText,btn:document.getElementById('btnClose').classList.contains('hide')}));
+  chk(!!c2.sh.closed_at&&c2.sh.closed_by==='u1'&&c2.sh.closed_by_name==='Lead One'&&/Submitted at \d\d:\d\d by Lead One/.test(c2.st)&&!/Updated after/.test(c2.st)&&c2.btn,'weekday confirming sets closed_at and closed_by, shows Submitted at HH:MM by Name',JSON.stringify({st:c2.st,sh:c2.sh}));
+  await p.waitForTimeout(30);
+  await p.fill('#q','zah'); await p.waitForTimeout(500); await p.click('.hit[data-i="0"]'); await p.click('#dutyOpts input[value="Nandi"]'); await p.click('#pkAdd'); await p.waitForTimeout(500);
+  const l1=await p.evaluate(()=>({n:window.__DB.iv_wd_attendance.length,st:document.getElementById('closeStatus').innerText,btn:!document.getElementById('btnClose').classList.contains('hide'),chip:/No team/.test(document.getElementById('list').innerText)}));
+  chk(l1.n===2&&/Updated after close-up/.test(l1.st)&&l1.btn&&l1.chip,'weekday a late addition is allowed, flagged Updated after close-up, and Close Up is offered again',JSON.stringify(l1));
+  await p.click('#btnClose'); await p.waitForTimeout(100);
+  chk(/submits 2 entries/.test(await p.evaluate(()=>document.querySelector('.sheet').innerText)),'weekday the second close-up counts both entries');
+  await p.click('#cuGo'); await p.waitForTimeout(400);
+  chk(await p.evaluate(()=>!/Updated after/.test(document.getElementById('closeStatus').innerText)&&document.getElementById('btnClose').classList.contains('hide')),'weekday closing up again clears the late flag');
+  await p.click('[data-rm]'); await p.waitForTimeout(500);
+  chk(await p.evaluate(()=>/Updated after close-up/.test(document.getElementById('closeStatus').innerText)),'weekday a late removal is flagged as well');
+  const yday=await p.evaluate(()=>{ const d=new Date(Date.now()-86400000*2); return d.toISOString().slice(0,10); });
+  await p.evaluate(y=>{ const v=document.getElementById('viewDate'); v.value=y; v.dispatchEvent(new Event('change',{bubbles:true})); },yday); await p.waitForTimeout(400);
+  const ro=await p.evaluate(()=>({ro:!document.getElementById('roBar').classList.contains('hide'),add:getComputedStyle(document.getElementById('addPanel')).display,rm:document.querySelectorAll('[data-rm]').length,close:getComputedStyle(document.getElementById('btnClose')).display,join:getComputedStyle(document.getElementById('btnJoin')).display}));
+  chk(ro.ro&&ro.add==='none'&&ro.rm===0&&ro.close==='none'&&ro.join==='none','weekday another day is read-only: no search, remove, join or Close Up',JSON.stringify(ro));
+  const tabs=await p.evaluate(()=>[...new Set(window.__calls.map(c=>c.t))].sort().join());
+  chk(tabs==='iv_wd_attendance,iv_wd_shifts,profiles,rpc:wd_member_search','weekday only ever talks to the search function, iv_wd_* and the profiles row (never iv_members, iv_roster, iv_attendance, iv_events)',tabs);
+  chk(await p.evaluate(()=>window.__calls.filter(c=>c.t==='profiles').every(c=>c.op==='select'&&c.eqs.length===1&&c.eqs[0][0]==='id'&&c.eqs[0][1]==='u1')),'weekday reads only its own profile row, by id');
+  { const src=fs.readFileSync(path.join(ROOT,'weekday.html'),'utf8').replace(/<!--[\s\S]*?-->/g,''); chk(!/iv_members|iv_roster|iv_events|["'`]iv_attendance["'`]/.test(src),'weekday source never names the restricted tables'); }
+  chk(p.errs.length===0,'weekday lead flow no page errors',p.errs.join(';')); await p.context().close(); }
+{ const today=new Date().toISOString().slice(0,10);
+  const p=await openWd(['facilitator'],{iv_wd_shifts:[]});
+  chk(await p.evaluate(()=>!document.getElementById('wdOk').classList.contains('hide')),'weekday a facilitator may open it too'); await p.context().close(); }
+{ /* two leads: joining keeps the other lead */
+  const p0=await openWd(['wd_tl']); const today=await p0.evaluate(()=>nzTodayISO()); await p0.context().close();
+  const p=await openWd(['wd_tl'],{iv_wd_shifts:[{date:today,leads:['Other Lead'],updated_at:'2026-01-01T00:00:00.000Z'}]});
+  chk(await p.evaluate(()=>document.getElementById('leadNames').innerText==='Other Lead'&&!document.getElementById('btnJoin').classList.contains('hide')),'weekday the banner lists the other lead and offers Join today\'s shift');
+  await p.click('#btnJoin'); await p.waitForTimeout(400);
+  const j=await p.evaluate(()=>({leads:window.__DB.iv_wd_shifts[0].leads.join(),n:window.__DB.iv_wd_shifts.length,txt:document.getElementById('leadNames').innerText}));
+  chk(j.leads==='Other Lead,Lead One'&&j.n===1&&j.txt==='Other Lead, Lead One','weekday Join merges into leads without dropping the other lead',JSON.stringify(j));
+  chk(p.errs.length===0,'weekday join no page errors',p.errs.join(';')); await p.context().close(); }
+
+// ── Weekday Team Lead on the Hub ──
+{ const p=await open('index.html',{width:1300,height:900});
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; const M=__mk({iv_wd_attendance:[],iv_wd_shifts:[],profiles:[]}); sb=M.sb; const {DB}=M;
+    const vis=id=>{ const e=document.getElementById(id); return !!e&&getComputedStyle(e).display!=='none'; };
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const asUser=pm=>{ CU={user:'x',display:'Fac',perms:pm,uid:'u',email:'f@x'}; COVER_TEAMS.clear(); applyNavVisibility(); };
+    const bar=async()=>{ await wait(450); const all=[...document.querySelectorAll('#topnav .tn-b')].map(b=>b.innerText.replace(/\s+/g,' ').trim()); return all; };
+    document.getElementById('app').style.display='block';
+    o.rank=PERM_RANK.wd_tl; o.label=ROLE_LABELS.wd_tl;
+    asUser(['team_a','wd_tl']); o.wdNav=vis('navWeekday'); o.wdAtt=vis('navWdAtt'); o.wdBar=(await bar()).some(x=>/Weekday$/.test(x)); o.wdHref=document.getElementById('navWeekday').getAttribute('href'); o.wdMgmt=!(await bar()).some(x=>/Weekday Attendance/.test(x));
+    o.wdOnly=(()=>{ asUser(['wd_tl']); return document.getElementById('dashEmpty').style.display; })();
+    asUser(['tl_a']); o.tlNav=vis('navWeekday'); o.tlAtt=vis('navWdAtt'); nav('wdatt'); o.tlRefused=!document.getElementById('page-wdatt').classList.contains('active');
+    asUser(['team_a']); o.volNav=vis('navWeekday');
+    asUser(['facilitator']); o.facNav=vis('navWeekday'); o.facAtt=vis('navWdAtt'); const fb=await bar(); o.facBar=fb.some(x=>/Management/.test(x)); o.facMenu=[...document.querySelectorAll('#topnav .tn-menu .tn-b')].some(b=>/Weekday Attendance/.test(b.innerText));
+    /* roles: who may grant it, and that a role is added on top of the normal one */
+    o.facGrants=grantableRoles().includes('wd_tl')&&grantablePerms().includes('wd_tl'); asUser(['director']); o.dirGrants=grantableRoles().includes('wd_tl'); asUser(['facilitator']);
+    o.picker=rpGroups(grantableRoles()).map(g=>g.id).join();
+    DB.profiles=[{id:'p9',display:'Vol Person',email:'v@x',perms:['team_a']}]; PROFILES=[Object.assign({},DB.profiles[0])];
+    document.body.insertAdjacentHTML('beforeend','<div id="ue-p9" class="um-edit" style="display:none"></div>');
+    editProfile('p9'); const cb=()=>document.querySelector('input[name="pf-perm-p9"][value="wd_tl"]');
+    o.cbExists=!!cb()&&!cb().disabled&&!cb().checked; o.teamKept=document.querySelector('input[name="pf-perm-p9"][value="team_a"]').checked;
+    cb().checked=true; rlSync('p9'); o.diff=document.getElementById('rl-diff-p9').innerText;
+    await saveProfile('p9'); o.afterAdd=DB.profiles[0].perms.slice().sort().join();
+    PROFILES=[Object.assign({},DB.profiles[0])]; document.querySelectorAll('#ue-p9').forEach(e=>e.remove()); document.body.insertAdjacentHTML('beforeend','<div id="ue-p9" class="um-edit" style="display:none"></div>'); editProfile('p9');
+    o.heldChecked=cb().checked; cb().checked=false; rlSync('p9'); await saveProfile('p9'); o.afterRemove=DB.profiles[0].perms.join();
+    /* invite: the extra box and the perms sent */
+    fillInviteRoles(); o.invBox=vis('ufWdRow')||getComputedStyle(document.getElementById('ufWdRow')).display!=='none';
+    return o; });
+  chk(r.rank===9&&r.label==='Weekday Team Lead','weekday-hub role wd_tl is rank 9 labelled Weekday Team Lead',JSON.stringify([r.rank,r.label]));
+  chk(r.wdNav&&!r.wdAtt&&r.wdBar&&r.wdHref==='weekday.html'&&r.wdMgmt,'weekday-hub a Weekday Team Lead sees the Weekday link (sidebar and top bar) and not Weekday Attendance',JSON.stringify(r));
+  chk(r.wdOnly==='none','weekday-hub an account with only wd_tl does not get the empty dashboard message',r.wdOnly);
+  chk(!r.tlNav&&!r.tlAtt&&r.tlRefused&&!r.volNav,'weekday-hub Team Lead and volunteer see neither Weekday nor Weekday Attendance, and nav refuses the page',JSON.stringify(r));
+  chk(r.facNav&&r.facAtt&&r.facBar&&r.facMenu,'weekday-hub a facilitator sees Weekday and Weekday Attendance under Management',JSON.stringify(r));
+  chk(r.facGrants&&r.dirGrants&&r.picker==='A,B,WD','weekday-hub a facilitator and a director may grant Weekday Team Lead; the picker offers it as its own group',JSON.stringify(r));
+  chk(r.cbExists&&r.teamKept&&/Adding: Weekday Team Lead/.test(r.diff)&&!/Removing/.test(r.diff)&&r.afterAdd==='team_a,wd_tl','weekday-hub ticking Weekday Team Lead on an account adds it and keeps the normal role',JSON.stringify(r));
+  chk(r.heldChecked&&r.afterRemove==='team_a','weekday-hub unticking it removes only wd_tl and keeps the normal role',JSON.stringify(r));
+  chk(r.invBox,'weekday-hub the invite form offers Also make them a Weekday Team Lead');
+  chk(p.errs.length===0,'weekday-hub role and nav no page errors',p.errs.join(';')); await p.context().close(); }
+{ const p=await open('index.html',{width:1300,height:900});
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; const M=__mk({iv_wd_attendance:[],iv_wd_shifts:[],profiles:[]}); sb=M.sb; const {DB,log}=M; let said=[]; window.confirm=m=>{ said.push(m); return true; };
+    CU={user:'x',display:'Fac',perms:['facilitator'],uid:'u',email:'f@x'}; applyNavVisibility(); document.getElementById('app').style.display='block';
+    const t=todayNZ(), d=n=>addDaysISO(t,n);
+    DB.iv_wd_attendance.push({id:1,date:d(-1),member_id:1,member_name:'Aly Kotadia',member_team:'A',duty:'Sukreet',added_by_name:'Lead One',created_at:d(-1)+'T02:00:00Z'},
+      {id:2,date:d(-1),member_id:2,member_name:'=cmd|x',member_team:'B',duty:'+Nandi',added_by_name:'Lead One',created_at:d(-1)+'T02:05:00Z'},
+      {id:3,date:d(-3),member_id:1,member_name:'Aly Kotadia',member_team:'A',duty:'Nandi',added_by_name:'Lead Two',created_at:d(-3)+'T02:00:00Z'},
+      {id:4,date:d(-60),member_id:1,member_name:'Aly Kotadia',member_team:'A',duty:'Old',added_by_name:'Lead Two',created_at:d(-60)+'T02:00:00Z'});
+    DB.iv_wd_shifts.push({date:d(-1),leads:['Lead One','Lead Two'],closed_at:d(-1)+'T05:00:00Z',closed_by_name:'Lead One'},{date:d(-3),leads:['Lead Two'],closed_at:null});
+    nav('wdatt'); await new Promise(r=>setTimeout(r,300));
+    o.range=document.getElementById('wdaFrom').value===addDaysISO(t,-30)&&document.getElementById('wdaTo').value===t;
+    o.days=[...document.querySelectorAll('#wdaDays .wda-day h3')].length; o.meta=document.querySelector('#wdaDays .wda-day').innerText.replace(/\s+/g,' ');
+    o.old=!/Old/.test(document.getElementById('wdaDays').innerText); o.notClosed=/Not closed up/.test(document.getElementById('wdaDays').innerText);
+    o.tot=document.getElementById('wdaTotals').innerText.replace(/\s+/g,' ');
+    o.csvA=csvCell('=1+1')+'|'+csvCell('+1')+'|'+csvCell('-1')+'|'+csvCell('@x')+'|'+csvCell('\tx')+'|'+csvCell('\rx')+'|'+csvCell('plain')+'|'+csvCell('a"b');
+    const csv=wdaCsvText(); o.csv=csv.split('\r\n'); 
+    await wdaDelete(2); o.afterDel=DB.iv_wd_attendance.filter(x=>x.id===2).length; o.said=said.length; o.audit=DB.audit_logs.some(a=>a.action==='wd-delete');
+    o.rows=document.querySelectorAll('#wdaDays .wda-row').length;
+    window.confirm=()=>false; await wdaDelete(1); o.kept=DB.iv_wd_attendance.some(x=>x.id===1);
+    return o; });
+  chk(r.range&&r.days===2&&/Leading: Lead One, Lead Two/.test(r.meta)&&/Closed up \d\d:\d\d/.test(r.meta)&&r.notClosed&&r.old,'weekday-att defaults to the last 30 days, groups by date with leads and closed-up state',JSON.stringify({range:r.range,days:r.days,meta:r.meta}));
+  chk(/Aly Kotadia \(Team A\) 2/.test(r.tot)&&/=cmd\|x/.test(r.tot),'weekday-att totals by member',r.tot);
+  chk(r.csvA==='"\'=1+1"|"\'+1"|"\'-1"|"\'@x"|"\'\tx"|"\'\rx"|"plain"|"a""b"','weekday-att CSV cells starting = + - @ tab or CR get a single quote prefix',JSON.stringify(r.csvA));
+  chk(r.csv.length===4&&r.csv[0].startsWith('"Date"')&&r.csv.some(l=>l.indexOf('"\'=cmd|x"')>=0)&&r.csv.some(l=>l.indexOf('"\'+Nandi"')>=0)&&r.csv.every((l,i)=>i===0||l.indexOf('"Extra Duty"')>=0),'weekday-att CSV export protects names and duties and labels every row Extra Duty',r.csv.join(' / '));
+  chk(r.afterDel===0&&r.said===1&&r.audit&&r.rows===2&&r.kept,'weekday-att delete asks first, removes the row, logs it, and a declined confirm keeps it',JSON.stringify(r));
+  chk(p.errs.length===0,'weekday-att no page errors',p.errs.join(';')); await p.context().close(); }
+{ const p=await open('index.html',{width:1300,height:900});
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; const M=__mk({iv_wd_attendance:[],iv_wd_shifts:[],profiles:[]}); sb=M.sb; const {DB}=M; const t=todayNZ();
+    CU={user:'x',display:'Vol',perms:['team_a'],uid:'u',email:'v@x'}; document.getElementById('app').style.display='block';
+    DB.iv_wd_attendance.push({id:1,date:addDaysISO(t,-2),member_id:7,member_name:'Me',duty:'Sukreet'},{id:2,date:addDaysISO(t,-9),member_id:7,member_name:'Me',duty:'Nandi Line'},{id:3,date:t,member_id:8,member_name:'Other',duty:'Nandi'});
+    const view=v=>{ M.sb.rpc=async n=>n==='my_member_view'?v:{data:[],error:null}; };
+    const el=()=>document.getElementById('pfExtra'), shown=()=>getComputedStyle(el()).display!=='none';
+    view({data:{linked:true,member:{id:7,name:'Me',away:[]}},error:null}); await loadProfile(); await new Promise(r=>setTimeout(r,150)); o.linked=el().innerText; o.shown=shown();
+    await wdExtraLine('mdExtra'); o.md=document.getElementById('mdExtra').innerText; o.mdShown=getComputedStyle(document.getElementById('mdExtra')).display!=='none';
+    view({data:{linked:false,member:null},error:null}); await loadProfile(); await new Promise(r=>setTimeout(r,150)); o.unlinked=el().innerText;
+    view({data:null,error:{message:'boom'}}); await loadProfile(); await new Promise(r=>setTimeout(r,150)); o.noview=el().innerText;
+    view({data:{linked:true,member:{id:7}},error:null}); const orig=M.sb.from; M.sb.from=t=>t==='iv_wd_attendance'?{select(){return this;},eq(){return this;},order(){return Promise.resolve({data:null,error:{message:'missing table'}});}}:orig(t);
+    await wdExtraLine('pfExtra'); o.err=el().innerText; o.errShown=shown();
+    return o; });
+  chk(/Extra duties: 2\./.test(r.linked)&&/Sukreet/.test(r.linked)&&/Nandi Line/.test(r.linked)&&!/Other/.test(r.linked)&&r.shown&&/separately/.test(r.linked),'weekday-profile My Profile shows only this volunteer\'s own extra duties, counted apart from normal totals',r.linked);
+  chk(/Extra duties: 2\./.test(r.md)&&r.mdShown,'weekday-profile My Duties shows the same line',r.md);
+  chk(/Extra duties: 0\./.test(r.unlinked)&&/Extra duties: 0\./.test(r.noview),'weekday-profile an unlinked account shows 0 gracefully',r.unlinked+' / '+r.noview);
+  chk(r.err===''&&!r.errShown,'weekday-profile a table error shows nothing',r.err);
+  chk(p.errs.length===0,'weekday-profile no page errors',p.errs.join(';')); await p.context().close(); }
 
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));

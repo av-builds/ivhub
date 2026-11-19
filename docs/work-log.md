@@ -45,3 +45,11 @@ I will report honestly on what was fixed, what was skipped and why, and every da
 - **Database.** Log entries are stamped with the real user. The old plaintext passwords are replaced with a placeholder. The rank function knows the division roles. The rest (team-scoped writes, checklist tables, and others) is waiting on a Supabase confirmation prompt.
 - **Satada.** Either Team Lead can add a satada week (Sunday to Saturday) with an owner team per night. Both leads see all seven nights. Only the owner team rosters a night, and the other lead can take it over. The cycle's own Fridays and Paanch Baar Saal are not created that week. Friday keeps its MPH options. Satada nights count as normal majalis in attendance and reports.
 - **Yearly roster.** From next year you send the jamati roster and I enter the majalis dates, including satada weeks.
+
+## Update: Weekday Team Leads
+- **Role and records.** A new Weekday Team Lead role, assignable by Facilitators on top of a normal role. Weekday attendance is kept in its own tables, separate from normal attendance.
+- **Weekday page.** Leads search a name, pick a duty from the full list, and it is recorded as an Extra Duty. Duties a person cannot do are blocked. Several leads can share a day. Close Up asks for confirmation and submits; late edits are allowed until midnight.
+- **Privacy.** A weekday lead sees only names, teams and cannot-do duties. The database blocks them from reading member, roster and attendance data.
+- **Hub.** Facilitators and above get a Weekday Attendance page. Volunteers see an Extra duties line in My Profile and My Duties.
+- **Team pages.** Cannot-do duties are set in each member's People profile. Attendance reports have an Extra Duty column.
+- **Invite function.** Now at version 16, with the new role.

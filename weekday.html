@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<!-- Hand-written (tools/make-specialty.cjs skips this file). Weekday Team Lead page:
+     the lead for a day with no Team A or Team B event adds extra duties for people
+     and closes up at the end. A pure Weekday Team Lead cannot read iv_members,
+     iv_roster, iv_attendance or other profiles, so this page only ever talks to
+     the wd_member_search function, iv_wd_shifts, iv_wd_attendance and the
+     signed-in account's own profile row. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekday Team | IV Hub</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{--dp:#020B18;--ds:#071628;--ds2:#0D2040;--dt:#E8F4FD;--dm:#7AAECB;--db:rgba(75,163,220,.18);
+  --blue:#00558B;--blue2:#1976D2;--blue-lt:#4BA3DC;--navy:#0C2461;--gold:#FCD34D;--red:#F87171;--green:#4ADE80;--r:12px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Archivo',sans-serif;font-weight:600;background:var(--dp);color:var(--dt);min-height:100vh;display:flex;flex-direction:column;
+  background-image:radial-gradient(ellipse at 15% 20%,rgba(0,85,139,.22),transparent 55%),radial-gradient(ellipse at 85% 80%,rgba(245,158,11,.10),transparent 55%);}
+.top{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--db);background:rgba(7,22,40,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:20;}
+.top img{width:42px;height:42px;border-radius:50%;background:#fff;flex-shrink:0;}
+.top .t{flex:1;min-width:0;}
+.top .t b{display:block;font-size:17px;font-weight:700;color:var(--blue-lt);text-transform:uppercase;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.top .t span{font-size:12px;color:var(--dm);}
+.top .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+.hub{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--db);color:var(--dt);text-decoration:none;font-size:14px;font-weight:700;white-space:nowrap;transition:all .18s;background:transparent;font-family:inherit;cursor:pointer;}
+.hub:hover{border-color:var(--blue-lt);background:rgba(75,163,220,.1);}
+.hub.primary{background:linear-gradient(135deg,var(--navy),var(--blue2));border-color:transparent;color:#fff;}
+.hub.danger{color:#FCA5A5;border-color:rgba(239,68,68,.4);}
+.hub[disabled]{opacity:.45;cursor:not-allowed;}
+main{flex:1;padding:16px 16px 90px;max-width:900px;width:100%;margin:0 auto;}
+.center{display:flex;align-items:center;justify-content:center;min-height:50vh;}
+.card{background:var(--ds);border:1px solid var(--db);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.45);}
+.small-card{width:520px;max-width:100%;text-align:center;padding:30px 26px;}
+h1{font-size:24px;font-weight:700;line-height:1.15;margin-bottom:8px;}
+h2{font-size:18px;font-weight:700;margin-bottom:8px;}
+p.lede{font-size:15px;line-height:1.6;color:var(--dm);margin-bottom:16px;}
+.msg{font-size:15px;line-height:1.6;color:var(--dm);}
+.spin{width:30px;height:30px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--blue-lt);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 14px;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hide{display:none!important;}
+.panel{padding:16px;margin-bottom:14px;}
+.sub{font-size:13px;color:var(--dm);line-height:1.5;}
+.datebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.datebar .d{font-size:20px;font-weight:700;flex:1 1 220px;min-width:0;}
+.datebar label{font-size:12px;color:var(--dm);display:block;margin-bottom:4px;}
+input[type=date],input[type=search],input[type=text]{width:100%;min-height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(75,163,220,.25);background:#091A33;color:var(--dt);font:600 16px 'Archivo',sans-serif;}
+input[type=date]{width:auto;}
+.lead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:14px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.35);margin-bottom:12px;font-size:15px;}
+.lead b{font-weight:700;}
+.lead .sp{flex:1;}
+.ro{padding:10px 14px;border-radius:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#FBBF24;font-size:14px;line-height:1.5;margin-bottom:12px;}
+.priv{font-size:13px;color:var(--dm);margin-top:10px;line-height:1.5;}
+.chip{display:inline-flex;align-items:center;min-height:26px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--db);background:rgba(75,163,220,.1);color:#BFE6FA;font-family:inherit;white-space:nowrap;}
+.chip.cant{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.45);color:#FCA5A5;}
+.chip.extra{background:rgba(252,211,77,.12);border-color:rgba(252,211,77,.4);color:var(--gold);}
+.res{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.hit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;min-height:52px;padding:8px 12px;border-radius:14px;border:1px solid var(--db);background:rgba(255,255,255,.04);color:var(--dt);font:600 15px 'Archivo',sans-serif;text-align:left;cursor:pointer;}
+.hit:hover{border-color:var(--blue-lt);background:rgba(75,163,220,.1);}
+.hit .n{font-weight:700;flex:1 1 140px;min-width:0;}
+.empty{text-align:center;color:var(--dm);padding:22px 10px;font-size:15px;}
+.entry{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;padding:10px 12px;border-radius:14px;border:1px solid var(--db);background:rgba(255,255,255,.03);margin-bottom:8px;}
+.entry .who{font-weight:700;flex:1 1 150px;min-width:0;font-size:15px;}
+.entry .duty{font-size:14px;}
+.entry .by{font-size:12.5px;color:var(--dm);flex:1 1 100%;}
+.status{font-size:15px;line-height:1.5;flex:1 1 220px;}
+.late{display:inline-flex;margin-left:8px;}
+/* dialog */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
+.sheet{width:560px;max-width:100%;max-height:90vh;overflow-y:auto;background:var(--ds);border:1px solid var(--db);border-radius:20px;padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+.sheet h2{font-size:20px;margin-bottom:4px;}
+.sheet .sub{margin-bottom:12px;}
+.opts{display:flex;flex-direction:column;gap:6px;margin:8px 0 12px;}
+.opt{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border-radius:12px;border:1px solid var(--db);background:rgba(255,255,255,.03);cursor:pointer;font-size:15px;}
+.opt input{width:20px;height:20px;flex-shrink:0;accent-color:var(--blue-lt);}
+.opt.dis{opacity:.6;cursor:not-allowed;background:rgba(248,113,113,.06);}
+.opt .nm{flex:1;min-width:0;}
+.opt .chip{min-height:22px;font-size:12px;}
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px;}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99;background:#0D2040;border:1px solid var(--db);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:92vw;}
+.toast.err{border-color:rgba(248,113,113,.6);color:#FCA5A5;}
+html[data-theme="light"] .chip.cant{color:#B91C1C;}
+html[data-theme="light"] .chip.extra{color:#8A5A00;}
+html[data-theme="light"] .ro{color:#8A5A00;}
+html[data-theme="light"] .hub.danger{color:#B91C1C;}
+html[data-theme="light"] .toast.err{color:#B91C1C;}
+html[data-theme="light"] input[type=date],html[data-theme="light"] input[type=search],html[data-theme="light"] input[type=text]{background:#fff;color:var(--dt);}
+@media (max-width:640px){
+  main{padding:12px 16px 90px;}
+  .panel{padding:12px;}
+  .top .acts .hub{padding:0 12px;}
+  .btns .hub{flex:1 1 auto;}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;}}
+</style>
+<link rel="stylesheet" href="ivtheme.css?v=20261119a">
+<link rel="stylesheet" href="ivshape.base.css?v=20261119a">
+<link rel="stylesheet" href="ivshape.css?v=20261119a">
+<link rel="stylesheet" href="ivtype.css?v=20261119a">
+<link rel="stylesheet" href="ivfix.css?v=20261119a">
+<script src="ivtheme.js?v=20261114a"></script>
+</head>
+<body>
+<header class="top">
+  <img src="logo.png" alt="Ismaili Volunteers" onerror="this.style.display='none'">
+  <div class="t"><b>Weekday Team</b><span>IV Hub · Auckland Jamatkhana</span></div>
+  <div class="acts">
+    <a class="hub" href="index.html?hub=1">Hub</a>
+    <button type="button" class="hub" id="btnOut">Sign out</button>
+  </div>
+</header>
+<main>
+  <div id="wdLoad" class="center"><div class="card small-card"><div class="spin"></div><div class="msg">Checking your access…</div></div></div>
+  <div id="wdDeny" class="center hide"><div class="card small-card"><h1>No access</h1>
+    <p class="lede" id="denyMsg">This page is for Weekday Team Leads. Ask a Facilitator if you should be one.</p>
+    <a class="hub" href="index.html?hub=1">Back to the Hub</a></div></div>
+
+  <div id="wdOk" class="hide">
+    <div class="datebar">
+      <div class="d" id="dateLbl"></div>
+      <div><label for="viewDate">View another day</label><input type="date" id="viewDate"></div>
+    </div>
+    <div id="roBar" class="ro hide" role="status"></div>
+    <div class="lead" id="leadBar" role="status"><span>Leading today: <b id="leadNames">nobody yet</b></span><span class="sp"></span>
+      <button type="button" class="hub" id="btnJoin">Join today's shift</button></div>
+
+    <section class="card panel" id="addPanel">
+      <h2>Add an extra duty</h2>
+      <label class="sub" for="q">Search for a person by name</label>
+      <input type="search" id="q" placeholder="Start typing a name" autocomplete="off" aria-controls="res" maxlength="60">
+      <div class="res" id="res" aria-live="polite"></div>
+      <p class="priv" id="privNote">You can only see names, teams and duties a person cannot do.</p>
+    </section>
+
+    <section class="card panel">
+      <h2>Today's extra duties <span class="chip" id="count">0</span></h2>
+      <div id="list"></div>
+    </section>
+
+    <section class="card panel" id="closePanel">
+      <h2>Close up</h2>
+      <div class="datebar" style="margin-bottom:0">
+        <div class="status" id="closeStatus" role="status"></div>
+        <button type="button" class="hub primary" id="btnClose">Close Up</button>
+      </div>
+    </section>
+  </div>
+</main>
+<div id="sheetHost"></div>
+<div id="toastHost"></div>
+
+<script>
+const SB_URL = 'https://ysmkqvceezrjcrlixlii.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzbWtxdmNlZXpyamNybGl4bGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjk4NzcsImV4cCI6MjA5Mzg0NTg3N30.YHx-q-nR8qfFvk2dZnEg5knK6eDK-zCbPlyxPDknK4w';
+const IV_TOP = ['owner','developer','director','deputy_director','phmu_lead','iv_admin'];
+/* The same duty names the team pages use (DUTY_INFO in teama.html), in the same order. */
+const DUTIES = ['Nandi Labelling','Number 1','Prayer Hall Entrance','Shoe Entrance','Seating & Discipline','Sukreet','Ghatpaat Closing',
+  'Safety Exit Door/Discipline','Nandi','Nandi Set-up','Nandi Centre','Nandi Trolley','Nandi Distribution','Chai Station','Chai Station Pack-up',
+  'Water Station','Nandi Line','Nandi Passing','MPH Paat Windup','MPH Hall Entrance','Seating & Discipline (Youth)','Sukreet & Ghatpaat Closing (Youth)'];
+/* A cannot-do list may carry the duty key instead of its name; read both. */
+const KEY_NAME = {nandi_labelling:'Nandi Labelling',number_1:'Number 1',ph_entrance:'Prayer Hall Entrance',shoe_entrance:'Shoe Entrance',seating:'Seating & Discipline',
+  sukreet:'Sukreet',ghatpaat_closing:'Ghatpaat Closing',safety_exit:'Safety Exit Door/Discipline',nandi:'Nandi',nandi_setup:'Nandi Set-up',nandi_centre:'Nandi Centre',
+  nandi_trolley:'Nandi Trolley',nandi_distribution:'Nandi Distribution',chai:'Chai Station',chai_packup:'Chai Station Pack-up',water_station:'Water Station',
+  nandi_line:'Nandi Line',nandi_passing:'Nandi Passing',mph_paat_windup:'MPH Paat Windup',mph_entrance:'MPH Hall Entrance',mph_seating:'Seating & Discipline (Youth)',
+  mph_sukreet:'Sukreet & Ghatpaat Closing (Youth)'};
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s==null?'':s).trim().toLowerCase();
+
+/* Today in New Zealand, whatever the device clock's zone is. */
+function nzTodayISO(){
+  try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'Pacific/Auckland',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); }
+  catch(e){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+}
+function nzHM(iso){
+  try{ return new Date(iso).toLocaleTimeString('en-NZ',{timeZone:'Pacific/Auckland',hour:'2-digit',minute:'2-digit',hour12:false}); }catch(e){ return ''; }
+}
+const longDate = iso => new Date(iso + 'T12:00:00').toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+let sb = null;
+const S = { uid:'', name:'', today:'', date:'', follow:true, shift:null, rows:[], busy:false, seq:0, results:[], lastQ:'' };
+const isToday = () => S.date === S.today;
+
+function permList(p){
+  if(Array.isArray(p)) return p;
+  if(typeof p === 'string'){ try{ const j = JSON.parse(p); if(Array.isArray(j)) return j; }catch(e){} }
+  return [];
+}
+function toast(t, bad){
+  const e = document.createElement('div'); e.className = 'toast' + (bad ? ' err' : ''); e.textContent = t; e.setAttribute('role', bad ? 'alert' : 'status');
+  $('toastHost').innerHTML = ''; $('toastHost').appendChild(e); setTimeout(()=>e.remove(), bad ? 5000 : 2400);
+}
+function show(id){ ['wdLoad','wdDeny','wdOk'].forEach(s=>$(s).classList.toggle('hide', s !== id)); }
+function teamLabel(t){ return t === 'A' || t === 'B' ? 'Team ' + t : (t ? String(t) : 'No team'); }
+function cannotNames(list){
+  const out = []; (Array.isArray(list) ? list : []).forEach(x=>{ const n = KEY_NAME[norm(x)] || String(x); if(norm(n) && out.indexOf(n) < 0) out.push(n); });
+  return out;
+}
+
+/* ── data ── */
+async function loadDay(){
+  if(!sb) return;
+  const d = S.date;
+  const [sh, at] = await Promise.all([
+    sb.from('iv_wd_shifts').select('*').eq('date', d).maybeSingle(),
+    sb.from('iv_wd_attendance').select('*').eq('date', d).order('created_at')
+  ]);
+  if(sh.error || at.error){ toast('Could not read the day - ' + ((sh.error || at.error).message || 'unknown error'), true); }
+  if(!sh.error) S.shift = sh.data || null;
+  if(!at.error) S.rows = at.data || [];
+  render();
+}
+/* Read the shift fresh, work out what to write, write it, and prove it landed. An existing row is only
+   changed if nobody else changed it since it was read (updated_at is the guard), so two leads joining
+   at once both end up in leads[]. A refused write returns no row, which is reported, never ignored. */
+async function writeShift(build){
+  for(let attempt = 0; attempt < 4; attempt++){
+    const r = await sb.from('iv_wd_shifts').select('*').eq('date', S.date).maybeSingle();
+    if(r.error) return {error:r.error};
+    const cur = r.data || null, patch = build(cur);
+    if(patch === null) return {row:cur};
+    if(!patch.updated_at) patch.updated_at = new Date().toISOString();
+    let w;
+    if(!cur) w = await sb.from('iv_wd_shifts').insert(Object.assign({date:S.date}, patch)).select();
+    else { let q = sb.from('iv_wd_shifts').update(patch).eq('date', S.date); if(cur.updated_at) q = q.eq('updated_at', cur.updated_at); w = await q.select(); }
+    if(w.error){ if(/duplicate key|23505/i.test((w.error.message||'') + (w.error.code||''))) continue; return {error:w.error}; }
+    const row = Array.isArray(w.data) ? w.data[0] : w.data;
+    if(row) return {row};
+    if(cur && cur.updated_at) continue;                   // someone else got in first: read again
+    return {refused:true};
+  }
+  return {refused:true};
+}
+const withMe = cur => { const leads = cur && Array.isArray(cur.leads) ? cur.leads.slice() : []; if(leads.indexOf(S.name) < 0) leads.push(S.name); return leads; };
+async function joinShift(quiet){
+  if(!isToday()) return false;
+  const res = await writeShift(cur=>{ const leads = withMe(cur); return cur && Array.isArray(cur.leads) && cur.leads.indexOf(S.name) >= 0 ? null : {leads}; });
+  if(res.row){ S.shift = res.row; render(); if(!quiet) toast('You are leading today'); return true; }
+  toast(res.error ? 'Could not join the shift - ' + res.error.message : 'Could not join the shift - the database refused it.', true);
+  return false;
+}
+/* After close-up, any change makes the submission out of date: stamp the shift so the page can say so. */
+async function touchAfterClose(){
+  if(!S.shift || !S.shift.closed_at) return;
+  const res = await writeShift(cur=>cur && cur.closed_at ? {} : null);
+  if(res.row) S.shift = res.row;
+}
+const lateEdit = () => !!(S.shift && S.shift.closed_at && S.shift.updated_at && S.shift.updated_at > S.shift.closed_at);
+
+/* ── render ── */
+function render(){
+  const today = isToday();
+  $('dateLbl').textContent = (today ? 'Today, ' : '') + longDate(S.date);
+  $('viewDate').value = S.date;
+  const ro = $('roBar'); ro.classList.toggle('hide', today);
+  ro.textContent = today ? '' : 'This is not today, so it is read-only. Extra duties can only be added or removed on the day itself.';
+  const leads = S.shift && Array.isArray(S.shift.leads) ? S.shift.leads : [];
+  $('leadBar').firstElementChild.firstChild.textContent = (today ? 'Leading today: ' : 'Leading: ');
+  $('leadNames').textContent = leads.length ? leads.join(', ') : 'nobody yet';
+  $('btnJoin').classList.toggle('hide', !today || leads.indexOf(S.name) >= 0);
+  $('addPanel').classList.toggle('hide', !today);
+  $('count').textContent = String(S.rows.length);
+  $('list').innerHTML = S.rows.length ? S.rows.map(r=>
+    '<div class="entry" data-id="'+esc(r.id)+'"><span class="who">'+esc(r.member_name)+'</span>'+
+    '<span class="chip">'+esc(teamLabel(r.member_team))+'</span>'+
+    '<span class="duty">'+esc(r.duty)+'</span><span class="chip extra">Extra Duty</span>'+
+    (today ? '<button type="button" class="hub danger" data-rm="'+esc(r.id)+'" aria-label="Remove '+esc(r.member_name)+' from '+esc(r.duty)+'">Remove</button>' : '')+
+    '<span class="by">Added by '+esc(r.added_by_name || '-')+(r.created_at ? ' at '+esc(nzHM(r.created_at)) : '')+'</span></div>').join('')
+    : '<div class="empty">No extra duties added '+(today ? 'yet today' : 'on this day')+'.</div>';
+  const sh = S.shift, closed = !!(sh && sh.closed_at), late = lateEdit();
+  $('closeStatus').innerHTML = closed
+    ? 'Submitted at '+esc(nzHM(sh.closed_at))+' by '+esc(sh.closed_by_name || 'a lead')+(late ? '<span class="chip extra late">Updated after close-up</span>' : '')
+    : (S.rows.length ? 'Not submitted yet. Close up when you are done.' : 'Nothing to submit yet.');
+  const b = $('btnClose'); b.classList.toggle('hide', !today || (closed && !late));
+  b.textContent = 'Close Up';
+}
+
+/* ── search ── */
+let qTimer = null;
+function onQuery(){
+  clearTimeout(qTimer);
+  const v = $('q').value.trim();
+  if(v.length < 2){ S.seq++; S.results = []; $('res').innerHTML = v ? '<div class="sub">Keep typing, at least 2 letters.</div>' : ''; return; }
+  qTimer = setTimeout(()=>runSearch(v), 280);
+}
+async function runSearch(v){
+  const mine = ++S.seq; S.lastQ = v;
+  const r = await sb.rpc('wd_member_search', {q: v});
+  if(mine !== S.seq) return;                                   // a newer search has started
+  if(r.error){ $('res').innerHTML = '<div class="sub">Search failed - ' + esc(r.error.message || 'try again') + '</div>'; return; }
+  S.results = Array.isArray(r.data) ? r.data : [];
+  $('res').innerHTML = S.results.length ? S.results.map((m,i)=>{
+    const cn = cannotNames(m.cannot);
+    return '<button type="button" class="hit" data-i="'+i+'"><span class="n">'+esc(m.name)+'</span><span class="chip">'+esc(teamLabel(m.team))+'</span>'+
+      cn.map(c=>'<span class="chip cant">Cannot do: '+esc(c)+'</span>').join('')+'</button>';
+  }).join('') : '<div class="sub">Nobody found for "'+esc(v)+'".</div>';
+}
+
+/* ── dialogs ── */
+let lastFocus = null;
+function openSheet(html){
+  lastFocus = document.activeElement;
+  $('sheetHost').innerHTML = '<div class="sheet-bg" id="sheetBg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">'+html+'</div></div>';
+  $('sheetBg').addEventListener('mousedown', e=>{ if(e.target.id === 'sheetBg') closeSheet(); });
+  const f = $('sheetHost').querySelector('input:not([disabled]),button'); if(f) f.focus();
+}
+function closeSheet(){ $('sheetHost').innerHTML = ''; if(lastFocus && lastFocus.isConnected && lastFocus.focus) try{ lastFocus.focus(); }catch(e){} }
+document.addEventListener('keydown', e=>{
+  if(!$('sheetHost').firstChild) return;
+  if(e.key === 'Escape'){ e.preventDefault(); closeSheet(); return; }
+  if(e.key === 'Tab'){ const els = [...$('sheetHost').querySelectorAll('input:not([disabled]),button:not([disabled])')]; if(!els.length) return;
+    const i = els.indexOf(document.activeElement), last = els.length - 1;
+    if(e.shiftKey && i <= 0){ e.preventDefault(); els[last].focus(); } else if(!e.shiftKey && i === last){ e.preventDefault(); els[0].focus(); } }
+});
+
+let PICK = null;
+function openPicker(m){
+  PICK = {m, cannot: cannotNames(m.cannot).map(norm)};
+  const opt = (n,i)=>{ const dis = PICK.cannot.indexOf(norm(n)) >= 0;
+    return '<label class="opt'+(dis?' dis':'')+'"><input type="radio" name="duty" value="'+esc(n)+'"'+(dis?' disabled aria-disabled="true"':'')+'><span class="nm">'+esc(n)+'</span>'+(dis?'<span class="chip cant">Cannot do</span>':'')+'</label>'; };
+  openSheet('<h2 id="sheetTitle">Extra duty for '+esc(m.name)+'</h2><div class="sub">'+esc(teamLabel(m.team))+'. This is on top of their normal duty. Duties they cannot do are switched off.</div>'+
+    '<div class="opts" id="dutyOpts" role="radiogroup" aria-label="Duty">'+DUTIES.map(opt).join('')+
+    '<label class="opt"><input type="radio" name="duty" value="__other"><span class="nm">Other (type it)</span></label></div>'+
+    '<input type="text" id="otherDuty" class="hide" maxlength="80" placeholder="Type the duty" aria-label="Duty name">'+
+    '<div class="sub" id="pickMsg" role="alert"></div>'+
+    '<div class="btns"><button type="button" class="hub" id="pkCancel">Cancel</button><button type="button" class="hub primary" id="pkAdd" disabled>Add</button></div>');
+}
+function pickedDuty(){
+  const r = document.querySelector('#dutyOpts input[name="duty"]:checked'); if(!r) return '';
+  return r.value === '__other' ? $('otherDuty').value.trim() : r.value;
+}
+function syncPicker(){
+  const r = document.querySelector('#dutyOpts input[name="duty"]:checked'), other = r && r.value === '__other';
+  $('otherDuty').classList.toggle('hide', !other);
+  const d = pickedDuty(), blocked = !!d && PICK.cannot.indexOf(norm(d)) >= 0;
+  $('pickMsg').textContent = blocked ? PICK.m.name + ' cannot do ' + d + '.' : '';
+  $('pkAdd').disabled = !d || blocked;
+}
+async function addEntry(){
+  if(S.busy || !PICK) return;
+  const m = PICK.m, duty = pickedDuty();
+  if(!duty || PICK.cannot.indexOf(norm(duty)) >= 0 || !isToday()) return;
+  S.busy = true; $('pkAdd').disabled = true;
+  try{
+    /* member_name and duty must be sent; the database stamps the rest from the session and the member record. */
+    const r = await sb.from('iv_wd_attendance').insert({date:S.date, member_id:m.id, member_name:m.name, member_team:m.team || null, duty:duty}).select();
+    if(r.error){
+      const dupe = /duplicate key|unique|23505/i.test((r.error.message||'') + (r.error.code||''));
+      $('pickMsg').textContent = dupe ? m.name + ' already has ' + duty + ' as an extra duty today.' : 'Could not add - ' + (r.error.message || 'unknown error');
+      $('pkAdd').disabled = false; return;
+    }
+    const row = Array.isArray(r.data) ? r.data[0] : r.data;
+    if(!row){ $('pickMsg').textContent = 'Could not add - the database refused it. You may not be allowed to add on this day.'; $('pkAdd').disabled = false; return; }
+    S.rows.push(row);
+    closeSheet(); PICK = null; render(); toast('Added ' + m.name + ' - ' + duty);
+    const leads = S.shift && Array.isArray(S.shift.leads) ? S.shift.leads : [];
+    if(leads.indexOf(S.name) < 0) await joinShift(true);
+    await touchAfterClose(); render();
+  } finally { S.busy = false; }
+}
+async function removeEntry(id){
+  if(S.busy || !isToday()) return;
+  const row = S.rows.find(r=>String(r.id) === String(id)); if(!row) return;
+  S.busy = true;
+  try{
+    const r = await sb.from('iv_wd_attendance').delete().eq('id', row.id).select();
+    if(r.error){ toast('Could not remove - ' + r.error.message, true); return; }
+    if(!r.data || !r.data.length){ toast('Could not remove - the database refused it.', true); return; }
+    S.rows = S.rows.filter(x=>String(x.id) !== String(id)); render(); toast('Removed ' + row.member_name + ' - ' + row.duty);
+    await touchAfterClose(); render();
+  } finally { S.busy = false; }
+}
+function openClose(){
+  if(!isToday()) return;
+  const n = S.rows.length;
+  openSheet('<h2 id="sheetTitle">Close up for today?</h2><div class="sub">Close up for today? This submits '+n+' '+(n === 1 ? 'entry' : 'entries')+' to Attendance.</div>'+
+    '<div class="btns"><button type="button" class="hub" id="cuCancel">Cancel</button><button type="button" class="hub primary" id="cuGo">Confirm and submit</button></div>');
+}
+async function confirmClose(){
+  if(S.busy || !isToday()) return;
+  S.busy = true; $('cuGo').disabled = true;
+  try{
+    const now = new Date().toISOString();
+    const res = await writeShift(cur=>({closed_at:now, closed_by:S.uid, closed_by_name:S.name, leads:withMe(cur), updated_at:now}));
+    if(!res.row){ toast(res.error ? 'Could not close up - ' + res.error.message : 'Could not close up - the database refused it.', true); $('cuGo').disabled = false; return; }
+    S.shift = res.row; closeSheet(); render(); toast('Submitted to Attendance');
+  } finally { S.busy = false; }
+}
+
+/* ── access ── */
+function allowed(perms){ return perms.indexOf('wd_tl') >= 0 || perms.indexOf('facilitator') >= 0 || IV_TOP.some(p=>perms.indexOf(p) >= 0); }
+function wire(){
+  $('q').addEventListener('input', onQuery);
+  $('res').addEventListener('click', e=>{ const b = e.target.closest('.hit'); if(b && isToday()) openPicker(S.results[Number(b.dataset.i)]); });
+  $('list').addEventListener('click', e=>{ const b = e.target.closest('[data-rm]'); if(b) removeEntry(b.dataset.rm); });
+  $('btnJoin').addEventListener('click', ()=>joinShift(false));
+  $('btnClose').addEventListener('click', openClose);
+  $('btnOut').addEventListener('click', async ()=>{ try{ await sb.auth.signOut({scope:'local'}); }catch(e){} location.replace('index.html'); });
+  $('viewDate').addEventListener('change', ()=>{ const v = $('viewDate').value; if(!/^\d{4}-\d\d-\d\d$/.test(v)) return; S.date = v; S.follow = (v === S.today); S.shift = null; S.rows = []; render(); loadDay(); });
+  $('sheetHost').addEventListener('click', e=>{
+    const id = e.target.id;
+    if(id === 'pkCancel' || id === 'cuCancel') closeSheet();
+    else if(id === 'pkAdd') addEntry();
+    else if(id === 'cuGo') confirmClose();
+  });
+  $('sheetHost').addEventListener('change', e=>{ if(PICK && e.target.name === 'duty') syncPicker(); });
+  $('sheetHost').addEventListener('input', e=>{ if(PICK && e.target.id === 'otherDuty') syncPicker(); });
+  /* Past midnight in New Zealand a page left open moves on to the new day. */
+  setInterval(()=>{ const t = nzTodayISO(); if(t !== S.today){ const was = S.today; S.today = t; if(S.follow || S.date === was){ S.date = t; S.follow = true; S.shift = null; S.rows = []; closeSheet(); render(); loadDay(); } } }, 60000);
+}
+async function start(){
+  wire();
+  const lib = window.supabase;
+  if(!lib || !lib.createClient){ show('wdDeny'); $('denyMsg').textContent = 'Could not reach the server. Check your connection and reload.'; return; }
+  sb = lib.createClient(SB_URL, SB_KEY);
+  const { data } = await sb.auth.getSession(), sess = data && data.session;
+  if(!sess || !sess.user){ location.replace('index.html'); return; }
+  const { data: prof, error: pe } = await sb.from('profiles').select('perms,display').eq('id', sess.user.id).maybeSingle();
+  if(pe){ show('wdDeny'); $('denyMsg').textContent = 'Could not check your access. Check your connection and reload.'; return; }
+  S.uid = sess.user.id;
+  S.name = ((prof && prof.display) || sess.user.email || 'Weekday lead').trim();
+  if(!allowed(permList(prof && prof.perms))){ show('wdDeny'); return; }
+  S.today = nzTodayISO(); S.date = S.today;
+  show('wdOk'); render(); await loadDay();
+}
+document.addEventListener('DOMContentLoaded', start);
+</script>
+</body>
+</html>

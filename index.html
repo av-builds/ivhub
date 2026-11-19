@@ -807,6 +807,17 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   .hero,.panel,.sg .scard{animation-duration:.24s;}
   .page.active>:is(.hero,.panel),.sg .scard,.st-row .st-fill{animation-delay:0s!important;}
 }
+
+/* Weekday Attendance (Management) */
+.wda-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;}
+.wda-bar .fg{margin:0;min-width:150px;}
+.wda-day{border:1px solid var(--db);border-radius:12px;padding:12px 14px;margin-bottom:12px;background:var(--ds);}
+.wda-day h3{margin:0 0 4px;font-size:16px;}
+.wda-meta{font-size:13px;color:var(--dm);margin-bottom:8px;line-height:1.5;}
+.wda-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--db);font-size:14px;}
+.wda-row .who{flex:1 1 160px;min-width:0;font-weight:700;}
+.wda-row .sm{font-size:12.5px;color:var(--dm);}
+.wda-tot{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--db);font-size:14px;flex-wrap:wrap;}
 </style>
 <link rel="stylesheet" href="ivtheme.css?v=20261119a">
 <link rel="stylesheet" href="ivshape.base.css?v=20261119a">
@@ -1014,6 +1025,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="nav-item" id="navMembers" data-page="members"><span class="ni">👥</span> Data Management</div>
       <div class="nav-item" id="navLogins" data-page="logins"><span class="ni">🔑</span> Admin Logins</div>
       <div class="nav-item" id="navSatada" data-page="satada"><span class="ni">🌙</span> Satada</div>
+      <div class="nav-item" id="navWdAtt" data-page="wdatt"><span class="ni">🗓️</span> Weekday Attendance</div>
       <div class="nav-item" id="navVLogins" data-page="vlogins"><span class="ni">🙋</span> Volunteer Logins</div>
       <div class="nav-item" id="navLinking" data-page="linking"><span class="ni">🔗</span> Account Linking<span class="nbadge" id="navLinkingCount" style="display:none;">0</span></div>
       <div class="nav-item" id="navAdmin" data-page="admin"><span class="ni">⚙️</span> Admin Panel</div>
@@ -1128,6 +1140,10 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
           <button class="btn btn-bl" id="pfSaveDetails">Save details</button>
         </div>
       </section>
+      <section class="panel" id="pfExtraPanel">
+        <h2 style="margin:0 0 4px;">Extra duties</h2>
+        <div class="sub" id="pfExtra" style="margin-bottom:4px;"></div>
+      </section>
       <section class="panel">
         <h2 style="margin:0 0 4px;">Availability</h2>
         <div class="sub" id="pfAway" style="margin-bottom:12px;"></div>
@@ -1142,6 +1158,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       </div>
       <section class="panel">
         <div class="sub" id="mdWhoNote" style="margin-bottom:10px;"></div>
+        <div class="sub" id="mdExtra" style="margin-bottom:10px;display:none;"></div>
         <div class="md-row">
           <div class="md-sugwrap">
             <input id="mdName" placeholder="Type your name - e.g. Aly Kotadia" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mdSug" aria-haspopup="listbox">
@@ -1235,6 +1252,27 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <section class="panel" id="saMain"></section>
     </div>
 
+    <!-- ═══ PAGE: WEEKDAY ATTENDANCE (facilitator and above) ═══ -->
+    <div class="page" id="page-wdatt">
+      <div class="ph">
+        <div><h1>Weekday Attendance</h1><p>Extra duties added by Weekday Team Leads on days without a Team A or Team B event. Everything here is on top of a person's normal duty.</p></div>
+      </div>
+      <section class="panel">
+        <div class="wda-bar">
+          <div class="fg"><label for="wdaFrom">From</label><input type="date" id="wdaFrom"></div>
+          <div class="fg"><label for="wdaTo">To</label><input type="date" id="wdaTo"></div>
+          <button class="btn btn-bl" id="wdaGo" onclick="wdaLoad()">Show</button>
+          <button class="btn btn-ol" id="wdaCsvBtn" onclick="wdaCsv()">Download CSV</button>
+        </div>
+        <div class="sub" id="wdaMsg" role="status" aria-live="polite"></div>
+        <div id="wdaDays"></div>
+      </section>
+      <section class="panel">
+        <h2 style="margin:0 0 8px;">Totals by member</h2>
+        <div id="wdaTotals"></div>
+      </section>
+    </div>
+
     <!-- ═══ PAGE: ADMIN LOGINS (accounts - former Manage Users modal) ═══ -->
     <div class="page" id="page-logins">
       <div class="ph">
@@ -1264,6 +1302,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="fg"><label>Email address</label><input id="ufInviteEmail" type="email" placeholder="firstname.lastname@example.com" autocomplete="off"></div>
       <div class="fg"><label>Display name (optional)</label><input id="ufInviteName" placeholder="e.g. Ahad Lokhandwala" autocomplete="off"></div>
       <div class="fg"><label>Access to grant</label><div id="ufInviteRoleBox"></div></div>
+      <div class="fg" id="ufWdRow"><label class="rl-opt"><input type="checkbox" id="ufInviteWd"><span>Also make them a Weekday Team Lead</span></label></div>
       <div class="al-prev" id="ufPreview"></div>
       <div id="ufInviteMsg" class="um-sub" style="margin:0 0 8px;"></div>
       <div class="um-form-acts">
@@ -1557,6 +1596,7 @@ const PERM_RANK = {
   ytl_a:7, ytl_b:7, av_atl:7,
   av_yatl:8,
   av_coord:9,
+  wd_tl:9,   /* Weekday Team Lead: stacks on top of a normal role, see docs/invite-user-function.ts */
   team_a:10, team_b:10, av_team:10,
 };
 const IV_TOP = ['owner','developer','director','deputy_director','phmu_lead','iv_admin'];
@@ -1571,6 +1611,10 @@ const ADMIN_B    = ()=>hasPerm(...IV_TOP,'facilitator','tl_b','ytl_b');
 const AV_VIEW    = ()=>hasPerm(...IV_TOP,'av_admin','av_atl','av_yatl','av_coord','av_team'); // facilitator NEVER sees AV
 const AV_ADMIN   = ()=>hasPerm(...IV_TOP,'av_admin','av_atl','av_yatl','av_coord');
 const USERS_ADMIN= ()=>hasPerm(...IV_TOP,'facilitator');
+/* Weekday Team Lead page: the lead themselves, and Facilitator and above. */
+const WD_VIEW   = ()=>hasPerm('wd_tl') || myRank() <= 5;
+/* What a Facilitator may hand out. Mirrors FACILITATOR_MAY in the invite-user function. */
+const FAC_MAY    = ['tl_a','ytl_a','tl_b','ytl_b','team_a','team_b','wd_tl'];
 /* Duty Stats has been removed from the Hub, so nobody is shown it. */
 const STATS_VIEW = ()=>false;
 // Reading the log means reading everyone's activity across every team,
@@ -1634,6 +1678,7 @@ const ROLE_LABELS = {
   tl_b:'Team B Lead', ytl_b:'Team B Assistant Lead',
   av_admin:'AV Team Lead', av_atl:'AV Team Assistant Lead', av_yatl:'AV Youth Assistant Lead', av_coord:'AV Team Co-ordinator',
   team_a:'IV Team A Volunteer', team_b:'IV Team B Volunteer', av_team:'AV Team Volunteer',
+  wd_tl:'Weekday Team Lead',
 };
 /* Role dropdown definitions: UI label → role id → perms array */
 const ROLE_DEFS = [
@@ -1656,8 +1701,9 @@ const ROLE_DEFS = [
   { id:'team_a',           label:'IV Team A Volunteer',       perms:['team_a'] },
   { id:'team_b',           label:'IV Team B Volunteer',       perms:['team_b'] },
   { id:'av_team',          label:'AV Team Volunteer',         perms:['av_team'] },
+  { id:'wd_tl',            label:'Weekday Team Lead',         perms:['wd_tl'] },
 ];
-const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead','facilitator','tl_a','ytl_a','tl_b','ytl_b','av_admin','av_atl','av_yatl','av_coord','team_a','team_b','av_team'];
+const PERMS_VOCAB = ['owner','developer','director','deputy_director','phmu_lead','facilitator','tl_a','ytl_a','tl_b','ytl_b','av_admin','av_atl','av_yatl','av_coord','team_a','team_b','av_team','wd_tl'];
 /* ═══ DIVISIONS AND TEAMS ═══
    wip: the page is still Under Construction - its menu entry and Quick
    access tile carry a warning tag. Remove the flag when the page is built.
@@ -1719,6 +1765,7 @@ function roleGroups(){
     {id:'iv', label:'IV Leadership', cat:'Leadership', levels:[['owner','Owner'],['developer','Developer'],['director','Director'],['deputy_director','Deputy Director'],['phmu_lead','PHMU Lead'],['facilitator','Facilitator']]},
     {id:'A',  label:'Team A', cat:'PHMU', levels:[['tl_a','Team Lead'],['ytl_a','Assistant Team Lead'],['team_a','Volunteer']]},
     {id:'B',  label:'Team B', cat:'PHMU', levels:[['tl_b','Team Lead'],['ytl_b','Assistant Team Lead'],['team_b','Volunteer']]},
+    {id:'WD', label:'Weekday Team', cat:'Weekday', levels:[['wd_tl','Weekday Team Lead']]},
     {id:'AV', label:'AV Team', cat:'PHMU', levels:[['av_admin','Team Lead'],['av_atl','Assistant Team Lead'],['av_yatl','Youth Assistant Lead'],['av_coord','Co-ordinator'],['av_team','Volunteer']]},
   ];
   DIVISIONS.forEach(d=>{
@@ -1796,13 +1843,13 @@ function grantableRoles(){
   const mine = myRank();
   if(mine >= 99) return [];
   // Facilitators staff the two IV teams; everyone else grants strictly below themselves.
-  if(hasPerm('facilitator') && !IV_ADMIN()) return ['tl_a','ytl_a','tl_b','ytl_b','team_a','team_b'];
+  if(hasPerm('facilitator') && !IV_ADMIN()) return FAC_MAY.slice();
   return ROLE_DEFS.filter(r=>rankOf(r.perms) > mine).map(r=>r.id);
 }
 function grantablePerms(){
   const mine = myRank();
   if(mine >= 99) return [];
-  if(hasPerm('facilitator') && !IV_ADMIN()) return ['tl_a','ytl_a','tl_b','ytl_b','team_a','team_b'];
+  if(hasPerm('facilitator') && !IV_ADMIN()) return FAC_MAY.slice();
   return PERMS_VOCAB.filter(p=>(PERM_RANK[p]==null?99:PERM_RANK[p]) > mine);
 }
 /* Whether the signed-in actor outranks the account they are editing. */
@@ -2435,6 +2482,7 @@ const PAGES = {
   members:   ()=>USERS_ADMIN(),
   logins:    ()=>USERS_ADMIN(),
   satada:    ()=>USERS_ADMIN(),   // facilitator and above
+  wdatt:     ()=>USERS_ADMIN(),   // Weekday Attendance, facilitator and above
   stats:     ()=>STATS_VIEW(),
   admin:     ()=>hasPerm('owner','developer'),
   audit:     ()=>AUDIT_VIEW(),
@@ -2456,6 +2504,7 @@ function nav(id){
   if(id === 'members') loadMembers();
   else if(id === 'logins'){ refreshUserRows(); if(!(mRows && mRows.length)) loadMembers(); }
   else if(id === 'satada') loadSatadaPage();
+  else if(id === 'wdatt') wdaInit();
   else if(id === 'vlogins') loadVLogins();
   else if(id === 'admin') loadAdminPanel();
   else if(id === 'audit') renderAuditPage();
@@ -2571,6 +2620,8 @@ function applyNavVisibility(){
   const TAG = ' <span class="ntag" data-tip="UNDER CONSTRUCTION">⚠ Soon</span>';
   const link = (u,i,n,cls,wip)=>'<a class="nav-item ' + (cls||'') + '" href="' + u + '" style="display:flex"><span class="ni">' + i + '</span> ' + n + (wip ? TAG : '') + '</a>';
   let phmuHtml = '', soloHtml = '', ancHtml = '';
+  /* Weekday Team Leads (and Facilitators and above) get the Weekday page on the bar itself. */
+  if(WD_VIEW()) soloHtml += '<a class="nav-item nav-solo" id="navWeekday" href="weekday.html" style="display:flex"><span class="ni">🗓️</span> Weekday</a>';
   DIVISIONS.forEach(d=>{
     const vt = d.teams.filter(t=>teamVisible(d,t));
     const dv = divVisible(d);
@@ -2599,12 +2650,13 @@ function applyNavVisibility(){
   item('navMembers', mm);
   item('navLogins', mm);
   item('navSatada', mm);
+  item('navWdAtt', mm);
   item('navLinking', mm);
   item('navAdmin', ow);
   item('navAudit', au);
   [['navTeamA','A'],['navTeamB','B'],['navAV','AV']].forEach(x=>{ const l=$(x[0]); if(l) l.onclick=()=>rememberTeam(x[1]); });
   renderQuickAccess();
-  const nothing = !(IV_ANY() || AV_VIEW() || specAny || mm || st || au || sub || apv);
+  const nothing = !(IV_ANY() || AV_VIEW() || WD_VIEW() || specAny || mm || st || au || sub || apv);
   $('dashEmpty').style.display = nothing ? 'block' : 'none';
 }
 function showApp(){
@@ -3004,6 +3056,7 @@ async function openMyDuties(){
   const r = await resolveMyName();
   if(noteEl){ noteEl.innerHTML = r.note || ''; noteEl.style.display = r.note ? 'block' : 'none'; }
   if(!input.value && r.name){ input.value = r.name; }
+  wdExtraLine('mdExtra');
   if(input.value.trim()) runDutySearch();
 }
 /* Two things volunteers used to find on their team's dashboard, which they no
@@ -4047,6 +4100,7 @@ async function addMemberRun(){
 function fillInviteRoles(){
   const box = $('ufInviteRoleBox'); if(!box) return;
   box.innerHTML = rolePickerHTML('ufInviteRole', grantableRoles(), 'No access yet - grant it later');
+  const wr = $('ufWdRow'); if(wr) wr.style.display = grantableRoles().includes('wd_tl') ? '' : 'none';
 }
 
 async function sendInvite(){
@@ -4056,7 +4110,8 @@ async function sendInvite(){
   const display = ($('ufInviteName').value||'').trim();
   const roleId = rpValue('ufInviteRole');
   const role = ROLE_DEFS.find(r=>r.id === roleId);
-  const perms = role ? role.perms : [];
+  const wdOn = !!($('ufInviteWd') && $('ufInviteWd').checked) && grantableRoles().includes('wd_tl');
+  const perms = (role ? role.perms.slice() : []).concat(wdOn && !(role && role.perms.includes('wd_tl')) ? ['wd_tl'] : []);
   const show = (t,bad)=>{ msg.textContent = t; msg.style.color = bad ? 'var(--red-lt, #F87171)' : 'var(--green-lt, #4ADE80)'; };
   if(!email || email.indexOf('@') < 0){ show('Enter their email address first.', true); return; }
   if(rpTeamChosen('ufInviteRole') && !roleId){ show('Choose a level for that team.', true); return; }
@@ -4087,11 +4142,12 @@ async function sendInvite(){
       await refreshUserRows();
       return;
     }
-    show(role
-      ? 'Invite sent to ' + email + ' - ' + role.label + ' access is already on the account.'
+    show(perms.length
+      ? 'Invite sent to ' + email + ' - ' + perms.map(k=>ROLE_LABELS[k]||k).join(' + ') + ' access is already on the account.'
       : 'Invite sent to ' + email + ' - grant access in the list below when you are ready.');
     $('ufInviteEmail').value = ''; $('ufInviteName').value = '';
-    auditLog('Invited user', 'login', email + (role ? ' - ' + role.label : ''));
+    auditLog('Invited user', 'login', email + (perms.length ? ' - ' + perms.map(k=>ROLE_LABELS[k]||k).join(' + ') : ''));
+    if($('ufInviteWd')) $('ufInviteWd').checked = false;
     await refreshUserRows();
   }catch(e){
     show('Invite failed: ' + (e.message || e), true);
@@ -4165,6 +4221,109 @@ async function deleteAccount(id){
     toast(who+' removed from the Hub');
     await refreshUserRows();
   }catch(e){ toast('Could not remove: '+(e.message||e),'err'); }
+}
+
+/* ═══ WEEKDAY ATTENDANCE (Management > Weekday Attendance) ═══════════════
+   Reads iv_wd_shifts and iv_wd_attendance, which Weekday Team Leads fill in
+   from weekday.html. Facilitator and above can read every row and delete
+   one; the database decides (RLS), so a refused delete comes back as no
+   rows and dbWrite says so. */
+const WDA = {from:'', to:'', rows:[], shifts:[], err:''};
+const nzHM = iso=>{ try{ return new Date(iso).toLocaleTimeString('en-NZ',{timeZone:'Pacific/Auckland',hour:'2-digit',minute:'2-digit',hour12:false}); }catch(e){ return ''; } };
+/* A cell that opens with = + - @ tab or CR is read as a formula by a spreadsheet. A leading single quote makes it plain text. */
+function csvCell(v){
+  let t = String(v == null ? '' : v);
+  if(/^[=+\-@\t\r]/.test(t)) t = "'" + t;
+  return '"' + t.replace(/"/g, '""') + '"';
+}
+function wdaInit(){
+  if(!PAGES.wdatt()) return;
+  if(!WDA.from){ WDA.to = todayNZ(); WDA.from = addDaysISO(WDA.to, -30); }
+  $('wdaFrom').value = WDA.from; $('wdaTo').value = WDA.to;
+  wdaLoad();
+}
+async function wdaLoad(){
+  if(!sb) return;
+  const from = $('wdaFrom').value, to = $('wdaTo').value;
+  if(!from || !to || from > to){ $('wdaMsg').textContent = 'Choose a start date that is not after the end date.'; return; }
+  WDA.from = from; WDA.to = to; WDA.err = '';
+  $('wdaMsg').textContent = 'Loading.';
+  const [a, sh] = await Promise.all([
+    sb.from('iv_wd_attendance').select('*').gte('date', from).lte('date', to).order('date', {ascending:false}).order('created_at'),
+    sb.from('iv_wd_shifts').select('*').gte('date', from).lte('date', to).order('date', {ascending:false})
+  ]);
+  if(a.error || sh.error){ WDA.err = 'Could not read weekday attendance - ' + ((a.error || sh.error).message || 'unknown error'); WDA.rows = []; WDA.shifts = []; }
+  else { WDA.rows = a.data || []; WDA.shifts = sh.data || []; }
+  wdaRender();
+}
+function wdaRender(){
+  const days = {};
+  WDA.shifts.forEach(x=>{ days[x.date] = days[x.date] || {date:x.date, shift:x, rows:[]}; days[x.date].shift = x; });
+  WDA.rows.forEach(r=>{ days[r.date] = days[r.date] || {date:r.date, shift:null, rows:[]}; days[r.date].rows.push(r); });
+  const list = Object.values(days).sort((x,y)=>x.date < y.date ? 1 : -1);
+  $('wdaMsg').textContent = WDA.err || (list.length ? WDA.rows.length + ' ' + (WDA.rows.length === 1 ? 'entry' : 'entries') + ' on ' + list.length + ' ' + (list.length === 1 ? 'day' : 'days') + '.' : 'Nothing recorded in this range.');
+  $('wdaDays').innerHTML = list.map(d=>{
+    const sh = d.shift, leads = sh && Array.isArray(sh.leads) ? sh.leads : [];
+    const closed = sh && sh.closed_at ? 'Closed up ' + nzHM(sh.closed_at) + (sh.closed_by_name ? ' by ' + sh.closed_by_name : '') : 'Not closed up';
+    return '<div class="wda-day" data-date="'+esc(d.date)+'"><h3>'+esc(fmtLong(d.date))+'</h3>'+
+      '<div class="wda-meta">Leading: '+esc(leads.length ? leads.join(', ') : 'nobody recorded')+' &middot; '+esc(closed)+'</div>'+
+      (d.rows.length ? d.rows.map(r=>'<div class="wda-row" data-id="'+esc(r.id)+'"><span class="who">'+esc(r.member_name)+'</span>'+
+        '<span class="chip">'+esc(r.member_team ? 'Team ' + r.member_team : 'No team')+'</span>'+
+        '<span>'+esc(r.duty)+'</span><span class="sm">added by '+esc(r.added_by_name || '-')+(r.created_at ? ' at '+esc(nzHM(r.created_at)) : '')+'</span>'+
+        '<button class="btn btn-red" onclick="wdaDelete('+Number(r.id)+')">Delete</button></div>').join('') : '<div class="wda-meta">No entries.</div>')+
+      '</div>';
+  }).join('');
+  const tot = {};
+  WDA.rows.forEach(r=>{ const k = r.member_id + '|' + r.member_name; const t = tot[k] = tot[k] || {name:r.member_name, team:r.member_team, n:0, duties:{}}; t.n++; t.duties[r.duty] = (t.duties[r.duty]||0) + 1; });
+  const ts = Object.values(tot).sort((x,y)=>y.n - x.n || String(x.name).localeCompare(String(y.name)));
+  $('wdaTotals').innerHTML = ts.length ? ts.map(t=>'<div class="wda-tot"><span><b>'+esc(t.name)+'</b> '+esc(t.team ? '(Team ' + t.team + ')' : '')+'</span><span>'+t.n+' &middot; '+esc(Object.keys(t.duties).map(k=>k + (t.duties[k] > 1 ? ' x' + t.duties[k] : '')).join(', '))+'</span></div>').join('') : '<div class="wda-meta">No totals yet.</div>';
+}
+function wdaCsvText(){
+  const shift = {}; WDA.shifts.forEach(x=>{ shift[x.date] = x; });
+  const head = ['Date','Leads','Closed up','Member','Team','Duty','Type','Added by','Added at'];
+  const lines = [head.map(csvCell).join(',')];
+  WDA.rows.slice().sort((x,y)=>x.date < y.date ? -1 : x.date > y.date ? 1 : String(x.created_at||'').localeCompare(String(y.created_at||''))).forEach(r=>{
+    const sh = shift[r.date];
+    lines.push([r.date, sh && Array.isArray(sh.leads) ? sh.leads.join('; ') : '', sh && sh.closed_at ? nzHM(sh.closed_at) + (sh.closed_by_name ? ' ' + sh.closed_by_name : '') : 'No',
+      r.member_name, r.member_team ? 'Team ' + r.member_team : '', r.duty, 'Extra Duty', r.added_by_name || '', r.created_at ? nzHM(r.created_at) : ''].map(csvCell).join(','));
+  });
+  return lines.join('\r\n');
+}
+function wdaCsv(){
+  if(!WDA.rows.length){ toast('Nothing to export in this range.', 'err'); return; }
+  const blob = new Blob(['\ufeff' + wdaCsvText()], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'weekday-attendance-' + WDA.from + '-to-' + WDA.to + '.csv';
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+async function wdaDelete(id){
+  if(!PAGES.wdatt()) return;
+  const r = WDA.rows.find(x=>String(x.id) === String(id)); if(!r) return;
+  if(!confirm('Delete this entry?\n\n' + r.member_name + ' - ' + r.duty + ' on ' + fmtLong(r.date) + '. This cannot be undone.')) return;
+  if(!await dbWrite('Deleting the entry', ()=>sb.from('iv_wd_attendance').delete().eq('id', id))) return;
+  auditLog('wd-delete', 'attendance', 'Weekday extra duty removed: ' + r.member_name + ' - ' + r.duty + ' on ' + r.date);
+  toast('Entry deleted');
+  await wdaLoad();
+}
+/* One line for My Profile and My Duties: the signed-in volunteer's own extra duties, kept apart from the normal totals.
+   The database only returns this person's own rows; the query names the member as well. Quiet on any failure. */
+async function wdExtraLine(id){
+  const el = $(id); if(!el) return;
+  el.style.display = 'none'; el.textContent = '';
+  try{
+    if(!sb || !CU || !CU.uid) return;
+    const rv = await sb.rpc('my_member_view');
+    const v = rv && !rv.error ? rv.data : null;
+    const mid = v && v.linked && v.member ? v.member.id : null;
+    let rows = [];
+    if(mid != null){
+      const r = await sb.from('iv_wd_attendance').select('date,duty').eq('member_id', mid).order('date', {ascending:false});
+      if(r.error) return;
+      rows = r.data || [];
+    }
+    const recent = rows.slice(0, 5).map(x=>fmtDM(x.date) + ' ' + x.duty).join(', ');
+    el.textContent = 'Extra duties: ' + rows.length + (rows.length ? '. Recent: ' + recent + '.' : '.') + ' Counted separately from your normal duties.';
+    el.style.display = '';
+  }catch(e){ console.warn('wdExtraLine:', e.message || e); }
 }
 /* ═══ SATADA (Management > Satada) ═══════════════════════════════════
    A majalis every night, Sunday to Saturday. Stored as seven ordinary
@@ -4745,6 +4904,7 @@ function alPreview(){
       ['Team B', hasPerm(...IV_TOP,'facilitator','tl_b','ytl_b','team_b')],
       ['AV Team', hasPerm(...IV_TOP,'av_admin','av_atl','av_yatl','av_coord','av_team')],
       ['Data Management', !!PAGES.members()], ['Admin Logins', !!PAGES.logins()], ['Satada', !!PAGES.satada()],
+      ['Weekday page', WD_VIEW()], ['Weekday Attendance', !!PAGES.wdatt()],
       ['Duty Stats', !!PAGES.stats()], ['Audit Logs', !!PAGES.audit()]];
   }finally{ CU.perms = saved; }
   box.innerHTML = '<h5>What they will be able to open · '+esc(ROLE_LABELS[roleId]||roleId)+'</h5><ul>'+
@@ -4856,6 +5016,7 @@ async function loadProfile(){
     : away.length ? away.length + ' upcoming away ' + (away.length === 1 ? 'date' : 'dates') + ': ' + away.slice(0,4).join(', ') + (away.length > 4 ? ' and more' : '')
     : 'No away dates set. The roster can pick you for any day.';
   $('pfAwayBtn').style.display = m ? '' : 'none';
+  wdExtraLine('pfExtra');
 }
 async function saveProfileName(){
   const v = $('pfDisplay').value.trim(), btn = $('pfSaveName');

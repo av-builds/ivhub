@@ -38,6 +38,8 @@ const RANK: Record<string, number> = {
   ytl_a: 7, ytl_b: 7, av_atl: 7,
   av_yatl: 8,
   av_coord: 9,
+  // Weekday Team Lead: a temporary lead that stacks on top of a normal role (team_a, tl_a and so on).
+  wd_tl: 9,
   team_a: 10, team_b: 10, av_team: 10,
 };
 // Division and team roles, generated from the same chart index.html's
@@ -91,6 +93,7 @@ const ROLE_INFO: Record<string, { label: string; blurb: string }> = {
   av_coord: { label: "AV Team Co-ordinator", blurb: "You co-ordinate day-to-day AV duties alongside the AV leads. You sit between the AV youth leads and AV volunteers in the chain of command." },
   team_a: { label: "IV Team A Volunteer", blurb: "You are a Team A volunteer. You can see your own duties, your away dates and the Team A calendar. Your Team Lead builds the roster and will place you on it." },
   team_b: { label: "IV Team B Volunteer", blurb: "You are a Team B volunteer. You can see your own duties, your away dates and the Team B calendar. Your Team Lead builds the roster and will place you on it." },
+  wd_tl: { label: "Weekday Team Lead", blurb: "You lead the extra duties on weekdays and any day without a Team A or Team B event. You can add people to extra duties for today, remove them, and close up at the end of the day. You see names, teams and the duties a person cannot do, nothing more." },
   av_team: { label: "AV Team Volunteer", blurb: "You are an AV volunteer. You can see your own duties, your away dates and the AV calendar. The AV leads build the roster and will place you on it." },
 };
 for (const [k, label] of Object.entries(DIVISION_LABELS)) {
@@ -244,7 +247,10 @@ Deno.serve(async (req) => {
           // read the audit log still gets their reset sent by a person, and
           // so do accounts with no role or an unrecognised one.
           const list = p as string[];
-          const volunteer = list.length > 0 && list.every((x) => isPerm(x) && RANK[x] === 10);
+          // wd_tl rides on top of a volunteer role and does not make the account a leader for this purpose,
+          // but it must come with at least one rank 10 role, so a lone wd_tl is still sent by a person.
+          const volunteer = list.some((x) => isPerm(x) && RANK[x] === 10) &&
+            list.every((x) => isPerm(x) && (RANK[x] === 10 || x === "wd_tl"));
           if (valid && who?.id && volunteer && !throttled) {
             await syncRoleMeta(svc, who.id, list);
             const { error: mailErr } = await svc.auth.resetPasswordForEmail(addr, { redirectTo: safeRedirect(peek.redirectTo) });
@@ -448,7 +454,7 @@ Deno.serve(async (req) => {
     ["owner", "developer", "director", "deputy_director", "phmu_lead", "iv_admin"].includes(p)
   );
   const facilitatorOnly = (perms as string[]).includes("facilitator") && !isIvTop;
-  const FACILITATOR_MAY = ["tl_a", "ytl_a", "tl_b", "ytl_b", "team_a", "team_b"];
+  const FACILITATOR_MAY = ["tl_a", "ytl_a", "tl_b", "ytl_b", "team_a", "team_b", "wd_tl"];
 
   const refused = wanted.filter((p) =>
     facilitatorOnly ? !FACILITATOR_MAY.includes(p) : RANK[p] <= callerRank
