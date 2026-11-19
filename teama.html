@@ -537,6 +537,8 @@ button.chip.un:hover{background:rgba(239,68,68,.22);border-color:var(--red-lt);}
 .dchip-tog:hover{border-color:var(--blue-lt);}
 .dchip-tog.prefer{background:rgba(16,185,129,.14);border-color:rgba(16,185,129,.45);color:var(--green-lt);}
 .dchip-tog.avoid{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.45);color:var(--red-lt);}
+.dchip-tog.cannot{background:rgba(239,68,68,.9);border-color:#ef4444;color:#fff;text-decoration:line-through;}
+.xd-note{font-size:12px;color:var(--dm);margin-top:6px;}
 .away-chip{display:inline-flex;align-items:center;gap:6px;background:var(--ds2);border:1px solid var(--db);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;}
 .away-chip button{background:none;border:none;color:var(--dm);cursor:pointer;font-size:13px;}
 .away-chip button:hover{color:var(--red-lt);}
@@ -2016,6 +2018,8 @@ let MEMBERS=[],EVENTS=[],ROSTERS={},ANNS=[],ATTEND={};
    ATTEND holds the raw register for the cycles on screen; this holds the
    whole history as four numbers per person. */
 let ATT_TOTALS={};
+/* Extra Duty: weekday walk-in duties from iv_wd_attendance, member_id -> [{date,duty}] (oldest first). Display only. */
+let EXTRA={};
 let CYCLES=[],selEventId=null,DB_MISSING=false,LOADED=false,curPage='calendar';
 let CAL={y:2026,m:0};
 let attEventId=null, repCycleK=null, repMode='attendance', repMember=null, lbDuty='', lbSort='count', memFilter={q:'',rank:'',age:'',nandi:'',away:''};
@@ -2046,7 +2050,10 @@ function cycleEvs(k){ return eventsInCycle(k).filter(e=>!isSatada(e)); }
 /* Something this page shows: in one of its cycles, or any satada night. */
 const inView=e=>isSatada(e)||CYCLES.some(c=>inCycleK(e.date,c.k));
 function isAway(m,date){ return Array.isArray(m.away)&&m.away.indexOf(date)>=0; }
-function normMember(m){ if(!Array.isArray(m.away)) m.away=[]; if(!m.prefs||typeof m.prefs!=='object'||Array.isArray(m.prefs)) m.prefs={}; if(!Array.isArray(m.prefs.prefer)) m.prefs.prefer=[]; if(!Array.isArray(m.prefs.avoid)) m.prefs.avoid=[]; if(!m.rank) m.rank='Member'; return m; }
+function normMember(m){ if(!Array.isArray(m.away)) m.away=[]; if(!m.prefs||typeof m.prefs!=='object'||Array.isArray(m.prefs)) m.prefs={}; if(!Array.isArray(m.prefs.prefer)) m.prefs.prefer=[]; if(!Array.isArray(m.prefs.avoid)) m.prefs.avoid=[]; if(!Array.isArray(m.prefs.cannot)) m.prefs.cannot=[];
+  /* A duty sits in at most one of prefer/avoid/cannot; cannot is the hard block and wins. */
+  if(m.prefs.cannot.length){ const cn=m.prefs.cannot; if(m.prefs.prefer.some(k=>cn.indexOf(k)>=0)) m.prefs.prefer=m.prefs.prefer.filter(k=>cn.indexOf(k)<0); if(m.prefs.avoid.some(k=>cn.indexOf(k)>=0)) m.prefs.avoid=m.prefs.avoid.filter(k=>cn.indexOf(k)<0); }
+  if(!m.rank) m.rank='Member'; return m; }
 
 /* ── DATA LOAD ──────────────────────────────────────────────────────
    Nothing is asked for that this page will not show. That used not to be
@@ -2072,6 +2079,19 @@ async function byEventId(table, ids){
     if(error) return {error:error};
     out.push.apply(out,data||[]);
   }
+  return {data:out};
+}
+/* Extra Duty rows for this team's members only, oldest first. Never throws:
+   an unreadable table comes back as {error} and the page carries on without it. */
+async function loadExtraDuty(ids){
+  if(!ids.length) return {data:[]};
+  const out=[];
+  for(let i=0;i<ids.length;i+=IN_CHUNK){
+    const {data,error}=await sb.from('iv_wd_attendance').select('member_id,date,duty').in('member_id',ids.slice(i,i+IN_CHUNK)).order('date');
+    if(error) return {error:error};
+    out.push.apply(out,data||[]);
+  }
+  out.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
   return {data:out};
 }
 const ANN_LIMIT=200;      // a feed, not an archive
@@ -2114,11 +2134,16 @@ async function loadAll(){
      the cycles on screen, which is all the attendance page and the
      per-cycle reports ever look at. */
   const windowIds=EVENTS.filter(e=>String(e.date||'')>=floor).map(e=>e.id);
-  const [ro,at,tot]=await Promise.all([
+  const memIds=MEMBERS.map(m=>m.id);
+  const [ro,at,tot,xd]=await Promise.all([
     q(()=>byEventId('iv_roster',evIds)),
     q(()=>byEventId('iv_attendance',windowIds)),
     q(()=>sb.rpc('member_attendance_totals',{p_team:PAGE_TEAM})),
+    q(()=>loadExtraDuty(memIds)),
   ]);
+  EXTRA={};
+  if(xd&&xd.error) console.warn('iv_wd_attendance:',xd.error.message||xd.error);
+  else ((xd&&xd.data)||[]).forEach(r=>{ if(r&&r.member_id!=null) (EXTRA[r.member_id]=EXTRA[r.member_id]||[]).push({date:r.date,duty:r.duty}); });
   ATT_TOTALS={};
   if(tot.error) console.warn('member_attendance_totals:',tot.error.message||tot.error);
   else (tot.data||[]).forEach(r=>{ ATT_TOTALS[r.member_id]=r; });
@@ -2209,6 +2234,7 @@ function subscribeRT(){
     ch.on('postgres_changes',{event:'*',schema:'public',table:'iv_events'},()=>{ if(!_pauseRT) rtReload(); })
       .on('postgres_changes',{event:'*',schema:'public',table:'iv_roster'},()=>{ if(!_pauseRT) rtReload(); })
       .on('postgres_changes',{event:'*',schema:'public',table:'iv_attendance'},()=>{ if(!_pauseRT) rtReload(); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'iv_wd_attendance'},()=>{ if(!_pauseRT) rtReload(); })
       .on('postgres_changes',{event:'*',schema:'public',table:'announcements'},()=>{ if(!_pauseRT) rtReload(); })
       .subscribe();
     subscribeCL();
@@ -4823,6 +4849,12 @@ function openMemberDrawer(id){
   if(!upc.length) h+='<div style="font-size:13px;color:var(--dm)">None scheduled.</div>';
   upc.slice(0,6).forEach(u=>{ h+='<div class="dp-row"><span class="dl">'+esc(fmtShort(u.ev.date))+'</span><span class="dv" style="max-width:62%">'+esc(u.duties.join(', '))+'</span></div>'; });
   h+='</div><div class="dp-actions"><button class="btn btn-ol btn-sm" onclick="copyMemberDuties('+m.id+')">⧉ Copy duties (WhatsApp)</button></div>';
+  const xd=(EXTRA[m.id]||[]).slice().sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
+  h+='<div class="dp-sec">Extra duties</div><div class="dp-card">';
+  if(!xd.length) h+='<div style="font-size:13px;color:var(--dm)">None.</div>';
+  else{ xd.slice(0,10).forEach(x=>{ h+='<div class="dp-row"><span class="dl">'+esc(fmtShort(x.date))+'</span><span class="dv" style="max-width:62%">'+esc(x.duty)+'</span></div>'; });
+    h+='<div class="xd-note">Extra Duty total: '+xd.length+(xd.length>10?' (showing the latest 10)':'')+'</div>'; }
+  h+='</div>';
   if(IS_EDIT){
     h+='<div class="dp-sec">Team-side data (leader-managed)</div>';
     h+='<div class="dp-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="font-size:13px;font-weight:800">Nandi certification</span>'+
@@ -4837,9 +4869,10 @@ function openMemberDrawer(id){
       (Array.isArray(m.away)&&m.away.length?m.away.slice().sort().map(d=>'<span class="away-chip">'+esc(fmtShort(d))+'<button title="Remove" onclick="removeAway('+m.id+',\''+escJs(d)+'\')">✕</button></span>').join(''):'<span style="font-size:12px;color:var(--dm)">None - member is available for all events.</span>')+'</div>'+
       '<div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="mdAwayDate" style="flex:1"><button class="btn btn-ol btn-sm" onclick="addAway('+m.id+')">+ Add away date</button></div>';
     // prefs
-    h+='<label class="flabel">Duty preferences <span style="text-transform:none;letter-spacing:0;color:var(--dm2)">- click to cycle neutral › prefer › avoid</span></label><div class="dchips">'+
-      allDutyNames.map(n=>{ const key=DUTY_INFO[n].key; const st=(m.prefs.prefer||[]).indexOf(key)>=0?'prefer':((m.prefs.avoid||[]).indexOf(key)>=0?'avoid':'');
-        return '<button class="dchip-tog '+st+'" onclick="cyclePref('+m.id+',\''+escJs(key)+'\')">'+esc(n)+(st==='prefer'?' ✓':(st==='avoid'?' ✕':''))+'</button>'; }).join('')+'</div>';
+    h+='<label class="flabel">Duty preferences <span style="text-transform:none;letter-spacing:0;color:var(--dm2)">- click to cycle neutral › prefer › avoid › cannot</span></label><div class="dchips">'+
+      allDutyNames.map(n=>{ const key=DUTY_INFO[n].key; const st=(m.prefs.cannot||[]).indexOf(key)>=0?'cannot':((m.prefs.prefer||[]).indexOf(key)>=0?'prefer':((m.prefs.avoid||[]).indexOf(key)>=0?'avoid':''));
+        return '<button class="dchip-tog '+st+'" onclick="cyclePref('+m.id+',\''+escJs(key)+'\')">'+esc(n)+(st==='prefer'?' ✓':(st==='avoid'?' ✕':(st==='cannot'?' ⛔':'')))+'</button>'; }).join('')+'</div>'+
+      '<div class="xd-note">Cannot: the Weekday Team Lead cannot assign this duty</div>';
     // notes
     h+='<label class="flabel">Notes</label><textarea id="mdNotes" style="width:100%;min-height:60px" placeholder="Private notes…">'+esc(m.notes||'')+'</textarea>'+
       '<button class="btn btn-ol btn-sm" style="margin-top:8px" onclick="saveMemberNotes('+m.id+')">Save notes</button>';
@@ -4892,9 +4925,11 @@ function addAway(id){ const m=memById(id); if(!m) return; const box=document.get
   updateMember(id,{away:away.sort()}).then(()=>openMemberDrawer(id)); }
 function removeAway(id,d){ const m=memById(id); if(!m) return; updateMember(id,{away:(m.away||[]).filter(x=>x!==d)}).then(()=>openMemberDrawer(id)); }
 function cyclePref(id,key){ const m=memById(id); if(!m) return; normMember(m); const pf=m.prefs.prefer,av=m.prefs.avoid;
-  const prefs={prefer:pf.slice(),avoid:av.slice()};
+  const cn=m.prefs.cannot;
+  const prefs=Object.assign({},m.prefs,{prefer:pf.slice(),avoid:av.slice(),cannot:cn.slice()});
   if(pf.indexOf(key)>=0){ prefs.prefer=pf.filter(k=>k!==key); prefs.avoid=av.concat([key]); }
-  else if(av.indexOf(key)>=0){ prefs.avoid=av.filter(k=>k!==key); }
+  else if(av.indexOf(key)>=0){ prefs.avoid=av.filter(k=>k!==key); prefs.cannot=cn.concat([key]); }
+  else if(cn.indexOf(key)>=0){ prefs.cannot=cn.filter(k=>k!==key); }
   else { prefs.prefer=pf.concat([key]); }
   updateMember(id,{prefs:prefs}).then(()=>openMemberDrawer(id)); }
 
@@ -5525,6 +5560,7 @@ function dutyStats(k){
   return out;
 }
 function cycleEventsSorted(k){ return eventsInCycle(k); }
+function extraCount(id){ return (EXTRA[id]||[]).length; }
 function renderAttendanceReport(k){
   const active=MEMBERS.filter(m=>m.status==='active');
   if(!active.length) return '<div class="empty-note">No active members.</div>';
@@ -5539,7 +5575,8 @@ function renderAttendanceReport(k){
     '<th>Member</th><th title="(Present + Late) as a share of Present, Late and Not present. Justified absences are excluded.">Attendance rate</th>'+
     '<th title="Late as a share of the times they turned up.">Lateness rate</th>'+
     '<th title="Every duty slot they have been rostered for, across all cycles. Not limited to the cycle selected.">Duties rostered (all time)</th>'+
-    '<th>P</th><th>L</th><th>J</th><th>N</th><th title="Turned up unrostered, in uniform, and were given a duty on the day. Already counted in P and L.">Walk-ins</th></tr></thead><tbody>';
+    '<th>P</th><th>L</th><th>J</th><th>N</th><th title="Turned up unrostered, in uniform, and were given a duty on the day. Already counted in P and L.">Walk-ins</th>'+
+    '<th title="Weekday duties done as a walk-in on a weekday shift. All time, not limited to the cycle selected. Not part of P, L, J, N, the rates or fairness.">Extra Duty <span style="font-weight:600">(all time)</span></th></tr></thead><tbody>';
   rows.forEach(r=>{
     const good=r.s.rate!=null&&r.s.rate>=90, bad=r.s.rate!=null&&r.s.rate<70;
     h+='<tr><td style="font-weight:800">'+esc(r.m.name)+'</td>'+
@@ -5547,7 +5584,7 @@ function renderAttendanceReport(k){
        '<td style="font-weight:800;color:'+((r.s.lateness||0)>25?'var(--gold-lt)':'var(--dt)')+'">'+pct(r.s.lateness)+'</td>'+
        '<td class="num" style="font-weight:800">'+r.d.total+'</td>'+
        '<td class="num">'+r.s.P+'</td><td class="num">'+r.s.L+'</td>'+
-       '<td class="num">'+r.s.J+'</td><td class="num">'+r.s.N+'</td><td class="num">'+(r.s.W||'')+'</td></tr>';
+       '<td class="num">'+r.s.J+'</td><td class="num">'+r.s.N+'</td><td class="num">'+(r.s.W||'')+'</td><td class="num">'+extraCount(r.m.id)+'</td></tr>';
   });
   return h+'</tbody></table></div></div>'+
     '<div class="ib" style="margin-top:12px">A justified absence is left out of the attendance rate entirely - giving notice costs nothing. Lateness is measured against the times someone actually turned up, so missing an event cannot make them look more punctual. A dash means they have never been rostered.</div>';
@@ -5715,11 +5752,11 @@ function reportCSV(k){
   // Attendance: the same three headline numbers the table shows, so the
   // export and the screen cannot disagree.
   const ds=dutyStats(k);
-  let out='Member,Attendance rate %,Lateness rate %,Duties rostered (all time),Present,Late,Justified,Not present\n';
+  let out='Member,Attendance rate %,Lateness rate %,Duties rostered (all time),Present,Late,Justified,Not present,Extra Duty (all time)\n';
   active.forEach(m=>{
     const st=attendanceStats(m.id,k), d=ds[m.id]||{total:0};
     out+=[q(m.name), st.rate==null?'':st.rate, st.lateness==null?'':st.lateness,
-          d.total, st.P, st.L, st.J, st.N].join(',')+'\n';
+          d.total, st.P, st.L, st.J, st.N, extraCount(m.id)].join(',')+'\n';
   });
   return out;
 }
