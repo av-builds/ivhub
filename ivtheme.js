@@ -139,11 +139,15 @@
     var go=window.ivGo; if(typeof go!=='function'||go.ivGrown) return;
     var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
     var busy=false;
-    var DARK=root.getAttribute('data-theme')==='light'?'rgb(243, 247, 251)':'rgb(2, 11, 24)';
     var w=function(){
       var args=arguments, self=this, v=document.getElementById('ivVeil');
       if(!v||reduce||busy||!document.body.animate) return go.apply(self,args);
       busy=true;
+      // Read at use time: the theme can be toggled after load.
+      var DARK=root.getAttribute('data-theme')==='light'?'rgb(243, 247, 251)':'rgb(2, 11, 24)';
+      // A cancelled or failed navigation never fires pagehide; without this the veil would stay over the page for good.
+      var guard=setTimeout(function(){ busy=false; resetGrow(); },8000);
+      window.addEventListener('pagehide',function(){ clearTimeout(guard); },{once:true});
       var p=press||{x:window.innerWidth/2,y:window.innerHeight/2}, el=p.el&&p.el.getBoundingClientRect?p.el:null;
       var r=el?el.getBoundingClientRect():null;
       if(!r||!r.width){ r={left:p.x-40,top:p.y-22,width:80,height:44,right:p.x+40,bottom:p.y+22}; el=null; }

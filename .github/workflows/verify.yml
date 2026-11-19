@@ -3,9 +3,9 @@
 name: Verify pages
 on:
   push:
-    paths: ['*.html', 'tools/**', 'tests/**', 'package.json', '.github/workflows/verify.yml']
+    paths: ['*.html', '*.js', '*.css', 'tools/**', 'tests/**', 'package.json', 'package-lock.json', '.github/workflows/verify.yml']
   pull_request:
-    paths: ['*.html', 'tools/**', 'tests/**', 'package.json', '.github/workflows/verify.yml']
+    paths: ['*.html', '*.js', '*.css', 'tools/**', 'tests/**', 'package.json', 'package-lock.json', '.github/workflows/verify.yml']
   workflow_dispatch:
 jobs:
   verify:
@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
-      - run: npm install
+      - run: npm ci
       # The cache is only a download shortcut. It was keyed on package.json, whose "^1.40.0" lets
       # Playwright move to a newer release that wants a newer browser build than the cached one,
       # so a cache hit could leave the browser missing. Installing every run is a no-op when the
@@ -23,6 +23,6 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - run: npx playwright install --with-deps chromium
       - run: npm test

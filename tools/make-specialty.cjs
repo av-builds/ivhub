@@ -160,7 +160,9 @@ async function start(){
   const { data } = await sb.auth.getSession();
   const sess = data && data.session;
   if(!sess || !sess.user){ location.replace('index.html'); return; }
-  const { data: prof } = await sb.from('profiles').select('perms').eq('id', sess.user.id).maybeSingle();
+  const { data: prof, error: pe } = await sb.from('profiles').select('perms').eq('id', sess.user.id).maybeSingle();
+  // A failed read is not "no access": say so instead of denying a legitimate user.
+  if(pe){ show('stDeny'); $('denyMsg').textContent = 'Could not check your access. Check your connection and reload.'; return; }
   const perms = permList(prof && prof.perms);
   render(perms);
 }

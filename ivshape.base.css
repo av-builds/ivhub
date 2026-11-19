@@ -13,6 +13,8 @@
 input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]),textarea{
   border:0!important;background-color:var(--ds2)!important;padding-left:max(20px,1.1em)!important;padding-right:max(20px,1.1em)!important;min-height:44px;}
 textarea{min-height:88px;--ivp-sl:10px;}
+/* small boxes (counts, capacities) would be mostly padding and slant: trim both */
+input[type=number]:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]),input[style*="width:"][style*="px"]:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]){--ivp-sl:5px;padding-left:max(var(--ivp-sl),10px)!important;padding-right:6px!important;}
 input:focus,textarea:focus,.btn:focus-visible,button:focus-visible{outline:0!important;box-shadow:inset 0 -3px 0 var(--iv-ac)!important;}
 
 /* table rows lean; the header row too */
@@ -43,3 +45,8 @@ table td:last-child,table th:last-child{padding-right:max(14px,var(--ivp-sl))!im
 .tn-hub,.tn-out,.tn-tog,.tn-show,body.tp .tn-b.tn-hub,body.tp .tn-out,body.tp .tn-tog{border-radius:0!important;clip-path:var(--ivp-poly);--ivp-sl:8px;border:0!important;
   background:color-mix(in srgb,var(--dt) 9%,var(--ds))!important;padding-left:18px!important;padding-right:18px!important;}
 .tn-out,body.tp .tn-out{background:color-mix(in srgb,var(--red-lt,#F87171) 18%,var(--ds))!important;}
+
+/* forced-colors (Windows high contrast) drops box-shadows, so the focus ring above would vanish: use a real outline */
+@media (forced-colors:active){
+  input:focus,textarea:focus,select:focus-visible,select.ivp-open,.btn:focus-visible,button:focus-visible,.ivp-opt:focus-visible,a:focus-visible{outline:2px solid Highlight!important;outline-offset:-2px;}
+}

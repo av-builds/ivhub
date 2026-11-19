@@ -26,7 +26,7 @@
     document.removeEventListener('mousedown',onDoc,true);
     document.removeEventListener('keydown',onKey,true);
     window.removeEventListener('resize',onAway); window.removeEventListener('scroll',onAway,true);
-    if(restoreFocus!==false&&o.trigger.focus) try{ o.trigger.focus({preventScroll:true}); }catch(e){}
+    if(restoreFocus!==false&&o.trigger.isConnected&&o.trigger.focus) try{ o.trigger.focus({preventScroll:true}); }catch(e){}
     if(o.onClose) o.onClose();
   }
   function onDoc(e){ if(open&&!open.pop.contains(e.target)&&!open.trigger.contains(e.target)) close(false); }
@@ -36,7 +36,8 @@
     if(!open) return;
     var list=opts(), i=list.indexOf(document.activeElement);
     if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); close(); return; }
-    if(e.key==='Tab'){ close(false); return; }
+    // Focus goes back to the field first so the browser's own Tab then moves on from it, not from the top of the page.
+    if(e.key==='Tab'){ close(true); return; }
     var next=null;
     if(e.key==='ArrowDown') next=list[Math.min(list.length-1,i+1)];
     else if(e.key==='ArrowUp') next=list[i<=0?0:i-1];
@@ -108,15 +109,16 @@
   /* ── selects ── */
   function itemsOf(sel){
     var out=[];
-    function add(o){ if(o.hidden) return; out.push({label:o.text,value:o.value,on:o.selected,disabled:o.disabled,run:function(){
+    function add(o,gd){ if(o.hidden) return; out.push({label:o.text,value:o.value,on:o.selected,disabled:o.disabled||!!gd,run:function(){
       if(sel.value!==o.value||!o.selected){ sel.value=o.value; o.selected=true;
         sel.dispatchEvent(new Event('input',{bubbles:true})); sel.dispatchEvent(new Event('change',{bubbles:true})); } }}); }
     [].forEach.call(sel.children,function(c){
-      if(c.tagName==='OPTGROUP'){ out.push({caption:true,label:c.label}); [].forEach.call(c.children,add); } else if(c.tagName==='OPTION') add(c);
+      if(c.tagName==='OPTGROUP'){ out.push({caption:true,label:c.label}); [].forEach.call(c.children,function(o){ add(o,c.disabled); }); } else if(c.tagName==='OPTION') add(c);
     });
     return out;
   }
   function openSelect(sel){
+    if(!sel.isConnected) return;
     var items=itemsOf(sel); if(!items.length) return;
     var p=popup(sel,items,{role:'listbox',minWidth:sel.offsetWidth});
     sel.classList.add('ivp-open');
@@ -139,11 +141,66 @@
     scan();
     // Pages build most of their selects after load.
     try{ new MutationObserver(function(muts){
+      // A menu whose select was replaced or whose options were rebuilt would otherwise write the pick into a stale element.
+      if(open&&open.trigger){
+        var stale=!open.trigger.isConnected;
+        if(!stale&&open.trigger.tagName==='SELECT') for(var k=0;k<muts.length;k++) if(muts[k].target!==document.body&&open.trigger.contains(muts[k].target)){ stale=true; break; }
+        if(stale) close(false);
+      }
       for(var i=0;i<muts.length;i++) for(var j=0;j<muts[i].addedNodes.length;j++){
         var n=muts[i].addedNodes[j]; if(n.nodeType!==1) continue;
         if(n.tagName==='SELECT') wire(n); else if(n.querySelectorAll) scan(n);
       }
     }).observe(document.body,{childList:true,subtree:true}); }catch(e){}
   }
-  if(document.body) boot(); else document.addEventListener('DOMContentLoaded',boot);
+  /* ── dialogs: move focus in, keep Tab inside, give focus back ──
+     Anything with role=dialog or aria-modal (Team A/B's #dcard and #mbox, the Hub's sheets) is watched. When one becomes
+     visible, focus enters it unless the page already put it there; Tab wraps inside it; when the last one closes, focus
+     returns to where it was. A dialog already open at load is tracked but never steals focus. */
+  var DLG='[role=dialog],[aria-modal=true]', FOC='a[href],button,input,select,textarea,[tabindex]', activeDlg=null, lastOut=null, dq=0;
+  function shown(d){
+    if(!d.getClientRects().length) return false;
+    var cs=getComputedStyle(d); if(cs.visibility==='hidden') return false;
+    return !d.closest('.dlg:not(.show),.mo:not(.show),[hidden],[inert]');
+  }
+  function focusable(d){
+    return [].filter.call(d.querySelectorAll(FOC),function(x){ return !x.disabled&&x.tabIndex>=0&&x.getClientRects().length&&getComputedStyle(x).visibility!=='hidden'; });
+  }
+  function topDialog(){
+    var all=document.querySelectorAll(DLG), t=null;
+    for(var i=0;i<all.length;i++) if(shown(all[i])) t=all[i];
+    return t;
+  }
+  function syncDialogs(first){
+    dq=0;
+    var t=topDialog();
+    if(t===activeDlg) return;
+    var was=activeDlg; activeDlg=t;
+    if(t){
+      if(!was&&!first&&!t.contains(document.activeElement)){
+        var f=focusable(t)[0];
+        if(!f){ if(!t.hasAttribute('tabindex')) t.setAttribute('tabindex','-1'); f=t; }
+        try{ f.focus({preventScroll:true}); }catch(e){}
+      }
+    } else if(was&&lastOut&&lastOut.isConnected&&lastOut.focus){
+      try{ lastOut.focus({preventScroll:true}); }catch(e){}
+      lastOut=null;
+    }
+  }
+  function queueDialogs(){ if(!dq) dq=requestAnimationFrame(function(){ syncDialogs(false); }); }
+  function bootDialogs(){
+    document.addEventListener('focusin',function(e){ if(!(e.target.closest&&e.target.closest(DLG))&&!(e.target.classList&&e.target.classList.contains('ivp-opt'))) lastOut=e.target; },true);
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='Tab'||!activeDlg||open) return;
+      var d=activeDlg, list=focusable(d), a=document.activeElement;
+      if(!list.length){ e.preventDefault(); return; }
+      if(!d.contains(a)){ e.preventDefault(); list[0].focus(); return; }
+      if(e.shiftKey&&(a===list[0]||a===d)){ e.preventDefault(); list[list.length-1].focus(); }
+      else if(!e.shiftKey&&a===list[list.length-1]){ e.preventDefault(); list[0].focus(); }
+    });
+    try{ new MutationObserver(queueDialogs).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden','open','inert']}); }catch(e){}
+    syncDialogs(true);
+  }
+  function boot2(){ boot(); bootDialogs(); }
+  if(document.body) boot2(); else document.addEventListener('DOMContentLoaded',boot2);
 })();

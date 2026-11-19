@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Training &amp; Development | IV Hub</title>
+<title>Training & Development | IV Hub</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
 <style>
@@ -49,12 +49,8 @@ p.lede{font-size:15px;line-height:1.65;color:var(--dm);margin-bottom:20px;}
 .hide{display:none!important;}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261119a">
-<link rel="stylesheet" href="ivshape.base.css?v=20261119a">
-<link rel="stylesheet" href="ivshape.css?v=20261119a">
-<link rel="stylesheet" href="ivtype.css?v=20261119a">
-<link rel="stylesheet" href="ivfix.css?v=20261119a">
-<script src="ivtheme.js?v=20261114a"></script>
+<link rel="stylesheet" href="ivtheme.css?v=20261021m">
+<script src="ivtheme.js?v=20261021m"></script>
 </head>
 <body>
 <header class="top">
@@ -108,7 +104,9 @@ async function start(){
   const { data } = await sb.auth.getSession();
   const sess = data && data.session;
   if(!sess || !sess.user){ location.replace('index.html'); return; }
-  const { data: prof } = await sb.from('profiles').select('perms').eq('id', sess.user.id).maybeSingle();
+  const { data: prof, error: pe } = await sb.from('profiles').select('perms').eq('id', sess.user.id).maybeSingle();
+  // A failed read is not "no access": say so instead of denying a legitimate user.
+  if(pe){ show('stDeny'); $('denyMsg').textContent = 'Could not check your access. Check your connection and reload.'; return; }
   const perms = permList(prof && prof.perms);
   render(perms);
 }

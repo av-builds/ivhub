@@ -1607,35 +1607,12 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <!-- Create New User -->
       <div class="iv-panel" style="margin-bottom:20px;">
         <div class="iv-ph" style="background:linear-gradient(135deg,#1A3A0B,#2A6010);">
-          <span>👤</span> Create New User
+          <span>👤</span> Users
         </div>
         <div class="iv-pb">
           <div class="add-form" style="background:linear-gradient(160deg,#061408,#0A2010);border:1px solid rgba(34,197,94,0.25);">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-              <div>
-                <div style="font-size:11px;font-weight:800;color:#4ADE80;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Display Name</div>
-                <input type="text" id="ap-display" placeholder="e.g. John Smith" class="wi">
-              </div>
-              <div>
-                <div style="font-size:11px;font-weight:800;color:#4ADE80;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Username</div>
-                <input type="text" id="ap-username" placeholder="e.g. john.smith" class="wi">
-              </div>
-              <div>
-                <div style="font-size:11px;font-weight:800;color:#4ADE80;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Password</div>
-                <input type="password" id="ap-password" placeholder="Set a password" class="wi" autocomplete="new-password">
-              </div>
-              <div style="grid-column:1/-1;">
-                <div style="font-size:11px;font-weight:800;color:#4ADE80;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Permissions <span style="color:rgba(74,222,128,0.5);font-weight:600;text-transform:none;letter-spacing:0;">(select one or more)</span></div>
-                <div id="ap-perms-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;">
-                  <label class="perm-chk" data-perm="owner"><input type="checkbox" value="owner"> 👑 Owner</label>
-                  <label class="perm-chk" data-perm="av_admin"><input type="checkbox" value="av_admin"> 🛡 AV Admin</label>
-                  <label class="perm-chk" data-perm="iv_admin"><input type="checkbox" value="iv_admin"> 🛡 IV Admin</label>
-                  <label class="perm-chk" data-perm="av_team"><input type="checkbox" value="av_team"> 📹 AV Team</label>
-                  <label class="perm-chk" data-perm="iv_team"><input type="checkbox" value="iv_team"> 🌿 IV Team</label>
-                </div>
-              </div>
-            </div>
-            <button class="btn btn-bl" style="background:linear-gradient(135deg,#166534,#15803D);" onclick="apCreateUser()">+ Create User</button>
+            <div style="font-size:13px;line-height:1.6;color:var(--dm);margin-bottom:10px;">Accounts are created and given passwords in <b>Admin Logins</b> on the Hub. Passwords are no longer stored or edited on this page; the list below only adjusts roles for existing accounts.</div>
+            <a class="btn btn-bl" href="index.html?hub=1" style="display:inline-block;text-decoration:none;background:linear-gradient(135deg,#166534,#15803D);">Open the Hub</a>
           </div>
           <div id="ap-userlist" style="margin-top:12px;"></div>
         </div>
@@ -1681,13 +1658,38 @@ let vols=[], majalisEvs=[], trainings=[], avEvents=[], roster={};
 // Hub AV membership - Map(nameLower → iv_members row) once hub membership loads OK.
 // Null means the hub list was unavailable, in which case nothing is filtered out.
 let hubAvSet=null;
+// Hub away dates by iv_members.id. Kept out of the volunteer rows on purpose:
+// the Hub owns them, and copying them into volunteers.data would go stale.
+let hubAwayById = new Map();
+// Busy = AV-local busy dates (v.bds) or an away date the volunteer set in the Hub.
+function volBusyOn(v, ds){
+  const away = v && v.hub_id!=null ? hubAwayById.get(v.hub_id) : null;
+  if(away && away.includes(ds)) return true;
+  return (v.bds||'').split(',').map(s=>s.trim()).filter(Boolean).includes(ds);
+}
 // People per weekday rotation (index 0=Sun … 6=Sat). Owner-configurable in
 // the Admin Panel, stored in app_settings, synced to every device.
 let dayCaps = {0:2,1:2,2:2,3:2,4:2,5:2,6:2};
+/* Own writes pause the realtime handlers so our echo is not re-applied. One
+   deadline, longest wins (a short pause must not cancel a long one). Events
+   that land inside the window are not applied; they queue a single reload for
+   when it ends, so another device's change is never lost. */
+let _pauseUntil = 0, _rtMissed = false, _rtTimer = null;
 function pauseRealtime(ms){
-  ms = ms || 800;
-  _realtimePaused = true;
-  setTimeout(function(){ _realtimePaused = false; }, ms);
+  _pauseUntil = Math.max(_pauseUntil, Date.now() + (ms || 800));
+}
+function rtPaused(){
+  if(Date.now() >= _pauseUntil) return false;
+  _rtMissed = true;
+  clearTimeout(_rtTimer);
+  _rtTimer = setTimeout(rtCatchUp, Math.max(50, _pauseUntil - Date.now()) + 50);
+  return true;
+}
+async function rtCatchUp(){
+  if(Date.now() < _pauseUntil){ _rtTimer = setTimeout(rtCatchUp, _pauseUntil - Date.now() + 50); return; }
+  if(!_rtMissed || !window.CU) return;
+  _rtMissed = false;
+  try{ await loadFromDB(); autoRoster(); renderAll(); }catch(e){ console.warn('Realtime catch-up failed:', e.message||e); }
 }
 function esc(s){
   if(!s) return '';
@@ -1864,7 +1866,7 @@ function hubHasAV(m){
 async function syncHubMembership(){
   hubAvSet = null;
   try{
-    const hR = await sb.from('iv_members').select('id,name,gender,status,spec');
+    const hR = await sb.from('iv_members').select('id,name,gender,status,spec,away');
     if(hR.error){
       console.warn('Hub AV membership unavailable ('+hR.error.message+') - showing existing volunteers unfiltered');
       const _st=document.getElementById('hubSyncStatus');
@@ -1875,6 +1877,11 @@ async function syncHubMembership(){
     const avOnly = hR.data.filter(hubHasAV);
     hubAvSet = new Map(avOnly.map(m=>[String(m.name||'').trim().toLowerCase(), m]));
     const byHubId = new Map(avOnly.map(m=>[m.id, m]));
+    hubAwayById = new Map(avOnly.map(m=>{
+      let a = m.away; if(typeof a === 'string'){ try{ a = JSON.parse(a); }catch(e){ a = []; } }
+      return [m.id, Array.isArray(a) ? a : []];
+    }));
+    const isAdmin = isAvAdminUser();
     const claimed = new Set();   // hub ids matched to a volunteer row
     const linked  = new Set();   // volunteer row ids that belong to the AV section
     const updates = [];
@@ -1894,7 +1901,7 @@ async function syncHubMembership(){
       if(hub.status === 'inactive' && v.status !== 'inactive'){ v.status = 'inactive'; dirty = true; } // org-wide inactive wins
       if(dirty) updates.push({id: v.id, data: normalizeVol({...v})});
     }
-    if(updates.length){
+    if(updates.length && isAdmin){   // volunteers_write is admin-only; others keep the in-memory values
       /* Names, genders and inactive flags coming down from the Hub. A
          refusal here is not fatal - the sync runs again on every load - but it was completely silent, so a page could spend weeks showing
          names the Hub had already corrected. */
@@ -1912,7 +1919,13 @@ async function syncHubMembership(){
       const rows = missing.map((m,i)=>{ const vid = base + i;
         return { id: vid, data: normalizeVol({id: vid, name:m.name, gender:m.gender,
           status: m.status==='inactive'?'inactive':'active', days:[], roles:[], bds:'', hub_id:m.id}) }; });
-      try{
+      if(!isAdmin){
+        // Writes are refused for non-admins; show the member from the Hub row
+        // (stable negative id so it cannot clash with an id an admin creates).
+        missing.forEach(m=>{ const nv = normalizeVol({id:-m.id, name:m.name, gender:m.gender,
+          status: m.status==='inactive'?'inactive':'active', days:[], roles:[], bds:'', hub_id:m.id});
+          vols.push(nv); linked.add(nv.id); });
+      } else try{
         /* Falling back to `rows` when nothing came back used to hide a
            refusal completely: the page carried on with volunteers it had
            invented, which then vanished on the next load. */
@@ -1945,13 +1958,18 @@ async function cleanupUnlisted(){
   if(!isAvAdminUser()){ toast('Access denied','err'); return; }
   toast('Checking hub membership…');
   try{
-    const hR = await sb.from('iv_members').select('name,spec');
+    const hR = await sb.from('iv_members').select('id,name,spec');
     if(hR.error) throw new Error('Hub membership unavailable: '+hR.error.message);
-    const keep = new Set((hR.data||[]).filter(hubHasAV).map(m=>String(m.name||'').trim().toLowerCase()));
+    const hubAv = (hR.data||[]).filter(hubHasAV);
+    const keep = new Set(hubAv.map(m=>String(m.name||'').trim().toLowerCase()));
+    const keepIds = new Set(hubAv.map(m=>m.id));
     const all = await sb.from('volunteers').select('*');
     if(all.error) throw all.error;
     const doomed = (all.data||[]).filter(r=>{
-      const d=r.data||r; return !keep.has(String(d.name||'').trim().toLowerCase());
+      const d=r.data||r;
+      // Linked rows are judged by hub_id (a renamed member must not be deleted);
+      // only unlinked legacy rows fall back to the name.
+      return d.hub_id!=null ? !keepIds.has(d.hub_id) : !keep.has(String(d.name||'').trim().toLowerCase());
     });
     if(!doomed.length){ toast('Nothing to remove - all volunteers are hub-listed ✓'); return; }
     if(!confirm(`Delete ${doomed.length} volunteer record(s) not ticked as AV Team in the hub?\nTheir availability/busy-date data will be permanently removed.\n(${keep.size} hub-listed AV member(s) will be kept.)`)) return;
@@ -2161,7 +2179,8 @@ async function dbSaveRoster(){
        this stays a pure saving with no change in what ends up stored. */
     const grid = visibleGridDates();
     const rows = [];
-    grid.forEach(ds=>{ const r = roster[ds]; if(r) rows.push({date:ds, data:r}); });
+    const today = todayDS();
+    grid.forEach(ds=>{ if(ds < today) return; const r = roster[ds]; if(r) rows.push({date:ds, data:r}); });
     if(!rows.length){ setSyncStatus('ok'); return; }
     pauseRealtime(4000);
     // Upsert in small batches to avoid payload limits
@@ -2379,7 +2398,6 @@ function dbUserToLocal(r){
   if(!perms.length) perms = ['av_team'];
   if(!permsAll.length) permsAll = perms.slice();
   return {
-    pw:      r.pw,
     role:    roleFromPerms(perms),
     perms,
     permsAll,
@@ -2389,19 +2407,19 @@ function dbUserToLocal(r){
 async function loadUsersEarly(){
   if(!sb) return;
   try{
-    const {data,error} = await sb.from('app_users').select('*');
+    const {data,error} = await sb.from('app_users').select('username,role,perms,display');
     if(error || !data || !data.length) return;
-    data.forEach(r=>{ if(r.username && r.pw) USERS[r.username] = dbUserToLocal(r); });
+    data.forEach(r=>{ if(r.username) USERS[r.username] = dbUserToLocal(r); });
     console.log('Users loaded for login:', Object.keys(USERS).length);
   } catch(e){ console.warn('loadUsersEarly failed:', e.message); }
 }
 async function loadUsersFromDB(){
   if(!sb) return;
   try{
-    const {data,error} = await sb.from('app_users').select('*');
+    const {data,error} = await sb.from('app_users').select('username,role,perms,display');
     if(error) throw error;
     if(data && data.length){
-      data.forEach(r=>{ if(r.username && r.pw) USERS[r.username] = dbUserToLocal(r); });
+      data.forEach(r=>{ if(r.username) USERS[r.username] = dbUserToLocal(r); });
       console.log('Users loaded from DB:', Object.keys(USERS).length);
       // Re-render user list if admin panel is currently open
       const apList = document.getElementById('ap-userlist');
@@ -2415,9 +2433,11 @@ async function loadUsersFromDB(){
 }
 async function dbSaveUser(username, data){
   if(!sb) return false;
-  const row = {username, pw:data.pw, role:data.role, perms:data.perms||[data.role], display:data.display};
+  // Existing rows only, and no pw: accounts are created in Admin Logins on the
+  // Hub, and the legacy plaintext pw column is neither read nor written here.
+  const row = {role:data.role, perms:data.perms||[data.role], display:data.display};
   try{
-    await dbStored(sb.from('app_users').upsert(row, {onConflict:'username'}));
+    await dbStored(sb.from('app_users').update(row).eq('username', username));
     return true;
   } catch(e){
     // 42703 = column does not exist (usually 'perms'). Retry without it so
@@ -2426,8 +2446,8 @@ async function dbSaveUser(username, data){
     if(e.code === '42703' || /perms/i.test(e.message||'')){
       _permsColMissing = true;
       try{
-        const rowNoPerms = {username:row.username, pw:row.pw, role:row.role, display:row.display};
-        await dbStored(sb.from('app_users').upsert(rowNoPerms, {onConflict:'username'}));
+        const rowNoPerms = {role:row.role, display:row.display};
+        await dbStored(sb.from('app_users').update(rowNoPerms).eq('username', username));
         toast('Saved, but app_users has no "perms" column - only the primary role was stored. Open Dashboard › DB Status for the one-line fix.','err');
         return true;
       }catch(e2){ console.error('dbSaveUser retry error:', e2.message); }
@@ -2448,11 +2468,9 @@ async function dbDeleteUserFromDB(username){
 async function dbRenameUser(oldUsername, newUsername, data){
   if(!sb) return false;
   try{
-    // Delete old, then save new via the resilient saver (handles a missing
-    // perms column the same way as any other save). The delete is checked
-    // too: leaving the old row behind would give one person two accounts,
-    // the older of which still has the old password.
-    await dbStored(sb.from('app_users').delete().eq('username', oldUsername));
+    // Rename in place (username is the primary key): one UPDATE event, so the
+    // renamed user's own session is not mistaken for a removed account.
+    await dbStored(sb.from('app_users').update({username:newUsername}).eq('username', oldUsername));
   } catch(e){ console.error('dbRenameUser error:', e.message);
     toast('Could not rename '+oldUsername+': '+(e.message||e),'err'); return false; }
   return await dbSaveUser(newUsername, data);
@@ -2784,7 +2802,10 @@ function renderMyAvCards(){
   admin.style.display='none'; mine.style.display='grid';
 
   const me = myAvName().toLowerCase();
-  const vol = vols.find(v=>String(v.name||'').trim().toLowerCase() === me) || null;
+  // Member link first (survives a display-name difference), name as the fallback
+  const mid = window.CU && CU.member_id;
+  const vol = (mid!=null ? vols.find(v=>v.hub_id===mid) : null)
+           || vols.find(v=>String(v.name||'').trim().toLowerCase() === me) || null;
   const today = todayDS();
 
   // Next day this person is on, from the roster already in memory.
@@ -3207,13 +3228,9 @@ function renderCal(){
     window._slideDir=null;
   }
 }
-function getJKP(ro){
-  if(ro._primary) return ro._primary;
-  for(const k of Object.keys(ro)){
-    if(k!=='_mph'&&k!=='_sup'&&k!=='_auto'&&k!=='_primary'&&k!=='_manual'&&k!=='_mph_primary'&&ro[k]&&typeof ro[k]==='string') return ro[k];
-  }
-  return null;
-}
+// The JK slot lives only in _primary. The old fallback scanned for any string
+// field and could return the MPH trainee (_mph_primary2) as the JK person.
+function getJKP(ro){ return ro._primary||null; }
 function trunc(s,n){return s&&s.length>n?s.substring(0,n)+'...':s||'';}
 function chMo(d){
   calMo+=d;
@@ -3226,7 +3243,7 @@ function chMo(d){
   // months no longer flips the roster month for everyone else.
   if(isAvAdminUser()){
     clearTimeout(window._chMoTimer);
-    window._chMoTimer = setTimeout(()=>saveMonthSetting(calMo, calYr), 800);
+    window._chMoTimer = setTimeout(()=>saveMonthSetting(calMo, calYr).catch(()=>toast('Month not synced to other devices: your role cannot change the shared month','err')), 800);
     auditLog(`Viewed roster for ${MO[calMo]} ${calYr}`,'roster',`Navigated to ${MO[calMo]} ${calYr}`);
   }
   autoRoster();
@@ -3430,7 +3447,7 @@ function dcEditHTML(ds){
   const dowName=DC_DOW[dt.getDay()];
   const byName=(a,b)=>a.name.localeCompare(b.name);
   const act=vols.filter(v=>v.status==='active').sort(byName);
-  const busyOn=v=>(v.bds||'').split(',').map(s=>s.trim()).includes(ds);
+  const busyOn=v=>volBusyOn(v, ds);
   const avail=act.filter(v=>(v.days||[]).includes(dowName)&&!busyOn(v));
   const others=act.filter(v=>!avail.includes(v));
   const sups=act.filter(dcIsSup);
@@ -3892,7 +3909,7 @@ function rmVol(id){
   const rv=vols.find(v=>v.id===id);
   // Hub-listed people cannot be deleted here - the next load would just
   // re-create them from iv_members. Send the admin to the hub instead.
-  if(rv && hubAvSet && hubAvSet.has(String(rv.name||'').trim().toLowerCase())){
+  if(rv && hubAvSet && (rv.hub_id!=null ? hubAwayById.has(rv.hub_id) : hubAvSet.has(String(rv.name||'').trim().toLowerCase()))){
     toast('This person is ticked "AV Team" in the Hub - untick them in Home › User Management to remove them from AV. (Deleting here would just re-create them on the next load.)','err');
     return;
   }
@@ -4058,7 +4075,10 @@ function autoRoster(){
   const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const active = vols.filter(v=>v.status==='active');
   const dim = new Date(calYr, calMo+1, 0).getDate();
-  const isBusy = (v, ds) => (v.bds||'').split(',').map(s=>s.trim()).filter(Boolean).includes(ds);
+  // Past days are history: they are neither regenerated nor re-saved, so
+  // opening an old month cannot rewrite what was stored for it.
+  const today = todayDS();
+  const isBusy = (v, ds) => volBusyOn(v, ds);
   // STRICTLY role-based: only the visible "MPH Certified Member" pill
   // counts. Hidden/stale mph flags in old data are ignored, so nobody
   // can be invisibly banned from Friday JK.
@@ -4079,15 +4099,17 @@ function autoRoster(){
   const dsOf = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
   const wkOf = dt => Math.floor(Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate())/(7*86400000));
   // ── Step 1: Clear only auto-assigned slots in the visible grid ──
+  const cleared = [];   // days emptied here; if the engine leaves them empty the stored row must go too
   gridDates.forEach(dt=>{
     const ds = dsOf(dt);
+    if(ds < today) return;
     const slot = roster[ds];
     if(!slot) return;
     // NEVER touch manually overridden slots
     if(slot._manual) return;
-    if(slot._auto) delete roster[ds];
+    if(slot._auto){ delete roster[ds]; cleared.push(ds); }
   });
-  if(!active.length){ _rosterIssues=[]; renderRosterIssues(); renderRotationStrip(null); renderCal(); return; }
+  if(!active.length){ _rosterIssues=[]; renderRosterIssues(); renderRotationStrip(null); persistAutoRoster([], cleared); renderCal(); return; }
   // ── Step 2: Assign volunteers to weekdays - configurable pool sizes ──
   // Each weekday runs an N-person rotation, where N is the Owner's
   // "Rotation Pool Sizes" setting in the Admin Panel (default 2).
@@ -4227,6 +4249,11 @@ function autoRoster(){
     const ds  = dsOf(dt);
     const dow = dt.getDay();
     const slot = roster[ds];
+    // Past day: keep what was recorded, only count it
+    if(ds < today){
+      if(slot && slot._primary) jkCount[slot._primary] = (jkCount[slot._primary]||0)+1;
+      return;
+    }
     // MANUAL OVERRIDE: count their JK date, but never reassign
     if(slot && slot._manual){
       if(slot._primary) jkCount[slot._primary] = (jkCount[slot._primary]||0)+1;
@@ -4277,6 +4304,7 @@ function autoRoster(){
   gridDates.forEach(dt=>{
     if(dt.getDay() !== 5) return;
     const ds = dsOf(dt);
+    if(ds < today) return;
     const slot = roster[ds];
     if(slot && (slot._manual || slot._mph_manual || slot._mph_removed)) return;
     const jkToday = (roster[ds] && roster[ds]._primary) || '';
@@ -4291,7 +4319,7 @@ function autoRoster(){
   });
   renderRosterIssues();
   renderRotationStrip(dayAssignees);
-  persistAutoRoster(gridDates.map(dsOf));
+  persistAutoRoster(gridDates.map(dsOf), cleared);
   if(typeof renderDashboard==='function') renderDashboard();
   renderCal();
 }
@@ -4299,22 +4327,31 @@ function autoRoster(){
    Only AV Admins / Owner write; debounced to avoid write storms; realtime
    is paused around the write so our own echo doesn't bounce back. */
 let _persistTimer = null;
-function persistAutoRoster(dateKeys){
+const _persistCleared = new Set();
+function persistAutoRoster(dateKeys, cleared){
   if(!sb || !isAvAdminUser()) return;
+  (cleared||[]).forEach(ds=>_persistCleared.add(ds));
   clearTimeout(_persistTimer);
   _persistTimer = setTimeout(async ()=>{
     try{
+      const today = todayDS();
       const rows = [];
       dateKeys.forEach(ds=>{
+        if(ds < today) return;   // stored history is never rewritten
         const r = roster[ds];
         if(r && r._auto && !r._manual && r._primary) rows.push({date:ds, data:r});
       });
-      if(!rows.length) return;
+      // Days the engine emptied (everyone busy, nobody available) would keep
+      // their old assignee in the database for every other reader.
+      const stale = [..._persistCleared].filter(ds => ds >= today && !(roster[ds] && roster[ds]._primary));
+      _persistCleared.clear();
+      if(!rows.length && !stale.length) return;
       pauseRealtime(4000);
+      if(stale.length) await dbStored(sb.from('roster').delete().in('date', stale), true);
       for(let i=0;i<rows.length;i+=50){
         await dbStored(sb.from('roster').upsert(rows.slice(i,i+50)));
       }
-      console.log(`Auto-roster persisted: ${rows.length} day(s)`);
+      console.log(`Auto-roster persisted: ${rows.length} day(s), ${stale.length} emptied`);
     }catch(e){ console.warn('Auto-roster persist failed:', e.message||e); }
   }, 1500);
 }
@@ -4377,6 +4414,9 @@ function addMajalis(){
   if(!date){toast('Select a date','err');return;}
   const uniformEl=document.getElementById('mjUniform');
   const uniform=uniformEl?uniformEl.value:'';
+  // One majalis per date: every consumer uses find(e=>e.date===ds), so a second
+  // row would sit in the database and the Upcoming list but never show on the calendar.
+  if(majalisEvs.some(e=>e.date===date)){toast('A majalis already exists on this date - change it from the day card','err');return;}
   const newMj={id:uid(),name,type:'Majalis',date,time:'',category:'',uniform};
   majalisEvs.push(newMj);
   document.getElementById('mjName').value='';
@@ -4392,7 +4432,8 @@ function addMajalis(){
     const d = new Date(date + 'T12:00');
     d.setDate(d.getDate() + 8);
     const pbsDate = localDS(d);
-    const pbsMj = {id:uid(), name:'Paanch Baar Saal', type:'Majalis', date:pbsDate, time:'', category:''};
+    if(majalisEvs.some(e=>e.date===pbsDate)){ toast('Paanch Baar Saal not added: a majalis already exists on '+pbsDate); return; }
+    const pbsMj = {id:uid(), name:name.includes('(K)')?'Paanch Baar Saal (K)':'Paanch Baar Saal', type:'Majalis', date:pbsDate, time:'', category:'', uniform};
     majalisEvs.push(pbsMj);
     renderMajalisCards();renderUpcoming();updateStats();autoRoster();
     auditLog('Auto-added Majalis: Paanch Baar Saal', 'majalis', `Date: ${pbsDate} (8 days after ${name})`);
@@ -4818,7 +4859,9 @@ function csvMjParts(name){
 }
 /* RFC-4180 escaping - wraps in quotes only when needed. */
 function csvEsc(v){
-  const str = (v===null||v===undefined) ? '' : String(v);
+  let str = (v===null||v===undefined) ? '' : String(v);
+  // Neutralise spreadsheet formulas in text cells (names, events); numbers stay intact
+  if(typeof v==='string' && /^[=+\-@\t\r]/.test(str)) str = "'" + str;
   return /[",\r\n]/.test(str) ? '"' + str.replace(/"/g,'""') + '"' : str;
 }
 /* First Monday on or after the 1st of the given month. */
@@ -5282,28 +5325,9 @@ async function apSetMonth(){
   }
 }
 function apCreateUser(){
-  if(!isOwnerUser()){ toast('Access denied','err'); return; }
-  const display  = document.getElementById('ap-display').value.trim();
-  const username = document.getElementById('ap-username').value.trim().toLowerCase();
-  const password = document.getElementById('ap-password').value.trim();
-  const permsChks = [...document.querySelectorAll('#ap-perms-grid input:checked')].map(c=>c.value);
-  if(!display)  { toast('Enter a display name','err'); return; }
-  if(!username) { toast('Enter a username','err'); return; }
-  if(!password) { toast('Enter a password','err'); return; }
-  if(!permsChks.length){ toast('Select at least one permission','err'); return; }
-  if(!/^[a-zA-Z0-9._-]+$/.test(username)){ toast('Username: only letters, numbers, dots, dashes allowed','err'); return; }
-  if(USERS[username]){ toast('Username already exists','err'); return; }
-  const primaryRole = roleFromPerms(permsChks); // highest privilege wins - never 'first checkbox'
-  const newUserData = { pw: password, role: primaryRole, perms: permsChks, display };
-  USERS[username] = newUserData;
-  dbSaveUser(username, newUserData);
-  document.getElementById('ap-display').value  = '';
-  document.getElementById('ap-username').value = '';
-  document.getElementById('ap-password').value = '';
-  document.querySelectorAll('#ap-perms-grid input').forEach(c=>c.checked=false);
-  auditLog(`Created user: ${display} (${username})`, 'login', `Perms: ${permsChks.join(', ')}`);
-  renderApUserList();
-  toast(`User "${display}" created!`);
+  // Legacy accounts could not sign in (sign-in is Supabase Auth at the Hub), and
+  // creating one meant storing a plaintext password. Accounts are made in the Hub.
+  toast('Create accounts in Admin Logins on the Hub','err');
 }
 function apDeleteUser(username){
   if(!isOwnerUser()){ toast('Access denied','err'); return; }
@@ -5327,7 +5351,6 @@ function apSaveUser(oldUsername){
   const _sid = oldUsername.replace(/\./g,'_').replace(/@/g,'_').replace(/[^a-zA-Z0-9_]/g,'_');
   const newDisplay  = document.getElementById('ap-edit-display-'+_sid)?.value.trim()||'';
   const newUsername = document.getElementById('ap-edit-username-'+_sid)?.value.trim().toLowerCase()||oldUsername;
-  const newPassword = document.getElementById('ap-edit-pw-'+_sid)?.value.trim()||'';
   // Self-edit keeps existing perms - you cannot change (or lose) your own
   // permissions from this panel, which prevents accidental lockouts.
   const isSelfEdit = (oldUsername === CU.user);
@@ -5344,9 +5367,6 @@ function apSaveUser(oldUsername){
   if(!newDisplay)  { toast('Display name cannot be empty','err'); return; }
   if(!newUsername) { toast('Username cannot be empty','err'); return; }
   if(!/^[a-zA-Z0-9._-]+$/.test(newUsername)){ toast('Username: only letters, numbers, dots, dashes allowed','err'); return; }
-  // Blank password = keep the current one
-  const finalPassword = newPassword || USERS[oldUsername]?.pw || '';
-  if(!finalPassword){ toast('Password cannot be empty','err'); return; }
   const oldData = USERS[oldUsername];
   // Check username collision (unless same username)
   if(newUsername !== oldUsername && USERS[newUsername]){
@@ -5356,7 +5376,7 @@ function apSaveUser(oldUsername){
   if(newUsername !== oldUsername){
     delete USERS[oldUsername];
   }
-  const savedData = { pw: finalPassword, role: newRole, perms: newPerms, display: newDisplay };
+  const savedData = { role: newRole, perms: newPerms, display: newDisplay };
   USERS[newUsername] = savedData;
   // Save to DB - rename if username changed
   if(newUsername !== oldUsername){
@@ -5395,7 +5415,6 @@ function renderApUserList(){
             <div style="font-size:12px;color:var(--dm);font-family:monospace;margin-bottom:3px;">${esc(u)}</div>
             <div style="display:flex;gap:4px;flex-wrap:wrap;">${(d.perms||[d.role]).map(p=>({owner:'👑 Owner',av_admin:'🛡 AV Admin',iv_admin:'🛡 IV Admin',av_team:'📹 AV Team',iv_team:'🌿 IV Team'})[p]||esc(p)).map(l=>`<span style="font-size:11px;font-weight:800;background:rgba(75,163,220,0.1);color:#4BA3DC;border:1px solid rgba(75,163,220,0.25);border-radius:10px;padding:2px 7px;">${l}</span>`).join('')}${(d.permsAll||[]).filter(p=>!PERM_KEYS.includes(PERM_LEGACY[p]||p)).map(p=>`<span title="Set in the Hub - this panel leaves it untouched" style="font-size:11px;font-weight:800;background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.28);border-radius:10px;padding:2px 7px;">🔒 ${esc(p)}</span>`).join('')}</div>
           </div>
-          <div style="font-size:12px;color:#8FAEC8;font-family:monospace;background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:4px;letter-spacing:0.06em;" title="Password hidden - open to change it">••••••</div>
           <span style="color:var(--dm);font-size:12px;margin-left:4px;">▼</span>
         </div>
         <!-- Edit form (collapsed by default) -->
@@ -5408,10 +5427,6 @@ function renderApUserList(){
             <div>
               <div style="font-size:11px;font-weight:800;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Username</div>
               <input type="text" id="ap-edit-username-${safeId}" value="${esc(u)}" class="wi" style="font-size:13px;padding:6px 9px;font-family:monospace;${isSelf?'opacity:.5;':''}" ${isSelf?'readonly':''}>
-            </div>
-            <div>
-              <div style="font-size:11px;font-weight:800;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">New Password <span style="text-transform:none;letter-spacing:0;font-weight:600;">(leave blank to keep current)</span></div>
-              <input type="password" id="ap-edit-pw-${safeId}" value="" placeholder="••••••" class="wi" style="font-size:13px;padding:6px 9px;font-family:monospace;" autocomplete="new-password">
             </div>
             <div style="grid-column:1/-1;">
               <div style="font-size:11px;font-weight:800;color:var(--dm);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px;">Permissions${isSelf?' <span style="text-transform:none;letter-spacing:0;font-weight:600;">(you cannot change your own)</span>':''}</div>
@@ -5498,27 +5513,26 @@ function nav(el){
    devices whenever any change is made.
 ═══════════════════════════════════ */
 let _realtimeChannels = [];
-let _realtimePaused = false;
 function startRealtime(){
   if(!sb) return;
   stopRealtime();
   const volCh = sb.channel('realtime-volunteers')
-    .on('postgres_changes',{event:'*',schema:'public',table:'volunteers'}, p=>{ if(!_realtimePaused) handleVolChange(p); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'volunteers'}, p=>{ if(!rtPaused()) handleVolChange(p); })
     .subscribe(s=>{ if(s==='SUBSCRIBED') console.log('Realtime: volunteers ✓'); });
   const mjCh = sb.channel('realtime-majalis')
-    .on('postgres_changes',{event:'*',schema:'public',table:'majalis'}, p=>{ if(!_realtimePaused) handleMajalisChange(p); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'majalis'}, p=>{ if(!rtPaused()) handleMajalisChange(p); })
     .subscribe(s=>{ if(s==='SUBSCRIBED') console.log('Realtime: majalis ✓'); });
   const roCh = sb.channel('realtime-roster')
-    .on('postgres_changes',{event:'*',schema:'public',table:'roster'}, p=>{ if(!_realtimePaused) handleRosterChange(p); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'roster'}, p=>{ if(!rtPaused()) handleRosterChange(p); })
     .subscribe(s=>{ if(s==='SUBSCRIBED') console.log('Realtime: roster ✓'); });
   const auCh = sb.channel('realtime-audit')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'audit_logs'}, p=>{ if(!_realtimePaused) handleAuditChange(p); })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'audit_logs'}, p=>{ if(!rtPaused()) handleAuditChange(p); })
     .subscribe(s=>{ if(s==='SUBSCRIBED') console.log('Realtime: audit_logs ✓'); });
   const setCh = sb.channel('realtime-settings')
-    .on('postgres_changes',{event:'*',schema:'public',table:'app_settings'}, p=>{ if(!_realtimePaused) handleSettingChange(p); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'app_settings'}, p=>{ if(!rtPaused()) handleSettingChange(p); })
     .subscribe(s=>{ if(s==='SUBSCRIBED') console.log('Realtime: app_settings ✓'); });
   const userCh = sb.channel('realtime-users')
-    .on('postgres_changes',{event:'*',schema:'public',table:'app_users'}, p=>{ if(!_realtimePaused) handleUserChange(p); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'app_users'}, p=>{ if(!rtPaused()) handleUserChange(p); })
     .subscribe(s=>{ if(s==='SUBSCRIBED') console.log('Realtime: app_users ✓'); });
   _realtimeChannels = [volCh, mjCh, roCh, auCh, setCh, userCh];
   setSyncStatus('ok');
@@ -5541,6 +5555,12 @@ function handleUserChange(payload){
       }
     }
   } else if(row && row.username){
+    // A rename arrives as one UPDATE (old carries the primary key): move the
+    // entry and our own session over instead of treating it as a removal.
+    if(old && old.username && old.username !== row.username){
+      delete USERS[old.username];
+      if(window.CU && CU.user === old.username) CU.user = row.username;
+    }
     // Full mapping - a live update must never strip the perms array
     USERS[row.username] = dbUserToLocal(row);
     // If OUR account changed, apply the new permissions to this live
@@ -5582,7 +5602,7 @@ function handleUserChange(payload){
   if(ap) renderApUserList();
 }
 function handleSettingChange(payload){
-  if(_realtimePaused) return;
+  if(rtPaused()) return;
   const row = payload.new || {};
   if(row.key === 'active_month' && row.value){
     try{
@@ -5726,12 +5746,10 @@ async function orResetMonth(){
   const monthName = MO[calMo]+' '+calYr;
   if(!confirm('Reset ALL of '+monthName+' to automatic assignment?\n\nEvery manual override, MPH change and locked day in this month will be permanently removed and the engine will reassign the whole month. This cannot be undone.')) return;
   const dim = new Date(calYr, calMo+1, 0).getDate();
-  // Cover the full visible grid, including padding days from the
-  // previous/next month, so locked padding cells are cleared too.
-  const firstCol = (new Date(calYr,calMo,1).getDay()+6)%7;
-  const trail    = (7 - ((firstCol+dim)%7)) % 7;
-  const start = localDS(new Date(calYr, calMo, 1-firstCol));
-  const end   = localDS(new Date(calYr, calMo+1, trail));
+  // Only this month: the padding days belong to the neighbouring months and
+  // may hold their manual locks, which the confirm above does not mention.
+  const start = localDS(new Date(calYr, calMo, 1));
+  const end   = localDS(new Date(calYr, calMo, dim));
   let cleared = 0;
   Object.keys(roster).forEach(ds=>{
     if(ds >= start && ds <= end){ delete roster[ds]; cleared++; }

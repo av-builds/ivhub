@@ -1622,7 +1622,8 @@ function closeDrawer(){ document.getElementById('mo').classList.remove('show'); 
 function oM(h){ document.getElementById('dcard').innerHTML=h; document.getElementById('dlg').classList.add('show'); }
 function cM(){ document.getElementById('dlg').classList.remove('show'); }
 let _pauseRT=false,_prtT=null;
-function pauseRT(ms){ ms=ms||800; _pauseRT=true; if(_prtT)clearTimeout(_prtT); _prtT=setTimeout(()=>{_pauseRT=false;},ms); }
+let _lastWrite=0;
+function pauseRT(ms){ ms=ms||800; _lastWrite=Date.now(); _pauseRT=true; if(_prtT)clearTimeout(_prtT); _prtT=setTimeout(()=>{_pauseRT=false;},ms); }
 /* The audit log recorded nothing at all for months and nobody knew,
    because the only handling was an empty catch. A failure here must not
    block the action the person was taking - the action itself succeeded - but it cannot be silent either, or the record quietly stops existing
@@ -1703,6 +1704,7 @@ function chandraatISO(k, overrides){ const iso=nzDateStr(newMoonDate(k));
 
 /* ── CYCLES ── */
 const ANCHOR_K=327; // chandraatISO(327) = 2026-06-15 → Team B (contract anchor)
+const CYCLE_STEP=2;   // cycles alternate A/B, so a team's own previous cycle is k-2
 function teamForCycle(k){ return (((k-ANCHOR_K)%2)+2)%2===0?'B':'A'; }
 let OVERRIDES={};
 let _cyCache={};
@@ -2037,7 +2039,7 @@ async function loadAll(){
   if(!sb) return;
   const q=async(fn)=>{ try{ return await fn(); }catch(e){ return {error:e}; } };
   const [st,me,ev,an]=await Promise.all([
-    q(()=>sb.from('iv_settings').select('*').eq('key','chandraat_overrides')),
+    q(()=>sb.from('iv_settings').select('*').in('key',['chandraat_overrides','auto_skip_'+PAGE_TEAM])),
     q(()=>sb.from('iv_members').select('*').eq('team',PAGE_TEAM)),
     q(()=>sb.from('iv_events').select('*').eq('team',PAGE_TEAM).order('date')),
     q(()=>sb.from('announcements').select('*').eq('team',PAGE_TEAM).order('created_at',{ascending:false}).limit(ANN_LIMIT)),
@@ -2045,6 +2047,7 @@ async function loadAll(){
   if(st.error){ console.warn('iv_settings:',st.error.message||st.error); if(tableMissing(st.error))DB_MISSING=true; }
   else (st.data||[]).forEach(r=>{
     if(r.key==='chandraat_overrides'&&r.value&&typeof r.value==='object'){ OVERRIDES=r.value; clearCycleCache(); }
+    if(r.key==='auto_skip_'+PAGE_TEAM&&Array.isArray(r.value)) AUTO_SKIP=new Set(r.value);
   });
   if(me.error){ console.warn('iv_members:',me.error.message||me.error); if(tableMissing(me.error))DB_MISSING=true; MEMBERS=[]; }
   else MEMBERS=(me.data||[]).map(normMember).sort((a,b)=>a.name.localeCompare(b.name));
@@ -2094,6 +2097,29 @@ async function loadAll(){
 }
 
 /* ── AUTO-CREATE (Fridays + PBS in current/future owned cycles) ── */
+/* Automatic events a lead deleted on purpose, as 'date|type'. Without this
+   the next load of any editor put the deleted Friday straight back. Kept in
+   iv_settings so every editor agrees; best-effort, so a refused write only
+   means the old behaviour. */
+let AUTO_SKIP=new Set();
+const autoSkipKey=()=>'auto_skip_'+PAGE_TEAM;
+async function saveAutoSkip(){
+  try{ await sb.from('iv_settings').upsert({key:autoSkipKey(),value:[...AUTO_SKIP]}); }catch(e){ console.warn('auto_skip',e); }
+}
+/* The Paanch Baar Saal date is derived from the cycle start, so moving the
+   start leaves the old one behind. Drop a future one that no longer
+   matches, but only when nothing has been rostered on it. */
+async function dropStalePbs(want){
+  const today=nzTodayISO();
+  const stale=EVENTS.filter(e=>e.type==='pbs'&&e.date>today&&!want.some(w=>w.type==='pbs'&&w.date===e.date)
+    &&CYCLES.some(c=>e.date>=c.start&&e.date<c.end&&want.some(w=>w.type==='pbs'&&w.date>=c.start&&w.date<c.end))
+    &&!(ROSTERS[e.id]&&ROSTERS[e.id].assign&&Object.keys(ROSTERS[e.id].assign).length));
+  if(!stale.length) return;
+  pauseRT(2000);
+  const ids=stale.map(e=>e.id);
+  if(await dbWrite('Removing a Paanch Baar Saal left on its old date',()=>sb.from('iv_events').delete().in('id',ids).eq('team',PAGE_TEAM)))
+    EVENTS=EVENTS.filter(e=>ids.indexOf(e.id)<0);
+}
 async function autoCreateEvents(){
   if(!IS_EDIT||!sb||DB_MISSING) return;
   const today=nzTodayISO();
@@ -2111,7 +2137,9 @@ async function autoCreateEvents(){
     const piso=p.getFullYear()+'-'+pad2(p.getMonth()+1)+'-'+pad2(p.getDate());
     if(piso<c.end) want.push({team:PAGE_TEAM,date:piso,name:'Paanch Baar Saal',type:'pbs',uniform:'Casual',youth:false,confirmed:false});
   }
-  const missing=want.filter(w=>!EVENTS.some(e=>e.date===w.date&&e.name===w.name));
+  /* By date and type, not name: a renamed Friday is still that Friday. */
+  await dropStalePbs(want);
+  const missing=want.filter(w=>!AUTO_SKIP.has(w.date+'|'+w.type)&&!EVENTS.some(e=>e.date===w.date&&(e.name===w.name||e.type===w.type)));
   if(!missing.length) return;
   pauseRT(2000);
   /* This runs on load without anybody asking for it, so it stays quiet
@@ -2119,7 +2147,11 @@ async function autoCreateEvents(){
      whose policy no longer lets them create events would find the Fridays
      simply missing, with the page saying it had made them. */
   const rows=await dbWriteRows('Creating this cycle’s automatic events',
-    ()=>sb.from('iv_events').insert(missing));
+    ()=>sb.from('iv_events').upsert(missing,{onConflict:'date,name',ignoreDuplicates:true}),
+    /* A second editor loading at the same moment may have made some of
+       these already; that is not a refusal. */
+    {verify:async()=>{ const r=await sb.from('iv_events').select('date,type').eq('team',PAGE_TEAM).in('date',missing.map(m=>m.date));
+      if(r.error) return r; return {data:missing.filter(w=>!(r.data||[]).some(h=>h.date===w.date&&h.type===w.type))}; }});
   if(!rows) return;
   EVENTS=EVENTS.concat(rows).sort((a,b)=>a.date<b.date?-1:1);
   auditLog('auto-create','events','Created '+rows.length+' events for '+TEAM_NAME);
@@ -2143,10 +2175,26 @@ let _rtT=null;
    That is right for somebody else's change and wrong for our own work
    that never stored - which is how a failed save came to look like a
    deletion. Anything unsaved is put back afterwards and stays flagged. */
+/* Not while somebody is typing (an unsent announcement, a roster note, a
+   search box) or while one of our own writes is in flight: the re-render
+   would wipe the text, and loadAll would replace ROSTERS with a read that
+   may predate the write. The reload waits and tries again. */
+function rtBusy(){
+  const f=document.activeElement;
+  if(f&&/^(TEXTAREA|INPUT|SELECT)$/.test(f.tagName)) return true;
+  const n=document.getElementById('annNew');
+  if(n&&n.value.trim()) return true;
+  return !!document.querySelector('[id^="annEdit_"]');
+}
 function rtReload(){ if(_rtT)clearTimeout(_rtT); _rtT=setTimeout(async()=>{
+  if(_pauseRT||rtBusy()){ rtReload(); return; }
+  const t0=Date.now(), keep=ROSTERS;
   await loadAll(); await loadCovering(); CYCLES=buildCycles();
+  /* A write began while the read was out: what came back may be older
+     than it. Keep what we hold and read again once things are quiet. */
+  if(_lastWrite>=t0){ ROSTERS=keep; rtReload(); return; }
   Object.keys(ROSTER_UNSAVED).forEach(id=>{ ROSTERS[id]=ROSTER_UNSAVED[id]; });
-  renderSaveWarning(); renderCurrent(); },350); }
+  renderSaveWarning(); if(rtBusy()) return; renderCurrent(); },350); }
 
 /* ── COUNTS / FAIRNESS ── */
 function computeCounts(k,excludeEventId){
@@ -2161,12 +2209,14 @@ function computeCounts(k,excludeEventId){
         all[p.id]=(all[p.id]||0)+1;
         if(!last[p.id]||ev.date>last[p.id]) last[p.id]=ev.date;
         if(k!=null&&inCycleK(ev.date,k)) cyc[p.id]=(cyc[p.id]||0)+1;
+        // Cycles alternate between the two teams, so this team's previous
+        // cycles are k-2, k-4 and k-6; k-1 and k-3 only ever hold the other team's events.
         // Carry fairness across cycles: someone who missed out recently
         // should come first when this cycle's counts are level. Three
         // cycles is deliberate - long enough to even out a run of bad
         // luck, short enough that a new member is not picked for
         // everything for weeks the way a lifetime total would do.
-        if(k!=null&&inCycleK(ev.date,k-1)||k!=null&&inCycleK(ev.date,k-2)||k!=null&&inCycleK(ev.date,k-3))
+        if(k!=null&&(inCycleK(ev.date,k-CYCLE_STEP)||inCycleK(ev.date,k-2*CYCLE_STEP)||inCycleK(ev.date,k-3*CYCLE_STEP)))
           recent[p.id]=(recent[p.id]||0)+1;
       }
     }
@@ -2478,12 +2528,19 @@ async function dbWriteRows(what, run, opts){
   const ok = await dbWrite(what, run, Object.assign({}, opts||{}, {bag:bag}));
   return ok ? (bag.rows || []) : null;
 }
+/* jsonb hands keys back ordered by length then bytes, so compare with keys sorted. */
+function canon(v){
+  if(Array.isArray(v)) return '['+v.map(canon).join(',')+']';
+  if(v&&typeof v==='object') return '{'+Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
+  return JSON.stringify(v);
+}
 let ROSTER_UNSAVED = {};        // event id -> the roster that is not safely stored
 function unsavedCount(){ return Object.keys(ROSTER_UNSAVED).length; }
 async function saveRoster(eventId, opts){
   const quiet = opts && opts.quiet;
   if(!sb || DB_MISSING){ ROSTER_UNSAVED[eventId] = ROSTERS[eventId]; return false; }
   const body = ROSTERS[eventId];
+  const sent = body ? canon(body) : null;   // snapshot: a later edit must not make this save look failed
   if(!body){ console.warn('saveRoster: nothing to save for event', eventId); return false; }
   /* Long enough to cover the write and the read-back. The old 1.5s could
      lapse mid-save, letting our own change bounce back as a reload. */
@@ -2495,7 +2552,7 @@ async function saveRoster(eventId, opts){
          every save was refused with 23502 (null value in column "date").
          The date is the event's own, which is what the column is for. */
       const evForDate = EVENTS.find(e=>e.id===eventId);
-      const {error} = await sb.from('iv_roster').upsert({event_id:eventId, date:evForDate?evForDate.date:null, data:body});
+      const {error} = await sb.from('iv_roster').upsert({event_id:eventId, date:evForDate?evForDate.date:null, data:body},{onConflict:'event_id'});
       if(!error){ err = null; break; }
       err = error;
     }catch(e){ err = e; }
@@ -2508,7 +2565,7 @@ async function saveRoster(eventId, opts){
       if(error) err = error;
       else if(!data || !data.length) err = {message:'the row was accepted but is not there when read back'};
       else if(data.length > 1) err = {message:'there are ' + data.length + ' roster rows for this event - the unique index on iv_roster(event_id) is missing, so saves cannot replace cleanly. Re-run SETUP.sql.'};
-      else if(JSON.stringify(data[0].data) !== JSON.stringify(body)) err = {message:'what came back does not match what was sent'};
+      else if(canon(data[0].data) !== sent) err = {message:'what came back does not match what was sent'};
     }catch(e){ err = e; }
   }
   if(err){
@@ -4056,7 +4113,7 @@ async function doPublishWithGaps(id){
   if(ok) toast('On the calendar - everyone can see it, with '+gaps+' slot'+(gaps===1?'':'s')+' still open');
 }
 async function setOnCalendar(ev, want){
-  if(want && unsavedCount()){
+  if(want && ROSTER_UNSAVED[ev.id]){
     toast('The roster is not stored yet, so there is nothing to put on the calendar.','err'); return false;
   }
   pauseRT(4000);
@@ -4085,7 +4142,7 @@ async function publishIfComplete(ev, opts){
      is nothing to publish at all, and reporting "38 slots unfilled" would
      send a lead off filling slots that are not being stored either.
      setOnCalendar refuses in that case and says so. */
-  if(unsavedCount()) return await setOnCalendar(ev, true);
+  if(ROSTER_UNSAVED[ev.id]) return await setOnCalendar(ev, true);
   const gaps = slotCounts(ev).missing;
   /* o.force is a lead saying "I know - publish it anyway". Some shortfalls
      cannot be filled at all: two Nandi-certified members cannot cover four
@@ -4240,6 +4297,7 @@ async function deleteEvent(){
   pauseRT(4000);
   if(!await dbWrite('Deleting the event', ()=>sb.from('iv_events').delete().eq('id',ev.id))) return;
   EVENTS=EVENTS.filter(e=>e.id!==ev.id); delete ROSTERS[ev.id];
+  if(ev.type==='friday'||ev.type==='pbs'){ AUTO_SKIP.add(ev.date+'|'+ev.type); await saveAutoSkip(); }
   auditLog('delete','events',ev.name+' '+ev.date);
   selEventId=null; refreshBadges(); toast('Event deleted');
   openCycle(cycleForDate(ev.date));
@@ -4275,6 +4333,7 @@ async function doResetCycle(k){
       {verify: ()=>sb.from('iv_events').select('id').eq('team',PAGE_TEAM).gte('date',start).lt('date',end)});
     if(!ok) return;
   }
+  if([...AUTO_SKIP].some(x=>x.slice(0,10)>=start&&x.slice(0,10)<end)){ AUTO_SKIP=new Set([...AUTO_SKIP].filter(x=>!(x.slice(0,10)>=start&&x.slice(0,10)<end))); await saveAutoSkip(); }
   const victims=EVENTS.filter(e=>inCycleK(e.date,k)); EVENTS=EVENTS.filter(e=>!inCycleK(e.date,k)); victims.forEach(e=>delete ROSTERS[e.id]);
   auditLog('reset-cycle','events',cycleLabel(k)+' - removed '+victims.length+' events');
   await autoCreateEvents();
@@ -4294,9 +4353,19 @@ function renderOvRows(){
   }).join('');
 }
 async function saveCycleSettings(){
-  const box=document.getElementById('dcard'); const newOv={};
-  (box?box.querySelectorAll('#ovRows .ov-in'):[]).forEach(inp=>{ const raw=inp.getAttribute('data-raw'),v=(inp.value||'').trim(); if(v&&v!==raw) newOv[raw]=v; });
+  const box=document.getElementById('dcard');
   pauseRT(4000);
+  /* The map is shared by both teams and this dialog only shows this team's
+     cycles. Re-read what is stored and change only the keys on screen, so
+     the other team's overrides (and a save made since this page loaded)
+     survive. */
+  const newOv={};
+  try{
+    const {data}=await sb.from('iv_settings').select('value').eq('key','chandraat_overrides').maybeSingle();
+    if(data&&data.value&&typeof data.value==='object') Object.assign(newOv,data.value);
+    else Object.assign(newOv,OVERRIDES);
+  }catch(e){ Object.assign(newOv,OVERRIDES); }
+  (box?box.querySelectorAll('#ovRows .ov-in'):[]).forEach(inp=>{ const raw=inp.getAttribute('data-raw'),v=(inp.value||'').trim(); if(v&&v!==raw) newOv[raw]=v; else delete newOv[raw]; });
   /* Written before OVERRIDES moves. The overrides decide where every
      cycle starts, so a refused save that had already been applied locally
      left this browser rostering to dates no other browser agreed with - and then autoCreateEvents() created events on them. */
@@ -5323,7 +5392,7 @@ function dutyStats(k){
   const bump=(id,key,duty,recent)=>{
     const o=out[id]=out[id]||{total:0,cyc:0,prev:0,recent:0,byDuty:{}};
     o.total++; if(key) o[key]++;
-    /* `recent` is the three-cycle carry the generator actually weighs - computeCounts() sums cycles k-1, k-2 and k-3. The report only ever
+    /* `recent` is the three-cycle carry the generator actually weighs - computeCounts() sums this team's last three own cycles (k-2, k-4, k-6). The report only ever
        showed `prev`, a single cycle, so a lead reading this page was being
        shown a narrower window than the policy uses and could not tell why
        somebody kept being skipped. */
@@ -5333,8 +5402,8 @@ function dutyStats(k){
   EVENTS.forEach(ev=>{
     const r=ROSTERS[ev.id]; if(!r||!r.assign) return;
     const kk=cycleForDate(ev.date);
-    const where = (k!=null && kk===k) ? 'cyc' : ((k!=null && kk===k-1) ? 'prev' : null);
-    const inRecent = k!=null && (kk===k-1 || kk===k-2 || kk===k-3);
+    const where = (k!=null && kk===k) ? 'cyc' : ((k!=null && kk===k-CYCLE_STEP) ? 'prev' : null);
+    const inRecent = k!=null && (kk===k-CYCLE_STEP || kk===k-2*CYCLE_STEP || kk===k-3*CYCLE_STEP);
     for(const key in r.assign){
       const label=recName(legacyLabel(key));
       for(const q of people(r.assign[key])){ if(q.id!=null) bump(q.id, where, label, inRecent); }
@@ -5356,7 +5425,7 @@ function renderAttendanceReport(k){
   let h='<div class="tw"><div class="tw-scroll"><table><thead><tr>'+
     '<th>Member</th><th title="(Present + Late) as a share of Present, Late and Not present. Justified absences are excluded.">Attendance rate</th>'+
     '<th title="Late as a share of the times they turned up.">Lateness rate</th>'+
-    '<th title="Total duty slots they have been given.">Duty days completed</th>'+
+    '<th title="Every duty slot they have been rostered for, across all cycles. Not limited to the cycle selected.">Duties rostered (all time)</th>'+
     '<th>P</th><th>L</th><th>J</th><th>N</th><th title="Turned up unrostered, in uniform, and were given a duty on the day. Already counted in P and L.">Walk-ins</th></tr></thead><tbody>';
   rows.forEach(r=>{
     const good=r.s.rate!=null&&r.s.rate>=90, bad=r.s.rate!=null&&r.s.rate<70;
@@ -5511,7 +5580,8 @@ function renderLeaderboard(){
 
 function reportCSV(k){
   const active=MEMBERS.filter(m=>m.status==='active');
-  const q=s2=>'"'+String(s2==null?'':s2).replace(/"/g,'""')+'"';
+  /* A cell that starts with = + - @ tab or CR is read as a formula by Excel and Sheets; names are typed by editors. */
+  const q=s2=>{ let t=String(s2==null?'':s2); if(/^[=+\-@\t\r]/.test(t)) t="'"+t; return '"'+t.replace(/"/g,'""')+'"'; };
 
   if(repMode==='leaderboard'){
     const ds=dutyStats(null);
@@ -5524,7 +5594,7 @@ function reportCSV(k){
     /* Same columns as the table, in the same order, including the three-cycle
        window - a CSV that disagrees with the page it was exported from is
        worse than no CSV. */
-    let out='Member,Duties this cycle,Last 3 cycles,Duties last cycle,Duty days completed in total\n';
+    let out='Member,Duties this cycle,Last 3 cycles,Duties last cycle,Duties rostered in total\n';
     active.forEach(m=>{ const d=ds[m.id]||{total:0,cyc:0,prev:0,recent:0};
       out+=[q(m.name),d.cyc,d.recent,d.prev,d.total].join(',')+'\n'; });
     return out;
@@ -5532,7 +5602,7 @@ function reportCSV(k){
   // Attendance: the same three headline numbers the table shows, so the
   // export and the screen cannot disagree.
   const ds=dutyStats(k);
-  let out='Member,Attendance rate %,Lateness rate %,Duty days completed,Present,Late,Justified,Not present\n';
+  let out='Member,Attendance rate %,Lateness rate %,Duties rostered (all time),Present,Late,Justified,Not present\n';
   active.forEach(m=>{
     const st=attendanceStats(m.id,k), d=ds[m.id]||{total:0};
     out+=[q(m.name), st.rate==null?'':st.rate, st.lateness==null?'':st.lateness,
@@ -5657,7 +5727,10 @@ function clSend(args){
     if(!res) return;
     if(res.error){
       CL.dbOk=false;
+      /* A missing table or function is a script nobody has run, not a blip,
+         so say it once instead of on every tick (the page also shows a note). */
       if(!tableMissing(res.error)&&!/function/i.test(res.error.message||'')) toast('Could not share that tick - it is saved on this phone only','err');
+      else if(!CL.missingTold){ CL.missingTold=true; toast('The shared checklist is not set up yet - ticks are saved on this phone only','err'); }
       if(curPage==='checklist'&&!CL.animating) clRender();
     }else if(res.data){
       CL.dbOk=true; CL.hasRow=true; CL.by=res.data.updated_by||CL.by; CL.at=res.data.updated_at||CL.at;
@@ -5937,14 +6010,14 @@ async function copyRoster(){
   const lines=rosterLines(ev);
   let out='*'+ev.name+' - '+fmtNice(ev.date)+'* ('+(ev.uniform||'Casual')+' Uniform)\n'; let mph=false;
   for(const l of lines){ if(l.sec==='mph'&&!mph){ out+='- REC Congregation -\n'; mph=true; } const names=l.male.concat(l.female); out+=l.name+': '+(names.length?names.join(', '):'-')+'\n'; }
-  toast(await clip(out)?'Copied - ready for WhatsApp':'Copy failed',(await clip(out))?'ok':'err');
+  const ok=await clip(out); toast(ok?'Copied - ready for WhatsApp':'Copy failed',ok?'ok':'err');
 }
 async function copyMemberDuties(id){
   const m=memById(id); if(!m) return; const upc=memberUpcomingDuties(id);
   let out='*'+m.name+' - upcoming '+TEAM_NAME+' duties*\n';
   if(!upc.length) out+='No upcoming duties scheduled.\n';
   upc.forEach(u=>{ out+=fmtNice(u.ev.date)+' ('+u.ev.name+'): '+u.duties.join(', ')+'\n'; });
-  toast(await clip(out)?'Member duties copied':'Copy failed',(await clip(out))?'ok':'err');
+  const ok=await clip(out); toast(ok?'Member duties copied':'Copy failed',ok?'ok':'err');
 }
 function memberUpcomingDuties(memberId){
   const today=nzTodayISO(); const out=[];
