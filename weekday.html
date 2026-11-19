@@ -58,11 +58,11 @@ input[type=date]{width:auto;}
 .res{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
 .hit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;min-height:52px;padding:8px 12px;border-radius:14px;border:1px solid var(--db);background:rgba(255,255,255,.04);color:var(--dt);font:600 15px 'Archivo',sans-serif;text-align:left;cursor:pointer;}
 .hit:hover{border-color:var(--blue-lt);background:rgba(75,163,220,.1);}
-.hit .n{font-weight:700;flex:1 1 140px;min-width:0;}
+.hit .n{font-weight:700;flex:1 1 140px;min-width:0;overflow-wrap:anywhere;}
 .empty{text-align:center;color:var(--dm);padding:22px 10px;font-size:15px;}
 .entry{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;padding:10px 12px;border-radius:14px;border:1px solid var(--db);background:rgba(255,255,255,.03);margin-bottom:8px;}
-.entry .who{font-weight:700;flex:1 1 150px;min-width:0;font-size:15px;}
-.entry .duty{font-size:14px;}
+.entry .who{font-weight:700;flex:1 1 150px;min-width:0;font-size:15px;overflow-wrap:anywhere;}
+.entry .wd-duty{font-size:14px;}
 .entry .by{font-size:12.5px;color:var(--dm);flex:1 1 100%;}
 .status{font-size:15px;line-height:1.5;flex:1 1 220px;}
 .late{display:inline-flex;margin-left:8px;}
@@ -70,26 +70,40 @@ input[type=date]{width:auto;}
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
 .sheet{width:560px;max-width:100%;max-height:90vh;overflow-y:auto;background:var(--ds);border:1px solid var(--db);border-radius:20px;padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.6);}
 .sheet h2{font-size:20px;margin-bottom:4px;}
-.sheet .sub{margin-bottom:12px;}
+.sheet .sub{margin-bottom:12px;overflow-wrap:anywhere;}
+.sheet .btns{position:sticky;bottom:-20px;margin:12px -20px -20px;padding:12px 20px 20px;background:var(--ds);}
 .opts{display:flex;flex-direction:column;gap:6px;margin:8px 0 12px;}
 .opt{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border-radius:12px;border:1px solid var(--db);background:rgba(255,255,255,.03);cursor:pointer;font-size:15px;}
 .opt input{width:20px;height:20px;flex-shrink:0;accent-color:var(--blue-lt);}
 .opt.dis{opacity:.6;cursor:not-allowed;background:rgba(248,113,113,.06);}
-.opt .nm{flex:1;min-width:0;}
+.opt .nm{flex:1;min-width:0;overflow-wrap:anywhere;}
 .opt .chip{min-height:22px;font-size:12px;}
 .btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px;}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99;background:#0D2040;border:1px solid var(--db);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:92vw;}
+.toast{overflow-wrap:anywhere;position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99;background:#0D2040;border:1px solid var(--db);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:92vw;}
 .toast.err{border-color:rgba(248,113,113,.6);color:#FCA5A5;}
+html[data-theme="light"] .chip{color:#0C4A6E;}
 html[data-theme="light"] .chip.cant{color:#B91C1C;}
 html[data-theme="light"] .chip.extra{color:#8A5A00;}
 html[data-theme="light"] .ro{color:#8A5A00;}
 html[data-theme="light"] .hub.danger{color:#B91C1C;}
 html[data-theme="light"] .toast.err{color:#B91C1C;}
 html[data-theme="light"] input[type=date],html[data-theme="light"] input[type=search],html[data-theme="light"] input[type=text]{background:#fff;color:var(--dt);}
+/* every surface leans, as on the other pages (the shared shape file is generated and does not cover this page's own classes) */
+.hit,.entry,.opt,.lead,.ro{--ivp-sl:8.5px;clip-path:var(--ivp-poly);border-radius:0;border-color:transparent;padding-left:max(var(--ivp-sl),14px);padding-right:max(var(--ivp-sl),14px);}
+.hub:not(.primary){background:rgba(75,163,220,.14);}
+.hub:not(.primary):hover{background:rgba(75,163,220,.26);}
+.hub.danger{background:rgba(248,113,113,.14);}
+.hub.danger:hover{background:rgba(248,113,113,.26);}
+html[data-theme="light"] .hit,html[data-theme="light"] .entry,html[data-theme="light"] .opt{background:rgba(11,27,51,.05);}
+html[data-theme="light"] .hit:hover{background:rgba(0,85,139,.12);}
 @media (max-width:640px){
   main{padding:12px 16px 90px;}
   .panel{padding:12px;}
   .top .acts .hub{padding:0 12px;}
+  .top{flex-wrap:wrap;row-gap:6px;}
+  .top .t{flex:1 1 120px;}
+  .top .t span{display:block;line-height:1.35;}
+  .top .acts{flex:1 1 100%;justify-content:flex-start;}
   .btns .hub{flex:1 1 auto;}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
@@ -134,7 +148,7 @@ html[data-theme="light"] input[type=date],html[data-theme="light"] input[type=se
     </section>
 
     <section class="card panel">
-      <h2>Today's extra duties <span class="chip" id="count">0</span></h2>
+      <h2 id="listTitle">Today's extra duties <span class="chip" id="count">0</span></h2>
       <div id="list"></div>
     </section>
 
@@ -179,7 +193,7 @@ function nzHM(iso){
 const longDate = iso => new Date(iso + 'T12:00:00').toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
 let sb = null;
-const S = { uid:'', name:'', today:'', date:'', follow:true, shift:null, rows:[], busy:false, seq:0, results:[], lastQ:'' };
+const S = { uid:'', name:'', today:'', date:'', follow:true, shift:null, rows:[], busy:false, seq:0, results:[], lastQ:'', loadErr:false, loadSeq:0 };
 const isToday = () => S.date === S.today;
 
 function permList(p){
@@ -193,6 +207,7 @@ function toast(t, bad){
 }
 function show(id){ ['wdLoad','wdDeny','wdOk'].forEach(s=>$(s).classList.toggle('hide', s !== id)); }
 function teamLabel(t){ return t === 'A' || t === 'B' ? 'Team ' + t : (t ? String(t) : 'No team'); }
+const cannotKey = n => KEY_NAME[norm(n)] || n;
 function cannotNames(list){
   const out = []; (Array.isArray(list) ? list : []).forEach(x=>{ const n = KEY_NAME[norm(x)] || String(x); if(norm(n) && out.indexOf(n) < 0) out.push(n); });
   return out;
@@ -201,12 +216,17 @@ function cannotNames(list){
 /* ── data ── */
 async function loadDay(){
   if(!sb) return;
-  const d = S.date;
-  const [sh, at] = await Promise.all([
-    sb.from('iv_wd_shifts').select('*').eq('date', d).maybeSingle(),
-    sb.from('iv_wd_attendance').select('*').eq('date', d).order('created_at')
-  ]);
-  if(sh.error || at.error){ toast('Could not read the day - ' + ((sh.error || at.error).message || 'unknown error'), true); }
+  const d = S.date, mine = ++S.loadSeq;
+  let sh, at;
+  try{
+    [sh, at] = await Promise.all([
+      sb.from('iv_wd_shifts').select('*').eq('date', d).maybeSingle(),
+      sb.from('iv_wd_attendance').select('*').eq('date', d).order('created_at')
+    ]);
+  }catch(e){ sh = at = {error:{message:(e && e.message) || 'network error'}}; }
+  if(mine !== S.loadSeq || d !== S.date) return;               // another day was picked while this one loaded
+  S.loadErr = !!(sh.error || at.error);
+  if(S.loadErr){ toast('Could not read the day - ' + ((sh.error || at.error).message || 'unknown error'), true); }
   if(!sh.error) S.shift = sh.data || null;
   if(!at.error) S.rows = at.data || [];
   render();
@@ -214,16 +234,19 @@ async function loadDay(){
 /* Read the shift fresh, work out what to write, write it, and prove it landed. An existing row is only
    changed if nobody else changed it since it was read (updated_at is the guard), so two leads joining
    at once both end up in leads[]. A refused write returns no row, which is reported, never ignored. */
-async function writeShift(build){
+async function writeShift(build, day){
+  try{ return await writeShiftTry(build, day || S.date); }catch(e){ return {error:{message:(e && e.message) || 'network error'}}; }
+}
+async function writeShiftTry(build, day){
   for(let attempt = 0; attempt < 4; attempt++){
-    const r = await sb.from('iv_wd_shifts').select('*').eq('date', S.date).maybeSingle();
+    const r = await sb.from('iv_wd_shifts').select('*').eq('date', day).maybeSingle();
     if(r.error) return {error:r.error};
     const cur = r.data || null, patch = build(cur);
     if(patch === null) return {row:cur};
     if(!patch.updated_at) patch.updated_at = new Date().toISOString();
     let w;
-    if(!cur) w = await sb.from('iv_wd_shifts').insert(Object.assign({date:S.date}, patch)).select();
-    else { let q = sb.from('iv_wd_shifts').update(patch).eq('date', S.date); if(cur.updated_at) q = q.eq('updated_at', cur.updated_at); w = await q.select(); }
+    if(!cur) w = await sb.from('iv_wd_shifts').insert(Object.assign({date:day}, patch)).select();
+    else { let q = sb.from('iv_wd_shifts').update(patch).eq('date', day); if(cur.updated_at) q = q.eq('updated_at', cur.updated_at); w = await q.select(); }
     if(w.error){ if(/duplicate key|23505/i.test((w.error.message||'') + (w.error.code||''))) continue; return {error:w.error}; }
     const row = Array.isArray(w.data) ? w.data[0] : w.data;
     if(row) return {row};
@@ -236,7 +259,7 @@ const withMe = cur => { const leads = cur && Array.isArray(cur.leads) ? cur.lead
 async function joinShift(quiet){
   if(!isToday()) return false;
   const res = await writeShift(cur=>{ const leads = withMe(cur); return cur && Array.isArray(cur.leads) && cur.leads.indexOf(S.name) >= 0 ? null : {leads}; });
-  if(res.row){ S.shift = res.row; render(); if(!quiet) toast('You are leading today'); return true; }
+  if(res.row){ if(res.row.date === S.date) S.shift = res.row; render(); if(!quiet) toast('You are leading today'); return true; }
   toast(res.error ? 'Could not join the shift - ' + res.error.message : 'Could not join the shift - the database refused it.', true);
   return false;
 }
@@ -244,7 +267,7 @@ async function joinShift(quiet){
 async function touchAfterClose(){
   if(!S.shift || !S.shift.closed_at) return;
   const res = await writeShift(cur=>cur && cur.closed_at ? {} : null);
-  if(res.row) S.shift = res.row;
+  if(res.row && res.row.date === S.date) S.shift = res.row;
 }
 const lateEdit = () => !!(S.shift && S.shift.closed_at && S.shift.updated_at && S.shift.updated_at > S.shift.closed_at);
 
@@ -261,17 +284,18 @@ function render(){
   $('btnJoin').classList.toggle('hide', !today || leads.indexOf(S.name) >= 0);
   $('addPanel').classList.toggle('hide', !today);
   $('count').textContent = String(S.rows.length);
+  $('listTitle').firstChild.textContent = today ? "Today's extra duties " : 'Extra duties ';
   $('list').innerHTML = S.rows.length ? S.rows.map(r=>
     '<div class="entry" data-id="'+esc(r.id)+'"><span class="who">'+esc(r.member_name)+'</span>'+
     '<span class="chip">'+esc(teamLabel(r.member_team))+'</span>'+
-    '<span class="duty">'+esc(r.duty)+'</span><span class="chip extra">Extra Duty</span>'+
+    '<span class="wd-duty">'+esc(r.duty)+'</span><span class="chip extra">Extra Duty</span>'+
     (today ? '<button type="button" class="hub danger" data-rm="'+esc(r.id)+'" aria-label="Remove '+esc(r.member_name)+' from '+esc(r.duty)+'">Remove</button>' : '')+
     '<span class="by">Added by '+esc(r.added_by_name || '-')+(r.created_at ? ' at '+esc(nzHM(r.created_at)) : '')+'</span></div>').join('')
-    : '<div class="empty">No extra duties added '+(today ? 'yet today' : 'on this day')+'.</div>';
+    : '<div class="empty">'+(S.loadErr ? 'Could not load this day. Pick the day again or reload.' : 'No extra duties added '+(today ? 'yet today' : 'on this day')+'.')+'</div>';
   const sh = S.shift, closed = !!(sh && sh.closed_at), late = lateEdit();
   $('closeStatus').innerHTML = closed
     ? 'Submitted at '+esc(nzHM(sh.closed_at))+' by '+esc(sh.closed_by_name || 'a lead')+(late ? '<span class="chip extra late">Updated after close-up</span>' : '')
-    : (S.rows.length ? 'Not submitted yet. Close up when you are done.' : 'Nothing to submit yet.');
+    : !today ? 'This day was not submitted.' : (S.rows.length ? 'Not submitted yet. Close up when you are done.' : 'Nothing to submit yet.');
   const b = $('btnClose'); b.classList.toggle('hide', !today || (closed && !late));
   b.textContent = 'Close Up';
 }
@@ -286,9 +310,9 @@ function onQuery(){
 }
 async function runSearch(v){
   const mine = ++S.seq; S.lastQ = v;
-  const r = await sb.rpc('wd_member_search', {q: v});
+  let r; try{ r = await sb.rpc('wd_member_search', {q: v}); }catch(e){ r = {error:{message:(e && e.message) || 'network error'}}; }
   if(mine !== S.seq) return;                                   // a newer search has started
-  if(r.error){ $('res').innerHTML = '<div class="sub">Search failed - ' + esc(r.error.message || 'try again') + '</div>'; return; }
+  if(r.error){ S.results = []; $('res').innerHTML = '<div class="sub">Search failed - ' + esc(r.error.message || 'try again') + '</div>'; return; }
   S.results = Array.isArray(r.data) ? r.data : [];
   $('res').innerHTML = S.results.length ? S.results.map((m,i)=>{
     const cn = cannotNames(m.cannot);
@@ -305,7 +329,13 @@ function openSheet(html){
   $('sheetBg').addEventListener('mousedown', e=>{ if(e.target.id === 'sheetBg') closeSheet(); });
   const f = $('sheetHost').querySelector('input:not([disabled]),button'); if(f) f.focus();
 }
-function closeSheet(){ $('sheetHost').innerHTML = ''; if(lastFocus && lastFocus.isConnected && lastFocus.focus) try{ lastFocus.focus(); }catch(e){} }
+function closeSheet(){
+  $('sheetHost').innerHTML = '';
+  if(lastFocus && lastFocus.isConnected && lastFocus.focus) try{ lastFocus.focus(); }catch(e){}
+  /* The button that opened it may now be hidden (Close Up after submitting): keep focus on the page, not lost. */
+  settleFocus();
+}
+function settleFocus(){ const a = document.activeElement; if(!a || a === document.body || !a.getClientRects().length){ const t = $('closeStatus'); t.tabIndex = -1; try{ t.focus({preventScroll:true}); }catch(e){} } }
 document.addEventListener('keydown', e=>{
   if(!$('sheetHost').firstChild) return;
   if(e.key === 'Escape'){ e.preventDefault(); closeSheet(); return; }
@@ -333,30 +363,34 @@ function pickedDuty(){
 function syncPicker(){
   const r = document.querySelector('#dutyOpts input[name="duty"]:checked'), other = r && r.value === '__other';
   $('otherDuty').classList.toggle('hide', !other);
-  const d = pickedDuty(), blocked = !!d && PICK.cannot.indexOf(norm(d)) >= 0;
+  const d = pickedDuty(), blocked = !!d && PICK.cannot.indexOf(norm(cannotKey(d))) >= 0;
   $('pickMsg').textContent = blocked ? PICK.m.name + ' cannot do ' + d + '.' : '';
   $('pkAdd').disabled = !d || blocked;
 }
 async function addEntry(){
   if(S.busy || !PICK) return;
   const m = PICK.m, duty = pickedDuty();
-  if(!duty || PICK.cannot.indexOf(norm(duty)) >= 0 || !isToday()) return;
+  if(!duty || PICK.cannot.indexOf(norm(cannotKey(duty))) >= 0 || !isToday()) return;
+  if(S.rows.some(x=>String(x.member_id) === String(m.id) && norm(x.duty) === norm(duty))){ $('pickMsg').textContent = m.name + ' already has ' + duty + ' as an extra duty today.'; return; }
   S.busy = true; $('pkAdd').disabled = true;
+  const day = S.date;
   try{
     /* member_name and duty must be sent; the database stamps the rest from the session and the member record. */
-    const r = await sb.from('iv_wd_attendance').insert({date:S.date, member_id:m.id, member_name:m.name, member_team:m.team || null, duty:duty}).select();
+    let r; try{ r = await sb.from('iv_wd_attendance').insert({date:day, member_id:m.id, member_name:m.name, member_team:m.team || null, duty:duty}).select(); }
+    catch(e){ r = {error:{message:(e && e.message) || 'network error'}}; }
+    const say = t => { const a = $('pickMsg'), b = $('pkAdd'); if(a) a.textContent = t; if(b) b.disabled = false; };   // the dialog may be gone (midnight)
     if(r.error){
       const dupe = /duplicate key|unique|23505/i.test((r.error.message||'') + (r.error.code||''));
-      $('pickMsg').textContent = dupe ? m.name + ' already has ' + duty + ' as an extra duty today.' : 'Could not add - ' + (r.error.message || 'unknown error');
-      $('pkAdd').disabled = false; return;
+      say(dupe ? m.name + ' already has ' + duty + ' as an extra duty today.' : 'Could not add - ' + (r.error.message || 'unknown error')); return;
     }
     const row = Array.isArray(r.data) ? r.data[0] : r.data;
-    if(!row){ $('pickMsg').textContent = 'Could not add - the database refused it. You may not be allowed to add on this day.'; $('pkAdd').disabled = false; return; }
-    S.rows.push(row);
+    if(!row){ say('Could not add - the database refused it. You may not be allowed to add on this day.'); return; }
+    if(row.date === S.date) S.rows.push(row);
     closeSheet(); PICK = null; render(); toast('Added ' + m.name + ' - ' + duty);
     const leads = S.shift && Array.isArray(S.shift.leads) ? S.shift.leads : [];
-    if(leads.indexOf(S.name) < 0) await joinShift(true);
-    await touchAfterClose(); render();
+    if(day === S.date){ if(leads.indexOf(S.name) < 0) await joinShift(true);
+      await touchAfterClose(); }
+    render();
   } finally { S.busy = false; }
 }
 async function removeEntry(id){
@@ -364,11 +398,11 @@ async function removeEntry(id){
   const row = S.rows.find(r=>String(r.id) === String(id)); if(!row) return;
   S.busy = true;
   try{
-    const r = await sb.from('iv_wd_attendance').delete().eq('id', row.id).select();
+    let r; try{ r = await sb.from('iv_wd_attendance').delete().eq('id', row.id).select(); }catch(e){ r = {error:{message:(e && e.message) || 'network error'}}; }
     if(r.error){ toast('Could not remove - ' + r.error.message, true); return; }
     if(!r.data || !r.data.length){ toast('Could not remove - the database refused it.', true); return; }
     S.rows = S.rows.filter(x=>String(x.id) !== String(id)); render(); toast('Removed ' + row.member_name + ' - ' + row.duty);
-    await touchAfterClose(); render();
+    if(row.date === S.date){ await touchAfterClose(); render(); }
   } finally { S.busy = false; }
 }
 function openClose(){
@@ -379,12 +413,13 @@ function openClose(){
 }
 async function confirmClose(){
   if(S.busy || !isToday()) return;
-  S.busy = true; $('cuGo').disabled = true;
+  S.busy = true; $('cuGo').disabled = true; const day = S.date;
   try{
     const now = new Date().toISOString();
-    const res = await writeShift(cur=>({closed_at:now, closed_by:S.uid, closed_by_name:S.name, leads:withMe(cur), updated_at:now}));
-    if(!res.row){ toast(res.error ? 'Could not close up - ' + res.error.message : 'Could not close up - the database refused it.', true); $('cuGo').disabled = false; return; }
-    S.shift = res.row; closeSheet(); render(); toast('Submitted to Attendance');
+    const res = await writeShift(cur=>({closed_at:now, closed_by:S.uid, closed_by_name:S.name, leads:withMe(cur), updated_at:now}), day);
+    if(!res.row){ toast(res.error ? 'Could not close up - ' + res.error.message : 'Could not close up - the database refused it.', true); const g = $('cuGo'); if(g) g.disabled = false; return; }
+    if(res.row.date === S.date) S.shift = res.row;
+    closeSheet(); render(); settleFocus(); toast('Submitted to Attendance');
   } finally { S.busy = false; }
 }
 
@@ -397,7 +432,7 @@ function wire(){
   $('btnJoin').addEventListener('click', ()=>joinShift(false));
   $('btnClose').addEventListener('click', openClose);
   $('btnOut').addEventListener('click', async ()=>{ try{ await sb.auth.signOut({scope:'local'}); }catch(e){} location.replace('index.html'); });
-  $('viewDate').addEventListener('change', ()=>{ const v = $('viewDate').value; if(!/^\d{4}-\d\d-\d\d$/.test(v)) return; S.date = v; S.follow = (v === S.today); S.shift = null; S.rows = []; render(); loadDay(); });
+  $('viewDate').addEventListener('change', ()=>{ const v = $('viewDate').value; if(!/^\d{4}-\d\d-\d\d$/.test(v)){ render(); return; } S.date = v; S.follow = (v === S.today); S.shift = null; S.rows = []; S.loadErr = false; render(); loadDay(); });
   $('sheetHost').addEventListener('click', e=>{
     const id = e.target.id;
     if(id === 'pkCancel' || id === 'cuCancel') closeSheet();
@@ -406,8 +441,19 @@ function wire(){
   });
   $('sheetHost').addEventListener('change', e=>{ if(PICK && e.target.name === 'duty') syncPicker(); });
   $('sheetHost').addEventListener('input', e=>{ if(PICK && e.target.id === 'otherDuty') syncPicker(); });
+  $('sheetHost').addEventListener('keydown', e=>{ if(e.key === 'Enter' && PICK && e.target.id === 'otherDuty'){ e.preventDefault(); if(!$('pkAdd').disabled) addEntry(); } });
+  $('sheetHost').addEventListener('change', e=>{ if(PICK && e.target.value === '__other' && e.target.checked) $('otherDuty').focus(); });
   /* Past midnight in New Zealand a page left open moves on to the new day. */
-  setInterval(()=>{ const t = nzTodayISO(); if(t !== S.today){ const was = S.today; S.today = t; if(S.follow || S.date === was){ S.date = t; S.follow = true; S.shift = null; S.rows = []; closeSheet(); render(); loadDay(); } } }, 60000);
+  function rollover(){
+    if(!S.uid) return;
+    const t = nzTodayISO(); if(t === S.today) return;
+    const was = S.today; S.today = t;
+    if(S.follow || S.date === was || S.date === t){ S.date = t; S.follow = true; S.shift = null; S.rows = []; S.loadErr = false; PICK = null; closeSheet(); render(); loadDay(); }
+    else render();
+  }
+  setInterval(rollover, 60000);
+  /* A phone asleep or a background tab does not run the timer: catch up, and pick up what other leads did, when the page is seen again. */
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden || !S.uid) return; rollover(); if(!$('sheetHost').firstChild && !S.busy) loadDay(); });
 }
 async function start(){
   wire();

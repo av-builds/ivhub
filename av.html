@@ -1192,7 +1192,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <div class="ph">
         <div><h1>Dashboard</h1><p id="dashSub">Overview</p></div>
         <div class="ha">
-          <button class="btn btn-ol btn-sm" onclick="showDebugInfo()" style="margin-right:8px;">🔍 DB Status</button>
+          <button class="btn btn-ol btn-sm nav-admin" onclick="showDebugInfo()" style="margin-right:8px;">🔍 DB Status</button>
           <button class="btn btn-bl btn-sm" onclick="nav(document.querySelector('[data-page=calendar]'))">View Roster</button>
         </div>
       </div>
@@ -1243,7 +1243,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div><h1>Monthly Roster</h1><p>Official volunteer schedule - 🔒 marks manually locked days; click any day for details &amp; quick actions</p></div>
         <div class="ha">
           <button class="btn btn-ol nav-admin" style="height:36px;" onclick="nav(document.querySelector('[data-page=volunteers]'))">👥 Manage Volunteers</button>
-          <button class="btn btn-ol" style="height:36px;" onclick="autoRoster();toast('Roster regenerated')">↻ Regenerate</button>
+          <button class="btn btn-ol nav-admin" style="height:36px;" onclick="autoRoster();toast('Roster regenerated')">↻ Regenerate</button>
           <button id="screenshotBtn" onclick="downloadRosterPNG()" style="display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#00558B,#1976D2);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(0,85,139,0.4);transition:all .18s;">
             📷 Save Hi-Res JPG
           </button>
@@ -2821,12 +2821,13 @@ function renderMyAvCards(){
     next = {ds, roles:roles.join(' · ')}; return true;
   });
 
-  const busy = vol ? String(vol.bds||'').split(',').map(x=>x.trim()).filter(Boolean).filter(d=>d>=today).sort() : [];
+  const away = vol && vol.hub_id!=null ? (hubAwayById.get(vol.hub_id)||[]) : [];
+  const busy = vol ? [...new Set(String(vol.bds||'').split(',').map(x=>x.trim()).filter(Boolean).concat(away))].filter(d=>d>=today).sort() : [];
   // How many days they have been on, all time - the same question the
   // admin stats answer for everybody, asked about one person.
   let done = 0;
   Object.keys(roster).forEach(ds=>{
-    const r = roster[ds]; if(!r || !vol) return;
+    const r = roster[ds]; if(!r || !vol || ds >= today) return;
     if(r._primary===vol.name || r._sup===vol.name) done++;
     else if(!r._mph_removed && (r._mph_primary===vol.name || r._mph_primary2===vol.name)) done++;
   });
@@ -3432,7 +3433,7 @@ function dcViewHTML(ds){
   h+=`<div class="dc-h">Jamātkhana duty</div>`;
   h+=dcPerson(assigned,tr2?'Trainer on duty':'Volunteer',!!tr2,
     (!tr2&&ro._sup)?`<div class="dc-tags"><span class="dc-tag blue">SUP · ${esc(ro._sup)}</span></div>`:'');
-  if(dt.getDay()===5){
+  if((dt.getDay()===5||ro._mph_primary)&&!ro._mph_removed){
     h+=`<div class="dc-h gold">MPH congregation</div>`;
     h+=dcPerson(ro._mph_primary||null,'MPH duty',true,
       ro._mph_primary2?`<div class="dc-sub2">🎓 In training: <b>${esc(ro._mph_primary2)}</b></div>`:'');
@@ -3591,7 +3592,8 @@ function dcBusy(){
   auditLog('Marked busy: '+name,'volunteer','Busy on '+fd(ds)+' via day card - cover auto-assigned');
   autoRoster(); renderAll();
   dcBody();
-  toast('✓ '+name+' marked busy - cover assigned for '+fd(ds));
+  if((roster[ds]||{})._primary) toast('✓ '+name+' marked busy - cover assigned for '+fd(ds));
+  else toast(name+' marked busy - nobody is free to cover '+fd(ds)+', assign someone by hand');
 }
 function dcMajalis(){
   const v=dcV('dc-mj'), c=document.getElementById('dc-mj-custom');
@@ -3641,6 +3643,7 @@ function dcUniform(){
 function dcTraining(){
   const ds=_dc.ds, trainee=dcV('dc-tr-trainee'), trainer=dcV('dc-tr-trainer');
   if(!trainee||!trainer){ dcHint('training','Pick both a trainee and a trainer and the training day will save.'); return; }
+  if(trainee===trainer){ dcHint('training','The trainee and the trainer must be different people.'); return; }
   dcHint('training','');
   const ex=trainings.find(e=>e.date===ds);
   if(ex&&ex.trainee===trainee&&ex.trainer===trainer) return;
@@ -3952,6 +3955,7 @@ function uDays(id){
   if(v&&card){
     v.days=[...card.querySelectorAll('.day-tog input:checked')].map(i=>i.value)||[];
     auditLog(`Updated availability for ${v.name}`,'volunteer',`Days: ${v.days.join(', ')||'none'}`);
+    renderVolCards();
     autoRoster();
     dbSaveVol(v);
   }
@@ -4597,6 +4601,8 @@ function addTraining(){
   if(!trainee){toast('Select a trainee (Junior Team Member)','err');return;}
   if(!trainer){toast('Select a trainer (Supervisor)','err');return;}
   if(!date){toast('Select a date','err');return;}
+  if(trainee===trainer){toast('The trainee and the trainer must be different people','err');return;}
+  if(trainings.some(e=>e.date===date)){toast('A training day already exists on this date - change it from the day card','err');return;}
   const newTr={id:uid(),name:trainee,type:'Training',trainee,trainer,date,time:'',category:'training'};
   trainings.push(newTr);
   document.getElementById('trTrainee').value='';
@@ -4628,7 +4634,7 @@ function renderUpcoming(){
     const assigned=ro&&ro._primary?true:false;
     return `<tr>
       <td>${fd(e.date)}</td>
-      <td><strong>${esc(e.name)}</strong> · ${esc(e.time)}</td>
+      <td><strong>${esc(e.name)}</strong>${e.time?' · '+esc(e.time):''}</td>
       <td><span style="color:#90CAF9;font-size:12px;font-weight:800;background:rgba(75,163,220,0.1);padding:2px 7px;border-radius:4px;">${esc(e.type)}</span></td>
       <td><span class="bdg ${assigned?'bdg-ok':'bdg-no'}">${assigned?'✓ Assigned':'Pending'}</span></td>
     </tr>`;
@@ -5082,7 +5088,7 @@ async function loadAuditLogs(){
     })));
     // Merge: keep in-memory entries that aren't in DB yet, plus all DB entries
     const inMemoryNew = auditLogs.filter(l =>
-      !dbLogs.some(d => d.ts === l.ts && d.username === l.username && d.action === l.action)
+      !dbLogs.some(d => new Date(d.ts).getTime() === new Date(l.ts).getTime() && d.username === l.username && d.action === l.action)
     );
     auditLogs = [...inMemoryNew, ...dbLogs]
       .sort((a,b) => b.ts.localeCompare(a.ts))
@@ -5465,8 +5471,8 @@ function nav(el){
   if(el.dataset && el.dataset.page === 'override') el = document.querySelector('[data-page=calendar]') || el;
   if(!window.CU) return;
   // Permission checks - must mirror applySession() exactly.
-  const _perms    = CU.perms || [CU.role];
-  const _has      = p => _perms.includes(p);
+  const _perms    = normalizePermList((CU.perms && CU.perms.length) ? CU.perms : [CU.role]);
+  const _has      = (...ps) => ps.some(p => _perms.includes(p));
   const _isOwner  = _has('owner','developer') || CU.role === 'owner' || CU.role === 'developer';
   const _isAvAdmin = AV_ADMIN_KEYS.some(k=>_has(k));
   const _isIvAdmin = IV_TOP.some(k=>_has(k));
@@ -5569,7 +5575,10 @@ function handleUserChange(payload){
       const fresh = USERS[row.username];
       const before = JSON.stringify(CU.perms||[]);
       CU.role = fresh.role;
-      CU.perms = (fresh.permsAll && fresh.permsAll.length) ? fresh.permsAll.slice() : fresh.perms;
+      const legacy = (fresh.permsAll && fresh.permsAll.length) ? fresh.permsAll.slice() : (fresh.perms||[]);
+      const auth = Array.isArray(CU.permsAuth) ? CU.permsAuth : [];
+      CU.perms = auth.concat(legacy.filter(p=>p && auth.indexOf(p)<0));
+      CU.role = roleFromPerms(normalizePermList(CU.perms));
       CU.display = fresh.display;
       try{ localStorage.setItem('ivhub_session', JSON.stringify(window.CU)); }catch(e){}
       applySession();
@@ -5580,9 +5589,9 @@ function handleUserChange(payload){
         const act = document.querySelector('.page.active');
         if(act){
           const pg = act.id.replace('page-','');
-          const perms = CU.perms||[];
+          const perms = normalizePermList(CU.perms||[]);
           const isOwner = perms.includes('owner') || perms.includes('developer');
-          const isAvAdmin = isOwner || perms.includes('av_admin') || perms.includes('iv_admin');
+          const isAvAdmin = AV_ADMIN_KEYS.some(k => perms.includes(k));
           const isIvAdmin = isOwner || perms.includes('iv_admin');
           const isAvTeam = isAvAdmin || perms.includes('av_team');
           const isAnyAdmin = isAvAdmin || isIvAdmin;
@@ -5692,9 +5701,8 @@ function handleRosterChange(payload){
   const {eventType, new:row, old} = payload;
   if(eventType === 'DELETE'){
     // Only delete if it wasn't manually overridden locally
-    if(!roster[old.date] || !roster[old.date]._manual){
-      delete roster[old.date];
-    }
+    // Our own deletes are paused above, so this one came from another device.
+    delete roster[old.date];
   } else {
     const incoming = row.data || {};
     const existing = roster[row.date];
@@ -5707,6 +5715,7 @@ function handleRosterChange(payload){
     }
   }
   renderCal();
+  if(typeof renderDashboard==='function') renderDashboard();
   showSyncPulse('📅');
 }
 function handleAuditChange(payload){
@@ -5722,7 +5731,7 @@ function handleAuditChange(payload){
     detail:   row.detail||'',
   };
   // Only add if not already in local list (avoid duplicates from own actions)
-  if(!auditLogs.find(l=>l.ts===entry.ts&&l.username===entry.username&&l.action===entry.action)){
+  if(!auditLogs.find(l=>new Date(l.ts).getTime()===new Date(entry.ts).getTime()&&l.username===entry.username&&l.action===entry.action)){
     auditLogs.unshift(entry);
     if(auditLogs.length>500) auditLogs=auditLogs.slice(0,500);
   }

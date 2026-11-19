@@ -39,7 +39,7 @@ h2{font-size:19px;font-weight:800;margin-bottom:8px;}
 .fg input:focus{border-color:var(--blue-lt);box-shadow:0 0 0 3px rgba(75,163,220,.12);}
 .fg input:disabled{opacity:.62;cursor:not-allowed;}
 .btn{width:100%;background:linear-gradient(135deg,var(--navy),var(--blue2));color:#fff;border:none;
-  border-radius:var(--r);padding:13px;font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;
+  border-radius:var(--r);padding:13px;min-height:44px;font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;
   cursor:pointer;margin-top:8px;transition:box-shadow .18s,transform .12s;}
 .btn:hover:not(:disabled){box-shadow:0 6px 20px rgba(0,85,139,.45);}
 .btn:active:not(:disabled){transform:scale(.985);}
@@ -48,8 +48,8 @@ h2{font-size:19px;font-weight:800;margin-bottom:8px;}
 .msg{min-height:20px;font-size:14px;line-height:1.55;text-align:center;margin-top:14px;}
 .msg.err{color:var(--red);} .msg.ok{color:var(--green);} .msg.warn{color:var(--gold);}
 .pw{position:relative;}
-.pw input{padding-right:46px;}
-.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:32px;
+.pw input{padding-right:50px;}
+.eye{position:absolute;right:2px;top:50%;transform:translateY(-50%);width:44px;height:44px;
   border:none;background:transparent;color:var(--dm);font-size:15px;cursor:pointer;border-radius:8px;
   display:flex;align-items:center;justify-content:center;opacity:.75;}
 .eye:hover{background:var(--ds2);opacity:1;}
@@ -270,7 +270,9 @@ async function start(){
   setTimeout(()=>$('emailConfirm').focus(), 80);
 }
 
+let saving = false;
 async function savePassword(){
+  if(saving) return;      // Enter pressed again while the first save is still running
   const typed = ($('emailConfirm').value||'').trim().toLowerCase();
   const a = $('pw1').value||'', b = $('pw2').value||'';
 
@@ -280,6 +282,7 @@ async function savePassword(){
   if(a !== b)                return say('setMsg','The two passwords do not match.','err');
 
   const btn = $('saveBtn');
+  saving = true;
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Saving…';
   say('setMsg','');
   try{
@@ -312,6 +315,7 @@ async function savePassword(){
   }catch(e){
     say('setMsg','Could not save your password: ' + (e.message||e), 'err');
   }finally{
+    saving = false;
     btn.disabled = false; btn.textContent = (LINK_KIND==='recovery') ? 'Save new password' : 'Create account';
   }
 }

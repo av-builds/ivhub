@@ -495,6 +495,8 @@ button.chip.un:hover{background:rgba(239,68,68,.22);border-color:var(--red-lt);}
 .duty-chip{display:inline-block;background:var(--ds2);border:1px solid var(--db);border-radius:6px;
   padding:2px 7px;margin:3px 5px 0 0;font-size:11.5px;font-weight:800;color:var(--blue-lt);}
 .duty-chip.none{color:var(--dm);border-style:dashed;}
+.duty-chip{white-space:normal;max-width:100%;overflow-wrap:anywhere;}
+@media(pointer:coarse){.att-btn{min-height:40px;min-width:40px;}}
 .att-duties{margin-top:2px;}
 .lead-tag{display:inline-block;background:rgba(252,211,77,.16);border:1px solid rgba(252,211,77,.4);
   color:var(--gold-lt);border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:900;margin-left:6px;}
@@ -671,7 +673,7 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4BA3DC
   body.sb-min .sidebar{width:250px;}
   #sbCollapse{display:none;}
   .main{margin-left:0!important;padding:16px 14px 70px;padding-top:62px;}
-  .hero{padding:18px;}.dash-greet{font-size:20px;}.dash-clock{font-size:23px;}
+  .hero{padding:18px 26px 18px 18px;}.dash-greet{font-size:20px;}.dash-clock{font-size:23px;}
   .ph{flex-direction:column;align-items:flex-start;}
   .mbox{top:auto;left:0;right:0;bottom:0;width:100%;max-width:100%;max-height:86vh;border-left:none;border-top:1px solid var(--db2);border-radius:var(--r-xl) var(--r-xl) 0 0;animation:sheetIn .3s cubic-bezier(.16,1,.3,1);padding-top:30px;}
   .mbox::before{content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);width:44px;height:4px;border-radius:2px;background:rgba(122,174,203,.4);}
@@ -2733,7 +2735,16 @@ function attRec(r){
   if(r.walk_in){ o.walk_in=true; o.walk_in_duty=r.walk_in_duty||''; o.in_uniform=!!r.in_uniform; }
   return o;
 }
+/* One tap at a time per person. A second tap lands while the first is still
+   being written, reads the old mark, and the lifetime totals count it twice. */
+const _attBusy=new Set();
 async function markAttendance(eventId,memberId,status){
+  const key=eventId+':'+memberId;
+  if(_attBusy.has(key)) return;
+  _attBusy.add(key);
+  try{ await markAttendanceNow(eventId,memberId,status); } finally{ _attBusy.delete(key); }
+}
+async function markAttendanceNow(eventId,memberId,status){
   if(!IS_EDIT) return;
   const cur=attStatus(eventId,memberId);
   const rec=ATTEND[eventId]=ATTEND[eventId]||{};
@@ -3088,9 +3099,9 @@ function renderDashboard(){
   let unfilled=0; upc.forEach(e=>unfilled+=slotCounts(e).missing);
   const nextFill=nextEv?slotCounts(nextEv):null;
   let h='<div class="ph"><div><h1>Dashboard</h1><p>'+esc(TEAM_NAME)+' roster overview · Auckland Jamatkhana</p></div>'+
-    '<div class="ha"><button class="btn btn-ol btn-sm" onclick="nav(\'roster\')">📋 Roster</button>'+
+    '<div class="ha">'+(IS_EDIT?'<button class="btn btn-ol btn-sm" onclick="nav(\'roster\')">📋 Roster</button>':'')+
     (IS_EDIT&&nextEv&&!evLocked(nextEv)?'<button class="btn btn-bl btn-sm" onclick="askRegenerateDay('+nextEv.id+')">↻ Regenerate next</button>':'')+
-    (nextEv?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+(nextEv.id)+');setTimeout(exportPNG,300)">📷 Export</button>':'')+'</div></div>';
+    (nextEv&&IS_EDIT?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+(nextEv.id)+');setTimeout(exportPNG,300)">📷 Export</button>':'')+'</div></div>';
   // hero
   h+='<div class="hero"><div style="position:relative;z-index:1;min-width:0"><div class="dash-greet">Ya Ali Madad</div>'+
     '<div class="dash-date">'+esc(fmtNice(today))+'</div>'+
@@ -3146,7 +3157,7 @@ function renderDashboard(){
   h+='<div class="pnl"><div class="pnl-h">📣 Announcements</div><div class="pnl-b" style="padding:10px">';
   if(!ANNS.length) h+='<div class="empty-note">No announcements.</div>';
   ANNS.slice(0,4).forEach(a=>{ h+='<div style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.04)"><div style="font-size:13px;line-height:1.5;white-space:pre-wrap">'+esc(a.text)+'</div><div style="font-size:12px;color:var(--dm);margin-top:4px">'+esc(a.author||'')+(a.created_at?' · '+esc(fmtNice(String(a.created_at).slice(0,10))):'')+'</div></div>'; });
-  h+='<div style="padding:8px"><button class="btn btn-ol btn-sm" onclick="nav(\'announce\')">Open announcements</button></div></div></div></div>';
+  h+=(IS_EDIT?'<div style="padding:8px"><button class="btn btn-ol btn-sm" onclick="nav(\'announce\')">Open announcements</button></div>':'')+'</div></div></div>';
   el.innerHTML=h;
   tickClock();
 }
@@ -3321,7 +3332,16 @@ function buildPlan(k,onlyEventId,opts){
    are complete, and reports what actually happened rather than what was
    attempted - counting stored and live separately is how a cycle that
    half-saved stops reading as a success. */
+/* One build at a time. A double press on Generate started two runs, each
+   saving its own random roster over the other's, so what was left on screen
+   and what was stored could be different rosters. */
+let _planBusy=false;
 async function applyPlan(plan,opts){
+  if(!plan||_planBusy) return false;
+  _planBusy=true;
+  try{ return await applyPlanNow(plan,opts); } finally{ _planBusy=false; }
+}
+async function applyPlanNow(plan,opts){
   if(!plan) return false;
   /* publish:false stores the rosters as drafts for the publish bar. The
      default is unchanged: complete rosters go on the calendar as they save. */
@@ -3355,7 +3375,7 @@ async function applyPlan(plan,opts){
   renderRoster(); refreshBadges();
   if(pubNew&&stored===n){
     const blanks=build.reduce((t,r)=>t+(r.missing||0),0);
-    toast((n===1?'Built '+esc(build[0].name):'Generated '+n+' days')+' - '+live+' on the calendar'+
+    toast((n===1?'Built '+build[0].name:'Generated '+n+' days')+' - '+live+' on the calendar'+
       (blanks?', '+blanks+' slot'+(blanks===1?'':'s')+' blank':''));
   }
   else if(!publish&&stored===n) toast('Saved '+n+' as draft'+(n===1?'':'s')+' - publish from the bar when ready');
@@ -4379,7 +4399,13 @@ function aeTypeChanged(){
   if(yEl) yEl.checked=(type==='friday');
   const yRow=box.querySelector('#aeYouthRow'); if(yRow) yRow.style.display=type==='friday'?'':'none';   // Fridays only
 }
+let _aeBusy=false;
 async function submitAddEvent(){
+  if(_aeBusy) return;
+  _aeBusy=true;
+  try{ await submitAddEventNow(); } finally{ _aeBusy=false; }
+}
+async function submitAddEventNow(){
   const box=document.getElementById('dcard');
   const date=(box.querySelector('#aeDate')||{}).value; const type=(box.querySelector('#aeType')||{}).value||'custom';
   const name=((box.querySelector('#aeName')||{}).value||'').trim(); const uniform=(box.querySelector('#aeUniform')||{}).value||'Casual';
@@ -4595,7 +4621,9 @@ function zoomFromCell(src){
     {duration:300,easing:'cubic-bezier(.16,1,.3,1)'});
   run.onfinish=run.oncancel=()=>{ card.style.animation=''; };
 }
+let _dayTok=0;
 async function openDayDuties(iso,src){
+  const tok=++_dayTok;
   const satNight=EVENTS.find(e=>e.date===iso&&isSatada(e));
   const owner=satNight?satNight.team:teamForCycle(cycleForDate(iso));
   const head='<h3>'+esc(fmtNice(iso))+'</h3>'+
@@ -4617,6 +4645,8 @@ async function openDayDuties(iso,src){
         (ro||[]).forEach(r=>{ rosters[r.event_id]=r.data; });
       }
     }catch(e){ console.warn('openDayDuties:',e.message||e); }
+    /* Closed, or another day tapped, while this was loading: do not pop the old one back open. */
+    if(tok!==_dayTok||!document.getElementById('dlg').classList.contains('show')) return;
   }
 
   if(!evs.length){
@@ -4797,6 +4827,8 @@ function renderMembers(){
   const hs=document.getElementById('hubSyncStatus'); if(hs){ hs.textContent='Hub ✓ '+MEMBERS.length+' member'+(MEMBERS.length!==1?'s':'')+' in '+TEAM_NAME; hs.style.color='var(--blue-lt)'; }
   renderMemberGrid();
 }
+/* Away dates still to come. Past ones stay on the card but no longer make somebody look unavailable. */
+function awayAhead(m){ const t=nzTodayISO(); return Array.isArray(m.away)?m.away.filter(d=>d>=t).length:0; }
 function memMatches(m){
   const q=memFilter.q.trim().toLowerCase();
   if(q&&!m.name.toLowerCase().includes(q)) return false;
@@ -4804,7 +4836,7 @@ function memMatches(m){
   if(memFilter.age&&m.age_group!==memFilter.age) return false;
   if(memFilter.nandi==='1'&&!m.nandi) return false;
   if(memFilter.nandi==='0'&&m.nandi) return false;
-  if(memFilter.away==='1'&&!(Array.isArray(m.away)&&m.away.length)) return false;
+  if(memFilter.away==='1'&&!awayAhead(m)) return false;
   return true;
 }
 function renderMemberGrid(){
@@ -4817,7 +4849,7 @@ function renderMemberGrid(){
     const tags=[];
     tags.push('<span class="bdg '+(m.status==='active'?'bdg-ok':'bdg-no')+'">'+(m.status==='active'?'ACTIVE':'INACTIVE')+'</span>');
     if(m.nandi) tags.push('<span class="bdg bdg-gd">Nandi ✓</span>');
-    if(Array.isArray(m.away)&&m.away.length) tags.push('<span class="bdg bdg-no">'+m.away.length+' away</span>');
+    if(awayAhead(m)) tags.push('<span class="bdg bdg-no">'+awayAhead(m)+' away</span>');
     if(rel.rate!=null) tags.push('<span class="bdg '+(rel.rate>=80?'bdg-ok':'bdg-warn')+'">'+rel.rate+'% reliable</span>');
     return '<div class="mem-card" onclick="openMemberDrawer('+m.id+')"><div class="mc-top"><div class="mem-av">'+esc((m.name||'?').slice(0,1))+'</div>'+
       '<div style="min-width:0"><div class="mc-nm">'+esc(m.name)+'</div><div class="mc-meta">'+esc(m.gender)+' · '+esc(AGE_LABELS[m.age_group]||m.age_group)+' · '+esc(m.rank||'Member')+'</div></div></div>'+
@@ -5022,7 +5054,7 @@ function openWalkIn(ctx){
   const duties=[...new Set(dutiesForEvent(ev).map(d=>recName(d.name)))];
   oM('<h3>Add a walk-in</h3>'+
     '<div class="ib" style="margin-bottom:12px">For someone who was not rostered but has turned up in uniform. They can be from either team, and a duty is optional. They are marked Present for '+esc(ev.name)+' tonight. The roster is not changed.</div>'+
-    '<div class="frow"><label class="flabel" for="wiFind">Who</label><input type="search" id="wiFind" placeholder="Type a name" autocomplete="off" oninput="wiList()">'+
+    '<div class="frow"><label class="flabel" for="wiFind">Who</label><input type="search" id="wiFind" placeholder="Type a name" autocomplete="off" oninput="wiTyped()">'+
       '<div class="wi-list" id="wiList" role="listbox" aria-label="Members of either team"></div><input type="hidden" id="wiWho"></div>'+
     '<div class="frow"><label class="flabel" for="wiDuty">Duty (optional)</label><select id="wiDuty" onchange="document.getElementById(\'wiOtherRow\').style.display=this.value===\'__other\'?\'\':\'none\'">'+
       '<option value="">No duty</option>'+duties.map(n=>'<option>'+esc(n)+'</option>').join('')+'<option value="__other">Other\u2026</option></select></div>'+
@@ -5041,6 +5073,12 @@ function wiList(){
   document.getElementById('wiList').innerHTML=pool.length
     ? pool.slice(0,60).map(m=>'<button type="button" role="option" class="wi-opt'+(m.id===pick?' on':'')+'" aria-selected="'+(m.id===pick)+'" onclick="wiPick('+m.id+')">'+esc(m.name)+'<small>'+esc([m.gender,m.age_group,'Team '+m.team].filter(Boolean).join(' \u00b7 '))+'</small></button>').join('')
     : '<div class="empty-note" style="padding:12px">'+(q?'Nobody in either team matches that name. Add new people in Data Management on the Hub first.':'Everyone is already on tonight\u2019s list.')+'</div>';
+}
+/* Typing again after choosing someone drops the choice, so the box and the person saved cannot disagree. */
+function wiTyped(){
+  const w=document.getElementById('wiWho'), f=document.getElementById('wiFind');
+  if(w&&w.value){ const m=WI_CTX&&WI_CTX.members.find(x=>x.id===+w.value); if(!m||m.name!==f.value) w.value=''; }
+  wiList();
 }
 function wiPick(id){
   const m=WI_CTX.members.find(x=>x.id===id); if(!m) return;
@@ -5283,7 +5321,7 @@ function renderCoverPanels(){
     h+='<div class="pnl cover-pnl" style="margin-bottom:16px">'+
        '<div class="pnl-h">\u{1F91D} Covering \u00b7 Team '+esc(ev.team)+' \u00b7 '+esc(fmtNice(ev.date))+
        ' <span class="ct">'+esc(ev.name)+'</span></div><div class="pnl-b">'+
-       '<div class="ib" style="margin-bottom:12px">You are standing in for this event only. Marking attendance and swapping people here changes Team '+esc(ev.team)+'\u2019s roster for '+esc(fmtNice(ev.date))+' and nothing else.</div>';
+       '<div class="ib" style="margin-bottom:12px">You are standing in for this event only. Marking attendance here changes Team '+esc(ev.team)+'\u2019s register for '+esc(fmtNice(ev.date))+' and nothing else.</div>';
     const roll=coverRoll(c), wiOpen=isEventDay(ev);
     const marked=roll.filter(r=>c.att[r.m.id]&&c.att[r.m.id].status).length;
     h+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px"><div style="font-weight:800">'+marked+' of '+roll.length+' marked</div>'+
@@ -5467,7 +5505,7 @@ function renderAttendance(){
        (unseen.length?' \u00b7 not yet: '+unseen.map(r=>esc(r.m.name)).join(', '):' - everyone has')+
        '</div>';
   }
-  h+='<div class="tw"><div class="pnl-h">\u{1F465} On duty tonight <span class="ct">'+roll.length+'</span></div>';
+  h+='<div class="tw"><div class="pnl-h">\u{1F465} On duty'+(isEventDay(ev)?' tonight':'')+' <span class="ct">'+roll.length+'</span></div>';
   roll.forEach(r=>{
     const m=r.m, st=rec[m.id]&&rec[m.id].status;
     const btn=(o)=>IS_EDIT
@@ -6038,7 +6076,13 @@ function clRefresh(){
 }
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) clRefresh(); });
 
+let _annBusy=false;
 async function postAnn(){
+  if(_annBusy) return;
+  _annBusy=true;
+  try{ await postAnnNow(); } finally{ _annBusy=false; }
+}
+async function postAnnNow(){
   const ta=document.getElementById('annNew'); const text=(ta&&ta.value||'').trim();
   if(!text) return toast('Write something first','err');
   const row={team:PAGE_TEAM,text:text,author:CU.display||CU.user};

@@ -82,15 +82,20 @@ p.lede{font-size:15px;line-height:1.6;color:var(--dm);margin-bottom:16px;}
 .person span{flex:1;font-size:15px;font-weight:800;}
 .x{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:16px;cursor:pointer;}
 .x:hover{background:rgba(239,68,68,.45);}
+html[data-theme="light"] .x{background:rgba(11,27,51,.1);color:#0B1B33;}
+html[data-theme="light"] .x:hover{background:rgba(220,38,38,.2);color:#B42318;}
+html[data-theme="light"] .hub.danger{color:#B42318;border-color:rgba(180,35,24,.45);}
 select,input[type=number]{width:100%;min-height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(75,163,220,.25);background:#091A33;color:var(--dt);font:700 14px 'Archivo',sans-serif;}
 .row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;}
 .row > select{flex:1;min-width:160px;}
 .hc{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;}
 .hc label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dm);text-align:center;margin-bottom:4px;}
-.av{width:100%;border-collapse:collapse;}
+.av{width:100%;border-collapse:collapse;table-layout:fixed;}
 .av td,.av th{padding:6px 3px;text-align:center;font-size:12px;}
-.av td:first-child,.av th:first-child{text-align:left;font-size:14px;padding-right:8px;min-width:110px;}
+.av td:first-child,.av th:first-child{text-align:left;font-size:14px;padding-right:8px;width:34%;min-width:0;overflow-wrap:anywhere;}
 .dayb{min-width:38px;min-height:38px;border-radius:10px;border:1px solid var(--db);background:transparent;color:var(--dm);font:800 12px 'Archivo',sans-serif;cursor:pointer;}
+.dayb{width:100%;}
+.av td:last-child,.av th:last-child{padding-right:3px!important;}
 .dayb.on{background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.5);color:var(--green);}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99;background:#0D2040;border:1px solid var(--db);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:92vw;}
 .toast.err{border-color:rgba(248,113,113,.6);color:#FCA5A5;}
@@ -103,9 +108,10 @@ select,input[type=number]{width:100%;min-height:44px;padding:0 12px;border-radiu
   .bar .sp{display:none;}
   .bar .hub{flex:1 1 100%;justify-content:center;padding:0 10px;}
   .hc{grid-template-columns:repeat(4,1fr);}
-  .av td:first-child,.av th:first-child{min-width:84px;}
+  .av td:first-child,.av th:first-child{width:64px;}
   .dayb{min-width:34px;}
 }
+@media (max-width:640px){.top .t b{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.15;font-size:14px;letter-spacing:0;}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
 </style>
 <link rel="stylesheet" href="ivtheme.css?v=20261119a">
@@ -233,7 +239,9 @@ function gridRange(){
   const total = Math.ceil((lead+dim)/7)*7, end = new Date(S.y, S.m, 1-lead+total-1);
   return {start, end, total};
 }
+let loadSeq = 0;
 async function loadAll(){
+  const seq = ++loadSeq;
   S.missing = {};
   const t0 = new Date(); const horizon = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+120);
   const g = gridRange();
@@ -247,13 +255,15 @@ async function loadAll(){
     q('safety_settings', ()=>sb.from('safety_settings').select('*')),
     q('safety_avail', ()=>sb.from('safety_avail').select('*')),
   ]);
+  if(seq !== loadSeq) return false;                    // a newer load started (month changed again): drop this one
   if(mem) S.pool = mem.filter(m=>(m.status||'active')==='active' && (Array.isArray(m.spec)?m.spec:[]).some(x=>String(x).toUpperCase()==='SAFETY'))
                       .map(m=>({id:m.id, name:m.name, away:Array.isArray(m.away)?m.away:[]}));
-  S.roster = {}; (ros||[]).forEach(r=>{ S.roster[r.date] = r.data || {people:[]}; });
+  S.roster = {}; (ros||[]).forEach(r=>{ const d = r.data && typeof r.data === 'object' ? r.data : {}; S.roster[r.date] = Object.assign({}, d, {people: Array.isArray(d.people) ? d.people : []}); });
   (set||[]).forEach(r=>{ if(r.key === 'headcount' && r.value) DAYS.forEach(d=>{ if(r.value[d] != null) S.head[d] = Number(r.value[d]); }); });
   S.avail = {}; (av||[]).forEach(r=>{ if(Array.isArray(r.days)) S.avail[r.member_id] = r.days; });
   S.loaded = true;
   showSetupWarn();
+  return true;
 }
 function showSetupWarn(){
   const w = $('setupWarn'), miss = Object.keys(S.missing).filter(k=>S.missing[k] === true);
@@ -296,9 +306,14 @@ function renderCal(){
 }
 async function changeMonth(n){
   S.m += n; if(S.m > 11){ S.m = 0; S.y++; } if(S.m < 0){ S.m = 11; S.y--; }
-  await loadAll(); renderCal();
+  if(await loadAll()) renderCal();
 }
+let busy = false;
 async function autoFill(){
+  if(busy) return; busy = true;
+  try{ await autoFillRun(); } finally { busy = false; }
+}
+async function autoFillRun(){
   const g = gridRange(), dates = [];
   for(let i=0;i<g.total;i++){ const d = new Date(g.start.getFullYear(), g.start.getMonth(), g.start.getDate()+i); if(d.getMonth() === S.m) dates.push(ymd(d)); }
   if(!S.pool.length){ toast('Nobody is in the Safety & Security pool yet - tick Safety & Security for people in Data Management.', true); return; }
@@ -341,9 +356,12 @@ function openDay(ds){
   };
 }
 async function saveDay(ds, people){
-  const data = {people:people, manual:true};
-  if(!await writeRows('safety_roster', [{date:ds, data:data}], 'Saving')) return;
-  S.roster[ds] = data; renderCal(); openDay(ds);
+  if(busy) return; busy = true;
+  try{
+    const data = {people:people, manual:true};
+    if(!await writeRows('safety_roster', [{date:ds, data:data}], 'Saving')) return;
+    S.roster[ds] = data; renderCal(); openDay(ds);
+  } finally { busy = false; }
 }
 
 function openSettings(){
@@ -357,15 +375,16 @@ function openSettings(){
     '<div class="row" style="justify-content:flex-end;margin-top:16px"><button class="hub" id="stCancel">Cancel</button><button class="hub primary" id="stSave">Save</button></div>');
   document.querySelectorAll('.dayb').forEach(b=>b.onclick = ()=>b.classList.toggle('on'));
   $('stCancel').onclick = closeSheet;
-  $('stSave').onclick = saveSettings;
+  $('stSave').onclick = async ()=>{ const bt = $('stSave'); if(bt.disabled) return; bt.disabled = true; await saveSettings(); const again = $('stSave'); if(again) again.disabled = false; };
 }
 async function saveSettings(){
   const head = {}; document.querySelectorAll('[data-hd]').forEach(i=>{ head[i.dataset.hd] = Math.max(0, Math.min(30, parseInt(i.value,10) || 0)); });
   const av = {}; S.pool.forEach(p=>{ av[p.id] = DAYS.filter(d=>{ const b = document.querySelector('.dayb[data-p="'+p.id+'"][data-d="'+d+'"]'); return b && b.classList.contains('on'); }); });
   if(!await writeRows('safety_settings', [{key:'headcount', value:head}], 'Saving numbers')) return;
+  Object.assign(S.head, head); renderCal();
   const rows = S.pool.map(p=>({member_id:p.id, days:av[p.id]}));
   if(rows.length && !await writeRows('safety_avail', rows, 'Saving availability')) return;
-  Object.assign(S.head, head); S.avail = Object.assign(S.avail, av);
+  S.avail = Object.assign(S.avail, av);
   closeSheet(); renderCal(); toast('Saved ✓');
 }
 

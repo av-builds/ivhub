@@ -255,7 +255,8 @@ html[data-theme="light"] .dcard.t-a{--tc:#24914F;}html[data-theme="light"] .dcar
 .md-month:first-child{margin-top:4px;}
 .md-hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 20px;margin-bottom:6px;border-radius:24px;border:1px solid var(--db);background:linear-gradient(135deg,var(--iv-acs,rgba(75,163,220,.12)),transparent 70%);}
 .md-av{width:56px;height:56px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:var(--iv-oa,#fff);background:var(--iv-ac,#00558B);box-shadow:0 0 0 3px var(--iv-sec,#3F8FBF);}
-.md-hero-t{flex:1;min-width:160px;}
+.md-hero-t{flex:1 1 160px;min-width:0;}
+.md-hero-t,.md-hero-n,.md-hero-s,.md-summary,.md-person,.dcard-duty,.dcard-ev,.md-empty,.hm-t,.hm-big,.hm-s,.sub{overflow-wrap:anywhere;}
 .md-hero-n{font-size:22px;font-weight:900;letter-spacing:-.02em;color:var(--dt);}
 .md-hero-s{font-size:13px;color:var(--dm);margin-top:2px;font-weight:700;}
 .md-shot{min-height:44px;display:inline-flex;align-items:center;gap:8px;}
@@ -408,14 +409,14 @@ table.mtab{width:100%;border-collapse:collapse;font-size:13px;}
 .link-sugg .btn{flex-direction:column;align-items:flex-start;gap:1px;line-height:1.3;padding:7px 12px;}
 .link-sugg .btn small{font-weight:600;opacity:.72;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;}
 .link-pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.link-pick select{flex:1;min-width:200px;background:var(--ds);border:1px solid var(--db);border-radius:var(--r);padding:8px 11px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:13px;outline:none;}
+.link-pick select{flex:1;min-width:min(200px,100%);max-width:100%;background:var(--ds);border:1px solid var(--db);border-radius:var(--r);padding:8px 11px;color:var(--dt);font-family:'Archivo',sans-serif;font-size:13px;outline:none;}
 .link-pick select:focus{border-color:var(--blue-lt);}
 .lk-row{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--db);flex-wrap:wrap;}
 .lk-row:last-child{border-bottom:none;}
-.lk-who{min-width:200px;flex:1;}
+.lk-who{min-width:min(200px,100%);flex:1;overflow-wrap:anywhere;}
 .lk-who b{display:block;font-size:14px;}
 .lk-who small{display:block;color:var(--dm);font-size:11.5px;margin-top:2px;}
-.lk-act{display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+.lk-act{display:flex;flex-direction:column;gap:8px;align-items:flex-end;max-width:100%;}
 .lk-who small.lk-taken{color:var(--gold-lt);margin-top:5px;line-height:1.5;}
 .lk-who small.lk-taken b{color:var(--gold-lt);}
 
@@ -524,7 +525,7 @@ html[data-theme="light"] .al-chip.on{color:#fff;}
 .al-person{display:flex;align-items:center;gap:14px;min-width:0;}
 .al-av{width:46px;height:46px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;background:var(--iv-acs,rgba(75,163,220,.16));color:var(--blue-lt);}
 .al-pn{min-width:0;}
-.al-name{font-size:15px;font-weight:800;color:var(--dt);}
+.al-name{font-size:15px;font-weight:800;color:var(--dt);overflow-wrap:anywhere;}
 .al-you{margin-left:8px;font-size:11px;font-weight:900;color:var(--blue-lt);}
 .al-mail{font-size:12.5px;color:var(--dm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .al-roles{display:flex;gap:6px;flex-wrap:wrap;}
@@ -815,7 +816,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .wda-day h3{margin:0 0 4px;font-size:16px;}
 .wda-meta{font-size:13px;color:var(--dm);margin-bottom:8px;line-height:1.5;}
 .wda-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--db);font-size:14px;}
-.wda-row .who{flex:1 1 160px;min-width:0;font-weight:700;}
+.wda-row .who{flex:1 1 160px;min-width:0;font-weight:700;overflow-wrap:anywhere;}
+.wda-row>span,.wda-tot>span,.wda-meta,.wda-day h3{min-width:0;overflow-wrap:anywhere;}
 .wda-row .sm{font-size:12.5px;color:var(--dm);}
 .wda-tot{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--db);font-size:14px;flex-wrap:wrap;}
 </style>
@@ -1508,6 +1510,15 @@ function initSupabase(){
         if(ev !== 'SIGNED_OUT' || LOGGING_OUT || !CU || !CU.uid) return;
         CU = { perms: [] }; AUTH_USER = null; MY_PROFILE = null;
         try{ localStorage.removeItem('ivhub_session'); }catch(e){}
+        /* Whoever signs in next on this page must not inherit this
+           person's directory, accounts or lists (doLogout clears the same). */
+        _lastView = null;
+        try{ localStorage.removeItem('ivhub_myname'); }catch(e){}
+        mRows = []; PROFILES = []; MY_MEMBER = null; MY_AWAY = []; AUDIT_ROWS = [];
+        try{ VL.rows = []; VL.logins = {}; VL.open = null; }catch(e){}
+        try{ AL.mem = null; AL.all = null; AL.admins = []; }catch(e){}
+        ['mdName','mList','umList','vlList','auList'].forEach(id=>{ const el = $(id); if(!el) return; if(el.tagName === 'INPUT') el.value = ''; else el.innerHTML = ''; });
+        $('lp').value = '';
         $('app').style.display = 'none';
         $('loginScreen').style.display = 'flex';
         $('loginErr').textContent = 'Your session has ended. Please sign in again.';
@@ -2376,20 +2387,29 @@ function startSession(sess){
   auditLog('Signed in', 'login', 'Logged in as ' + sess.display);
   showApp();
 }
+let LOGIN_BUSY = false;
 async function doLogin(){
   const raw = $('lu').value || '';
   const u = raw.trim().toLowerCase();
   const p = $('lp').value || '';
   const err = $('loginErr');
-  err.textContent = '';
-  if(!u){ err.textContent = 'Please enter your username.'; return; }
+  err.textContent = ''; err.style.color = '';
+  if(LOGIN_BUSY) return;
+  if(!u){ err.textContent = 'Please enter your email address.'; return; }
 
   if(!sb){ err.textContent = 'No connection to the database - try again shortly.'; return; }
   if(u.indexOf('@') < 0){
     err.textContent = 'Sign in with your email address.';
     return;
   }
-  await authLogin(u, p);
+  if(!p){ err.textContent = 'Please enter your password.'; $('lp').focus(); return; }
+  /* One attempt at a time: a double click or a second Enter used to send
+     two sign-ins, and a dropped connection threw past the screen without
+     saying anything. */
+  LOGIN_BUSY = true; const lb = $('loginBtn'); lb.disabled = true;
+  try{ await authLogin(u, p); }
+  catch(e){ err.textContent = 'Could not sign in - check your connection and try again.'; }
+  finally{ LOGIN_BUSY = false; lb.disabled = false; }
   if(!ALLOW_LEGACY_LOGIN) return;
 
   /* Legacy username path - unreachable, and now inert. The passwords it
@@ -2409,10 +2429,11 @@ async function doLogin(){
 let LOGGING_OUT = false;
 async function doLogout(){
   LOGGING_OUT = true;
-  await auditLog('Signed out', 'login', (CU.display || CU.user || 'Someone') + ' signed out');
+  /* Waits for the entry, but not forever: on a dead connection the sign-out must still happen. */
+  try{ await Promise.race([auditLog('Signed out', 'login', (CU.display || CU.user || 'Someone') + ' signed out'), new Promise(r=>setTimeout(r, 4000))]); }catch(e){}
   try{ if(sb) await sb.auth.signOut({scope:'local'}); }catch(e){}
   AUTH_USER = null; MY_PROFILE = null;
-  localStorage.removeItem('ivhub_session');
+  try{ localStorage.removeItem('ivhub_session'); }catch(e){}
   /* Per-user state must not carry over to whoever signs in next on this
      page: the visit log would skip their first section, and the
      remembered name is the fallback identity for My duties. */
@@ -2420,7 +2441,13 @@ async function doLogout(){
   try{ localStorage.removeItem('ivhub_myname'); }catch(e){}
   mRows = []; PROFILES = []; MY_MEMBER = null; MY_AWAY = []; AUDIT_ROWS = [];
   try{ VL.rows = []; VL.logins = {}; VL.open = null; }catch(e){}
-  try{ AL.mem = null; }catch(e){}
+  try{ AL.mem = null; AL.all = null; AL.admins = []; }catch(e){}
+  /* Satada, Weekday Attendance and duties hold other people's rows: do not leave them for the next sign-in. */
+  try{ Object.assign(SA, {weeks:{}, rost:{}, att:{}, sel:null, form:false, date:'', owners:saAlt(), busy:false, err:'', loaded:false}); Object.assign(WDA, {rows:[], shifts:[], err:''}); }catch(e){}
+  dutyCache = null; _mdNames = null; _myNameResolved = null; mdShotData = null;
+  ['saWeeks','saMain','wdaDays','wdaTotals','homeDash'].forEach(id=>{ const el = $(id); if(el) el.innerHTML = ''; });
+  { const r = $('mdResults'); if(r) r.innerHTML = '<div class="md-empty"><div class="big">🔍</div>Enter your name above to find your upcoming duties.<br>Your name is remembered on this device.</div>'; }
+  ['mdSummary','mdWarns'].forEach(id=>{ const el = $(id); if(el) el.style.display = 'none'; });
   ['mdName','mList','umList','vlList','auList'].forEach(id=>{
     const el = $(id); if(!el) return;
     if('value' in el && el.tagName === 'INPUT') el.value = ''; else el.innerHTML = '';
@@ -2469,9 +2496,12 @@ function tickClock(){
   $('heroDate').textContent = now.toLocaleDateString('en-NZ', {timeZone:'Pacific/Auckland', weekday:'long', day:'numeric', month:'long', year:'numeric'});
 }
 function roleLabel(cu){
-  if(ROLE_LABELS[cu.role]) return ROLE_LABELS[cu.role];
-  const p = (cu.perms||[])[0];
-  return ROLE_LABELS[p] || (cu.role || 'Member');
+  /* The highest role names the person. Weekday Team Lead is stacked on a
+     normal role, so whichever order the database returns them in, a Team A
+     Lead who also leads weekdays still reads as a Team A Lead. */
+  const ps = (cu.perms||[]).filter(k=>ROLE_LABELS[k]).sort((a,b)=>rankOf([a]) - rankOf([b]));
+  if(ps.length) return ROLE_LABELS[ps[0]];
+  return ROLE_LABELS[cu.role] || (cu.role || 'Member');
 }
 
 /* Per-page permission guards (deep-checked on nav AND used to hide nav items) */
@@ -2940,6 +2970,8 @@ async function fetchDutyData(){
   })();
   try{
     dutyCache = await dutyFetchPromise;
+    /* A failed read must not stay cached: forget it shortly so the next look asks again. */
+    if(dutyCache.warns.length){ const bad = dutyCache; setTimeout(()=>{ if(dutyCache === bad) dutyCache = null; }, 8000); }
   }finally{
     dutyFetchPromise = null;
   }
@@ -3001,7 +3033,7 @@ async function resolveMyName(){
       }
     }
   }catch(e){ console.warn('resolveMyName failed:', e.message || e); }
-  if(!name) name = localStorage.getItem('ivhub_myname') || '';
+  if(!name){ try{ name = localStorage.getItem('ivhub_myname') || ''; }catch(e){} }
   _myNameResolved = { name, note };
   return _myNameResolved;
 }
@@ -3096,15 +3128,16 @@ async function loadMyDutiesDash(){
   const r = await resolveMyName();
   if(!r.name){ box.innerHTML = `<div class="md-empty"><div class="big">🗓️</div>Open My Duties and search your name to see your schedule.</div>`; return; }
   box.innerHTML = '<div class="skel"></div><div class="skel"></div>';
-  const {entries} = await fetchDutyData();
+  const {entries, warns} = await fetchDutyData();
   const mine = entries.filter(e=>exactName(r.name, e.person)).slice(0, 3);
+  if(!mine.length && warns.length){ box.innerHTML = `<div class="md-empty"><div class="big">⚠️</div>Your duties could not be loaded right now. Open My Duties to try again.</div>`; return; }
   if(!mine.length){ box.innerHTML = `<div class="md-empty"><div class="big">🌙</div>No upcoming duties for <b>${esc(r.name)}</b> in the next 90 days.</div>`; return; }
   const srcByDate = {}; mine.forEach(e=>{ (srcByDate[e.date] = srcByDate[e.date] || new Set()).add(e.source); });
   box.innerHTML = mine.map((e,i)=>dutyCardHTML(e, srcByDate[e.date].size > 1, i)).join('');
 }
 async function runDutySearch(){
   const q = ($('mdName').value || '').trim();
-  localStorage.setItem('ivhub_myname', $('mdName').value || '');
+  try{ localStorage.setItem('ivhub_myname', $('mdName').value || ''); }catch(e){}
   const res = $('mdResults'), sum = $('mdSummary'), warnsEl = $('mdWarns');
   mdShotData = null;
   sum.style.display = 'none';
@@ -3120,6 +3153,10 @@ async function runDutySearch(){
     warnsEl.style.display = 'block';
   }
   const mine = entries.filter(e=>fuzzyMatch(q, e.person));
+  if(!mine.length && warns.length && !entries.length){
+    res.innerHTML = `<div class="md-empty"><div class="big">⚠️</div>Duties could not be loaded right now, so nothing can be shown for “${esc(q)}”.<br>Check your connection and press Search to try again.</div>`;
+    return;
+  }
   if(!mine.length){
     res.innerHTML = `<div class="md-empty"><div class="big">🌙</div>No upcoming duties found for “${esc(q)}” in the next 90 days.<br>Enjoy the break - or check the spelling of your name.</div>`;
     sum.style.display = 'block';
@@ -3892,6 +3929,7 @@ async function saveMemberEdit(row, panel){
   const nandi = panel.querySelector('[data-ef="nandi"]').classList.contains('on');
   if(nandi !== !!row.nandi) patch.nandi = nandi;
   const phone = (panel.querySelector('[data-ef="phone"]').value || '').trim();
+  if(phone && !/^[0-9+()\-\s]{6,20}$/.test(phone)){ toast('That phone number does not look right.', 'err'); return; }
   if(phone !== (row.phone || '')) patch.phone = phone || null;
   const notes = (panel.querySelector('[data-ef="notes"]').value || '').trim();
   if(notes !== (row.notes || '')) patch.notes = notes || null;
@@ -4020,7 +4058,9 @@ async function revokeMemberAccess(row){
 }
 
 async function deleteMember(row){
-  if(!confirm(`Delete member "${row.name}" (${memberTeamLabel(row)})? This cannot be undone.`)) return;
+  const hasLogin = (PROFILES||[]).some(p=>String(p.member_id) === String(row.id));
+  if(!confirm(`Delete member "${row.name}" (${memberTeamLabel(row)})? This cannot be undone.` +
+    (hasLogin ? `\n\nThey have a login. Deleting the member does not remove it - to take away their access use "They have left - revoke access" first.` : ''))) return;
   if(!sb){ toast('No database connection - cannot delete.', 'err'); return; }
   if(!await dbWrite('Deleting the member', ()=>sb.from('iv_members').delete().eq('id', row.id))) return;
   mRows = mRows.filter(r=>r.id !== row.id);
@@ -4045,6 +4085,9 @@ async function addMemberRun(){
   const name = (panel.querySelector('#maName').value || '').trim();
   if(!name){ toast('Please enter the member\'s name.', 'err'); return; }
   if(!sb){ toast('No database connection - cannot add members.', 'err'); return; }
+  if(name.length > 80){ toast('That name is too long (80 characters at most).', 'err'); return; }
+  if((mRows||[]).some(m=>String(m.name||'').trim().toLowerCase() === name.toLowerCase()) &&
+     !confirm('There is already a member called "' + name + '". Add another with the same name?')) return;
   const rank = panel.querySelector('#maRank').value;
   const lead = rankIsLeadership(rank);
   const activePill = panel.querySelector('.tpill.active');
@@ -4103,6 +4146,7 @@ function fillInviteRoles(){
   const wr = $('ufWdRow'); if(wr) wr.style.display = grantableRoles().includes('wd_tl') ? '' : 'none';
 }
 
+let INVITE_BUSY = false;
 async function sendInvite(){
   const msg = $('ufInviteMsg');
   const btn = $('ufInviteSend');
@@ -4113,11 +4157,13 @@ async function sendInvite(){
   const wdOn = !!($('ufInviteWd') && $('ufInviteWd').checked) && grantableRoles().includes('wd_tl');
   const perms = (role ? role.perms.slice() : []).concat(wdOn && !(role && role.perms.includes('wd_tl')) ? ['wd_tl'] : []);
   const show = (t,bad)=>{ msg.textContent = t; msg.style.color = bad ? 'var(--red-lt, #F87171)' : 'var(--green-lt, #4ADE80)'; };
-  if(!email || email.indexOf('@') < 0){ show('Enter their email address first.', true); return; }
+  if(INVITE_BUSY) return;
+  if(!email){ show('Enter their email address first.', true); return; }
+  if(!EMAIL_RE.test(email)){ show('That email address does not look right.', true); return; }
   if(rpTeamChosen('ufInviteRole') && !roleId){ show('Choose a level for that team.', true); return; }
   if(roleId && !grantableRoles().includes(roleId)){ show('That role is at or above your own level.', true); return; }
   if(!sb){ show('No connection to Supabase.', true); return; }
-  btn.disabled = true; const label = btn.textContent; btn.textContent = 'Sending…';
+  INVITE_BUSY = true; btn.disabled = true; const label = btn.textContent; btn.textContent = 'Sending…';
   try{
     const {data, error} = await sb.functions.invoke('invite-user', {
       body: { email: email, display: display || undefined, perms: perms, redirectTo: setupUrl() }
@@ -4152,7 +4198,7 @@ async function sendInvite(){
   }catch(e){
     show('Invite failed: ' + (e.message || e), true);
   }finally{
-    btn.disabled = false; btn.textContent = label;
+    INVITE_BUSY = false; btn.disabled = false; btn.textContent = label;
   }
 }
 /* ── Removing people ────────────────────────────────────────────────
@@ -4645,8 +4691,9 @@ function memberOptions(sel){
      rather than showing the account as unlinked. */
   const missing = sel != null && sel !== '' && !rows.some(m=>String(m.id)===String(sel));
   return '<option value="">- not linked -</option>' + (missing ? '<option value="'+esc(sel)+'" selected>#'+esc(sel)+'</option>' : '') + rows.map(m=>
-    '<option value="'+m.id+'"'+(String(sel)===String(m.id)?' selected':'')+'>'+esc(m.name||('#'+m.id))+
-    (m.team?(' · Team '+esc(m.team)):'')+'</option>').join('');
+    { const taken = String(sel)!==String(m.id) && (PROFILES||[]).some(p=>p.member_id!=null && String(p.member_id)===String(m.id));   /* one login per person: the database refuses a second */
+      return '<option value="'+m.id+'"'+(String(sel)===String(m.id)?' selected':'')+(taken?' disabled':'')+'>'+esc(m.name||('#'+m.id))+
+    (m.team?(' · Team '+esc(m.team)):'')+(taken?' (already linked)':'')+'</option>'; }).join('');
 }
 /* ═══ VOLUNTEER LOGINS ═══
    The volunteer directory with the personal details a lead needs: date of
@@ -4740,9 +4787,16 @@ async function vlSave(id){
   const email = (f('email')||'').trim();
   if(email && !EMAIL_RE.test(email)){ toast('That email address does not look right.','err'); return; }
   const patch = { gender: f('gender'), email: email || null };
-  if(VL.hasPhone) patch.phone = (f('phone')||'').trim() || null;
+  if(VL.hasPhone){
+    const ph = (f('phone')||'').trim();
+    if(ph && !/^[0-9+()\-\s]{6,20}$/.test(ph)){ toast('That phone number does not look right.','err'); return; }
+    patch.phone = ph || null;
+  }
   if(VL.hasDob){
-    const dob = f('dob') || null; patch.dob = dob;
+    const dob = f('dob') || null;
+    const yrs = ageFromDob(dob);
+    if(dob && (yrs == null || yrs < 0 || yrs > 110)){ toast('That date of birth does not look right.','err'); return; }
+    patch.dob = dob;
     const a = ageFromDob(dob); if(a != null) patch.age_group = groupForAge(a);
   }
   if(!await dbWrite('Saving the volunteer', ()=>sb.from('iv_members').update(patch).eq('id', id))) return;
@@ -4878,7 +4932,7 @@ function alRenderList(){
         '<div class="al-mail">'+esc(r.email||'')+'</div></div></div>'+
       '<div class="al-roles">'+pills+'</div>'+
       '<div class="al-link'+(linked||r.member_id?'':' warn')+'">'+link+'</div>'+
-      '<div class="al-acts">'+(can ? '<span class="al-go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>' : '<span class="pchip" title="This account outranks you">outranks you</span>')+'</div>'+
+      '<div class="al-acts">'+(can ? '<span class="al-go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>' : (self ? '<span class="pchip" title="Change your own name and details in My Profile">your account</span>' : '<span class="pchip" title="This account outranks you">outranks you</span>'))+'</div>'+
       '<div class="um-edit" id="ue-'+id+'" style="display:none;"></div></div>';
   }).join('');
 }
@@ -5021,6 +5075,8 @@ async function loadProfile(){
 async function saveProfileName(){
   const v = $('pfDisplay').value.trim(), btn = $('pfSaveName');
   if(v.length < 2){ toast('A name needs at least 2 characters.', 'err'); return; }
+  if(v.length > 60){ toast('A name can be 60 characters at most.', 'err'); return; }
+  if(!sb){ toast('No connection - try again in a moment.', 'err'); return; }
   btn.disabled = true;
   try{
     const {data, error} = await sb.rpc('set_my_display', {p_display: v});
@@ -5033,7 +5089,13 @@ async function saveProfileName(){
   btn.disabled = false;
 }
 async function saveProfileDetails(){
-  const btn = $('pfSaveDetails'); btn.disabled = true;
+  const btn = $('pfSaveDetails');
+  const em = ($('pfEmail').value || '').trim(), ph = ($('pfPhone').value || '').trim(), dob = $('pfDob').value || '';
+  if(em && !EMAIL_RE.test(em)){ toast('That email address does not look right.', 'err'); return; }
+  if(ph && !/^[0-9+()\-\s]{6,20}$/.test(ph)){ toast('That phone number does not look right.', 'err'); return; }
+  if(dob){ const yrs = ageFromDob(dob); if(yrs == null || yrs < 0 || yrs > 110){ toast('That date of birth does not look right.', 'err'); return; } }
+  if(!sb){ toast('No connection - try again in a moment.', 'err'); return; }
+  btn.disabled = true;
   try{
     const {error} = await sb.rpc('set_my_details', {
       p_phone: $('pfPhone').value, p_email: $('pfEmail').value,
@@ -5885,7 +5947,7 @@ function bindUI(){
   $('mdName').addEventListener('focus', mdShowSug);
   $('mdName').addEventListener('blur', ()=>setTimeout(mdHideSug, 180));
   $('mdSug').addEventListener('mousedown', e=>{ const it = e.target.closest('.md-sug-i'); if(it){ e.preventDefault(); mdPickSug(it.dataset.name); } });
-  $('mdName').addEventListener('change', ()=>localStorage.setItem('ivhub_myname', $('mdName').value || ''));
+  $('mdName').addEventListener('change', ()=>{ try{ localStorage.setItem('ivhub_myname', $('mdName').value || ''); }catch(e){} });
   $('mdGoBtn').addEventListener('click', ()=>nav('myduties'));
   /* away dates */
   $('awayAdd').addEventListener('click', addAway);
@@ -5980,7 +6042,19 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   const authed = await authBootstrap();
   if(authed) showApp();
   else if(ALLOW_LEGACY_LOGIN && loadSession()) showApp();
-  else { try{ localStorage.removeItem('ivhub_session'); }catch(e){} $('loginScreen').style.display = 'flex'; $('lu').focus(); }
+  else {
+    try{ localStorage.removeItem('ivhub_session'); }catch(e){}
+    $('loginScreen').style.display = 'flex'; $('lu').focus();
+    /* An invite or reset link that is spent or out of date arrives as
+       #error=...&error_code=otp_expired, or as a token with no session
+       behind it. Say so instead of showing a bare sign-in box. */
+    try{
+      if(!$('loginErr').textContent && (/[#&]error(_code)?=/.test(location.hash || '') || AUTH_LINK)){
+        $('loginErr').textContent = 'That link has expired or was already used. Use "Send me a reset link" below, or ask an admin to send a new one.';
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    }catch(e){}
+  }
 });
 /* ── DESKTOP TOP NAVIGATION ──────────────────────────────────────────
    Reads the sidebar and mirrors it into the top bar. Items before the
@@ -6606,9 +6680,10 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       '<span class="hm-tag">'+(e.kind==='training'?'Training':(e.team==='AV'?'AV':'Team '+esc(e.team)))+'</span></div>';
   }
   async function dutiesHTML(lead){
-    var me = await resolveMyName(), mine = [];
+    var me = await resolveMyName(), mine = [], failed = false;
     if(me && me.name){
       var duty = await fetchDutyData();
+      failed = duty.warns && duty.warns.length > 0;
       mine = duty.entries.filter(function(e){ return exactName(me.name, e.person); });
       try{
         var today = todayNZ();
@@ -6619,7 +6694,8 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       mine.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
     }
     if(!mine.length){
-      if(lead) return '';
+      if(lead && !failed) return '';
+      if(failed) return '<section class="hm-sec"><h3 class="hm-h">Your upcoming duties</h3><div class="hm-empty"><b>Your duties could not be loaded right now.</b><span>Check your connection and refresh the page.</span></div></section>';
       return '<section class="hm-sec"><h3 class="hm-h">Your upcoming duties</h3><div class="hm-empty"><b>Nothing on your list yet.</b><span>When you are rostered, your duties appear here with the date, time and team.</span></div></section>';
     }
     var first = mine[0], n = Math.max(0, dd(todayNZ(), first.date)), pct = Math.max(0.06, 1-Math.min(7,n)/7);
