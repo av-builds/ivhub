@@ -38,3 +38,10 @@ This log covers the recent redesign and hardening work on the live site (av-buil
 3. Run a second full sweep after the fixes.
 
 I will report honestly on what was fixed, what was skipped and why, and every database or function change I made.
+
+## Update: fixes pushed, Satada built
+
+- **Bug and security fixes.** The Hub, Team A and B, AV, division pages and shared code fixes are pushed. Examples are the roster save wrongly reported as failed, the away-date script injection, and the AV admin panel no longer reading passwords. The invite-user function is live as version 14, with throttled password resets and division roles.
+- **Database.** Log entries are stamped with the real user. The old plaintext passwords are replaced with a placeholder. The rank function knows the division roles. The rest (team-scoped writes, checklist tables, and others) is waiting on a Supabase confirmation prompt.
+- **Satada.** Either Team Lead can add a satada week (Sunday to Saturday) with an owner team per night. Both leads see all seven nights. Only the owner team rosters a night, and the other lead can take it over. The cycle's own Fridays and Paanch Baar Saal are not created that week. Friday keeps its MPH options. Satada nights count as normal majalis in attendance and reports.
+- **Yearly roster.** From next year you send the jamati roster and I enter the majalis dates, including satada weeks.
