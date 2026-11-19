@@ -40,6 +40,28 @@ const RANK: Record<string, number> = {
   av_coord: 9,
   team_a: 10, team_b: 10, av_team: 10,
 };
+// Division and team roles, generated from the same chart index.html's
+// DIVISIONS/defRole uses: Leads rank 6, Assistant Leads 7, team volunteers 10.
+// Keep this list in step with DIVISIONS there and with public.rank_of().
+const DIVISIONS: { key: string; lead: string; alead: string; teams: { key: string; role: string }[] }[] = [
+  { key: "pt", lead: "Paat Team Lead", alead: "Paat Assistant Team Lead",
+    teams: [{ key: "ab", role: "Abeshafa Paat" }, { key: "sk", role: "Sukreet Paat" }] },
+  { key: "td", lead: "Training & Development Lead", alead: "Assistant Training & Development Lead", teams: [] },
+  { key: "ss", lead: "Safety & Security Lead", alead: "Assistant Safety & Security Lead", teams: [] },
+  { key: "an", lead: "Ancillary Services Lead", alead: "Ancillary Services Assistant Lead",
+    teams: [{ key: "mt", role: "Maintenance" }, { key: "ck", role: "Cooking Team" }, { key: "cl", role: "Cleaning Team" }] },
+];
+const DIVISION_LABELS: Record<string, string> = {};
+const defRole = (k: string, rank: number, label: string) => { RANK[k] = rank; DIVISION_LABELS[k] = label; };
+DIVISIONS.forEach((d) => {
+  defRole(d.key + "_lead", 6, d.lead);
+  defRole(d.key + "_alead", 7, d.alead);
+  d.teams.forEach((t) => {
+    defRole(t.key + "_lead", 6, t.role + " Lead");
+    defRole(t.key + "_alead", 7, t.role + " Assistant Lead");
+    defRole(t.key + "_team", 10, t.role + " Volunteer");
+  });
+});
 // hasOwnProperty, not `in`. `"constructor" in RANK` is true - every object
 // inherits it - so `in` would wave through prototype names as if they were
 // permissions and write them onto the account.
@@ -71,6 +93,14 @@ const ROLE_INFO: Record<string, { label: string; blurb: string }> = {
   team_b: { label: "IV Team B Volunteer", blurb: "You are a Team B volunteer. You can see your own duties, your away dates and the Team B calendar. Your Team Lead builds the roster and will place you on it." },
   av_team: { label: "AV Team Volunteer", blurb: "You are an AV volunteer. You can see your own duties, your away dates and the AV calendar. The AV leads build the roster and will place you on it." },
 };
+for (const [k, label] of Object.entries(DIVISION_LABELS)) {
+  const r = RANK[k];
+  ROLE_INFO[k] = { label, blurb: r === 10
+    ? `You are a ${label}. You can see your own duties, your away dates and your team's page. Your team leads will place you on the roster.`
+    : r === 6
+    ? `You are the ${label}. You can open your division or team page and manage it, within the chain of command. You report to IV leadership.`
+    : `You are the ${label}. You support your lead with the same working access, one step lower in the chain of command.` };
+}
 const RANK_NAME = (r: number) =>
   r === 0 ? "Rank 0, the top of the chain of command" : r <= 5 ? `Rank ${r}, IV leadership` :
   r <= 9 ? `Rank ${r}, team leadership` : "Rank 10, volunteer";
@@ -180,30 +210,61 @@ Deno.serve(async (req) => {
     if (String(peek.action ?? "") === "request-reset") {
       const said = { ok: true, message: "If that address has an account, a link is on its way." };
       const addr = String(peek.email ?? "").trim().toLowerCase();
-      if (!addr || !/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(addr)) return json(said);
+      const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      const t0 = Date.now();
 
-      const { data: who } = await svc
-        .from("profiles").select("perms").eq("email", addr).maybeSingle();
-      let p = who?.perms ?? [];
-      if (typeof p === "string") { try { p = JSON.parse(p); } catch { p = []; } }
-      if (!Array.isArray(p)) p = [];
-
-      // Volunteers only. Anyone who can change a roster, manage an account
-      // or read the audit log still gets their reset sent by a person.
-      // Volunteers sit at rank 10; the Co-ordinator (9) is not one of them.
-      if (who && rankOf(p as string[]) >= 10) {
+      // Every branch does the same lookups and then waits out the same
+      // minimum time, so the reply cannot tell a volunteer's address from a
+      // leader's or from one that does not exist. The mail itself is sent in
+      // the background (waitUntil) so a slow send does not show either.
+      const work = (async () => {
         try {
-          const { data: acct } = await svc.from("profiles").select("id").eq("email", addr).maybeSingle();
-          if (acct?.id) await syncRoleMeta(svc, acct.id, p as string[]);
-          await svc.auth.resetPasswordForEmail(addr, { redirectTo: safeRedirect(peek.redirectTo) });
-          await svc.from("audit_logs").insert({
-            ts: new Date().toISOString(),
-            username: addr, user_display: addr,
-            action: "Requested own password reset", category: "login",
-            detail: "Self-service reset, volunteer",
-          });
+          const valid = !!addr && addr.length <= 254 && /^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(addr);
+          const key = valid ? addr : "invalid@invalid.invalid";
+          const { data: rows } = await svc
+            .from("profiles").select("id, perms").eq("email", key).limit(1);
+          const who = rows?.[0];
+          let p: unknown = who?.perms ?? [];
+          if (typeof p === "string") { try { p = JSON.parse(p); } catch { p = []; } }
+          if (!Array.isArray(p)) p = [];
+
+          // Throttle before any side effect: one mail per address per 10
+          // minutes, and a global ceiling so the shared mail quota (which
+          // admin invites and resets also draw on) cannot be drained.
+          // Both counts run for every address, known or not.
+          const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+          const mine = await svc.from("audit_logs").select("id", { count: "exact", head: true })
+            .eq("username", key).eq("action", "Requested own password reset").gte("ts", since);
+          const all = await svc.from("audit_logs").select("id", { count: "exact", head: true })
+            .eq("action", "Requested own password reset").gte("ts", since);
+          const throttled = (mine.count ?? 0) > 0 || (all.count ?? 0) >= 20;
+
+          // Volunteers only: an explicit allow list (every role known and at
+          // rank 10). Anyone who can change a roster, manage an account or
+          // read the audit log still gets their reset sent by a person, and
+          // so do accounts with no role or an unrecognised one.
+          const list = p as string[];
+          const volunteer = list.length > 0 && list.every((x) => isPerm(x) && RANK[x] === 10);
+          if (valid && who?.id && volunteer && !throttled) {
+            await syncRoleMeta(svc, who.id, list);
+            const { error: mailErr } = await svc.auth.resetPasswordForEmail(addr, { redirectTo: safeRedirect(peek.redirectTo) });
+            // Logged only when a mail really went out, so the log (and the
+            // throttle that reads it) grows with mail sent, not with requests.
+            if (!mailErr) {
+              await svc.from("audit_logs").insert({
+                ts: new Date().toISOString(),
+                username: addr, user_display: addr,
+                action: "Requested own password reset", category: "login",
+                detail: "Self-service reset, volunteer",
+              });
+            }
+          }
         } catch { /* never let a failure here change the answer */ }
-      }
+      })();
+      try { (globalThis as any).EdgeRuntime?.waitUntil?.(work); } catch { /* not available locally */ }
+      await Promise.race([work, sleep(2500)]);
+      const left = 800 - (Date.now() - t0);
+      if (left > 0) await sleep(left);
       return json(said);
     }
   }
@@ -340,11 +401,15 @@ Deno.serve(async (req) => {
         username: prof?.email ?? caller.email ?? "",
         user_display: prof?.display ?? caller.email ?? "",
         action: "Sent password reset", category: "login",
-        detail: email + (signedOut ? ": sessions ended" : ": sessions NOT ended (" + signOutNote + ")"),
+        detail: email + (signedOut ? ": sessions ended (access tokens lapse within about an hour)" : ": sessions NOT ended (" + signOutNote + ")"),
       });
     } catch { /* logging is optional */ }
 
-    return json({ ok: true, email, signedOut, warning: signedOut ? undefined :
+    // Revoking sessions stops refresh tokens; an access token already issued
+    // stays valid until it expires (about an hour), so say so.
+    return json({ ok: true, email, signedOut,
+      note: signedOut ? "Their sessions were ended. A device may stay signed in until its current access token expires, within about an hour." : undefined,
+      warning: signedOut ? undefined :
       "Reset email sent, but their existing sessions could not be ended (" + signOutNote +
       "). They stay signed in on devices until the new password is set." });
   }
@@ -368,9 +433,14 @@ Deno.serve(async (req) => {
   // dropdown on the site is convenience; anyone can call this endpoint
   // directly, so the rule that you may only hand out authority strictly
   // below your own has to be enforced on this side.
-  const wanted = Array.isArray(body.perms)
-    ? [...new Set(body.perms.map((p) => String(p)))].filter(isPerm)
-    : [];
+  const asked = Array.isArray(body.perms) ? [...new Set(body.perms.map((p) => String(p)))] : [];
+  // Fail loudly: silently dropping a role would report success for an account
+  // that has no access.
+  const unknownRoles = asked.filter((p) => !isPerm(p));
+  if (unknownRoles.length) {
+    return json({ error: "These roles are not recognised and were not granted: " + unknownRoles.join(", ") }, 400);
+  }
+  const wanted = asked;
 
   // Facilitators staff the two IV teams and nothing else. Mirrors
   // grantableRoles() on the site; keep the two in step.
@@ -388,6 +458,51 @@ Deno.serve(async (req) => {
       error: "You cannot grant " + refused.join(", ") +
              " because it is at or above your own level in the chain of command.",
     }, 403);
+  }
+
+  // ── 3c. member_id, validated before anything is sent ────────────
+  // Numeric, a real member, and not already linked to another account.
+  let linkMember: number | null = null;
+  const rawMember = body.member_id;
+  if (rawMember !== undefined && rawMember !== null && rawMember !== "") {
+    const n = Number(rawMember);
+    if (!Number.isInteger(n) || n <= 0) return json({ error: "member_id must be a positive whole number." }, 400);
+    const { data: mem, error: memErr } = await admin.from("iv_members").select("id").eq("id", n).maybeSingle();
+    if (memErr) return json({ error: "Could not check that member: " + memErr.message }, 500);
+    if (!mem) return json({ error: "That member does not exist." }, 400);
+    linkMember = n;
+  }
+
+  // ── 3d. An address that already has a profile ───────────────────
+  // Re-sending a pending invite is fine, but never at the expense of an
+  // existing account: a confirmed one is refused, and a pending one must be
+  // strictly below the caller, exactly as for reset and delete.
+  const { data: existingRows, error: exErr } = await admin
+    .from("profiles").select("id, perms").eq("email", email).limit(1);
+  if (exErr) return json({ error: "Could not check that address: " + exErr.message }, 500);
+  const existing = existingRows?.[0];
+  if (existing) {
+    let ePerms: unknown = existing.perms ?? [];
+    if (typeof ePerms === "string") { try { ePerms = JSON.parse(ePerms); } catch { ePerms = []; } }
+    if (!Array.isArray(ePerms)) ePerms = [];
+    if (callerRank >= rankOf(ePerms as string[])) {
+      return json({ error: "That account is at or above your level in the chain of command." }, 403);
+    }
+    let confirmed = true;
+    try {
+      const { data: au } = await admin.auth.admin.getUserById(existing.id);
+      confirmed = !!(au?.user?.email_confirmed_at || au?.user?.confirmed_at || au?.user?.last_sign_in_at);
+    } catch { /* unknown: treat as confirmed, the safe side */ }
+    if (confirmed) {
+      return json({ error: "That email already has an account. It will be in the list below." }, 409);
+    }
+  }
+  if (linkMember !== null) {
+    const { data: taken, error: tkErr } = await admin.from("profiles").select("id").eq("member_id", linkMember).limit(1);
+    if (tkErr) return json({ error: "Could not check that member: " + tkErr.message }, 500);
+    if (taken?.length && taken[0].id !== existing?.id) {
+      return json({ error: "That member is already linked to another account." }, 409);
+    }
   }
 
   // Written with the service key into a table the browser cannot reach, so
@@ -446,9 +561,6 @@ Deno.serve(async (req) => {
   // reason invitations are sent from the member directory: three hundred
   // accounts that each already know which person they are, so My Duties
   // works the first time everybody signs in.
-  const memberId = Number(body.member_id);
-  const linkMember = Number.isInteger(memberId) && memberId > 0 ? memberId : null;
-
   if (newId && (wanted.length || linkMember !== null)) {
     const patch: Record<string, unknown> = {};
     if (wanted.length) patch.perms = wanted;
@@ -456,12 +568,14 @@ Deno.serve(async (req) => {
     const { error: upErr } = await admin.from("profiles").update(patch).eq("id", newId);
     if (upErr) {
       granted = [];
-      // The invite is already gone; say so plainly rather than pretending.
+      try { await admin.from("invited_perms").delete().eq("email", email); } catch { /* best effort */ }
+      // The invite is already out, but the account is not as asked: report an
+      // error, not a success, so nobody believes the access was granted.
       return json({
-        ok: true, email, id: newId, perms: [], member_id: null,
-        warning: "Invite sent, but the permissions did not save (" + upErr.message +
-                 "). Grant them from the list below.",
-      });
+        error: "The invite was sent, but the permissions did not save (" + upErr.message +
+               "). Grant them from the list below.",
+        email, id: newId,
+      }, 500);
     }
     try { await admin.from("invited_perms").delete().eq("email", email); } catch { /* best effort */ }
   }

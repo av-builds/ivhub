@@ -108,9 +108,11 @@ select,input[type=number]{width:100%;min-height:44px;padding:0 12px;border-radiu
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
 </style>
-<link rel="stylesheet" href="ivtheme.css?v=20261118b">
-<link rel="stylesheet" href="ivshape.base.css?v=20261118b">
-<link rel="stylesheet" href="ivshape.css?v=20261118b">
+<link rel="stylesheet" href="ivtheme.css?v=20261119a">
+<link rel="stylesheet" href="ivshape.base.css?v=20261119a">
+<link rel="stylesheet" href="ivshape.css?v=20261119a">
+<link rel="stylesheet" href="ivtype.css?v=20261119a">
+<link rel="stylesheet" href="ivfix.css?v=20261119a">
 <script src="ivtheme.js?v=20261114a"></script>
 </head>
 <body>
@@ -408,7 +410,9 @@ async function start(){
   sb = lib.createClient(SB_URL, SB_KEY);
   const { data } = await sb.auth.getSession(), sess = data && data.session;
   if(!sess || !sess.user){ location.replace('index.html'); return; }
-  const { data: prof } = await sb.from('profiles').select('perms,display,member_id').eq('id', sess.user.id).maybeSingle();
+  const { data: prof, error: pe } = await sb.from('profiles').select('perms,display,member_id').eq('id', sess.user.id).maybeSingle();
+  // A failed read is not "no access": say so instead of denying a legitimate user.
+  if(pe){ show('stDeny'); $('denyMsg').textContent = 'Could not check your access. Check your connection and reload.'; return; }
   if(!render(permList(prof && prof.perms))) return;
   await loadAll();
   const mine = prof && S.pool.find(p=>String(p.id) === String(prof.member_id));

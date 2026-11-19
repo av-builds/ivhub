@@ -1,0 +1,113 @@
+/* ═══ SITEWIDE FIXES from the visual audit (hand-written; loaded after ivtype.css) ═══ */
+
+/* The bar must not be clipped, or its dropdowns are cut off. Spinners are circles. Plain-text notes have no shape. */
+.topnav,header.topnav,.tn-group,.tn-row{clip-path:none!important;}
+.spin{clip-path:none!important;border-radius:50%!important;}
+.al-link.warn,.cl-note.warn,.warn:not(.btn):not(.bdg):not(.chip):not(.pill):not(.ib){clip-path:none!important;}
+.ib.ib-warn,.cl-note{clip-path:none!important;}
+
+/* floating buttons never sit on the last row of content */
+.main{padding-bottom:130px!important;}
+@media(max-width:1100px){header.top{padding-right:124px;}}
+
+/* the welcome banner: room for its last line (the date) */
+.iv-banner.has-name,.iv-banner{min-height:calc(380px + var(--ivb-top,0px));}
+@media(max-width:560px){.iv-banner.has-name,.iv-banner{min-height:calc(330px + var(--ivb-top,0px));}}
+.ivb-title{word-spacing:.12em;}
+.ph p,.page .sub{text-wrap:pretty;}
+
+/* checklist tick boxes keep a visible fill (a border is cut by the slant) */
+.cl-box,.cl-ring{background:color-mix(in srgb,var(--iv-sec,var(--blue-lt)) 45%,transparent)!important;}
+.cl-row.done .cl-box,.cl-row.ticking .cl-box,.cl-card.armed .cl-ring,.cl-card.clearing .cl-ring{background:var(--green-lt,#4ADE80)!important;}
+
+/* the drawer's inputs show as boxes */
+.al-drawer .fg input,.al-drawer .fg select{background-color:var(--dp)!important;}
+html[data-theme="light"] .al-drawer .fg input,html[data-theme="light"] .al-drawer .fg select{background-color:#fff!important;}
+
+/* ghost buttons get a fill, not a border */
+.btn.ghost{background:rgba(75,163,220,.14)!important;min-height:44px;color:var(--dt)!important;}
+
+/* loading and disabled */
+.btn:disabled,.btn[disabled]{opacity:.5;cursor:not-allowed;filter:saturate(.6);}
+
+
+
+/* ── light theme: colours written for a dark page ── */
+html[data-theme="light"]{--green-lt:#0B6B47;}
+html[data-theme="light"] .badge-link{color:#0B6B47!important;background:rgba(36,145,79,.14)!important;}
+html[data-theme="light"] .badge-b{color:#5B2FA8!important;background:rgba(124,58,237,.12)!important;}
+html[data-theme="light"] .mbox{background:var(--ds)!important;}
+html[data-theme="light"] .dp-card{background:rgba(11,27,51,.05)!important;}
+html[data-theme="light"] .dp-row{border-bottom-color:rgba(11,27,51,.08)!important;}
+html[data-theme="light"] #auditList [style*="color:#C8DFF0"]{color:var(--dt)!important;}
+html[data-theme="light"] #auditList span[style*="color:#6EE7B7"]{color:#0B6B47!important;}
+html[data-theme="light"] #auditList span[style*="color:#A5B4FC"]{color:#4338CA!important;}
+html[data-theme="light"] #page-audit #auditList>div[style*="sticky"]{background:#E6EEF7!important;color:#3D5A78!important;}
+html[data-theme="light"] .mj-list-name[style*="67E8F9"]{color:#0E7490!important;}
+html[data-theme="light"] .page [style*="color:#6EE7B7"]{color:#047857!important;}
+html[data-theme="light"] .page [style*="color:#FCA5A5"]{color:#B42318!important;}
+html[data-theme="light"] .page [style*="color:#E8C060"]{color:#8A5A00!important;}
+html[data-theme="light"] .page [style*="color:#f88"],html[data-theme="light"] .page [style*="color:#F88"]{color:#B42318!important;}
+html[data-theme="light"] .role-pill.yl{color:#0E7490;}
+html[data-theme="light"] .perm-chk{background:#E2EAF3!important;color:#14304F!important;}
+html[data-theme="light"] .dayb.on{color:#166534!important;background:rgba(22,163,74,.18)!important;}
+html[data-theme="light"] .rl-opt input:checked+span{background:var(--blue)!important;color:#fff!important;}
+html[data-theme="light"] .pchip-x{background:rgba(0,85,139,.14);color:var(--blue);}
+html[data-theme="light"] .cl-seg{background:#DCE6F0!important;}
+html[data-theme="light"] .tile{background:#EAF1FA!important;}
+html[data-theme="light"] .tile:hover{background:#DCE8F6!important;}
+html[data-theme="light"] .badge{color:#fff!important;}
+html[data-theme="light"] .cell{background:#EEF3FA;}
+html[data-theme="light"] .mo{background:#E6EEF8!important;color:var(--navy,#0C2461)!important;}
+html[data-theme="light"] #vlList .um-meta b{color:#0B6B47!important;}
+
+/* ── small screens ── */
+@media(max-width:600px){
+  /* AV forms: one column so inputs show what is typed */
+  #page-events .add-form>div>div[style*="grid-template-columns"],#page-adminpanel .add-form>div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
+  #page-dashboard #dashWeek>div{flex-wrap:wrap;}
+  #vmCount{flex:1 1 100%;margin-left:0!important;margin-top:2px;}
+  .iv-ph{flex-wrap:wrap;}
+  .tw:has(#upTb) table{min-width:0;}
+  .tw:has(#upTb) th,.tw:has(#upTb) td{padding:9px 7px;}
+  .tw:has(#upTb) td:first-child{white-space:nowrap;}
+  /* tap targets */
+  .ev-del{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;}
+  .role-pill .rp-x{padding:12px 10px;margin:-12px -6px;}
+  .day-tog span{padding:11px 10px;min-height:40px;box-sizing:border-box;}
+  .vm-filter{min-height:40px;}
+  .btn-sm{min-width:44px;}
+  /* Numbers */
+  .seg{display:flex;width:100%;}
+  .seg button{flex:1 1 0;min-width:0;padding:11px 10px 11px 12px;}
+  #body-reports select{min-width:0;width:100%;}
+  .pick-row{flex-wrap:wrap;row-gap:4px;}
+  .pick-row .nm{flex:1 1 100%;}
+  .pick-row .meta{margin-left:auto;}
+  .cv-dh .ce-main{flex:1;min-width:120px;}
+  .cv-car{margin-left:auto;}
+  /* admin logins */
+  .al-lab{letter-spacing:.04em;}
+  .al-cap{letter-spacing:.05em;}
+  .rl-opt span{min-height:42px;line-height:42px;}
+  .rl-grid{max-height:60vh;}
+  /* audit log table: wrap long cells rather than scroll sideways */
+  #auList td,#auList th{white-space:normal;overflow-wrap:anywhere;}
+  /* safety calendar */
+  .cell .d{gap:2px;flex-wrap:nowrap;}
+  .cell .n{flex:none;padding:1px 3px!important;--ivp-sl:3px;font-size:11px;white-space:nowrap;}
+  .cell .lock{display:none;}
+  .av{table-layout:fixed;}
+  .av td:first-child,.av th:first-child{width:64px;min-width:0!important;font-size:13px!important;padding-right:4px;overflow-wrap:anywhere;}
+  .av td,.av th{padding:6px 1px;}
+  .dayb{min-width:0;}
+}
+@media(max-width:900px){
+  /* the phone menu: the Soon tag is a dot, so labels keep their width */
+  .sidebar .ntag{font-size:0!important;padding:0!important;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:auto;}
+  .sidebar .ntag::before{content:"!";font-size:13px;font-weight:700;}
+}
+.top .t span a{display:inline-block;padding:12px 6px;margin:-12px -6px;}
+.cal-legend{gap:0 5px;}
+.cal-legend i{margin-right:0;}
+.cal-legend i:not(:first-child){margin-left:14px;}
