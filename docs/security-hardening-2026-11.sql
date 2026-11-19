@@ -78,3 +78,20 @@ create policy app_users_write on public.app_users for all to authenticated
 -- confirmation that nobody answered and timed out. Verified afterwards that
 -- iv_checklist and both functions do not exist. Steps 3-12 not started.
 -- ===================================================================
+
+-- ===================================================================
+-- APPLIED to production (migrations hardening_02 to hardening_04, plus the app_users pw neutralise):
+--  * app_users.pw set to '-' on every row (policies left as they were: the live pages still read the table).
+--  * iv_checklist, checklist_can, checklist_set created (docs/checklist.sql).
+--  * rank_of knows the division roles (hardening_01).
+--  * can_edit_team(text): rank <= 5 anywhere; rank 6 to 8 holding tl_/ytl_ of one team only that team; other
+--    rank 6 to 8 roles (AV, division leads) unchanged. iv_members, iv_events, iv_roster, iv_attendance write
+--    policies use it (rosters and attendance by their event's team, so a satada night follows its owner team).
+--    Simulated as tl_a, tl_b, facilitator, volunteer inside a rolled-back block: leads write only their team,
+--    facilitators both, volunteers none.
+--  * roster_seen and member_attendance_totals: leaders only (volunteers see only their own row).
+--  * iv_members.away CHECK (array of YYYY-MM-DD strings); deleting a member unlinks profiles.member_id.
+--  * profiles read policies: own row, rank <= 5 (existing admin policy) or rank <= 8; the two read-all policies dropped.
+--  * TRUNCATE, TRIGGER, REFERENCES revoked from anon and authenticated.
+-- NOT applied: app_users policy tightening (live pages read it), iv_roster primary key move to event_id,
+-- anon privilege revoke (some policies are TO public). Dashboard-only: leaked-password protection, shorter OTP expiry.

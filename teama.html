@@ -842,6 +842,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .cy-card.st-current::before{background:linear-gradient(90deg,#059669,var(--green-lt),transparent 85%);}
 .cy-card:hover{transform:translateY(-3px);border-color:rgba(75,163,220,.38);box-shadow:0 12px 30px rgba(2,11,24,.45);}
 .cy-grid.past .cy-card{opacity:.72;}
+.cy-card.ro{opacity:.6;cursor:default;}
+.cy-card.ro:hover{transform:none;box-shadow:none;border-color:inherit;opacity:.6;}
 .cy-grid.past .cy-card:hover{opacity:1;}
 .cy-top{display:flex;align-items:center;gap:8px;}
 .cy-count{margin-left:auto;font-size:12px;font-weight:800;color:var(--dm);}
@@ -3536,7 +3538,7 @@ function renderPlanPanel(){
    applyPlan); only where the result is shown has changed. The calendar is
    still the landing page - this is where the Roster item opens. */
 let ROSTER_BAR_K=null;          // the cycle the page is working on, when chosen
-let ROSTER_VIEW='cycles';       // 'cycles' | 'cycle' | 'satada' | 'event'
+let ROSTER_VIEW='cycles';       // 'cycles' | 'cycle' | 'event'
 let ROSTER_K=null;              // the cycle shown in the cycle view
 let _rosterJump=false;          // set when something sends you straight to a cycle or event
 let _publishing=false;          // one publish run at a time
@@ -3603,6 +3605,28 @@ function evStateHTML(e){
 }
 
 /* ── 1. THE CYCLES ── */
+/* The Satada group at the top of the roster page: one entry per night of
+   every satada week that has not finished, both teams. This team's own
+   nights open the normal roster; the other team's are greyed and read only.
+   Who owns which night is set in the Hub, never here. */
+function satNightCardHTML(e,today){
+  const mine=!satRO(e), st=e.date<today?'historic':(e.date===today?'current':'upcoming');
+  const sc=slotCounts(e);
+  const line=!mine?'Team '+e.team+' runs this night':!sc.generated?'Not built':e.confirmed?(sc.missing?'On the calendar · <b>'+sc.missing+' blank</b>':'On the calendar'):'Hidden from the calendar';
+  const inner='<span class="cy-top"><span class="cyc-tag '+st+'">SATADA</span>'+ownerChip(e)+'</span>'+
+    '<span class="cy-name">'+esc(fmtDowLong(e.date))+'</span>'+
+    '<span class="cy-dates">'+esc(fmtShort(e.date))+'</span>'+
+    '<span class="cy-line">'+(mine?line:esc(line))+'</span>';
+  return mine?'<button class="cy-card st-'+st+'" data-sat="'+e.id+'" onclick="openFullRoster('+e.id+')">'+inner+'</button>'
+             :'<div class="cy-card ro st-'+st+'" data-sat="'+e.id+'" aria-disabled="true">'+inner+'</div>';
+}
+function satGroupHTML(){
+  const today=nzTodayISO(), wk=satWeekMap();
+  const nights=[]; Object.keys(wk).sort().forEach(w=>{ if(addDaysLocal(w,6)>=today) wk[w].forEach(e=>nights.push(e)); });
+  if(!nights.length) return '';
+  return '<div class="cy-sec" id="satGroup" style="margin-top:4px">Satada · every night, both teams</div>'+
+    '<div class="cy-grid">'+nights.map(e=>satNightCardHTML(e,today)).join('')+'</div>';
+}
 function cycleCardHTML(c){
   const s=cycleSummary(c.k);
   let line;
@@ -3625,12 +3649,11 @@ function cycleCardHTML(c){
 function renderCyclePicker(){
   const live=CYCLES.filter(c=>c.status!=='historic'), past=CYCLES.filter(c=>c.status==='historic').slice().reverse();
   let h='<div class="ph"><div><h1>Roster</h1><p>Pick a cycle to generate, check and publish its rosters.</p></div>'+
-    (IS_EDIT?'<div class="ha"><button class="btn btn-ol btn-sm" onclick="openAddSatada()">+ Add Satada</button><button class="btn btn-da btn-sm" onclick="openResetCycle()">Reset next cycle</button></div>':'')+'</div>';
+    (IS_EDIT?'<div class="ha"><button class="btn btn-da btn-sm" onclick="openResetCycle()">Reset next cycle</button></div>':'')+'</div>';
+  h+=satGroupHTML();
   if(!CYCLES.length) return h+'<div class="empty-gen"><div class="zap">📅</div><h3>No cycles found</h3><p>Nothing to roster yet.</p></div>';
   h+='<div class="cy-legend"><span class="cal-legend"><i class="st-nb"></i>Not built <i class="st-dr"></i>Draft <i class="st-lv"></i>On the calendar</span></div>';
   if(live.length) h+='<div class="cy-grid">'+live.map(cycleCardHTML).join('')+'</div>';
-  const sats=satWeekMap(), weeks=Object.keys(sats).sort();
-  if(weeks.length) h+='<div class="cy-sec">Satada weeks · every night, both teams</div><div class="cy-grid">'+weeks.map(satWeekCardHTML).join('')+'</div>';
   if(past.length) h+='<div class="cy-sec">Past cycles · read only</div><div class="cy-grid past">'+past.map(cycleCardHTML).join('')+'</div>';
   return h;
 }
@@ -3644,7 +3667,6 @@ function renderCyclePicker(){
    slots and all; they simply show blank. Taking a day down is the
    deliberate act now (Hide from calendar), not putting it up. */
 let ROSTER_OPEN=null;           // the event day expanded in the cycle view
-let ROSTER_SAT=null;            // the Sunday of the satada week shown in the satada view
 function renderCycleView(k){
   const meta=CYCLES.find(c=>c.k===k)||{status:'upcoming'};
   const hist=meta.status==='historic', s=cycleSummary(k);
@@ -3663,7 +3685,6 @@ function renderCycleView(k){
     side+='<div class="cv-acts">';
     if(s.n) side+='<button class="btn btn-bl" onclick="askGenerateCycle('+k+')">⚡ '+(s.built?'Regenerate cycle':'Generate entire cycle')+'</button>';
     side+='<button class="btn btn-ol" onclick="openAddEvent()">+ Add event</button>'+
-          '<button class="btn btn-ol btn-sm" onclick="openAddSatada()">+ Add Satada</button>'+
           '<button class="btn btn-ol btn-sm" title="Chandraat overrides" aria-label="Cycle settings" onclick="openCycleSettings()">⚙ Cycle settings</button></div>';
   }
   if(hist) side+='<div class="cv-stat">🔒 Read only</div>';
@@ -3723,7 +3744,7 @@ function dayCardHTML(e,edit){
       if(built) h+='<button class="btn btn-ol btn-sm" onclick="toggleDayCalendar('+e.id+')">'+(e.confirmed?'Hide from calendar':'Put back on the calendar')+'</button>'+
                    '<button class="btn btn-ol btn-sm" onclick="askRegenerateDay('+e.id+')">↻ Regenerate day</button>';
       h+='<button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster</button>'+
-         (isSatada(e)&&IS_EDIT?'<button class="btn btn-ol btn-sm" onclick="openSatadaOwner('+e.id+')">Change owner</button>':'')+'</div>';
+         '</div>';
     } else if(!hist||built) h+='<div class="cv-dacts"><button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster</button></div>';
     if(!built){
       h+=edit?'<div class="cv-empty"><p>This day has no roster yet. Building it fills every duty using everyone’s duties across the rest of the cycle, and puts it on the calendar.</p>'+
@@ -3737,11 +3758,11 @@ function dayCardHTML(e,edit){
 /* Expanding a day also selects it, so the slot picker and chip menu - which work on the selected event - edit the day you are looking at. */
 function openDay(id,fromSide){
   const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
+  if(isSatada(ev)) return openFullRoster(id);   // a satada night has its own page, not a cycle day card
   const k=cycleForDate(ev.date);
-  const sat=isSatada(ev);
-  if(!sat&&ROSTER_K!==k){ ROSTER_K=ROSTER_BAR_K=k; }
+  if(ROSTER_K!==k){ ROSTER_K=ROSTER_BAR_K=k; }
   ROSTER_OPEN=(ROSTER_OPEN===id&&!fromSide)?null:id;
-  selEventId=id; ROSTER_VIEW=sat?'satada':'cycle'; if(sat) ROSTER_SAT=weekStart(ev.date);
+  selEventId=id; ROSTER_VIEW='cycle';
   if(curPage!=='roster'){ _rosterJump=true; nav('roster'); }
   else renderRoster();
   if(ROSTER_OPEN===id) setTimeout(()=>{
@@ -3812,10 +3833,10 @@ async function generateDay(id,opts){
   if(!plan) return toast('This event cannot be built','err');
   if(opts&&opts.midCycle) plan.midCycle=opts.midCycle;
   PLAN_OPEN.clear(); PLAN_OPEN.add(id);
-  if(isSatada(ev)){ ROSTER_VIEW='satada'; ROSTER_SAT=weekStart(ev.date); ROSTER_OPEN=id; selEventId=id; }
+  if(isSatada(ev)){ ROSTER_VIEW='event'; ROSTER_OPEN=id; selEventId=id; }
   else { ROSTER_VIEW='cycle'; ROSTER_K=ROSTER_BAR_K=k; ROSTER_OPEN=id; selEventId=id; }
   await applyPlan(plan,{publish:'new'});
-  if(isSatada(ev)&&ROSTER_PLAN===plan){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }   // the satada view has no summary panel; do not leave a receipt for the cycle view to pick up
+  if(isSatada(ev)&&ROSTER_PLAN===plan){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }   // the night's own page has no summary panel; do not leave a receipt for the cycle view to pick up
 }
 
 /* ── 3. ONE EVENT ── */
@@ -3823,7 +3844,7 @@ function renderEventPage(ev){
   const k=cycleForDate(ev.date), sat=isSatada(ev), wk=weekStart(ev.date);
   const evs=sat?(satWeekMap()[wk]||[]):cycleEvs(k), i=evs.findIndex(e=>e.id===ev.id);
   const prev=i>0?evs[i-1]:null, next=i>=0&&i<evs.length-1?evs[i+1]:null;
-  let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="'+(sat?'openSatadaWeek(\''+wk+'\')':'openCycle('+k+')')+'">'+esc(sat?'Satada '+fmtShort(wk):cyclePretty(k))+'</button>'+
+  let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="'+(sat?'openRosterHome()':'openCycle('+k+')')+'">'+esc(sat?'Satada '+fmtShort(wk):cyclePretty(k))+'</button>'+
     '<span class="rc-here">'+esc(ev.name)+' · '+esc(fmtShort(ev.date))+'</span>'+
     '<span class="rc-nav">'+
       (prev?'<button class="btn btn-ol btn-sm" onclick="openFullRoster('+prev.id+')" aria-label="Previous event: '+esc(prev.name)+'">‹</button>':'')+
@@ -3846,16 +3867,12 @@ function renderRoster(){
   let v=ROSTER_VIEW;
   if(v==='event'&&!selEvent()) v=ROSTER_K!=null?'cycle':'cycles';
   if(v==='cycle'&&(ROSTER_K==null||!CYCLES.some(c=>c.k===ROSTER_K))) v='cycles';
-  if(v==='satada'&&!(ROSTER_SAT&&satWeekMap()[ROSTER_SAT])) v='cycles';
   ROSTER_VIEW=v;
-  el.innerHTML=v==='cycles'?renderCyclePicker():v==='cycle'?renderCycleView(ROSTER_K):v==='satada'?renderSatadaView(ROSTER_SAT):renderEventPage(selEvent());
+  el.innerHTML=v==='cycles'?renderCyclePicker():v==='cycle'?renderCycleView(ROSTER_K):renderEventPage(selEvent());
 }
-/* 'Owned by Team X' with the way to take the night over. Shown wherever a
-   satada night owned by the other team is opened. */
+/* 'Owned by Team X': shown wherever a satada night owned by the other team is opened. */
 function satOwnerNote(ev){
-  return '<div class="ib" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
-    '<span><b>Owned by Team '+esc(ev.team)+'</b> - their lead builds this roster and marks attendance, so it is read only on '+esc(TEAM_NAME)+'\u2019s page.</span>'+
-    (IS_EDIT?'<button class="btn btn-gd btn-sm" style="margin-left:auto;white-space:nowrap" onclick="openSatadaOwner('+ev.id+')">Take over this night</button>':'')+'</div>';
+  return '<div class="ib" style="margin-bottom:10px"><b>Owned by Team '+esc(ev.team)+'</b> - their lead builds this roster and marks attendance, so it is read only on '+esc(TEAM_NAME)+'\u2019s page.</div>';
 }
 function renderEventView(ev){
   const hist=isHistoricEvent(ev), locked=evLocked(ev), ro=satRO(ev), canEd=IS_EDIT&&!hist&&!ro;
@@ -3878,9 +3895,7 @@ function renderEventView(ev){
   h+='<button class="btn btn-ol" onclick="exportPNG()">📷 Export PNG</button>'+(CAN_ASSIGN_COVER()&&ev&&!ro?'<button class="btn btn-ol btn-sm" onclick="openCoverDialog('+ev.id+')" title="Hand this event to someone else">\u{1F91D} '+(ev.cover_name?('Cover: '+esc(ev.cover_name)):'Assign cover')+'</button>':'')+'';
   h+='<button class="btn btn-ol" onclick="copyRoster()">⧉ Copy (WhatsApp)</button>';
   if(IS_EDIT) h+='<button class="btn btn-ol btn-sm" title="Chandraat overrides" onclick="openCycleSettings()">⚙</button>';
-  if(isSatada(ev)&&IS_EDIT) h+='<button class="btn btn-ol btn-sm" onclick="openSatadaOwner('+ev.id+')">'+(ro?'Take over this night':'Change owner')+'</button>'+
-    '<button class="btn btn-da btn-sm" title="Delete the whole satada week" onclick="openDeleteSatada(\''+weekStart(ev.date)+'\')">Delete this satada</button>';
-  else if(IS_EDIT&&!hist) h+='<button class="btn btn-da btn-sm" title="Delete event" onclick="confirmDeleteEvent()">🗑</button>';
+  if(IS_EDIT&&!hist&&!isSatada(ev)) h+='<button class="btn btn-da btn-sm" title="Delete event" onclick="confirmDeleteEvent()">🗑</button>';
   h+='</div>';
   if(ro) h+=satOwnerNote(ev);
   if(hist) h+='<div class="ro-note">🔒 Historical - read only</div>';
@@ -3897,7 +3912,7 @@ function renderEventView(ev){
   }
   if(!IS_EDIT&&!ev.confirmed) return h+'<div class="empty-gen"><div class="zap">⏳</div><h3>Roster not published yet</h3><p>The '+esc(TEAM_NAME)+' leaders have not put this one on the calendar. It appears here as soon as they do.</p></div>';
   if(!hasRoster){
-    if(ro) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster yet</h3><p>Team '+esc(ev.team)+' has not built this night. Take it over if it should be yours.</p></div>';
+    if(ro) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster yet</h3><p>Team '+esc(ev.team)+' has not built this night.</p></div>';
     if(!IS_EDIT||hist) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster</h3><p>No duty assignments were recorded.</p></div>';
     return h+'<div class="empty-gen"><div class="zap">⚡</div><h3>Ready to Generate</h3><p>Automatically assign all duties for this event.</p>'+
       '<div class="btns"><button class="btn btn-bl" onclick="generateDay('+ev.id+')">⚡ Generate</button>'+
@@ -4250,255 +4265,20 @@ async function toggleConfirm(){
   if(ok) toast('Taken off the calendar - only the leads can see it now');
 }
 
-/* ── SATADA: THE WEEK VIEW, CREATING, OWNING, DELETING ──────────────
-   Decisions, so they are not rediscovered:
-   - Creating is not subject to the cycle-ownership check; either lead can do
-     it from either page, for any week that has not finished.
-   - Every night replaces its date's automatic Friday Majlis / Paanch Baar
-     Saal, but only after the lead has seen the list, and only when nothing
-     is rostered or marked on them. A date that holds anything else (a roster,
-     attendance, or an event that is not one of the two automatic types) is
-     left exactly as it is and gets no satada night: the other nights still
-     are made. iv_roster is keyed by date, so one date can carry only one
-     rostered event.
-   - Handing a night to the other team is refused while it has attendance, and
-     while it has a roster unless the lead chooses to clear that roster in
-     the same step: the people on it belong to the old owner's team.
-   - Deleting removes all seven nights. It is never recorded in AUTO_SKIP, so
-     the cycle's own events come back on the next autoCreateEvents run. */
-function satWeekCardHTML(w){
-  const evs=satWeekMap()[w]||[], mine=evs.filter(mineEv), today=nzTodayISO(), end=addDaysLocal(w,6);
-  const built=mine.filter(e=>slotCounts(e).generated).length;
-  const status=end<today?'historic':(w<=today?'current':'upcoming');
-  const line=mine.length?(mine.length+' of '+evs.length+' nights are yours'+(IS_EDIT?' · '+built+' built':'')):'None of these nights are yours yet';
-  return '<button class="cy-card st-'+status+'" onclick="openSatadaWeek(\''+esc(w)+'\')">'+
-    '<span class="cy-top"><span class="cyc-tag '+status+'">SATADA</span><span class="cy-count">'+evs.length+' night'+(evs.length===1?'':'s')+'</span></span>'+
-    '<span class="cy-name">Satada week</span>'+
-    '<span class="cy-dates">'+esc(fmtShort(w))+' › '+esc(fmtShort(end))+'</span>'+
-    '<span class="cy-line">'+esc(line)+'</span></button>';
-}
-function openSatadaWeek(w){
-  ROSTER_VIEW='satada'; ROSTER_SAT=w; ROSTER_OPEN=null;
-  rosterGo();
-}
-function renderSatadaView(w){
-  const evs=satWeekMap()[w]||[], end=addDaysLocal(w,6), today=nzTodayISO();
-  const mine=evs.filter(mineEv);
-  const status=end<today?'historic':(w<=today?'current':'upcoming');
-  const toBuild=mine.filter(e=>!evLocked(e)&&!slotCounts(e).generated);
-  let side='<div class="cv-card"><span class="cyc-tag '+status+'">SATADA</span>'+
-    '<div class="cv-name">Satada week</div><div class="cv-dates">'+esc(fmtShort(w))+' › '+esc(fmtShort(end))+'</div>'+
-    '<div class="cv-stat"><b>'+mine.length+'</b> of '+evs.length+' nights are '+esc(TEAM_NAME)+'’s · '+(evs.length-mine.length)+' owned by Team '+esc(OTHER_TEAM)+'</div>';
-  if(IS_EDIT){
-    side+='<div class="cv-acts">';
-    if(toBuild.length) side+='<button class="btn btn-bl" onclick="generateSatadaNights(\''+esc(w)+'\')">⚡ Build my nights</button>';
-    side+='<button class="btn btn-ol btn-sm" onclick="openAddSatada()">+ Add Satada</button>'+
-          '<button class="btn btn-da btn-sm" onclick="openDeleteSatada(\''+esc(w)+'\')">Delete this satada</button></div>';
-  }
-  side+='</div><div class="cv-evs" role="list">';
-  for(const e of evs){
-    const sc=slotCounts(e), d=new Date(e.date+'T12:00:00');
-    const note=satRO(e)?'Owned by Team '+e.team:!sc.generated?'Not built':e.confirmed?(sc.missing?'On the calendar · '+sc.missing+' blank':'On the calendar'):'Hidden';
-    const cls=satRO(e)||!sc.generated?'nb':e.confirmed?(sc.missing?'gp':'lv'):'hd';
-    side+='<button role="listitem" class="cv-ev'+(ROSTER_OPEN===e.id?' on':'')+'" onclick="openDay('+e.id+',true)">'+
-      '<span class="cv-d"><b>'+d.getDate()+'</b><span>'+MON_UP[d.getMonth()]+'</span></span>'+
-      '<span class="cv-t"><span class="nm">'+esc(e.name)+' '+ownerChip(e)+'</span><span class="st st-'+cls+'">'+esc(note)+'</span></span></button>';
-  }
-  side+='</div>';
-  let main='<div class="cy-evs-h"><h2>Nights</h2><span class="cv-hint">Click a night to see who is on</span></div><div class="cv-days">';
-  for(const e of evs) main+=dayCardHTML(e,IS_EDIT&&!isHistoricEvent(e));
-  main+='</div>';
-  return '<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openRosterHome()">All cycles</button></div>'+
-    '<div class="cv-layout"><aside class="cv-side" aria-label="This satada">'+side+'</aside>'+
-    '<section class="cv-main" aria-label="Satada nights">'+main+'</section></div>';
-}
+/* ── SATADA: ROSTERING ONLY ─────────────────────────────────────────
+   Creating a satada, choosing which team owns each night, changing an owner
+   and deleting a satada are all done in the Hub (Management > Satada), by a
+   facilitator or above. This page only rosters the nights it owns and shows
+   the other team's nights read only (see satGroupHTML).
+   A satada week still takes over the cycle's own Friday Majlis and Paanch
+   Baar Saal (autoCreateEvents), and deleting it in the Hub lets them come
+   back on the next automatic run. */
 async function generateSatadaNights(w){
   if(!IS_EDIT) return;
   if(!MEMBERS.some(m=>m.status==='active')) return toast('No active members','err');
   const todo=(satWeekMap()[w]||[]).filter(e=>mineEv(e)&&!evLocked(e)&&!slotCounts(e).generated);
   if(!todo.length) return toast('Every one of your nights is already built','err');
   for(const e of todo) await generateDay(e.id);
-}
-
-/* ── Add Satada ── */
-let SAT_PLAN=null;
-function satNextSunday(){ const t=nzTodayISO(); return addDaysLocal(t,(7-dowIdx(t))%7); }
-function satValidate(iso){
-  if(!iso) return 'Pick the Sunday the week starts on.';
-  if(dowIdx(iso)!==0) return fmtShort(iso)+' is a '+fmtDowLong(iso)+', not a Sunday. A satada week runs Sunday to Saturday.';
-  if(addDaysLocal(iso,6)<nzTodayISO()) return 'That week has already finished.';
-  if((satWeekMap()[iso]||[]).length) return 'Satada nights already exist in the week of '+fmtShort(iso)+'.';
-  return '';
-}
-function openAddSatada(){
-  if(!IS_EDIT) return;
-  const def=satNextSunday();
-  let rows='';
-  for(let i=0;i<7;i++){
-    const t=i%2===0?PAGE_TEAM:OTHER_TEAM;
-    rows+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="width:104px;font-weight:800">'+SATADA_DAYS[i]+'</span>'+
-      '<span id="saD'+i+'" class="num" style="flex:1;color:var(--dm);font-size:13px"></span>'+
-      '<select id="saOwn'+i+'" aria-label="Owner of '+SATADA_DAYS[i]+' night" style="width:120px"><option value="A"'+(t==='A'?' selected':'')+'>Team A</option><option value="B"'+(t==='B'?' selected':'')+'>Team B</option></select></div>';
-  }
-  oM('<h3>Add Satada</h3>'+
-    '<p style="font-size:13px;color:var(--dm);line-height:1.55;margin:-4px 0 12px">A majalis every night, Sunday to Saturday. For that week the normal cycle makes no Friday Majlis or Paanch Baar Saal. Choose which team runs each night.</p>'+
-    '<div class="frow"><label class="flabel" for="saDate">Sunday the week starts</label>'+
-      '<input type="date" id="saDate" value="'+esc(def)+'" min="'+esc(weekStart(nzTodayISO()))+'" onchange="satDateChanged()" oninput="satDateChanged()">'+
-      '<div id="saHint" class="ae-hint"></div></div>'+
-    '<div class="frow"><label class="flabel">Owner of each night</label>'+rows+'</div>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" id="saGo" onclick="submitAddSatada()">Create Satada</button></div>');
-  satDateChanged();
-}
-function satDateChanged(){
-  const box=document.getElementById('dcard'); if(!box) return;
-  const el=box.querySelector('#saDate'), hint=box.querySelector('#saHint'); if(!el||!hint) return;
-  const v=el.value, err=satValidate(v);
-  hint.className='ae-hint '+(err?'bad':'ok');
-  hint.textContent=err?'✕ '+err:'✓ '+fmtShort(v)+' › '+fmtShort(addDaysLocal(v,6));
-  for(let i=0;i<7;i++){ const d=box.querySelector('#saD'+i); if(d) d.textContent=(v&&dowIdx(v)===0)?fmtShort(addDaysLocal(v,i)):''; }
-}
-/* Reads the whole week from the database, not just this page's copy: the
-   other team's regular events are not loaded here, and a satada made a
-   moment ago by the other lead may not be either. Returns {err} or the plan. */
-async function planSatada(sun,owners){
-  const bad=satValidate(sun); if(bad) return {err:bad};
-  if(!sb||DB_MISSING) return {err:'Could not add the satada - no database connection'};
-  const sat=addDaysLocal(sun,6);
-  const wk=await sb.from('iv_events').select('*').gte('date',sun).lte('date',sat);
-  if(wk.error) return {err:'Could not read that week - '+(wk.error.message||wk.error)};
-  const have=wk.data||[];
-  if(have.some(e=>e.type==='satada')) return {err:'Satada nights already exist in the week of '+fmtShort(sun)+'.'};
-  const busy=new Set();
-  if(have.length){
-    const ids=have.map(e=>e.id);
-    const [ro,at]=await Promise.all([sb.from('iv_roster').select('event_id').in('event_id',ids),sb.from('iv_attendance').select('event_id').in('event_id',ids)]);
-    if(ro.error||at.error) return {err:'Could not check the rosters in that week - '+(((ro.error||at.error).message)||'')};
-    (ro.data||[]).forEach(r=>busy.add(r.event_id)); (at.data||[]).forEach(r=>busy.add(r.event_id));
-  }
-  const rows=[], del=[], skip=[];
-  for(let i=0;i<7;i++){
-    const d=addDaysLocal(sun,i), regs=have.filter(e=>e.date===d);
-    const hold=regs.find(e=>busy.has(e.id)||(e.type!=='friday'&&e.type!=='pbs'));
-    if(hold){ skip.push({date:d,name:hold.name,team:hold.team,why:busy.has(hold.id)?'it already has a roster or attendance':'it is not an automatic event'}); continue; }
-    regs.forEach(e=>del.push(e));
-    rows.push({team:owners[i],date:d,name:'Satada - '+SATADA_DAYS[i],type:'satada',uniform:'Casual',youth:i===5,confirmed:false});
-  }
-  if(!rows.length) return {err:'Every date in that week already holds a roster or another event, so no satada night could be made.'};
-  return {sun:sun,rows:rows,del:del,skip:skip};
-}
-async function submitAddSatada(){
-  const box=document.getElementById('dcard'); if(!box||!IS_EDIT) return;
-  const sun=(box.querySelector('#saDate')||{}).value;
-  const owners=[]; for(let i=0;i<7;i++){ const v=(box.querySelector('#saOwn'+i)||{}).value; owners.push(v==='B'?'B':'A'); }
-  const bad=satValidate(sun); if(bad) return toast(bad,'err');
-  const plan=await planSatada(sun,owners);
-  if(plan.err) return toast(plan.err,'err');
-  if(!plan.del.length&&!plan.skip.length){ SAT_PLAN=plan; return runSatadaPlan(); }
-  SAT_PLAN=plan;
-  const li=a=>'<li>'+a+'</li>';
-  oM('<h3>Create this satada?</h3>'+
-    (plan.del.length?'<p style="font-size:14px;color:var(--dm);line-height:1.6;margin-bottom:6px">These regular events in that week will be replaced:</p>'+
-      '<ul style="font-size:13px;color:var(--dm);line-height:1.7;margin:0 0 12px;padding-left:20px">'+
-      plan.del.map(e=>li(esc(fmtShort(e.date))+' - '+esc(e.name)+' (Team '+esc(e.team)+')')).join('')+'</ul>':'')+
-    (plan.skip.length?'<p style="font-size:14px;color:var(--gold-lt);line-height:1.6;margin-bottom:6px">These dates are kept as they are, so they get no satada night:</p>'+
-      '<ul style="font-size:13px;color:var(--dm);line-height:1.7;margin:0 0 12px;padding-left:20px">'+
-      plan.skip.map(x=>li(esc(fmtShort(x.date))+' - '+esc(x.name)+': '+esc(x.why))).join('')+'</ul>':'')+
-    '<p style="font-size:13px;color:var(--dm)">'+plan.rows.length+' satada night'+(plan.rows.length===1?'':'s')+' will be created.</p>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="SAT_PLAN=null;cM()">Cancel</button><button class="btn btn-bl" onclick="runSatadaPlan()">Create Satada</button></div>');
-}
-async function runSatadaPlan(){
-  const plan=SAT_PLAN; SAT_PLAN=null; if(!plan||!IS_EDIT) return;
-  cM(); pauseRT(6000);
-  if(plan.del.length){
-    const ids=plan.del.map(e=>e.id);
-    if(!await dbWrite('Replacing the regular events in that week',()=>sb.from('iv_events').delete().in('id',ids),
-        {verify:()=>sb.from('iv_events').select('id').in('id',ids)})) return;
-    EVENTS=EVENTS.filter(e=>ids.indexOf(e.id)<0); ids.forEach(id=>delete ROSTERS[id]);
-  }
-  /* One insert for all of the nights. */
-  const rows=await dbWriteRows('Creating the satada nights',()=>sb.from('iv_events').insert(plan.rows));
-  if(!rows){ if(plan.del.length) await autoCreateEvents(); renderCurrent(); return; }
-  EVENTS=EVENTS.concat(rows).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
-  OTHER_EV={};
-  auditLog('add-satada','events','Satada '+plan.sun+' - '+rows.map(r=>r.date.slice(5)+' Team '+r.team).join(', ')+
-    (plan.del.length?'; replaced '+plan.del.length+' regular event'+(plan.del.length===1?'':'s'):'')+
-    (plan.skip.length?'; kept '+plan.skip.length+' date'+(plan.skip.length===1?'':'s')+' as they were':''));
-  refreshBadges();
-  openSatadaWeek(plan.sun);
-  toast('Satada created - '+rows.length+' night'+(rows.length===1?'':'s'));
-}
-
-/* ── Owner of a night ── */
-function hasRosterData(ev){
-  const r=ROSTERS[ev.id];
-  return !!(r&&r.assign&&rosterPeople(r).length);
-}
-function openSatadaOwner(id){
-  const ev=EVENTS.find(e=>e.id===id); if(!ev||!IS_EDIT||!isSatada(ev)) return;
-  const to=ev.team==='A'?'B':'A', take=to===PAGE_TEAM;
-  const what=take?'Take over':'Hand over';
-  if(ev.date<nzTodayISO()) return toast('That night has already passed, so its owner cannot change.','err');
-  const att=ATTEND[ev.id]||{};
-  if(Object.keys(att).some(k=>att[k]&&att[k].status))
-    return oM('<h3>'+what+' '+esc(ev.name)+'?</h3><p style="font-size:14px;color:var(--dm);line-height:1.6">Attendance has already been marked for this night, so its owner cannot change.</p>'+
-      '<div class="macts"><button class="btn btn-ol" onclick="cM()">Close</button></div>');
-  const n=hasRosterData(ev)?rosterPeople(ROSTERS[ev.id]).length:0;
-  if(n) return oM('<h3>'+what+' '+esc(ev.name)+'?</h3>'+
-    '<p style="font-size:14px;color:var(--dm);line-height:1.6">'+esc(fmtShort(ev.date))+' already has a roster of '+n+' '+(n===1?'person':'people')+
-      ' from Team '+esc(ev.team)+'. Moving the night to Team '+esc(to)+' with them still on it would leave volunteers rostered by a lead who is not theirs, so this is not done silently.</p>'+
-    '<p style="font-size:14px;color:var(--dm);line-height:1.6">You can clear the roster as part of the hand over; Team '+esc(to)+' then builds its own.</p>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
-    '<button class="btn btn-da" onclick="doSatadaOwner('+ev.id+',\''+to+'\',true)">Clear the roster and '+(take?'take over':'hand over')+'</button></div>');
-  oM('<h3>'+what+' '+esc(ev.name)+'?</h3><p style="font-size:14px;color:var(--dm);line-height:1.6">'+esc(fmtNice(ev.date))+' moves from Team '+esc(ev.team)+' to Team '+esc(to)+
-    '. It has no roster yet, so nothing else changes.</p>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
-    '<button class="btn btn-bl" onclick="doSatadaOwner('+ev.id+',\''+to+'\',false)">'+(take?'Take over this night':'Hand over to Team '+esc(to))+'</button></div>');
-}
-async function doSatadaOwner(id,to,clear){
-  cM(); const ev=EVENTS.find(e=>e.id===id); if(!ev||!IS_EDIT||!isSatada(ev)||(to!=='A'&&to!=='B')||ev.team===to) return;
-  pauseRT(6000);
-  const patch={team:to}; const was=ev.team;
-  if(clear){
-    if(!await dbWrite('Clearing the roster',()=>sb.from('iv_roster').delete().eq('event_id',id),
-        {verify:()=>sb.from('iv_roster').select('event_id').eq('event_id',id)})) return;
-    delete ROSTERS[id]; delete ROSTER_UNSAVED[id]; patch.confirmed=false;
-  }
-  if(!await dbWrite('Changing the owner',()=>sb.from('iv_events').update(patch).eq('id',id))) return;
-  Object.assign(ev,patch); OTHER_EV={};
-  auditLog('satada-owner','events',ev.name+' '+ev.date+' - Team '+was+' to Team '+to+(clear?' (roster cleared)':''));
-  renderCurrent(); refreshBadges();
-  toast(to===PAGE_TEAM?'You now own '+ev.name:ev.name+' handed to Team '+to);
-}
-
-/* ── Delete a whole satada ── */
-function openDeleteSatada(w){
-  if(!IS_EDIT) return;
-  const evs=satWeekMap()[w]||[]; if(!evs.length) return;
-  const rostered=evs.filter(e=>hasRosterData(e)||Object.keys(ATTEND[e.id]||{}).length);
-  oM('<h3>Delete this satada</h3><p style="font-size:14px;color:var(--dm);line-height:1.6">All '+evs.length+' nights of the week of <b style="color:var(--dt)">'+esc(fmtShort(w))+
-    '</b> are deleted, for both teams. The regular Friday Majlis and Paanch Baar Saal come back on the next automatic run. This cannot be undone.</p>'+
-    (rostered.length?'<div class="ib ib-warn">'+rostered.length+' night'+(rostered.length===1?' has':'s have')+' a roster or attendance: '+
-      rostered.map(e=>esc(fmtShort(e.date))+' (Team '+esc(e.team)+')').join(', ')+'.</div>'+
-      '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:10px 0"><input type="checkbox" id="saDelOk" style="width:auto"> I understand those rosters and attendance marks are deleted with them</label>':'')+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-da" onclick="doDeleteSatada(\''+esc(w)+'\','+(rostered.length?'true':'false')+')">Delete this satada</button></div>');
-}
-async function doDeleteSatada(w,needOk){
-  const box=document.getElementById('dcard');
-  if(needOk&&!(box&&box.querySelector('#saDelOk')&&box.querySelector('#saDelOk').checked)) return toast('Tick the box to confirm - some nights have a roster','err');
-  const evs=satWeekMap()[w]||[]; if(!evs.length||!IS_EDIT) return;
-  cM(); pauseRT(6000);
-  const ids=evs.map(e=>e.id);
-  if(!await dbWrite('Deleting the satada',()=>sb.from('iv_events').delete().in('id',ids),
-      {verify:()=>sb.from('iv_events').select('id').in('id',ids)})) return;
-  EVENTS=EVENTS.filter(e=>ids.indexOf(e.id)<0); ids.forEach(id=>{ delete ROSTERS[id]; delete ATTEND[id]; delete ROSTER_UNSAVED[id]; });
-  OTHER_EV={};
-  if(ids.indexOf(selEventId)>=0) selEventId=null;
-  auditLog('delete-satada','events','Satada '+w+' - removed '+ids.length+' nights');
-  /* Not recorded in AUTO_SKIP: the cycle's own Friday and Paanch Baar Saal
-     are only ever suppressed while a satada stands. */
-  await autoCreateEvents();
-  ROSTER_VIEW='cycles'; ROSTER_SAT=null; ROSTER_OPEN=null;
-  renderCurrent(); refreshBadges(); toast('Satada deleted');
 }
 
 /* ── ADD / DELETE / RESET EVENTS ── */
@@ -4530,8 +4310,7 @@ function openAddEvent(){
     '<div class="frow"><label class="flabel" for="aeName">Event name</label><input type="text" id="aeName" value="Friday Majlis"><datalist id="eidNames">'+EID_NAMES.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist></div>'+
     '<div class="frow"><label class="flabel" for="aeUniform">Uniform</label><select id="aeUniform"><option>Casual</option><option>Formal</option></select></div>'+
     '<div class="frow" id="aeYouthRow"><label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="aeYouth" checked style="width:auto"> Youth Congregation (MPH section)</label></div>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" onclick="submitAddEvent()">Add Event</button></div>'+
-    '<div style="margin-top:10px;font-size:12.5px;color:var(--dm)">A satada week (every night, Sunday to Saturday) is not a single event: <button class="btn btn-ol btn-sm" onclick="cM();openAddSatada()">Add Satada</button></div>');
+    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" onclick="submitAddEvent()">Add Event</button></div>');
   aeDateChanged();
 }
 /* Says who owns the chosen date the moment it changes, instead of after a
@@ -4607,7 +4386,7 @@ async function submitAddEvent(){
 }
 function confirmDeleteEvent(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
-  if(isSatada(ev)) return openDeleteSatada(weekStart(ev.date));   // a satada is only ever deleted as a whole week
+  if(isSatada(ev)) return toast('A satada is deleted as a whole week, in the Hub under Management > Satada.','err');
   oM('<h3>Delete event</h3><p style="font-size:14px;color:var(--dm)">Delete <b style="color:var(--dt)">'+esc(ev.name)+' - '+esc(fmtNice(ev.date))+'</b> and its roster? This cannot be undone.</p>'+
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-da" onclick="deleteEvent()">Delete event</button></div>');
 }
@@ -4734,7 +4513,6 @@ function openEventDrawer(id){
   h+='<div class="dp-actions">'+
     (IS_EDIT?'<button class="btn btn-bl btn-sm" onclick="selectEvent('+ev.id+')">Open in Roster</button>':'')+
     (IS_EDIT&&!evLocked(ev)?'<button class="btn btn-ol btn-sm" onclick="closeDrawer();askRegenerateDay('+ev.id+')">↻ Regenerate</button>':'')+
-    (IS_EDIT&&isSatada(ev)?'<button class="btn btn-ol btn-sm" onclick="closeDrawer();openSatadaOwner('+ev.id+')">'+(satRO(ev)?'Take over this night':'Change owner')+'</button>':'')+
     '<button class="btn btn-ol btn-sm" onclick="selEventId='+ev.id+';copyRoster()">⧉ Copy</button></div>';
   openDrawer(h);
 }
