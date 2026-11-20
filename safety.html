@@ -267,7 +267,7 @@ async function loadAll(){
 }
 function showSetupWarn(){
   const w = $('setupWarn'), miss = Object.keys(S.missing).filter(k=>S.missing[k] === true);
-  const err = S.missing.members_err || S.missing.safety_roster_err;
+  const err = S.missing.members_err || S.missing.safety_roster_err || S.missing.safety_settings_err || S.missing.safety_avail_err;
   if(!miss.length && !err){ w.classList.add('hide'); return; }
   w.classList.remove('hide');
   w.innerHTML = miss.length
@@ -285,6 +285,7 @@ async function deleteDay(ds){
   if(!sb) return false;
   const res = await sb.from('safety_roster').delete().eq('date', ds).select();
   if(res.error){ toast('Reset failed - ' + res.error.message, true); return false; }
+  if(S.roster[ds] && (!res.data || !res.data.length)){ toast('Reset failed - the database refused it. You may not have permission.', true); return false; }
   return true;
 }
 
@@ -309,6 +310,8 @@ async function changeMonth(n){
   if(await loadAll()) renderCal();
 }
 let busy = false;
+/* A read that failed leaves empty defaults behind. Writing from those would overwrite what is really stored. */
+function loadFailed(){ return !!(S.missing.members_err || S.missing.safety_roster_err || S.missing.safety_settings_err || S.missing.safety_avail_err); }
 async function autoFill(){
   if(busy) return; busy = true;
   try{ await autoFillRun(); } finally { busy = false; }
@@ -316,6 +319,7 @@ async function autoFill(){
 async function autoFillRun(){
   const g = gridRange(), dates = [];
   for(let i=0;i<g.total;i++){ const d = new Date(g.start.getFullYear(), g.start.getMonth(), g.start.getDate()+i); if(d.getMonth() === S.m) dates.push(ymd(d)); }
+  if(loadFailed()){ toast('Some data could not be read, so Auto-fill is paused to protect days locked by hand. Reload and try again.', true); return; }
   if(!S.pool.length){ toast('Nobody is in the Safety & Security pool yet - tick Safety & Security for people in Data Management.', true); return; }
   const plan = planMonth(dates, S.roster, S.pool, S.avail, S.head);
   const rows = Object.keys(plan).map(ds=>({date:ds, data:{people:plan[ds], manual:false}}));
@@ -394,6 +398,7 @@ function openSettings(){
   $('stSave').onclick = async ()=>{ const bt = $('stSave'); if(bt.disabled) return; bt.disabled = true; await saveSettings(); const again = $('stSave'); if(again) again.disabled = false; };
 }
 async function saveSettings(){
+  if(loadFailed()){ toast('Some data could not be read, so saving is paused to protect what is stored. Reload and try again.', true); return; }
   const head = {}; document.querySelectorAll('[data-hd]').forEach(i=>{ head[i.dataset.hd] = Math.max(0, Math.min(30, parseInt(i.value,10) || 0)); });
   const av = {}; S.pool.forEach(p=>{ av[p.id] = DAYS.filter(d=>{ const b = document.querySelector('.dayb[data-p="'+p.id+'"][data-d="'+d+'"]'); return b && b.classList.contains('on'); }); });
   if(!await writeRows('safety_settings', [{key:'headcount', value:head}], 'Saving numbers')) return;
@@ -454,7 +459,10 @@ async function start(){
   S.me = { name: mine ? mine.name : (prof && prof.display) || '' };
   if(S.mgr){ renderCal(); } else { renderMine(); }
 }
-document.addEventListener('DOMContentLoaded', start);
+document.addEventListener('DOMContentLoaded', () => start().catch(e => {
+  // A thrown read must not leave the page on "Checking your access…" for ever.
+  console.warn('safety start', e); show('stDeny'); $('denyMsg').textContent = 'Could not check your access. Check your connection and reload.';
+}));
 </script>
 <script>
 /* If this browser kept an old copy of the page, say so. The page is asked for

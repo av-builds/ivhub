@@ -1023,7 +1023,7 @@ select:not([multiple]):not([size]):not([data-native]):focus-visible,select.ivp-o
 @media(pointer:coarse){select:not([multiple]):not([size]):not([data-native]){min-height:44px;}}
 
 /* the popup */
-.ivp-pop{position:fixed;z-index:3000;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:calc(100vw - 16px);box-sizing:border-box;}
+.ivp-pop{position:fixed;z-index:5100;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:calc(100vw - 16px);box-sizing:border-box;}
 .ivp-pop.ivp-scroll{overflow-y:auto;overscroll-behavior:contain;padding-right:2px;}
 .ivp-pop.ivp-up{flex-direction:column;}
 .ivp-opt{display:flex;align-items:center;gap:10px;min-height:44px;box-sizing:border-box;width:100%;flex:none;text-align:left;

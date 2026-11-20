@@ -214,6 +214,7 @@ body.sb-min .main{margin-left:70px;}
 .ib-warn{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.45);color:#FCA5A5;}
 .ib-warn b{color:#FECACA;}
 .ib b,.ib a{color:var(--dt);}.ib a{color:var(--blue-lt);font-weight:800;}
+#dbHint,#saveWarn{position:relative;z-index:6;}   /* the calendar's hero banner runs up behind the top of the page and would otherwise paint over these */
 .hint-banner{background:var(--gold-bg);border:1px solid var(--gold-bd);color:var(--gold-lt);border-radius:var(--r);padding:10px 15px;font-size:13px;font-weight:700;margin-bottom:14px;display:flex;gap:8px;align-items:center;}
 .tw{background:var(--ds);background-image:var(--surface-grad);border:var(--hairline);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-1);}
 .tw-scroll{overflow-x:auto;}
@@ -414,7 +415,7 @@ button.chip.un:hover{background:rgba(239,68,68,.22);border-color:var(--red-lt);}
 /* ─── CALENDAR ─── */
 .cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
 .cal-nav h3{font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;min-width:180px;text-align:center;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;}
 .cal-grid.anim-l{animation:slideInL .3s ease both;}.cal-grid.anim-r{animation:slideInR .3s ease both;}
 .cal-dow{font-size:11px;font-weight:900;letter-spacing:0.06em;color:var(--dm);text-align:center;padding:4px 0;}
 .cal-cell{min-height:78px;background:var(--ds);border:1px solid var(--db);border-radius:9px;padding:5px 6px;font-size:12px;position:relative;transition:border .15s;}
@@ -2025,6 +2026,7 @@ let ATT_TOTALS={};
 /* Extra Duty: weekday walk-in duties from iv_wd_attendance, member_id -> [{date,duty}] (oldest first). Display only. */
 let EXTRA={};
 let CYCLES=[],selEventId=null,DB_MISSING=false,LOADED=false,curPage='calendar';
+let LOAD_ERR='';   // why the last read came back short, shown above every page until a read succeeds
 let CAL={y:2026,m:0};
 let attEventId=null, repCycleK=null, repMode='attendance', repMember=null, lbDuty='', lbSort='count', memFilter={q:'',rank:'',age:'',nandi:'',away:''};
 const AGES=['adult','youth','child'];
@@ -2162,6 +2164,9 @@ async function loadAll(){
   if(hs){ if(me.error){ hs.textContent='⚠ Hub membership unavailable - '+(me.error.message||me.error); hs.style.color='var(--gold-lt)'; }
     else { hs.textContent='Hub ✓ '+MEMBERS.length+' member'+(MEMBERS.length!==1?'s':'')+' in '+TEAM_NAME; hs.style.color='var(--blue-lt)'; } }
   /* False when a core read failed: what is held was kept, not replaced. */
+  const bad=me.error||ev.error||ro.error||at.error||an.error;
+  LOAD_ERR=bad?String(bad.message||bad):'';
+  if(LOADED) renderDbHint();
   return !(me.error||ev.error||ro.error);
 }
 
@@ -2269,6 +2274,7 @@ function rtReload(delay){ if(_rtT)clearTimeout(_rtT); _rtT=setTimeout(async()=>{
      render over it; try again later, backing off. */
   if(ok===false){ _rtFails=Math.min(_rtFails+1,5); rtReload(Math.min(30000,2000*Math.pow(2,_rtFails))); return; }
   _rtFails=0;
+  Object.keys(ROSTER_UNSAVED).forEach(id=>{ if(!EVENTS.some(e=>e.id===+id)) delete ROSTER_UNSAVED[id]; });   // the event was deleted elsewhere: nothing left to save it to
   await loadCovering(); CYCLES=buildCycles();
   /* A write began while the read was out: what came back may be older
      than it. Keep what we hold and read again once things are quiet. */
@@ -2375,7 +2381,12 @@ function generateEventData(ev){
   const hist=cycleDutyHistory(k,ev.id);   // per-member duty names held this cycle (excl. this event)
   // EXTENSION (a): away-dates - a member whose away list contains this event's date is
   // treated as unavailable and excluded from the entire eligibility pool for this event.
-  const active=MEMBERS.filter(m=>m.status==='active'&&!isAway(m,ev.date)&&!busyElsewhere(m,ev.date));
+  /* Two events on one date each hold a roster: nobody is handed a second
+     one on the same day. Read from ROSTERS, so a build that stages several
+     events sees the ones it has already made. */
+  const sameDay=new Set();
+  EVENTS.forEach(e=>{ if(e.id!==ev.id&&e.date===ev.date&&ROSTERS[e.id]) rosterPeople(ROSTERS[e.id]).forEach(i=>sameDay.add(i)); });
+  const active=MEMBERS.filter(m=>m.status==='active'&&!isAway(m,ev.date)&&!busyElsewhere(m,ev.date)&&!sameDay.has(m.id));
   const byGA=(g,a)=>active.filter(m=>m.gender===g&&m.age_group===a);
   const mA=byGA('Male','adult'),mY=byGA('Male','youth'),mC=byGA('Male','child');
   const fA=byGA('Female','adult'),fY=byGA('Female','youth'),fC=byGA('Female','child');
@@ -2873,7 +2884,19 @@ function renderCurrent(){
 function renderDbHint(){
   const el=document.getElementById('dbHint');
   el.innerHTML=(DB_MISSING&&IS_EDIT)?
-    '<div class="hint-banner"><span>⚠️</span><span>Database not initialised - run <b>&nbsp;SETUP.sql&nbsp;</b> on the Supabase project to create the IV tables.</span></div>':'';
+    '<div class="hint-banner"><span>⚠️</span><span>Database not initialised - run <b>&nbsp;SETUP.sql&nbsp;</b> on the Supabase project to create the IV tables.</span></div>'
+    : LOAD_ERR?'<div class="hint-banner"><span>⚠️</span><span>Some of this page could not be loaded, so what you see may be out of date or incomplete ('+esc(LOAD_ERR.slice(0,140))+').</span><button class="btn btn-ol btn-sm" style="margin-left:auto" onclick="retryLoad()">Try again</button></div>':'';
+}
+let _retryBusy=false;
+async function retryLoad(){
+  if(_retryBusy) return; _retryBusy=true;
+  try{
+    const ok=await loadAll(); await loadCovering(); CYCLES=buildCycles();
+    if(ok!==false&&!LOAD_ERR){ await autoCreateEvents(); toast('Loaded'); }
+    else toast('Still could not load - try again in a moment','err');
+    Object.keys(ROSTER_UNSAVED).forEach(id=>{ ROSTERS[id]=ROSTER_UNSAVED[id]; });
+    renderCurrent();
+  } finally{ _retryBusy=false; }
 }
 /* ── THE FOUR CARDS ───────────────────────────────────────────────────
    A lead and a volunteer open this page for different reasons, and used
@@ -2897,14 +2920,17 @@ async function loadMyMember(){
    attendance figure is built on, and until now nothing said it was
    outstanding - you had to go looking event by event. */
 function unmarkedEvents(){
-  const today = nzTodayISO();
+  const today = nzTodayISO(), activeIds = new Set(MEMBERS.filter(m=>m.status==='active').map(m=>m.id));
   return EVENTS.filter(ev=>{
     if(ev.date >= today) return false;
     if(satRO(ev)) return false;                                  // the other team marks its own night
     if(!inView(ev)) return false;   // outside what is loaded
     const r = ROSTERS[ev.id]; if(!r || !r.assign) return false;
     const marks = ATTEND[ev.id] || {};
-    return rosterPeople(r).some(id=>!marks[id]);
+    /* Only people the register actually lists: somebody made inactive or
+       deleted since the roster was built can never be marked, and would
+       keep this event in the bell for ever. */
+    return rosterPeople(r).some(id=>!marks[id]&&activeIds.has(id));
   });
 }
 function rosterPeople(r){
@@ -3127,8 +3153,9 @@ function renderDashboard(){
      look broken rather than correct. */
   {
     const ownsDay=e=>isSatada(e)?e.team===PAGE_TEAM:teamForCycle(cycleForDate(e.date))===PAGE_TEAM;
-    const mineUpc=upc.filter(ownsDay);
-    const dayEv=EVENTS.filter(e=>e.date===today&&ownsDay(e));
+    const seeable=e=>IS_EDIT||e.confirmed;   // a draft is for the leads only
+    const mineUpc=upc.filter(e=>ownsDay(e)&&seeable(e));
+    const dayEv=EVENTS.filter(e=>e.date===today&&ownsDay(e)&&seeable(e));
     const showEvs=dayEv.length?dayEv:(mineUpc.length?[mineUpc[0]]:[]);
     if(showEvs.length){
       const when=showEvs[0].date===today?'Today':fmtNice(showEvs[0].date);
@@ -4138,6 +4165,8 @@ function renderPickList(){
   const r=ensureRoster(ev); const inEvent=new Set();
   for(const key in (r.assign||{})) for(const p of people(r.assign[key])) if(p.id!=null) inEvent.add(p.id);
   const dhist=cycleDutyHistory(k,ev.id);
+  const sameDay=new Set();   // already on another roster the same day
+  EVENTS.forEach(e=>{ if(e.id!==ev.id&&e.date===ev.date&&ROSTERS[e.id]) rosterPeople(ROSTERS[e.id]).forEach(i=>sameDay.add(i)); });
   /* Everybody on the team can be searched and picked, whatever their age or certification: a lead replacing
      a duty knows who is available better than the rules do. The usual fit (age for this duty, Nandi
      certification) only decides the order, with a note on anyone outside it. */
@@ -4148,6 +4177,7 @@ function renderPickList(){
   list.innerHTML=cands.length?cands.map(m=>{
     const flags=(isAway(m,ev.date)?'<span class="pick-flag" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:var(--red-lt)">away</span>':'')+
       (inEvent.has(m.id)?'<span class="pick-flag">in this event</span>':'')+
+      (sameDay.has(m.id)?'<span class="pick-flag">on another event this day</span>':'')+
       ((!REPEAT_ALLOWED_DUTIES.has(d.name)&&dhist[m.id]&&dhist[m.id].has(d.name))?'<span class="pick-flag">did this duty (cycle)</span>':'')+
       (!ageFit(m)?'<span class="pick-flag">child, not usual for this duty</span>':'')+
       ((d.name==='Nandi'&&!m.nandi)?'<span class="pick-flag">not Nandi certified</span>':'')+
@@ -4461,7 +4491,7 @@ async function deleteEvent(){
   cM(); const ev=selEvent(); if(!ev||isSatada(ev)) return;
   pauseRT(4000);
   if(!await dbWrite('Deleting the event', ()=>sb.from('iv_events').delete().eq('id',ev.id))) return;
-  EVENTS=EVENTS.filter(e=>e.id!==ev.id); delete ROSTERS[ev.id];
+  EVENTS=EVENTS.filter(e=>e.id!==ev.id); delete ROSTERS[ev.id]; delete ROSTER_UNSAVED[ev.id]; renderSaveWarning();
   if(ev.type==='friday'||ev.type==='pbs'){ AUTO_SKIP.add(ev.date+'|'+ev.type); await saveAutoSkip(); }
   auditLog('delete','events',ev.name+' '+ev.date);
   selEventId=null; refreshBadges(); toast('Event deleted');
@@ -4499,7 +4529,7 @@ async function doResetCycle(k){
     if(!ok) return;
   }
   if([...AUTO_SKIP].some(x=>x.slice(0,10)>=start&&x.slice(0,10)<end)){ AUTO_SKIP=new Set([...AUTO_SKIP].filter(x=>!(x.slice(0,10)>=start&&x.slice(0,10)<end))); await saveAutoSkip(); }
-  const victims=EVENTS.filter(e=>inCycleK(e.date,k)&&!isSatada(e)); EVENTS=EVENTS.filter(e=>!(inCycleK(e.date,k)&&!isSatada(e))); victims.forEach(e=>delete ROSTERS[e.id]);
+  const victims=EVENTS.filter(e=>inCycleK(e.date,k)&&!isSatada(e)); EVENTS=EVENTS.filter(e=>!(inCycleK(e.date,k)&&!isSatada(e))); victims.forEach(e=>{ delete ROSTERS[e.id]; delete ROSTER_UNSAVED[e.id]; }); renderSaveWarning();
   auditLog('reset-cycle','events',cycleLabel(k)+' - removed '+victims.length+' events');
   await autoCreateEvents();
   if(!selEvent()){ const f=cycleEvs(k)[0]; selEventId=f?f.id:null; }
@@ -4643,13 +4673,16 @@ async function openDayDuties(iso,src){
   let evs=EVENTS.filter(e=>e.date===iso), rosters={};
   if(evs.length){ evs.forEach(e=>{ if(ROSTERS[e.id]) rosters[e.id]=ROSTERS[e.id]; }); }
 
-  // Nothing local - either the other team's day, or simply not loaded.
-  if(!evs.length && sb && !DB_MISSING){
+  /* Nothing local - either the other team's day, or simply not loaded. A
+     satada night is local for both teams, but the cycle's own team may hold
+     another event on the same date, so a satada date is fetched as well. */
+  if((!evs.length||evs.some(isSatada)) && sb && !DB_MISSING){
     try{
       const {data:ev}=await sb.from('iv_events').select('*').eq('date',iso);
-      evs=ev||[];
-      if(evs.length){
-        const {data:ro}=await sb.from('iv_roster').select('*').in('event_id',evs.map(e=>e.id));
+      const have=new Set(evs.map(e=>e.id)); evs=evs.concat((ev||[]).filter(e=>!have.has(e.id))).sort((a,b)=>a.id-b.id);
+      const need=evs.filter(e=>!rosters[e.id]);
+      if(need.length){
+        const {data:ro}=await sb.from('iv_roster').select('*').in('event_id',need.map(e=>e.id));
         (ro||[]).forEach(r=>{ rosters[r.event_id]=r.data; });
       }
     }catch(e){ console.warn('openDayDuties:',e.message||e); }
@@ -4704,7 +4737,7 @@ async function loadOtherEvents(y,m){
     if(error) throw error;
     OTHER_EV[key]=(data||[]).filter(e=>e.type!=='satada');   // satada nights of both teams are already in EVENTS
     if(OTHER_EV[key].length && typeof curPage!=='undefined' && curPage==='calendar') renderCalendar();
-  }catch(e){ console.warn('other team events not loaded:',e.message||e); }
+  }catch(e){ delete OTHER_EV[key]; console.warn('other team events not loaded:',e.message||e); }   // forgotten, so the next draw asks again
 }
 const tdDiff=(a,b)=>Math.round((Date.parse(b+'T12:00:00Z')-Date.parse(a+'T12:00:00Z'))/86400000);
 function tdMyDuties(){
@@ -4865,7 +4898,7 @@ function renderMemberGrid(){
       '<div style="font-size:12px;color:var(--dm);margin-top:9px">All-time duties: <b class="num" style="color:var(--dt)">'+(counts.all[m.id]||0)+'</b> · Last: '+(counts.last[m.id]?esc(fmtShort(counts.last[m.id])):'-')+'</div></div>';
   }).join('')+'</div>';
 }
-function syncFromHub(){ if(!sb) return toast('No database connection','err'); loadAll().then(()=>{ CYCLES=buildCycles(); renderMembers(); toast('Synced from Hub ✓'); }); }
+function syncFromHub(){ if(!sb) return toast('No database connection','err'); loadAll().then(ok=>{ CYCLES=buildCycles(); renderMembers(); if(ok===false) toast('Could not sync from the Hub - what you see is the last copy','err'); else toast('Synced from Hub ✓'); }); }
 function openMemberDrawer(id){
   const m=memById(id); if(!m) return;
   const counts=computeCounts(null,null); const rel=memberReliability(m.id);
@@ -4960,18 +4993,22 @@ async function updateMember(id,patch){
 }
 function saveMemberContact(id){ const box=document.getElementById('mbox'); const phone=(box.querySelector('#mdPhone')||{}).value||''; const email=(box.querySelector('#mdEmail')||{}).value||''; updateMember(id,{phone:phone.trim()||null,email:email.trim()||null}).then(ok=>{ if(ok) toast('Contact saved'); }); }
 function saveMemberNotes(id){ const box=document.getElementById('mbox'); const notes=(box.querySelector('#mdNotes')||{}).value||''; updateMember(id,{notes:notes.trim()||null}).then(ok=>{ if(ok) toast('Notes saved'); }); }
-function addAway(id){ const m=memById(id); if(!m) return; const box=document.getElementById('mbox'); const d=(box.querySelector('#mdAwayDate')||{}).value; if(!d) return toast('Pick a date','err');
+/* One away-date or preference write at a time per person. A second click lands before the first has been stored, builds its patch from
+   the old copy and overwrites the first, so a tap would quietly vanish. */
+const _memBusy=new Set();
+function memWrite(id,patch){ _memBusy.add(id); return updateMember(id,patch).then(ok=>{ _memBusy.delete(id); return ok; },e=>{ _memBusy.delete(id); throw e; }).then(()=>openMemberDrawer(id)); }
+function addAway(id){ const m=memById(id); if(!m||_memBusy.has(id)) return; const box=document.getElementById('mbox'); const d=(box.querySelector('#mdAwayDate')||{}).value; if(!d) return toast('Pick a date','err');
   const away=(Array.isArray(m.away)?m.away.slice():[]); if(away.indexOf(d)<0) away.push(d);
-  updateMember(id,{away:away.sort()}).then(()=>openMemberDrawer(id)); }
-function removeAway(id,d){ const m=memById(id); if(!m) return; updateMember(id,{away:(m.away||[]).filter(x=>x!==d)}).then(()=>openMemberDrawer(id)); }
-function cyclePref(id,key){ const m=memById(id); if(!m) return; normMember(m); const pf=m.prefs.prefer,av=m.prefs.avoid;
+  memWrite(id,{away:away.sort()}); }
+function removeAway(id,d){ const m=memById(id); if(!m||_memBusy.has(id)) return; memWrite(id,{away:(m.away||[]).filter(x=>x!==d)}); }
+function cyclePref(id,key){ const m=memById(id); if(!m||_memBusy.has(id)) return; normMember(m); const pf=m.prefs.prefer,av=m.prefs.avoid;
   const cn=m.prefs.cannot;
   const prefs=Object.assign({},m.prefs,{prefer:pf.slice(),avoid:av.slice(),cannot:cn.slice()});
   if(pf.indexOf(key)>=0){ prefs.prefer=pf.filter(k=>k!==key); prefs.avoid=av.concat([key]); }
   else if(av.indexOf(key)>=0){ prefs.avoid=av.filter(k=>k!==key); prefs.cannot=cn.concat([key]); }
   else if(cn.indexOf(key)>=0){ prefs.cannot=cn.filter(k=>k!==key); }
   else { prefs.prefer=pf.concat([key]); }
-  updateMember(id,{prefs:prefs}).then(()=>openMemberDrawer(id)); }
+  memWrite(id,{prefs:prefs}); }
 
 /* ════════════════════════════════════════════
    ATTENDANCE
@@ -5021,7 +5058,9 @@ function attendanceRoll(ev){
   // Rostered first, then leads who are only here to supervise.
   out.sort((a,b)=>(b.duties.length?1:0)-(a.duties.length?1:0)||a.m.name.localeCompare(b.m.name));
   const att=ATTEND[ev.id]||{};
-  if(!ALL_MEMBERS&&Object.keys(att).some(id=>att[id]&&att[id].walk_in&&!MEMBERS.some(m=>m.id===+id)))
+  /* Not again for a while after a failed read: the redraw below comes back
+     here, and a read that keeps failing would otherwise loop for ever. */
+  if(!ALL_MEMBERS&&Date.now()-_allMembersFail>30000&&Object.keys(att).some(id=>att[id]&&att[id].walk_in&&!MEMBERS.some(m=>m.id===+id)))
     loadAllMembers().then(()=>{ if(curPage==='attendance') renderAttendance(); });
   return out.concat(walkInRows(att, walkInPool(), out));
 }
@@ -5029,15 +5068,15 @@ function attendanceRoll(ev){
    only exist as attendance marks; listed after everyone who was rostered. */
 /* Walk-ins can come from either team, so the page needs the other team's
    people as well as its own. Fetched once, on the first walk-in. */
-let ALL_MEMBERS=null, _allMembersP=null;
+let ALL_MEMBERS=null, _allMembersP=null, _allMembersFail=0;
 function loadAllMembers(){
   if(ALL_MEMBERS) return Promise.resolve(ALL_MEMBERS);
   if(!sb||DB_MISSING) return Promise.resolve(MEMBERS);
   return _allMembersP=_allMembersP||Promise.resolve(sb.from('iv_members').select('*')).then(function(r){
     _allMembersP=null;
-    if(r&&r.error){ console.warn('walk-in members:',r.error.message||r.error); return MEMBERS; }
+    if(!r||r.error){ _allMembersFail=Date.now(); console.warn('walk-in members:',r&&r.error?(r.error.message||r.error):'no answer'); return MEMBERS; }
     return ALL_MEMBERS=(r.data||[]).map(normMember);
-  },function(){ _allMembersP=null; return MEMBERS; });
+  },function(){ _allMembersP=null; _allMembersFail=Date.now(); return MEMBERS; });
 }
 const walkInPool=()=>ALL_MEMBERS||MEMBERS;
 function walkInRows(att, members, already){
@@ -5131,6 +5170,7 @@ async function removeWalkIn(ev, id, att, members, after){
 async function addWalkInHere(){
   const ev=EVENTS.find(e=>e.id===attEventId); if(!ev||!IS_EDIT) return;
   await loadAllMembers();
+  if(!ALL_MEMBERS&&sb&&!DB_MISSING) toast('The other team\u2019s members could not be loaded - only '+TEAM_NAME+' is listed','err');
   openWalkIn({ev:ev, members:walkInPool(), roll:attendanceRoll(ev), after:(id,rec)=>{
     (ATTEND[ev.id]=ATTEND[ev.id]||{})[id]=rec; bumpTotals(id,null,'present'); renderAttendance(); }});
 }
@@ -5261,7 +5301,7 @@ function toggleBell(ev){
   pop.style.bottom = Math.max(12, window.innerHeight - r.top + 8) + 'px';
   pop.innerHTML = BELL.map((b,i)=>
     '<button class="bell-row" onclick="bellGo(' + i + ')">' +
-      '<span class="tag">' + (b.kind === 'away' ? 'Away clash' : b.kind === 'gap' ? 'Unfilled' : 'Cover') + '</span>' +
+      '<span class="tag">' + (b.kind === 'away' ? 'Away clash' : b.kind === 'gap' ? 'Unfilled' : b.kind === 'att' ? 'Attendance' : 'Cover') + '</span>' +
       '<b>' + esc(b.title) + '</b><small>' + esc(b.sub) + '</small></button>').join('');
   pop.classList.add('open');
 }
@@ -5373,15 +5413,17 @@ function coverRoll(c){
   out.sort((a,b)=>a.m.name.localeCompare(b.m.name));
   return out.concat(walkInRows(c.att, walkInPool(), out));
 }
+/* The panel lives on the dashboard for a stand-in and on the calendar for a lead covering the other team, so redraw whichever page is showing. */
 async function addCoverWalkIn(ci){
   const c=COVERING[ci]; if(!c) return;
   await loadAllMembers();
+  if(!ALL_MEMBERS&&sb&&!DB_MISSING) toast('The other team\u2019s members could not be loaded - only '+TEAM_NAME+' is listed','err');
   openWalkIn({ev:c.ev, members:walkInPool(), roll:coverRoll(c),
-    after:(id,rec)=>{ c.att[id]=rec; renderDashboard(); }});
+    after:(id,rec)=>{ c.att[id]=rec; renderCurrent(); }});
 }
 function removeCoverWalkIn(ci,id){
   const c=COVERING[ci]; if(!c) return;
-  return removeWalkIn(c.ev, id, c.att, walkInPool(), ()=>renderDashboard());
+  return removeWalkIn(c.ev, id, c.att, walkInPool(), ()=>renderCurrent());
 }
 
 async function markCoverAttendance(ci,memberId,status){
@@ -5405,9 +5447,9 @@ async function markCoverAttendance(ci,memberId,status){
         .eq('event_id',c.ev.id).eq('member_id',memberId),
         {verify: ()=>sb.from('iv_attendance').select('event_id')
                        .eq('event_id',c.ev.id).eq('member_id',memberId)});
-  if(!ok){ renderDashboard(); return; }
+  if(!ok){ renderCurrent(); return; }
   if(next) c.att[memberId]=Object.assign({},c.att[memberId]||{},{status:next}); else delete c.att[memberId];
-  renderDashboard();
+  renderCurrent();
   auditLog('cover-attendance','attendance','Team '+c.ev.team+' '+c.ev.date+' - '+
     ((c.members.find(m=>m.id===memberId)||{}).name||memberId)+': '+(next||'cleared'));
 }
@@ -5621,7 +5663,7 @@ function renderAttendanceReport(k){
     '<th>Member</th><th title="(Present + Late) as a share of Present, Late and Not present. Justified absences are excluded.">Attendance rate</th>'+
     '<th title="Late as a share of the times they turned up.">Lateness rate</th>'+
     '<th title="Every duty slot they have been rostered for, across all cycles. Not limited to the cycle selected.">Duties rostered (all time)</th>'+
-    '<th>P</th><th>L</th><th>J</th><th>N</th><th title="Turned up unrostered, in uniform, and were given a duty on the day. Already counted in P and L.">Walk-ins</th>'+
+    '<th>P</th><th>L</th><th>J</th><th>N</th><th title="Turned up unrostered, in uniform, and were added on the day, with or without a duty. Already counted in P and L.">Walk-ins</th>'+
     '<th title="Weekday duties done as a walk-in on a weekday shift. All time, not limited to the cycle selected. Not part of P, L, J, N, the rates or fairness.">Extra Duty <span style="font-weight:600">(all time)</span></th></tr></thead><tbody>';
   rows.forEach(r=>{
     const good=r.s.rate!=null&&r.s.rate>=90, bad=r.s.rate!=null&&r.s.rate<70;
@@ -5866,7 +5908,7 @@ const CL_ITEMS=[
   {key:'ac',           st:'close', title:'Air conditioning off', detail:'Make sure the air conditioning in the MPC (REC area) is switched off before leaving. The switch is in the far-left corner.'}
 ];
 const CL={day:null,dayType:'regular',done:[],deferred:[],hist:[],mode:'focus',armed:false,animating:false,
-  loaded:false,loading:false,dbOk:true,hasRow:false,by:'',at:null,pending:0,enter:'',_armT:null,_chain:Promise.resolve()};
+  loaded:false,loading:false,dbOk:true,lost:[],hasRow:false,by:'',at:null,pending:0,enter:'',_armT:null,_chain:Promise.resolve()};
 const clWide=()=>window.matchMedia&&matchMedia('(min-width:1000px) and (hover:hover)').matches;
 const clReduced=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clLocalKey=()=>'ivhub_cl_'+TEAM_LC+'_'+CL.day;
@@ -5897,7 +5939,7 @@ async function clLoad(){
   }
   if(!sb||DB_MISSING){ CL.dbOk=false; CL.loaded=true; return; }
   const {data,error}=await sb.from('iv_checklist').select('*').eq('team',PAGE_TEAM).eq('day',day).maybeSingle();
-  if(error){ CL.dbOk=false; if(!tableMissing(error)) console.warn('checklist load',error); }
+  if(error){ CL.dbOk=false; CL.setup=tableMissing(error)||/function/i.test(error.message||''); if(!CL.setup) console.warn('checklist load',error); }
   else{ CL.dbOk=true; if(data&&!CL.pending) clApply(data); }
   CL.loaded=true;
 }
@@ -5922,13 +5964,15 @@ function clSend(args){
     CL.pending--;
     if(!res) return;
     if(res.error){
-      CL.dbOk=false;
+      CL.dbOk=false; CL.setup=tableMissing(res.error)||/function/i.test(res.error.message||'');
+      CL.lost.push({day:CL.day,args:args});   // sent again once the database answers, so a tick made offline is not wiped by the next reply
       /* A missing table or function is a script nobody has run, not a blip,
          so say it once instead of on every tick (the page also shows a note). */
       if(!tableMissing(res.error)&&!/function/i.test(res.error.message||'')) toast('Could not share that tick - it is saved on this phone only','err');
       else if(!CL.missingTold){ CL.missingTold=true; toast('The shared checklist is not set up yet - ticks are saved on this phone only','err'); }
       if(curPage==='checklist'&&!CL.animating) clRender();
     }else if(res.data){
+      if(CL.lost.length){ const l=CL.lost.filter(x=>x.day===CL.day); CL.lost=[]; if(l.length){ l.forEach(x=>clSend(x.args)); return; } }
       CL.dbOk=true; CL.hasRow=true; CL.by=res.data.updated_by||CL.by; CL.at=res.data.updated_at||CL.at;
       if(!CL.pending&&!CL.animating){ CL.done=(res.data.done||[]).slice(); if(res.data.day_type) CL.dayType=res.data.day_type; clSaveLocal(); if(curPage==='checklist') clRender(); }
     }
@@ -6055,7 +6099,7 @@ function clRender(){
   if(wide) h+='<div class="cl-grid"><div class="cl-side">'+clListHTML(vis,cur)+'</div><div class="cl-main">'+clFocusHTML(q,cur,nDone,total,true)+'</div></div>';
   else if(CL.mode==='focus') h+=clFocusHTML(q,cur,nDone,total,false);
   else{ h+=clListHTML(vis,cur); if(!q.length) h+='<div class="cl-note">All clear for tonight.</div>'; }
-  if(!CL.dbOk) h+='<div class="cl-note warn">Ticks are saved on this device only, so the other Team Lead cannot see them. The owner needs to run docs/checklist.sql in Supabase.</div>';
+  if(!CL.dbOk) h+='<div class="cl-note warn">Ticks are saved on this device only, so the other Team Lead cannot see them. '+(CL.setup?'The owner needs to run docs/checklist.sql in Supabase.':'The shared checklist could not be reached or refused the change; it will share again once it can.')+'</div>';
   else if(CL.by&&CL.at) h+='<div class="cl-note">Last change by '+esc(CL.by)+' at '+esc(new Date(CL.at).toLocaleTimeString('en-NZ',{hour:'numeric',minute:'2-digit',timeZone:'Pacific/Auckland'}))+'</div>';
   h+='</div>';
   CL.enter=''; el.innerHTML=h;
@@ -6161,9 +6205,11 @@ function sheetTitle(prefix,ev){
 }
 /* Title across the top of the exported sheet, matching the printed roster:
    "Team A - Friday Majlis - 11th September 2026 (Casual Uniform)" */
+/* A satada night carries its owner's name, which is not always this page's team. */
+const evTeamName=ev=>ev&&ev.team?'Team '+ev.team:TEAM_NAME;
 function rxTitle(ev){
   const d=new Date(ev.date+'T12:00:00');
-  return TEAM_NAME+' - '+ev.name+' - '+ordN(d.getDate())+' '+
+  return evTeamName(ev)+' - '+ev.name+' - '+ordN(d.getDate())+' '+
          d.toLocaleDateString('en-NZ',{month:'long'})+' '+d.getFullYear()+
          ' ('+(ev.uniform||'Casual')+' Uniform)';
 }
@@ -6194,7 +6240,7 @@ async function exportPNG(){
       h+='<tr><td class="rx-sub" colspan="3">REC Congregation</td></tr>'+rec.map(row).join('');
     }
     h+='</tbody></table>'+
-       '<div class="rx-ft"><span>'+esc(TEAM_NAME)+' \u00b7 '+(ev.confirmed?'Confirmed':'Draft')+'</span>'+
+       '<div class="rx-ft"><span>'+esc(evTeamName(ev))+' \u00b7 '+(ev.confirmed?'Confirmed':'Draft')+'</span>'+
        '<span>IV Hub \u00b7 '+esc(fmtNice(nzTodayISO()))+'</span></div></div>';
     stage.innerHTML=h;
     const card=document.getElementById('expCard');

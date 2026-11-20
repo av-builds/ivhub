@@ -362,7 +362,11 @@ $('copyBtn').addEventListener('click', async function(){
 });
 ['emailConfirm','pw1','pw2'].forEach(id=>$(id).addEventListener('keydown', e=>{ if(e.key==='Enter') savePassword(); }));
 
-start();
+start().catch(e=>{
+  // A thrown read must not leave the page on "Checking your invitation…" for ever.
+  show('stepRequest');
+  say('reqMsg','Could not check your invitation: ' + (e && e.message || e) + '. Check your connection and reload.','err');
+});
 </script>
 <script>
 /* If this browser kept an old copy of the page, say so. The page is asked for

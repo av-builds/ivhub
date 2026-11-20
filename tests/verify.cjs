@@ -604,7 +604,7 @@ for(const [file,key,words] of [['index.html','hub',/YA ALI|Ya Ali/i],['teama.htm
     document.getElementById('umNewBtn').click(); o.drawer=document.getElementById('umInvite').classList.contains('show'); o.preview=document.getElementById('ufPreview').innerText.slice(0,30);
     return o; });
   chk(r.tiles===4&&r.rows===4,'logins  four summary tiles and a row per account',JSON.stringify(r));
-  chk(/All4,Leadership1,Teamleads1,AV1,Divisions0,Noaccess1/.test(r.chips),'logins  filter chips carry live counts',r.chips);
+  chk(/All4,Leadership1,Teamleads1,AV1,Divisions0,Weekday0,Noaccess1/.test(r.chips),'logins  filter chips carry live counts',r.chips);
   chk(r.noAccess===1&&r.search===1,'logins  the No access chip and the search narrow the list',r.noAccess+' '+r.search);
   chk(r.ed&&r.manyToggles&&r.diffAdd&&r.diffDel&&r.filtered>=1&&r.filtered<6,'logins  roles are one-tap toggles with an adding/removing summary and a search',JSON.stringify([r.ed,r.manyToggles,r.held,r.diffAdd,r.diffDel,r.filtered]));
   chk(r.flipped&&r.unflipped,'logins  a tile flips over and back');

@@ -514,7 +514,7 @@ select[size]:not([size="1"]) option:checked{
 .mj-list-mo{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:rgba(255,255,255,.65);line-height:1;}
 .mj-list-d{font-family:'Archivo',sans-serif;font-size:22px;font-weight:900;color:#fff;line-height:1;}
 .mj-list-yr{font-size:11px;color:rgba(255,255,255,.5);}
-.mj-list-body{flex:1;}
+.mj-list-body{flex:1;min-width:0;overflow-wrap:anywhere;}
 .mj-list-name{font-family:'Archivo',sans-serif;font-size:17px;font-weight:900;color:#E8F4FD;margin-bottom:5px;}
 .mj-list-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .mj-type-tag{background:rgba(75,163,220,.12);color:#4BA3DC;border:1px solid rgba(75,163,220,.25);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:2px 8px;border-radius:4px;}
@@ -838,6 +838,8 @@ tr:hover td{background:var(--ds2);}
 .r-badge-logo:hover{transform:rotate(360deg);}
 /* Login card sits above the aurora backdrop */
 #loginScreen .lbox{position:relative;z-index:1;}
+/* While the sign-in is being verified there is nothing to type into: the Hub does the signing in. */
+#loginScreen.chk .lfg,#loginScreen.chk .lbtn{display:none;}
 /* ── Page & modal motion ── */
 .page.active{animation:pageIn .34s cubic-bezier(.16,1,.3,1);}
 .mo.show .mbox{animation:popIn .26s cubic-bezier(.16,1,.3,1);}
@@ -1125,7 +1127,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 <header class="topnav" id="topnav" aria-label="Main navigation"></header>
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen">
+<div id="loginScreen" class="chk">
   <div class="lbox">
     <div class="llogo">
       <div class="llogo-wrap">
@@ -1144,7 +1146,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <input type="password" id="lp" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="lbtn" onclick="doLogin()">Sign In</button>
-    <div id="loginErr" style="color:#f88;font-size:13px;text-align:center;margin-top:10px;min-height:16px;"></div>
+    <div id="loginErr" style="color:var(--dm);font-size:13px;text-align:center;margin-top:10px;min-height:16px;">Checking your sign-in…</div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--db);font-size:12px;color:var(--dm);text-align:center;line-height:1.7;">
       <a href="index.html" style="color:var(--blue-lt);text-decoration:none;font-weight:700;">Back to IV Hub</a><br>
       <span style="opacity:.6;">Contact your administrator for credentials.</span>
@@ -2728,6 +2730,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   try{ localStorage.removeItem('ivhub_session'); }catch(e){}
   if(sb){ location.replace('index.html'); return; }
   document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginScreen').classList.remove('chk');
+  document.getElementById('loginErr').style.color = '#f88';
   document.getElementById('loginErr').textContent = 'Cannot reach the server to verify your sign-in.';
   return;
   /* eslint-disable no-unreachable */
@@ -2765,6 +2769,8 @@ async function logout(){
   sessionStorage.removeItem('jk_calMo');
   sessionStorage.removeItem('jk_calYr');
   document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginScreen').classList.remove('chk');
+  document.getElementById('loginErr').style.color = '#f88';
   document.getElementById('app').style.display = 'none';
   document.getElementById('lu').value = '';
   document.getElementById('lp').value = '';
@@ -4041,7 +4047,7 @@ function renderRosterIssues(){
       ${_rosterIssues.map(i=>`
         <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px solid rgba(239,68,68,0.12);">
           <span style="font-size:13px;flex-shrink:0;margin-top:1px;">${icons[i.type]||'•'}</span>
-          <span style="font-size:13px;color:#FECACA;line-height:1.6;">${esc(i.text)}</span>
+          <span style="font-size:13px;color:#FECACA;line-height:1.6;min-width:0;overflow-wrap:anywhere;">${esc(i.text)}</span>
         </div>`).join('')}
       <div style="font-size:12px;color:#C99A9A;margin-top:8px;font-style:italic;">Only AV Admins and the Owner can see this banner. Fix via User Management (availability) or by clicking the day on the calendar (specific days).</div>
     </div>`;
@@ -5170,7 +5176,7 @@ function renderAuditLogs(){
             ${esc(initials)}
           </div>
           <!-- Content -->
-          <div style="flex:1;min-width:0;">
+          <div style="flex:1;min-width:0;overflow-wrap:anywhere;">
             <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px;">
               <span style="font-size:14px;font-weight:800;color:#E8F4FD;">${esc(l.user_display||l.username||'Unknown')}</span>
               <span style="font-size:11px;color:var(--dm);font-family:monospace;opacity:.6;">${esc(l.username)}</span>
@@ -5204,7 +5210,8 @@ function clearAuditDisplay(){
   renderAuditLogs();
 }
 async function confirmClearAllLogs(){
-  if(!isOwnerUser()){
+  // The database allows this for the Owner only (a Developer passes isOwnerUser but is refused).
+  if(!curPerms().includes('owner')){
     toast('Only the Owner can clear audit logs.','err');
     return;
   }

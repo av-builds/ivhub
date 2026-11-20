@@ -132,7 +132,10 @@ function render(perms){
   }
   show('stOk');
 }
-document.addEventListener('DOMContentLoaded', start);
+document.addEventListener('DOMContentLoaded', () => start().catch(() => {
+  // A thrown read must not leave the page on "Checking your access…" for ever.
+  show('stDeny'); $('denyMsg').textContent = 'Could not check your access. Check your connection and reload.';
+}));
 </script>
 <script>
 /* If this browser kept an old copy of the page, say so. The page is asked for

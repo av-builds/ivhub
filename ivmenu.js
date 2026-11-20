@@ -159,7 +159,7 @@
   document.addEventListener('keydown',function(e){
     var el=e.target;
     if(!el||!el.__ivb||e.defaultPrevented||e.altKey||e.ctrlKey||e.metaKey||(e.key!=='Enter'&&e.key!==' ')) return;
-    e.preventDefault(); el.click();
+    e.preventDefault(); if(!e.repeat) el.click();
   });
 
   window.IVP={popup:popup,close:close,scan:scan};
@@ -227,6 +227,8 @@
   }
   function queueDialogs(){ if(!dq) dq=requestAnimationFrame(function(){ syncDialogs(false); }); }
   function bootDialogs(){
+    // The AV page's #mbox carries no dialog role of its own; give it one so it is trapped, labelled and restored like the others.
+    [].forEach.call(document.querySelectorAll('.mo>.mbox:not([role])'),function(m){ m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true'); if(!m.hasAttribute('aria-label')&&!m.hasAttribute('aria-labelledby')) m.setAttribute('aria-label','Details'); });
     document.addEventListener('focusin',function(e){ if(!(e.target.closest&&e.target.closest(DLG))&&!(e.target.classList&&e.target.classList.contains('ivp-opt'))) lastOut=e.target; },true);
     document.addEventListener('keydown',function(e){
       if(e.key!=='Tab'||!activeDlg||open) return;
