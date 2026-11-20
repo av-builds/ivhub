@@ -495,6 +495,8 @@ button.chip.un:hover{background:rgba(239,68,68,.22);border-color:var(--red-lt);}
 .duty-chip{display:inline-block;background:var(--ds2);border:1px solid var(--db);border-radius:6px;
   padding:2px 7px;margin:3px 5px 0 0;font-size:11.5px;font-weight:800;color:var(--blue-lt);}
 .duty-chip.none{color:var(--dm);border-style:dashed;}
+.duty-chip{white-space:normal;max-width:100%;overflow-wrap:anywhere;}
+@media(pointer:coarse){.att-btn{min-height:40px;min-width:40px;}}
 .att-duties{margin-top:2px;}
 .lead-tag{display:inline-block;background:rgba(252,211,77,.16);border:1px solid rgba(252,211,77,.4);
   color:var(--gold-lt);border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:900;margin-left:6px;}
@@ -537,6 +539,8 @@ button.chip.un:hover{background:rgba(239,68,68,.22);border-color:var(--red-lt);}
 .dchip-tog:hover{border-color:var(--blue-lt);}
 .dchip-tog.prefer{background:rgba(16,185,129,.14);border-color:rgba(16,185,129,.45);color:var(--green-lt);}
 .dchip-tog.avoid{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.45);color:var(--red-lt);}
+.dchip-tog.cannot{background:#B91C1C;border-color:#991B1B;color:#fff;}
+.xd-note{font-size:12px;color:var(--dm);margin-top:6px;}
 .away-chip{display:inline-flex;align-items:center;gap:6px;background:var(--ds2);border:1px solid var(--db);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;}
 .away-chip button{background:none;border:none;color:var(--dm);cursor:pointer;font-size:13px;}
 .away-chip button:hover{color:var(--red-lt);}
@@ -669,7 +673,7 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4BA3DC
   body.sb-min .sidebar{width:250px;}
   #sbCollapse{display:none;}
   .main{margin-left:0!important;padding:16px 14px 70px;padding-top:62px;}
-  .hero{padding:18px;}.dash-greet{font-size:20px;}.dash-clock{font-size:23px;}
+  .hero{padding:18px 26px 18px 18px;}.dash-greet{font-size:20px;}.dash-clock{font-size:23px;}
   .ph{flex-direction:column;align-items:flex-start;}
   .mbox{top:auto;left:0;right:0;bottom:0;width:100%;max-width:100%;max-height:86vh;border-left:none;border-top:1px solid var(--db2);border-radius:var(--r-xl) var(--r-xl) 0 0;animation:sheetIn .3s cubic-bezier(.16,1,.3,1);padding-top:30px;}
   .mbox::before{content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);width:44px;height:4px;border-radius:2px;background:rgba(122,174,203,.4);}
@@ -830,6 +834,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .ro-crumbs .rc-nav{margin-left:auto;display:flex;gap:6px;}
 .ro-crumbs .rc-nav .btn{font-size:17px;line-height:1;padding:5px 12px;}
 .cy-legend{margin:-8px 0 14px;}
+.cy-legend.after-sat{margin-top:14px;}
+@media(max-width:520px){.cy-grid.sat{grid-template-columns:1fr 1fr;gap:8px;}}
 .cy-legend .cal-legend{margin-left:0;}
 .cy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
 .cy-sec{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--dm2);margin:26px 0 10px;}
@@ -842,6 +848,8 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .cy-card.st-current::before{background:linear-gradient(90deg,#059669,var(--green-lt),transparent 85%);}
 .cy-card:hover{transform:translateY(-3px);border-color:rgba(75,163,220,.38);box-shadow:0 12px 30px rgba(2,11,24,.45);}
 .cy-grid.past .cy-card{opacity:.72;}
+.cy-card.ro{opacity:.6;cursor:default;}
+.cy-card.ro:hover{transform:none;box-shadow:none;border-color:inherit;opacity:.6;}
 .cy-grid.past .cy-card:hover{opacity:1;}
 .cy-top{display:flex;align-items:center;gap:8px;}
 .cy-count{margin-left:auto;font-size:12px;font-weight:800;color:var(--dm);}
@@ -2014,6 +2022,8 @@ let MEMBERS=[],EVENTS=[],ROSTERS={},ANNS=[],ATTEND={};
    ATTEND holds the raw register for the cycles on screen; this holds the
    whole history as four numbers per person. */
 let ATT_TOTALS={};
+/* Extra Duty: weekday walk-in duties from iv_wd_attendance, member_id -> [{date,duty}] (oldest first). Display only. */
+let EXTRA={};
 let CYCLES=[],selEventId=null,DB_MISSING=false,LOADED=false,curPage='calendar';
 let CAL={y:2026,m:0};
 let attEventId=null, repCycleK=null, repMode='attendance', repMember=null, lbDuty='', lbSort='count', memFilter={q:'',rank:'',age:'',nandi:'',away:''};
@@ -2044,7 +2054,10 @@ function cycleEvs(k){ return eventsInCycle(k).filter(e=>!isSatada(e)); }
 /* Something this page shows: in one of its cycles, or any satada night. */
 const inView=e=>isSatada(e)||CYCLES.some(c=>inCycleK(e.date,c.k));
 function isAway(m,date){ return Array.isArray(m.away)&&m.away.indexOf(date)>=0; }
-function normMember(m){ if(!Array.isArray(m.away)) m.away=[]; if(!m.prefs||typeof m.prefs!=='object'||Array.isArray(m.prefs)) m.prefs={}; if(!Array.isArray(m.prefs.prefer)) m.prefs.prefer=[]; if(!Array.isArray(m.prefs.avoid)) m.prefs.avoid=[]; if(!m.rank) m.rank='Member'; return m; }
+function normMember(m){ if(!Array.isArray(m.away)) m.away=[]; if(!m.prefs||typeof m.prefs!=='object'||Array.isArray(m.prefs)) m.prefs={}; if(!Array.isArray(m.prefs.prefer)) m.prefs.prefer=[]; if(!Array.isArray(m.prefs.avoid)) m.prefs.avoid=[]; if(!Array.isArray(m.prefs.cannot)) m.prefs.cannot=[];
+  /* A duty sits in at most one of prefer/avoid/cannot; cannot is the hard block and wins. */
+  if(m.prefs.cannot.length){ const cn=m.prefs.cannot; if(m.prefs.prefer.some(k=>cn.indexOf(k)>=0)) m.prefs.prefer=m.prefs.prefer.filter(k=>cn.indexOf(k)<0); if(m.prefs.avoid.some(k=>cn.indexOf(k)>=0)) m.prefs.avoid=m.prefs.avoid.filter(k=>cn.indexOf(k)<0); }
+  if(!m.rank) m.rank='Member'; return m; }
 
 /* ── DATA LOAD ──────────────────────────────────────────────────────
    Nothing is asked for that this page will not show. That used not to be
@@ -2072,6 +2085,19 @@ async function byEventId(table, ids){
   }
   return {data:out};
 }
+/* Extra Duty rows for this team's members only, oldest first. Never throws:
+   an unreadable table comes back as {error} and the page carries on without it. */
+async function loadExtraDuty(ids){
+  if(!ids.length) return {data:[]};
+  const out=[];
+  for(let i=0;i<ids.length;i+=IN_CHUNK){
+    const {data,error}=await sb.from('iv_wd_attendance').select('member_id,date,duty').in('member_id',ids.slice(i,i+IN_CHUNK)).order('date');
+    if(error) return {error:error};
+    out.push.apply(out,data||[]);
+  }
+  out.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+  return {data:out};
+}
 const ANN_LIMIT=200;      // a feed, not an archive
 async function loadAll(){
   if(!sb) return;
@@ -2087,10 +2113,10 @@ async function loadAll(){
     if(r.key==='chandraat_overrides'&&r.value&&typeof r.value==='object'){ OVERRIDES=r.value; clearCycleCache(); }
     if(r.key==='auto_skip_'+PAGE_TEAM&&Array.isArray(r.value)) AUTO_SKIP=new Set(r.value);
   });
-  if(me.error){ console.warn('iv_members:',me.error.message||me.error); if(tableMissing(me.error))DB_MISSING=true; MEMBERS=[]; }
+  if(me.error){ console.warn('iv_members:',me.error.message||me.error); if(tableMissing(me.error))DB_MISSING=true; }
   else MEMBERS=(me.data||[]).map(normMember).sort((a,b)=>a.name.localeCompare(b.name));
   ALL_MEMBERS=null;   // walk-ins read both teams; fetched again on next use so edits show
-  if(ev.error){ console.warn('iv_events:',ev.error.message||ev.error); if(tableMissing(ev.error))DB_MISSING=true; EVENTS=[]; }
+  if(ev.error){ console.warn('iv_events:',ev.error.message||ev.error); if(tableMissing(ev.error))DB_MISSING=true; }
   else EVENTS=ev.data||[];
   const evIds=EVENTS.map(e=>e.id);
   /* The cycles this page will actually show - four back, the current
@@ -2112,26 +2138,31 @@ async function loadAll(){
      the cycles on screen, which is all the attendance page and the
      per-cycle reports ever look at. */
   const windowIds=EVENTS.filter(e=>String(e.date||'')>=floor).map(e=>e.id);
-  const [ro,at,tot]=await Promise.all([
+  const memIds=MEMBERS.map(m=>m.id);
+  const [ro,at,tot,xd]=await Promise.all([
     q(()=>byEventId('iv_roster',evIds)),
     q(()=>byEventId('iv_attendance',windowIds)),
     q(()=>sb.rpc('member_attendance_totals',{p_team:PAGE_TEAM})),
+    q(()=>loadExtraDuty(memIds)),
   ]);
+  EXTRA={};
+  if(xd&&xd.error) console.warn('iv_wd_attendance:',xd.error.message||xd.error);
+  else ((xd&&xd.data)||[]).forEach(r=>{ if(r&&r.member_id!=null) (EXTRA[r.member_id]=EXTRA[r.member_id]||[]).push({date:r.date,duty:r.duty}); });
   ATT_TOTALS={};
   if(tot.error) console.warn('member_attendance_totals:',tot.error.message||tot.error);
   else (tot.data||[]).forEach(r=>{ ATT_TOTALS[r.member_id]=r; });
-  ROSTERS={};
   if(ro.error){ console.warn('iv_roster:',ro.error.message||ro.error); if(tableMissing(ro.error))DB_MISSING=true; }
-  else (ro.data||[]).forEach(r=>{ ROSTERS[r.event_id]=r.data||{assign:{},manual:{}}; });
-  if(an.error){ console.warn('announcements:',an.error.message||an.error); if(tableMissing(an.error))DB_MISSING=true; ANNS=[]; }
+  else { const nr={}; (ro.data||[]).forEach(r=>{ nr[r.event_id]=r.data||{assign:{},manual:{}}; }); ROSTERS=nr; }
+  if(an.error){ console.warn('announcements:',an.error.message||an.error); if(tableMissing(an.error))DB_MISSING=true; }
   else ANNS=an.data||[];
-  ATTEND={};
   if(at.error){ console.warn('iv_attendance:',at.error.message||at.error); }
-  else (at.data||[]).forEach(r=>{ (ATTEND[r.event_id]=ATTEND[r.event_id]||{})[r.member_id]=attRec(r); });
+  else { const na={}; (at.data||[]).forEach(r=>{ (na[r.event_id]=na[r.event_id]||{})[r.member_id]=attRec(r); }); ATTEND=na; }
   // hub-sync status line
   const hs=document.getElementById('hubSyncStatus');
   if(hs){ if(me.error){ hs.textContent='⚠ Hub membership unavailable - '+(me.error.message||me.error); hs.style.color='var(--gold-lt)'; }
     else { hs.textContent='Hub ✓ '+MEMBERS.length+' member'+(MEMBERS.length!==1?'s':'')+' in '+TEAM_NAME; hs.style.color='var(--blue-lt)'; } }
+  /* False when a core read failed: what is held was kept, not replaced. */
+  return !(me.error||ev.error||ro.error);
 }
 
 /* ── AUTO-CREATE (Fridays + PBS in current/future owned cycles) ── */
@@ -2207,6 +2238,7 @@ function subscribeRT(){
     ch.on('postgres_changes',{event:'*',schema:'public',table:'iv_events'},()=>{ if(!_pauseRT) rtReload(); })
       .on('postgres_changes',{event:'*',schema:'public',table:'iv_roster'},()=>{ if(!_pauseRT) rtReload(); })
       .on('postgres_changes',{event:'*',schema:'public',table:'iv_attendance'},()=>{ if(!_pauseRT) rtReload(); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'iv_wd_attendance'},()=>{ if(!_pauseRT) rtReload(); })
       .on('postgres_changes',{event:'*',schema:'public',table:'announcements'},()=>{ if(!_pauseRT) rtReload(); })
       .subscribe();
     subscribeCL();
@@ -2228,15 +2260,21 @@ function rtBusy(){
   if(n&&n.value.trim()) return true;
   return !!document.querySelector('[id^="annEdit_"]');
 }
-function rtReload(){ if(_rtT)clearTimeout(_rtT); _rtT=setTimeout(async()=>{
+let _rtFails=0;
+function rtReload(delay){ if(_rtT)clearTimeout(_rtT); _rtT=setTimeout(async()=>{
   if(_pauseRT||rtBusy()){ rtReload(); return; }
   const t0=Date.now(), keep=ROSTERS;
-  await loadAll(); await loadCovering(); CYCLES=buildCycles();
+  const ok=await loadAll();
+  /* A core read failed: what is held is still the last good copy. Do not
+     render over it; try again later, backing off. */
+  if(ok===false){ _rtFails=Math.min(_rtFails+1,5); rtReload(Math.min(30000,2000*Math.pow(2,_rtFails))); return; }
+  _rtFails=0;
+  await loadCovering(); CYCLES=buildCycles();
   /* A write began while the read was out: what came back may be older
      than it. Keep what we hold and read again once things are quiet. */
   if(_lastWrite>=t0){ ROSTERS=keep; rtReload(); return; }
   Object.keys(ROSTER_UNSAVED).forEach(id=>{ ROSTERS[id]=ROSTER_UNSAVED[id]; });
-  renderSaveWarning(); if(rtBusy()) return; renderCurrent(); },350); }
+  renderSaveWarning(); if(rtBusy()) return; renderCurrent(); },delay>0?delay:1200); }
 
 /* ── COUNTS / FAIRNESS ── */
 function computeCounts(k,excludeEventId){
@@ -2606,7 +2644,7 @@ async function saveRoster(eventId, opts){
       const {data, error} = await sb.from('iv_roster').select('event_id,data').eq('event_id', eventId);
       if(error) err = error;
       else if(!data || !data.length) err = {message:'the row was accepted but is not there when read back'};
-      else if(data.length > 1) err = {message:'there are ' + data.length + ' roster rows for this event - the unique index on iv_roster(event_id) is missing, so saves cannot replace cleanly. Re-run SETUP.sql.'};
+      else if(data.length > 1) err = {message:'there are ' + data.length + ' roster rows for this event, so the save did not replace the old one cleanly. Tell the admin.'};
       else if(canon(data[0].data) !== sent) err = {message:'what came back does not match what was sent'};
     }catch(e){ err = e; }
   }
@@ -2705,7 +2743,16 @@ function attRec(r){
   if(r.walk_in){ o.walk_in=true; o.walk_in_duty=r.walk_in_duty||''; o.in_uniform=!!r.in_uniform; }
   return o;
 }
+/* One tap at a time per person. A second tap lands while the first is still
+   being written, reads the old mark, and the lifetime totals count it twice. */
+const _attBusy=new Set();
 async function markAttendance(eventId,memberId,status){
+  const key=eventId+':'+memberId;
+  if(_attBusy.has(key)) return;
+  _attBusy.add(key);
+  try{ await markAttendanceNow(eventId,memberId,status); } finally{ _attBusy.delete(key); }
+}
+async function markAttendanceNow(eventId,memberId,status){
   if(!IS_EDIT) return;
   const cur=attStatus(eventId,memberId);
   const rec=ATTEND[eventId]=ATTEND[eventId]||{};
@@ -3005,7 +3052,7 @@ async function boot(){
   if(IS_EDIT) renderCalendar(); else nav('dashboard');
   await waitSupabase();
   setSyncStatus(sb?'ok':'off');
-  await loadAll();
+  const loadedOk=await loadAll();
   await loadCovering();   // events elsewhere I have been asked to stand in for
   if(!IS_EDIT && !COVERING.length){
     document.body.insertAdjacentHTML('beforeend',
@@ -3016,7 +3063,7 @@ async function boot(){
   }
   await loadMyMember();   // which of these members the viewer is, for their own cards
   CYCLES=buildCycles();
-  await autoCreateEvents();
+  if(loadedOk!==false) await autoCreateEvents();   // never on top of a failed read: it would see no events
   const today=nzTodayISO();
   const upc=EVENTS.filter(e=>e.date>=today&&mineEv(e)&&inView(e));
   const vis=EVENTS.filter(e=>mineEv(e)&&inView(e));
@@ -3060,9 +3107,9 @@ function renderDashboard(){
   let unfilled=0; upc.forEach(e=>unfilled+=slotCounts(e).missing);
   const nextFill=nextEv?slotCounts(nextEv):null;
   let h='<div class="ph"><div><h1>Dashboard</h1><p>'+esc(TEAM_NAME)+' roster overview · Auckland Jamatkhana</p></div>'+
-    '<div class="ha"><button class="btn btn-ol btn-sm" onclick="nav(\'roster\')">📋 Roster</button>'+
+    '<div class="ha">'+(IS_EDIT?'<button class="btn btn-ol btn-sm" onclick="nav(\'roster\')">📋 Roster</button>':'')+
     (IS_EDIT&&nextEv&&!evLocked(nextEv)?'<button class="btn btn-bl btn-sm" onclick="askRegenerateDay('+nextEv.id+')">↻ Regenerate next</button>':'')+
-    (nextEv?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+(nextEv.id)+');setTimeout(exportPNG,300)">📷 Export</button>':'')+'</div></div>';
+    (nextEv&&IS_EDIT?'<button class="btn btn-ol btn-sm" onclick="selectEvent('+(nextEv.id)+');setTimeout(exportPNG,300)">📷 Export</button>':'')+'</div></div>';
   // hero
   h+='<div class="hero"><div style="position:relative;z-index:1;min-width:0"><div class="dash-greet">Ya Ali Madad</div>'+
     '<div class="dash-date">'+esc(fmtNice(today))+'</div>'+
@@ -3111,14 +3158,14 @@ function renderDashboard(){
     const sc=slotCounts(e); const tm=TYPE_META[e.type]||TYPE_META.custom;
     const tag=satRO(e)?'<span class="next-tag today">Team '+esc(e.team)+'</span>':e.confirmed?'<span class="next-tag ok">Confirmed</span>':(sc.missing?'<span class="next-tag warn">'+sc.missing+' gaps</span>':(sc.generated?'<span class="next-tag ok">Filled</span>':'<span class="next-tag today">Draft</span>'));
     const d=new Date(e.date+'T12:00:00');
-    h+='<div class="next-row" onclick="event.stopPropagation();openEventDrawer('+e.id+')"><div class="next-d"><div class="d num">'+d.getDate()+'</div><div class="w">'+esc(MON_UP[d.getMonth()])+'</div></div>'+
+    h+='<div class="next-row" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}" onclick="event.stopPropagation();openEventDrawer('+e.id+')"><div class="next-d"><div class="d num">'+d.getDate()+'</div><div class="w">'+esc(MON_UP[d.getMonth()])+'</div></div>'+
       '<div class="next-who"><div class="n">'+esc(e.name)+(isSatada(e)?' '+ownerChip(e):'')+'</div><div class="m">'+esc(fmtDowLong(e.date))+' · '+esc(e.uniform||'Casual')+'</div></div>'+tag+'</div>';
   });
   h+='</div></div>';
   h+='<div class="pnl"><div class="pnl-h">📣 Announcements</div><div class="pnl-b" style="padding:10px">';
   if(!ANNS.length) h+='<div class="empty-note">No announcements.</div>';
   ANNS.slice(0,4).forEach(a=>{ h+='<div style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.04)"><div style="font-size:13px;line-height:1.5;white-space:pre-wrap">'+esc(a.text)+'</div><div style="font-size:12px;color:var(--dm);margin-top:4px">'+esc(a.author||'')+(a.created_at?' · '+esc(fmtNice(String(a.created_at).slice(0,10))):'')+'</div></div>'; });
-  h+='<div style="padding:8px"><button class="btn btn-ol btn-sm" onclick="nav(\'announce\')">Open announcements</button></div></div></div></div>';
+  h+=(IS_EDIT?'<div style="padding:8px"><button class="btn btn-ol btn-sm" onclick="nav(\'announce\')">Open announcements</button></div>':'')+'</div></div></div>';
   el.innerHTML=h;
   tickClock();
 }
@@ -3293,7 +3340,16 @@ function buildPlan(k,onlyEventId,opts){
    are complete, and reports what actually happened rather than what was
    attempted - counting stored and live separately is how a cycle that
    half-saved stops reading as a success. */
+/* One build at a time. A double press on Generate started two runs, each
+   saving its own random roster over the other's, so what was left on screen
+   and what was stored could be different rosters. */
+let _planBusy=false;
 async function applyPlan(plan,opts){
+  if(!plan||_planBusy) return false;
+  _planBusy=true;
+  try{ return await applyPlanNow(plan,opts); } finally{ _planBusy=false; }
+}
+async function applyPlanNow(plan,opts){
   if(!plan) return false;
   /* publish:false stores the rosters as drafts for the publish bar. The
      default is unchanged: complete rosters go on the calendar as they save. */
@@ -3327,7 +3383,7 @@ async function applyPlan(plan,opts){
   renderRoster(); refreshBadges();
   if(pubNew&&stored===n){
     const blanks=build.reduce((t,r)=>t+(r.missing||0),0);
-    toast((n===1?'Built '+esc(build[0].name):'Generated '+n+' days')+' - '+live+' on the calendar'+
+    toast((n===1?'Built '+build[0].name:'Generated '+n+' days')+' - '+live+' on the calendar'+
       (blanks?', '+blanks+' slot'+(blanks===1?'':'s')+' blank':''));
   }
   else if(!publish&&stored===n) toast('Saved '+n+' as draft'+(n===1?'':'s')+' - publish from the bar when ready');
@@ -3536,7 +3592,7 @@ function renderPlanPanel(){
    applyPlan); only where the result is shown has changed. The calendar is
    still the landing page - this is where the Roster item opens. */
 let ROSTER_BAR_K=null;          // the cycle the page is working on, when chosen
-let ROSTER_VIEW='cycles';       // 'cycles' | 'cycle' | 'satada' | 'event'
+let ROSTER_VIEW='cycles';       // 'cycles' | 'cycle' | 'event'
 let ROSTER_K=null;              // the cycle shown in the cycle view
 let _rosterJump=false;          // set when something sends you straight to a cycle or event
 let _publishing=false;          // one publish run at a time
@@ -3603,6 +3659,28 @@ function evStateHTML(e){
 }
 
 /* ── 1. THE CYCLES ── */
+/* The Satada group at the top of the roster page: one entry per night of
+   every satada week that has not finished, both teams. This team's own
+   nights open the normal roster; the other team's are greyed and read only.
+   Who owns which night is set in the Hub, never here. */
+function satNightCardHTML(e,today){
+  const mine=!satRO(e), st=e.date<today?'historic':(e.date===today?'current':'upcoming');
+  const sc=slotCounts(e);
+  const line=!mine?'Team '+e.team+' runs this night':!sc.generated?'Not built':e.confirmed?(sc.missing?'On the calendar · <b>'+sc.missing+' blank</b>':'On the calendar'):'Hidden from the calendar';
+  const inner='<span class="cy-top"><span class="cyc-tag '+st+'">SATADA</span>'+ownerChip(e)+'</span>'+
+    '<span class="cy-name">'+esc(fmtDowLong(e.date))+'</span>'+
+    '<span class="cy-dates">'+esc(fmtShort(e.date))+'</span>'+
+    '<span class="cy-line">'+(mine?line:esc(line))+'</span>';
+  return mine?'<button class="cy-card st-'+st+'" data-sat="'+e.id+'" onclick="openFullRoster('+e.id+')">'+inner+'</button>'
+             :'<div class="cy-card ro st-'+st+'" data-sat="'+e.id+'" aria-disabled="true">'+inner+'</div>';
+}
+function satGroupHTML(){
+  const today=nzTodayISO(), wk=satWeekMap();
+  const nights=[]; Object.keys(wk).sort().forEach(w=>{ if(addDaysLocal(w,6)>=today) wk[w].forEach(e=>nights.push(e)); });
+  if(!nights.length) return '';
+  return '<div class="cy-sec" id="satGroup" style="margin-top:4px">Satada · every night, both teams</div>'+
+    '<div class="cy-grid sat">'+nights.map(e=>satNightCardHTML(e,today)).join('')+'</div>';
+}
 function cycleCardHTML(c){
   const s=cycleSummary(c.k);
   let line;
@@ -3625,12 +3703,11 @@ function cycleCardHTML(c){
 function renderCyclePicker(){
   const live=CYCLES.filter(c=>c.status!=='historic'), past=CYCLES.filter(c=>c.status==='historic').slice().reverse();
   let h='<div class="ph"><div><h1>Roster</h1><p>Pick a cycle to generate, check and publish its rosters.</p></div>'+
-    (IS_EDIT?'<div class="ha"><button class="btn btn-ol btn-sm" onclick="openAddSatada()">+ Add Satada</button><button class="btn btn-da btn-sm" onclick="openResetCycle()">Reset next cycle</button></div>':'')+'</div>';
+    (IS_EDIT?'<div class="ha"><button class="btn btn-da btn-sm" onclick="openResetCycle()">Reset next cycle</button></div>':'')+'</div>';
+  const sat=satGroupHTML(); h+=sat;
   if(!CYCLES.length) return h+'<div class="empty-gen"><div class="zap">📅</div><h3>No cycles found</h3><p>Nothing to roster yet.</p></div>';
-  h+='<div class="cy-legend"><span class="cal-legend"><i class="st-nb"></i>Not built <i class="st-dr"></i>Draft <i class="st-lv"></i>On the calendar</span></div>';
+  h+='<div class="cy-legend'+(sat?' after-sat':'')+'"><span class="cal-legend"><i class="st-nb"></i>Not built <i class="st-dr"></i>Draft <i class="st-lv"></i>On the calendar</span></div>';
   if(live.length) h+='<div class="cy-grid">'+live.map(cycleCardHTML).join('')+'</div>';
-  const sats=satWeekMap(), weeks=Object.keys(sats).sort();
-  if(weeks.length) h+='<div class="cy-sec">Satada weeks · every night, both teams</div><div class="cy-grid">'+weeks.map(satWeekCardHTML).join('')+'</div>';
   if(past.length) h+='<div class="cy-sec">Past cycles · read only</div><div class="cy-grid past">'+past.map(cycleCardHTML).join('')+'</div>';
   return h;
 }
@@ -3644,7 +3721,6 @@ function renderCyclePicker(){
    slots and all; they simply show blank. Taking a day down is the
    deliberate act now (Hide from calendar), not putting it up. */
 let ROSTER_OPEN=null;           // the event day expanded in the cycle view
-let ROSTER_SAT=null;            // the Sunday of the satada week shown in the satada view
 function renderCycleView(k){
   const meta=CYCLES.find(c=>c.k===k)||{status:'upcoming'};
   const hist=meta.status==='historic', s=cycleSummary(k);
@@ -3663,7 +3739,6 @@ function renderCycleView(k){
     side+='<div class="cv-acts">';
     if(s.n) side+='<button class="btn btn-bl" onclick="askGenerateCycle('+k+')">⚡ '+(s.built?'Regenerate cycle':'Generate entire cycle')+'</button>';
     side+='<button class="btn btn-ol" onclick="openAddEvent()">+ Add event</button>'+
-          '<button class="btn btn-ol btn-sm" onclick="openAddSatada()">+ Add Satada</button>'+
           '<button class="btn btn-ol btn-sm" title="Chandraat overrides" aria-label="Cycle settings" onclick="openCycleSettings()">⚙ Cycle settings</button></div>';
   }
   if(hist) side+='<div class="cv-stat">🔒 Read only</div>';
@@ -3723,7 +3798,7 @@ function dayCardHTML(e,edit){
       if(built) h+='<button class="btn btn-ol btn-sm" onclick="toggleDayCalendar('+e.id+')">'+(e.confirmed?'Hide from calendar':'Put back on the calendar')+'</button>'+
                    '<button class="btn btn-ol btn-sm" onclick="askRegenerateDay('+e.id+')">↻ Regenerate day</button>';
       h+='<button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster</button>'+
-         (isSatada(e)&&IS_EDIT?'<button class="btn btn-ol btn-sm" onclick="openSatadaOwner('+e.id+')">Change owner</button>':'')+'</div>';
+         '</div>';
     } else if(!hist||built) h+='<div class="cv-dacts"><button class="btn btn-ol btn-sm" onclick="openFullRoster('+e.id+')">Open full roster</button></div>';
     if(!built){
       h+=edit?'<div class="cv-empty"><p>This day has no roster yet. Building it fills every duty using everyone’s duties across the rest of the cycle, and puts it on the calendar.</p>'+
@@ -3737,11 +3812,11 @@ function dayCardHTML(e,edit){
 /* Expanding a day also selects it, so the slot picker and chip menu - which work on the selected event - edit the day you are looking at. */
 function openDay(id,fromSide){
   const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
+  if(isSatada(ev)) return openFullRoster(id);   // a satada night has its own page, not a cycle day card
   const k=cycleForDate(ev.date);
-  const sat=isSatada(ev);
-  if(!sat&&ROSTER_K!==k){ ROSTER_K=ROSTER_BAR_K=k; }
+  if(ROSTER_K!==k){ ROSTER_K=ROSTER_BAR_K=k; }
   ROSTER_OPEN=(ROSTER_OPEN===id&&!fromSide)?null:id;
-  selEventId=id; ROSTER_VIEW=sat?'satada':'cycle'; if(sat) ROSTER_SAT=weekStart(ev.date);
+  selEventId=id; ROSTER_VIEW='cycle';
   if(curPage!=='roster'){ _rosterJump=true; nav('roster'); }
   else renderRoster();
   if(ROSTER_OPEN===id) setTimeout(()=>{
@@ -3812,10 +3887,10 @@ async function generateDay(id,opts){
   if(!plan) return toast('This event cannot be built','err');
   if(opts&&opts.midCycle) plan.midCycle=opts.midCycle;
   PLAN_OPEN.clear(); PLAN_OPEN.add(id);
-  if(isSatada(ev)){ ROSTER_VIEW='satada'; ROSTER_SAT=weekStart(ev.date); ROSTER_OPEN=id; selEventId=id; }
+  if(isSatada(ev)){ ROSTER_VIEW='event'; ROSTER_OPEN=id; selEventId=id; }
   else { ROSTER_VIEW='cycle'; ROSTER_K=ROSTER_BAR_K=k; ROSTER_OPEN=id; selEventId=id; }
   await applyPlan(plan,{publish:'new'});
-  if(isSatada(ev)&&ROSTER_PLAN===plan){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }   // the satada view has no summary panel; do not leave a receipt for the cycle view to pick up
+  if(isSatada(ev)&&ROSTER_PLAN===plan){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }   // the night's own page has no summary panel; do not leave a receipt for the cycle view to pick up
 }
 
 /* ── 3. ONE EVENT ── */
@@ -3823,7 +3898,7 @@ function renderEventPage(ev){
   const k=cycleForDate(ev.date), sat=isSatada(ev), wk=weekStart(ev.date);
   const evs=sat?(satWeekMap()[wk]||[]):cycleEvs(k), i=evs.findIndex(e=>e.id===ev.id);
   const prev=i>0?evs[i-1]:null, next=i>=0&&i<evs.length-1?evs[i+1]:null;
-  let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="'+(sat?'openSatadaWeek(\''+wk+'\')':'openCycle('+k+')')+'">'+esc(sat?'Satada '+fmtShort(wk):cyclePretty(k))+'</button>'+
+  let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="'+(sat?'openRosterHome()':'openCycle('+k+')')+'">'+esc(sat?'Satada '+fmtShort(wk):cyclePretty(k))+'</button>'+
     '<span class="rc-here">'+esc(ev.name)+' · '+esc(fmtShort(ev.date))+'</span>'+
     '<span class="rc-nav">'+
       (prev?'<button class="btn btn-ol btn-sm" onclick="openFullRoster('+prev.id+')" aria-label="Previous event: '+esc(prev.name)+'">‹</button>':'')+
@@ -3846,16 +3921,12 @@ function renderRoster(){
   let v=ROSTER_VIEW;
   if(v==='event'&&!selEvent()) v=ROSTER_K!=null?'cycle':'cycles';
   if(v==='cycle'&&(ROSTER_K==null||!CYCLES.some(c=>c.k===ROSTER_K))) v='cycles';
-  if(v==='satada'&&!(ROSTER_SAT&&satWeekMap()[ROSTER_SAT])) v='cycles';
   ROSTER_VIEW=v;
-  el.innerHTML=v==='cycles'?renderCyclePicker():v==='cycle'?renderCycleView(ROSTER_K):v==='satada'?renderSatadaView(ROSTER_SAT):renderEventPage(selEvent());
+  el.innerHTML=v==='cycles'?renderCyclePicker():v==='cycle'?renderCycleView(ROSTER_K):renderEventPage(selEvent());
 }
-/* 'Owned by Team X' with the way to take the night over. Shown wherever a
-   satada night owned by the other team is opened. */
+/* 'Owned by Team X': shown wherever a satada night owned by the other team is opened. */
 function satOwnerNote(ev){
-  return '<div class="ib" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
-    '<span><b>Owned by Team '+esc(ev.team)+'</b> - their lead builds this roster and marks attendance, so it is read only on '+esc(TEAM_NAME)+'\u2019s page.</span>'+
-    (IS_EDIT?'<button class="btn btn-gd btn-sm" style="margin-left:auto;white-space:nowrap" onclick="openSatadaOwner('+ev.id+')">Take over this night</button>':'')+'</div>';
+  return '<div class="ib" style="margin-bottom:10px"><b>Owned by Team '+esc(ev.team)+'</b> - their lead builds this roster and marks attendance, so it is read only on '+esc(TEAM_NAME)+'\u2019s page.</div>';
 }
 function renderEventView(ev){
   const hist=isHistoricEvent(ev), locked=evLocked(ev), ro=satRO(ev), canEd=IS_EDIT&&!hist&&!ro;
@@ -3878,9 +3949,7 @@ function renderEventView(ev){
   h+='<button class="btn btn-ol" onclick="exportPNG()">📷 Export PNG</button>'+(CAN_ASSIGN_COVER()&&ev&&!ro?'<button class="btn btn-ol btn-sm" onclick="openCoverDialog('+ev.id+')" title="Hand this event to someone else">\u{1F91D} '+(ev.cover_name?('Cover: '+esc(ev.cover_name)):'Assign cover')+'</button>':'')+'';
   h+='<button class="btn btn-ol" onclick="copyRoster()">⧉ Copy (WhatsApp)</button>';
   if(IS_EDIT) h+='<button class="btn btn-ol btn-sm" title="Chandraat overrides" onclick="openCycleSettings()">⚙</button>';
-  if(isSatada(ev)&&IS_EDIT) h+='<button class="btn btn-ol btn-sm" onclick="openSatadaOwner('+ev.id+')">'+(ro?'Take over this night':'Change owner')+'</button>'+
-    '<button class="btn btn-da btn-sm" title="Delete the whole satada week" onclick="openDeleteSatada(\''+weekStart(ev.date)+'\')">Delete this satada</button>';
-  else if(IS_EDIT&&!hist) h+='<button class="btn btn-da btn-sm" title="Delete event" onclick="confirmDeleteEvent()">🗑</button>';
+  if(IS_EDIT&&!hist&&!isSatada(ev)) h+='<button class="btn btn-da btn-sm" title="Delete event" onclick="confirmDeleteEvent()">🗑</button>';
   h+='</div>';
   if(ro) h+=satOwnerNote(ev);
   if(hist) h+='<div class="ro-note">🔒 Historical - read only</div>';
@@ -3897,7 +3966,7 @@ function renderEventView(ev){
   }
   if(!IS_EDIT&&!ev.confirmed) return h+'<div class="empty-gen"><div class="zap">⏳</div><h3>Roster not published yet</h3><p>The '+esc(TEAM_NAME)+' leaders have not put this one on the calendar. It appears here as soon as they do.</p></div>';
   if(!hasRoster){
-    if(ro) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster yet</h3><p>Team '+esc(ev.team)+' has not built this night. Take it over if it should be yours.</p></div>';
+    if(ro) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster yet</h3><p>Team '+esc(ev.team)+' has not built this night.</p></div>';
     if(!IS_EDIT||hist) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster</h3><p>No duty assignments were recorded.</p></div>';
     return h+'<div class="empty-gen"><div class="zap">⚡</div><h3>Ready to Generate</h3><p>Automatically assign all duties for this event.</p>'+
       '<div class="btns"><button class="btn btn-bl" onclick="generateDay('+ev.id+')">⚡ Generate</button>'+
@@ -4250,255 +4319,20 @@ async function toggleConfirm(){
   if(ok) toast('Taken off the calendar - only the leads can see it now');
 }
 
-/* ── SATADA: THE WEEK VIEW, CREATING, OWNING, DELETING ──────────────
-   Decisions, so they are not rediscovered:
-   - Creating is not subject to the cycle-ownership check; either lead can do
-     it from either page, for any week that has not finished.
-   - Every night replaces its date's automatic Friday Majlis / Paanch Baar
-     Saal, but only after the lead has seen the list, and only when nothing
-     is rostered or marked on them. A date that holds anything else (a roster,
-     attendance, or an event that is not one of the two automatic types) is
-     left exactly as it is and gets no satada night: the other nights still
-     are made. iv_roster is keyed by date, so one date can carry only one
-     rostered event.
-   - Handing a night to the other team is refused while it has attendance, and
-     while it has a roster unless the lead chooses to clear that roster in
-     the same step: the people on it belong to the old owner's team.
-   - Deleting removes all seven nights. It is never recorded in AUTO_SKIP, so
-     the cycle's own events come back on the next autoCreateEvents run. */
-function satWeekCardHTML(w){
-  const evs=satWeekMap()[w]||[], mine=evs.filter(mineEv), today=nzTodayISO(), end=addDaysLocal(w,6);
-  const built=mine.filter(e=>slotCounts(e).generated).length;
-  const status=end<today?'historic':(w<=today?'current':'upcoming');
-  const line=mine.length?(mine.length+' of '+evs.length+' nights are yours'+(IS_EDIT?' · '+built+' built':'')):'None of these nights are yours yet';
-  return '<button class="cy-card st-'+status+'" onclick="openSatadaWeek(\''+esc(w)+'\')">'+
-    '<span class="cy-top"><span class="cyc-tag '+status+'">SATADA</span><span class="cy-count">'+evs.length+' night'+(evs.length===1?'':'s')+'</span></span>'+
-    '<span class="cy-name">Satada week</span>'+
-    '<span class="cy-dates">'+esc(fmtShort(w))+' › '+esc(fmtShort(end))+'</span>'+
-    '<span class="cy-line">'+esc(line)+'</span></button>';
-}
-function openSatadaWeek(w){
-  ROSTER_VIEW='satada'; ROSTER_SAT=w; ROSTER_OPEN=null;
-  rosterGo();
-}
-function renderSatadaView(w){
-  const evs=satWeekMap()[w]||[], end=addDaysLocal(w,6), today=nzTodayISO();
-  const mine=evs.filter(mineEv);
-  const status=end<today?'historic':(w<=today?'current':'upcoming');
-  const toBuild=mine.filter(e=>!evLocked(e)&&!slotCounts(e).generated);
-  let side='<div class="cv-card"><span class="cyc-tag '+status+'">SATADA</span>'+
-    '<div class="cv-name">Satada week</div><div class="cv-dates">'+esc(fmtShort(w))+' › '+esc(fmtShort(end))+'</div>'+
-    '<div class="cv-stat"><b>'+mine.length+'</b> of '+evs.length+' nights are '+esc(TEAM_NAME)+'’s · '+(evs.length-mine.length)+' owned by Team '+esc(OTHER_TEAM)+'</div>';
-  if(IS_EDIT){
-    side+='<div class="cv-acts">';
-    if(toBuild.length) side+='<button class="btn btn-bl" onclick="generateSatadaNights(\''+esc(w)+'\')">⚡ Build my nights</button>';
-    side+='<button class="btn btn-ol btn-sm" onclick="openAddSatada()">+ Add Satada</button>'+
-          '<button class="btn btn-da btn-sm" onclick="openDeleteSatada(\''+esc(w)+'\')">Delete this satada</button></div>';
-  }
-  side+='</div><div class="cv-evs" role="list">';
-  for(const e of evs){
-    const sc=slotCounts(e), d=new Date(e.date+'T12:00:00');
-    const note=satRO(e)?'Owned by Team '+e.team:!sc.generated?'Not built':e.confirmed?(sc.missing?'On the calendar · '+sc.missing+' blank':'On the calendar'):'Hidden';
-    const cls=satRO(e)||!sc.generated?'nb':e.confirmed?(sc.missing?'gp':'lv'):'hd';
-    side+='<button role="listitem" class="cv-ev'+(ROSTER_OPEN===e.id?' on':'')+'" onclick="openDay('+e.id+',true)">'+
-      '<span class="cv-d"><b>'+d.getDate()+'</b><span>'+MON_UP[d.getMonth()]+'</span></span>'+
-      '<span class="cv-t"><span class="nm">'+esc(e.name)+' '+ownerChip(e)+'</span><span class="st st-'+cls+'">'+esc(note)+'</span></span></button>';
-  }
-  side+='</div>';
-  let main='<div class="cy-evs-h"><h2>Nights</h2><span class="cv-hint">Click a night to see who is on</span></div><div class="cv-days">';
-  for(const e of evs) main+=dayCardHTML(e,IS_EDIT&&!isHistoricEvent(e));
-  main+='</div>';
-  return '<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="openRosterHome()">All cycles</button></div>'+
-    '<div class="cv-layout"><aside class="cv-side" aria-label="This satada">'+side+'</aside>'+
-    '<section class="cv-main" aria-label="Satada nights">'+main+'</section></div>';
-}
+/* ── SATADA: ROSTERING ONLY ─────────────────────────────────────────
+   Creating a satada, choosing which team owns each night, changing an owner
+   and deleting a satada are all done in the Hub (Management > Satada), by a
+   facilitator or above. This page only rosters the nights it owns and shows
+   the other team's nights read only (see satGroupHTML).
+   A satada week still takes over the cycle's own Friday Majlis and Paanch
+   Baar Saal (autoCreateEvents), and deleting it in the Hub lets them come
+   back on the next automatic run. */
 async function generateSatadaNights(w){
   if(!IS_EDIT) return;
   if(!MEMBERS.some(m=>m.status==='active')) return toast('No active members','err');
   const todo=(satWeekMap()[w]||[]).filter(e=>mineEv(e)&&!evLocked(e)&&!slotCounts(e).generated);
   if(!todo.length) return toast('Every one of your nights is already built','err');
   for(const e of todo) await generateDay(e.id);
-}
-
-/* ── Add Satada ── */
-let SAT_PLAN=null;
-function satNextSunday(){ const t=nzTodayISO(); return addDaysLocal(t,(7-dowIdx(t))%7); }
-function satValidate(iso){
-  if(!iso) return 'Pick the Sunday the week starts on.';
-  if(dowIdx(iso)!==0) return fmtShort(iso)+' is a '+fmtDowLong(iso)+', not a Sunday. A satada week runs Sunday to Saturday.';
-  if(addDaysLocal(iso,6)<nzTodayISO()) return 'That week has already finished.';
-  if((satWeekMap()[iso]||[]).length) return 'Satada nights already exist in the week of '+fmtShort(iso)+'.';
-  return '';
-}
-function openAddSatada(){
-  if(!IS_EDIT) return;
-  const def=satNextSunday();
-  let rows='';
-  for(let i=0;i<7;i++){
-    const t=i%2===0?PAGE_TEAM:OTHER_TEAM;
-    rows+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="width:104px;font-weight:800">'+SATADA_DAYS[i]+'</span>'+
-      '<span id="saD'+i+'" class="num" style="flex:1;color:var(--dm);font-size:13px"></span>'+
-      '<select id="saOwn'+i+'" aria-label="Owner of '+SATADA_DAYS[i]+' night" style="width:120px"><option value="A"'+(t==='A'?' selected':'')+'>Team A</option><option value="B"'+(t==='B'?' selected':'')+'>Team B</option></select></div>';
-  }
-  oM('<h3>Add Satada</h3>'+
-    '<p style="font-size:13px;color:var(--dm);line-height:1.55;margin:-4px 0 12px">A majalis every night, Sunday to Saturday. For that week the normal cycle makes no Friday Majlis or Paanch Baar Saal. Choose which team runs each night.</p>'+
-    '<div class="frow"><label class="flabel" for="saDate">Sunday the week starts</label>'+
-      '<input type="date" id="saDate" value="'+esc(def)+'" min="'+esc(weekStart(nzTodayISO()))+'" onchange="satDateChanged()" oninput="satDateChanged()">'+
-      '<div id="saHint" class="ae-hint"></div></div>'+
-    '<div class="frow"><label class="flabel">Owner of each night</label>'+rows+'</div>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" id="saGo" onclick="submitAddSatada()">Create Satada</button></div>');
-  satDateChanged();
-}
-function satDateChanged(){
-  const box=document.getElementById('dcard'); if(!box) return;
-  const el=box.querySelector('#saDate'), hint=box.querySelector('#saHint'); if(!el||!hint) return;
-  const v=el.value, err=satValidate(v);
-  hint.className='ae-hint '+(err?'bad':'ok');
-  hint.textContent=err?'✕ '+err:'✓ '+fmtShort(v)+' › '+fmtShort(addDaysLocal(v,6));
-  for(let i=0;i<7;i++){ const d=box.querySelector('#saD'+i); if(d) d.textContent=(v&&dowIdx(v)===0)?fmtShort(addDaysLocal(v,i)):''; }
-}
-/* Reads the whole week from the database, not just this page's copy: the
-   other team's regular events are not loaded here, and a satada made a
-   moment ago by the other lead may not be either. Returns {err} or the plan. */
-async function planSatada(sun,owners){
-  const bad=satValidate(sun); if(bad) return {err:bad};
-  if(!sb||DB_MISSING) return {err:'Could not add the satada - no database connection'};
-  const sat=addDaysLocal(sun,6);
-  const wk=await sb.from('iv_events').select('*').gte('date',sun).lte('date',sat);
-  if(wk.error) return {err:'Could not read that week - '+(wk.error.message||wk.error)};
-  const have=wk.data||[];
-  if(have.some(e=>e.type==='satada')) return {err:'Satada nights already exist in the week of '+fmtShort(sun)+'.'};
-  const busy=new Set();
-  if(have.length){
-    const ids=have.map(e=>e.id);
-    const [ro,at]=await Promise.all([sb.from('iv_roster').select('event_id').in('event_id',ids),sb.from('iv_attendance').select('event_id').in('event_id',ids)]);
-    if(ro.error||at.error) return {err:'Could not check the rosters in that week - '+(((ro.error||at.error).message)||'')};
-    (ro.data||[]).forEach(r=>busy.add(r.event_id)); (at.data||[]).forEach(r=>busy.add(r.event_id));
-  }
-  const rows=[], del=[], skip=[];
-  for(let i=0;i<7;i++){
-    const d=addDaysLocal(sun,i), regs=have.filter(e=>e.date===d);
-    const hold=regs.find(e=>busy.has(e.id)||(e.type!=='friday'&&e.type!=='pbs'));
-    if(hold){ skip.push({date:d,name:hold.name,team:hold.team,why:busy.has(hold.id)?'it already has a roster or attendance':'it is not an automatic event'}); continue; }
-    regs.forEach(e=>del.push(e));
-    rows.push({team:owners[i],date:d,name:'Satada - '+SATADA_DAYS[i],type:'satada',uniform:'Casual',youth:i===5,confirmed:false});
-  }
-  if(!rows.length) return {err:'Every date in that week already holds a roster or another event, so no satada night could be made.'};
-  return {sun:sun,rows:rows,del:del,skip:skip};
-}
-async function submitAddSatada(){
-  const box=document.getElementById('dcard'); if(!box||!IS_EDIT) return;
-  const sun=(box.querySelector('#saDate')||{}).value;
-  const owners=[]; for(let i=0;i<7;i++){ const v=(box.querySelector('#saOwn'+i)||{}).value; owners.push(v==='B'?'B':'A'); }
-  const bad=satValidate(sun); if(bad) return toast(bad,'err');
-  const plan=await planSatada(sun,owners);
-  if(plan.err) return toast(plan.err,'err');
-  if(!plan.del.length&&!plan.skip.length){ SAT_PLAN=plan; return runSatadaPlan(); }
-  SAT_PLAN=plan;
-  const li=a=>'<li>'+a+'</li>';
-  oM('<h3>Create this satada?</h3>'+
-    (plan.del.length?'<p style="font-size:14px;color:var(--dm);line-height:1.6;margin-bottom:6px">These regular events in that week will be replaced:</p>'+
-      '<ul style="font-size:13px;color:var(--dm);line-height:1.7;margin:0 0 12px;padding-left:20px">'+
-      plan.del.map(e=>li(esc(fmtShort(e.date))+' - '+esc(e.name)+' (Team '+esc(e.team)+')')).join('')+'</ul>':'')+
-    (plan.skip.length?'<p style="font-size:14px;color:var(--gold-lt);line-height:1.6;margin-bottom:6px">These dates are kept as they are, so they get no satada night:</p>'+
-      '<ul style="font-size:13px;color:var(--dm);line-height:1.7;margin:0 0 12px;padding-left:20px">'+
-      plan.skip.map(x=>li(esc(fmtShort(x.date))+' - '+esc(x.name)+': '+esc(x.why))).join('')+'</ul>':'')+
-    '<p style="font-size:13px;color:var(--dm)">'+plan.rows.length+' satada night'+(plan.rows.length===1?'':'s')+' will be created.</p>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="SAT_PLAN=null;cM()">Cancel</button><button class="btn btn-bl" onclick="runSatadaPlan()">Create Satada</button></div>');
-}
-async function runSatadaPlan(){
-  const plan=SAT_PLAN; SAT_PLAN=null; if(!plan||!IS_EDIT) return;
-  cM(); pauseRT(6000);
-  if(plan.del.length){
-    const ids=plan.del.map(e=>e.id);
-    if(!await dbWrite('Replacing the regular events in that week',()=>sb.from('iv_events').delete().in('id',ids),
-        {verify:()=>sb.from('iv_events').select('id').in('id',ids)})) return;
-    EVENTS=EVENTS.filter(e=>ids.indexOf(e.id)<0); ids.forEach(id=>delete ROSTERS[id]);
-  }
-  /* One insert for all of the nights. */
-  const rows=await dbWriteRows('Creating the satada nights',()=>sb.from('iv_events').insert(plan.rows));
-  if(!rows){ if(plan.del.length) await autoCreateEvents(); renderCurrent(); return; }
-  EVENTS=EVENTS.concat(rows).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
-  OTHER_EV={};
-  auditLog('add-satada','events','Satada '+plan.sun+' - '+rows.map(r=>r.date.slice(5)+' Team '+r.team).join(', ')+
-    (plan.del.length?'; replaced '+plan.del.length+' regular event'+(plan.del.length===1?'':'s'):'')+
-    (plan.skip.length?'; kept '+plan.skip.length+' date'+(plan.skip.length===1?'':'s')+' as they were':''));
-  refreshBadges();
-  openSatadaWeek(plan.sun);
-  toast('Satada created - '+rows.length+' night'+(rows.length===1?'':'s'));
-}
-
-/* ── Owner of a night ── */
-function hasRosterData(ev){
-  const r=ROSTERS[ev.id];
-  return !!(r&&r.assign&&rosterPeople(r).length);
-}
-function openSatadaOwner(id){
-  const ev=EVENTS.find(e=>e.id===id); if(!ev||!IS_EDIT||!isSatada(ev)) return;
-  const to=ev.team==='A'?'B':'A', take=to===PAGE_TEAM;
-  const what=take?'Take over':'Hand over';
-  if(ev.date<nzTodayISO()) return toast('That night has already passed, so its owner cannot change.','err');
-  const att=ATTEND[ev.id]||{};
-  if(Object.keys(att).some(k=>att[k]&&att[k].status))
-    return oM('<h3>'+what+' '+esc(ev.name)+'?</h3><p style="font-size:14px;color:var(--dm);line-height:1.6">Attendance has already been marked for this night, so its owner cannot change.</p>'+
-      '<div class="macts"><button class="btn btn-ol" onclick="cM()">Close</button></div>');
-  const n=hasRosterData(ev)?rosterPeople(ROSTERS[ev.id]).length:0;
-  if(n) return oM('<h3>'+what+' '+esc(ev.name)+'?</h3>'+
-    '<p style="font-size:14px;color:var(--dm);line-height:1.6">'+esc(fmtShort(ev.date))+' already has a roster of '+n+' '+(n===1?'person':'people')+
-      ' from Team '+esc(ev.team)+'. Moving the night to Team '+esc(to)+' with them still on it would leave volunteers rostered by a lead who is not theirs, so this is not done silently.</p>'+
-    '<p style="font-size:14px;color:var(--dm);line-height:1.6">You can clear the roster as part of the hand over; Team '+esc(to)+' then builds its own.</p>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
-    '<button class="btn btn-da" onclick="doSatadaOwner('+ev.id+',\''+to+'\',true)">Clear the roster and '+(take?'take over':'hand over')+'</button></div>');
-  oM('<h3>'+what+' '+esc(ev.name)+'?</h3><p style="font-size:14px;color:var(--dm);line-height:1.6">'+esc(fmtNice(ev.date))+' moves from Team '+esc(ev.team)+' to Team '+esc(to)+
-    '. It has no roster yet, so nothing else changes.</p>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button>'+
-    '<button class="btn btn-bl" onclick="doSatadaOwner('+ev.id+',\''+to+'\',false)">'+(take?'Take over this night':'Hand over to Team '+esc(to))+'</button></div>');
-}
-async function doSatadaOwner(id,to,clear){
-  cM(); const ev=EVENTS.find(e=>e.id===id); if(!ev||!IS_EDIT||!isSatada(ev)||(to!=='A'&&to!=='B')||ev.team===to) return;
-  pauseRT(6000);
-  const patch={team:to}; const was=ev.team;
-  if(clear){
-    if(!await dbWrite('Clearing the roster',()=>sb.from('iv_roster').delete().eq('event_id',id),
-        {verify:()=>sb.from('iv_roster').select('event_id').eq('event_id',id)})) return;
-    delete ROSTERS[id]; delete ROSTER_UNSAVED[id]; patch.confirmed=false;
-  }
-  if(!await dbWrite('Changing the owner',()=>sb.from('iv_events').update(patch).eq('id',id))) return;
-  Object.assign(ev,patch); OTHER_EV={};
-  auditLog('satada-owner','events',ev.name+' '+ev.date+' - Team '+was+' to Team '+to+(clear?' (roster cleared)':''));
-  renderCurrent(); refreshBadges();
-  toast(to===PAGE_TEAM?'You now own '+ev.name:ev.name+' handed to Team '+to);
-}
-
-/* ── Delete a whole satada ── */
-function openDeleteSatada(w){
-  if(!IS_EDIT) return;
-  const evs=satWeekMap()[w]||[]; if(!evs.length) return;
-  const rostered=evs.filter(e=>hasRosterData(e)||Object.keys(ATTEND[e.id]||{}).length);
-  oM('<h3>Delete this satada</h3><p style="font-size:14px;color:var(--dm);line-height:1.6">All '+evs.length+' nights of the week of <b style="color:var(--dt)">'+esc(fmtShort(w))+
-    '</b> are deleted, for both teams. The regular Friday Majlis and Paanch Baar Saal come back on the next automatic run. This cannot be undone.</p>'+
-    (rostered.length?'<div class="ib ib-warn">'+rostered.length+' night'+(rostered.length===1?' has':'s have')+' a roster or attendance: '+
-      rostered.map(e=>esc(fmtShort(e.date))+' (Team '+esc(e.team)+')').join(', ')+'.</div>'+
-      '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:10px 0"><input type="checkbox" id="saDelOk" style="width:auto"> I understand those rosters and attendance marks are deleted with them</label>':'')+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-da" onclick="doDeleteSatada(\''+esc(w)+'\','+(rostered.length?'true':'false')+')">Delete this satada</button></div>');
-}
-async function doDeleteSatada(w,needOk){
-  const box=document.getElementById('dcard');
-  if(needOk&&!(box&&box.querySelector('#saDelOk')&&box.querySelector('#saDelOk').checked)) return toast('Tick the box to confirm - some nights have a roster','err');
-  const evs=satWeekMap()[w]||[]; if(!evs.length||!IS_EDIT) return;
-  cM(); pauseRT(6000);
-  const ids=evs.map(e=>e.id);
-  if(!await dbWrite('Deleting the satada',()=>sb.from('iv_events').delete().in('id',ids),
-      {verify:()=>sb.from('iv_events').select('id').in('id',ids)})) return;
-  EVENTS=EVENTS.filter(e=>ids.indexOf(e.id)<0); ids.forEach(id=>{ delete ROSTERS[id]; delete ATTEND[id]; delete ROSTER_UNSAVED[id]; });
-  OTHER_EV={};
-  if(ids.indexOf(selEventId)>=0) selEventId=null;
-  auditLog('delete-satada','events','Satada '+w+' - removed '+ids.length+' nights');
-  /* Not recorded in AUTO_SKIP: the cycle's own Friday and Paanch Baar Saal
-     are only ever suppressed while a satada stands. */
-  await autoCreateEvents();
-  ROSTER_VIEW='cycles'; ROSTER_SAT=null; ROSTER_OPEN=null;
-  renderCurrent(); refreshBadges(); toast('Satada deleted');
 }
 
 /* ── ADD / DELETE / RESET EVENTS ── */
@@ -4530,8 +4364,7 @@ function openAddEvent(){
     '<div class="frow"><label class="flabel" for="aeName">Event name</label><input type="text" id="aeName" value="Friday Majlis"><datalist id="eidNames">'+EID_NAMES.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist></div>'+
     '<div class="frow"><label class="flabel" for="aeUniform">Uniform</label><select id="aeUniform"><option>Casual</option><option>Formal</option></select></div>'+
     '<div class="frow" id="aeYouthRow"><label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="aeYouth" checked style="width:auto"> Youth Congregation (MPH section)</label></div>'+
-    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" onclick="submitAddEvent()">Add Event</button></div>'+
-    '<div style="margin-top:10px;font-size:12.5px;color:var(--dm)">A satada week (every night, Sunday to Saturday) is not a single event: <button class="btn btn-ol btn-sm" onclick="cM();openAddSatada()">Add Satada</button></div>');
+    '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" onclick="submitAddEvent()">Add Event</button></div>');
   aeDateChanged();
 }
 /* Says who owns the chosen date the moment it changes, instead of after a
@@ -4574,7 +4407,13 @@ function aeTypeChanged(){
   if(yEl) yEl.checked=(type==='friday');
   const yRow=box.querySelector('#aeYouthRow'); if(yRow) yRow.style.display=type==='friday'?'':'none';   // Fridays only
 }
+let _aeBusy=false;
 async function submitAddEvent(){
+  if(_aeBusy) return;
+  _aeBusy=true;
+  try{ await submitAddEventNow(); } finally{ _aeBusy=false; }
+}
+async function submitAddEventNow(){
   const box=document.getElementById('dcard');
   const date=(box.querySelector('#aeDate')||{}).value; const type=(box.querySelector('#aeType')||{}).value||'custom';
   const name=((box.querySelector('#aeName')||{}).value||'').trim(); const uniform=(box.querySelector('#aeUniform')||{}).value||'Casual';
@@ -4607,7 +4446,7 @@ async function submitAddEvent(){
 }
 function confirmDeleteEvent(){
   const ev=selEvent(); if(!ev||!IS_EDIT||isHistoricEvent(ev)) return;
-  if(isSatada(ev)) return openDeleteSatada(weekStart(ev.date));   // a satada is only ever deleted as a whole week
+  if(isSatada(ev)) return toast('A satada is deleted as a whole week, in the Hub under Management > Satada.','err');
   oM('<h3>Delete event</h3><p style="font-size:14px;color:var(--dm)">Delete <b style="color:var(--dt)">'+esc(ev.name)+' - '+esc(fmtNice(ev.date))+'</b> and its roster? This cannot be undone.</p>'+
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-da" onclick="deleteEvent()">Delete event</button></div>');
 }
@@ -4734,7 +4573,6 @@ function openEventDrawer(id){
   h+='<div class="dp-actions">'+
     (IS_EDIT?'<button class="btn btn-bl btn-sm" onclick="selectEvent('+ev.id+')">Open in Roster</button>':'')+
     (IS_EDIT&&!evLocked(ev)?'<button class="btn btn-ol btn-sm" onclick="closeDrawer();askRegenerateDay('+ev.id+')">↻ Regenerate</button>':'')+
-    (IS_EDIT&&isSatada(ev)?'<button class="btn btn-ol btn-sm" onclick="closeDrawer();openSatadaOwner('+ev.id+')">'+(satRO(ev)?'Take over this night':'Change owner')+'</button>':'')+
     '<button class="btn btn-ol btn-sm" onclick="selEventId='+ev.id+';copyRoster()">⧉ Copy</button></div>';
   openDrawer(h);
 }
@@ -4791,7 +4629,9 @@ function zoomFromCell(src){
     {duration:300,easing:'cubic-bezier(.16,1,.3,1)'});
   run.onfinish=run.oncancel=()=>{ card.style.animation=''; };
 }
+let _dayTok=0;
 async function openDayDuties(iso,src){
+  const tok=++_dayTok;
   const satNight=EVENTS.find(e=>e.date===iso&&isSatada(e));
   const owner=satNight?satNight.team:teamForCycle(cycleForDate(iso));
   const head='<h3>'+esc(fmtNice(iso))+'</h3>'+
@@ -4813,6 +4653,8 @@ async function openDayDuties(iso,src){
         (ro||[]).forEach(r=>{ rosters[r.event_id]=r.data; });
       }
     }catch(e){ console.warn('openDayDuties:',e.message||e); }
+    /* Closed, or another day tapped, while this was loading: do not pop the old one back open. */
+    if(tok!==_dayTok||!document.getElementById('dlg').classList.contains('show')) return;
   }
 
   if(!evs.length){
@@ -4993,6 +4835,8 @@ function renderMembers(){
   const hs=document.getElementById('hubSyncStatus'); if(hs){ hs.textContent='Hub ✓ '+MEMBERS.length+' member'+(MEMBERS.length!==1?'s':'')+' in '+TEAM_NAME; hs.style.color='var(--blue-lt)'; }
   renderMemberGrid();
 }
+/* Away dates still to come. Past ones stay on the card but no longer make somebody look unavailable. */
+function awayAhead(m){ const t=nzTodayISO(); return Array.isArray(m.away)?m.away.filter(d=>d>=t).length:0; }
 function memMatches(m){
   const q=memFilter.q.trim().toLowerCase();
   if(q&&!m.name.toLowerCase().includes(q)) return false;
@@ -5000,7 +4844,7 @@ function memMatches(m){
   if(memFilter.age&&m.age_group!==memFilter.age) return false;
   if(memFilter.nandi==='1'&&!m.nandi) return false;
   if(memFilter.nandi==='0'&&m.nandi) return false;
-  if(memFilter.away==='1'&&!(Array.isArray(m.away)&&m.away.length)) return false;
+  if(memFilter.away==='1'&&!awayAhead(m)) return false;
   return true;
 }
 function renderMemberGrid(){
@@ -5013,9 +4857,9 @@ function renderMemberGrid(){
     const tags=[];
     tags.push('<span class="bdg '+(m.status==='active'?'bdg-ok':'bdg-no')+'">'+(m.status==='active'?'ACTIVE':'INACTIVE')+'</span>');
     if(m.nandi) tags.push('<span class="bdg bdg-gd">Nandi ✓</span>');
-    if(Array.isArray(m.away)&&m.away.length) tags.push('<span class="bdg bdg-no">'+m.away.length+' away</span>');
+    if(awayAhead(m)) tags.push('<span class="bdg bdg-no">'+awayAhead(m)+' away</span>');
     if(rel.rate!=null) tags.push('<span class="bdg '+(rel.rate>=80?'bdg-ok':'bdg-warn')+'">'+rel.rate+'% reliable</span>');
-    return '<div class="mem-card" onclick="openMemberDrawer('+m.id+')"><div class="mc-top"><div class="mem-av">'+esc((m.name||'?').slice(0,1))+'</div>'+
+    return '<div class="mem-card" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}" onclick="openMemberDrawer('+m.id+')"><div class="mc-top"><div class="mem-av">'+esc((m.name||'?').slice(0,1))+'</div>'+
       '<div style="min-width:0"><div class="mc-nm">'+esc(m.name)+'</div><div class="mc-meta">'+esc(m.gender)+' · '+esc(AGE_LABELS[m.age_group]||m.age_group)+' · '+esc(m.rank||'Member')+'</div></div></div>'+
       '<div class="mem-tags">'+tags.join('')+'</div>'+
       '<div style="font-size:12px;color:var(--dm);margin-top:9px">All-time duties: <b class="num" style="color:var(--dt)">'+(counts.all[m.id]||0)+'</b> · Last: '+(counts.last[m.id]?esc(fmtShort(counts.last[m.id])):'-')+'</div></div>';
@@ -5045,6 +4889,12 @@ function openMemberDrawer(id){
   if(!upc.length) h+='<div style="font-size:13px;color:var(--dm)">None scheduled.</div>';
   upc.slice(0,6).forEach(u=>{ h+='<div class="dp-row"><span class="dl">'+esc(fmtShort(u.ev.date))+'</span><span class="dv" style="max-width:62%">'+esc(u.duties.join(', '))+'</span></div>'; });
   h+='</div><div class="dp-actions"><button class="btn btn-ol btn-sm" onclick="copyMemberDuties('+m.id+')">⧉ Copy duties (WhatsApp)</button></div>';
+  const xd=(EXTRA[m.id]||[]).slice().sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
+  h+='<div class="dp-sec">Extra duties</div><div class="dp-card">';
+  if(!xd.length) h+='<div style="font-size:13px;color:var(--dm)">None.</div>';
+  else{ xd.slice(0,10).forEach(x=>{ h+='<div class="dp-row"><span class="dl">'+esc(fmtShort(x.date))+'</span><span class="dv" style="max-width:62%">'+esc(x.duty)+'</span></div>'; });
+    h+='<div class="xd-note">Extra Duty total: '+xd.length+(xd.length>10?' (showing the latest 10)':'')+'</div>'; }
+  h+='</div>';
   if(IS_EDIT){
     h+='<div class="dp-sec">Team-side data (leader-managed)</div>';
     h+='<div class="dp-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="font-size:13px;font-weight:800">Nandi certification</span>'+
@@ -5052,18 +4902,19 @@ function openMemberDrawer(id){
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px"><span style="font-size:13px;font-weight:800">Status</span>'+
       '<button class="pill '+(m.status==='active'?'on':'')+'" onclick="updateMember('+m.id+',{status:\''+(m.status==='active'?'inactive':'active')+'\'}).then(()=>openMemberDrawer('+m.id+'))">'+(m.status==='active'?'Active':'Inactive')+'</button></div></div>';
     // contact
-    h+='<label class="flabel">Contact</label><div style="display:flex;gap:8px"><input type="text" id="mdPhone" placeholder="Phone" value="'+esc(m.phone||'')+'" style="flex:1"><input type="text" id="mdEmail" placeholder="Email" value="'+esc(m.email||'')+'" style="flex:1"></div>'+
+    h+='<label class="flabel" for="mdPhone">Contact</label><div style="display:flex;gap:8px"><input type="text" id="mdPhone" aria-label="Phone" placeholder="Phone" value="'+esc(m.phone||'')+'" style="flex:1"><input type="text" id="mdEmail" aria-label="Email" placeholder="Email" value="'+esc(m.email||'')+'" style="flex:1"></div>'+
       '<button class="btn btn-ol btn-sm" style="margin-top:8px" onclick="saveMemberContact('+m.id+')">Save contact</button>';
     // away dates
-    h+='<label class="flabel">Away / unavailable dates</label><div class="dchips" id="mdAway">'+
+    h+='<label class="flabel" for="mdAwayDate">Away / unavailable dates</label><div class="dchips" id="mdAway">'+
       (Array.isArray(m.away)&&m.away.length?m.away.slice().sort().map(d=>'<span class="away-chip">'+esc(fmtShort(d))+'<button title="Remove" onclick="removeAway('+m.id+',\''+escJs(d)+'\')">✕</button></span>').join(''):'<span style="font-size:12px;color:var(--dm)">None - member is available for all events.</span>')+'</div>'+
-      '<div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="mdAwayDate" style="flex:1"><button class="btn btn-ol btn-sm" onclick="addAway('+m.id+')">+ Add away date</button></div>';
+      '<div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="mdAwayDate" aria-label="Away date" style="flex:1"><button class="btn btn-ol btn-sm" onclick="addAway('+m.id+')">+ Add away date</button></div>';
     // prefs
-    h+='<label class="flabel">Duty preferences <span style="text-transform:none;letter-spacing:0;color:var(--dm2)">- click to cycle neutral › prefer › avoid</span></label><div class="dchips">'+
-      allDutyNames.map(n=>{ const key=DUTY_INFO[n].key; const st=(m.prefs.prefer||[]).indexOf(key)>=0?'prefer':((m.prefs.avoid||[]).indexOf(key)>=0?'avoid':'');
-        return '<button class="dchip-tog '+st+'" onclick="cyclePref('+m.id+',\''+escJs(key)+'\')">'+esc(n)+(st==='prefer'?' ✓':(st==='avoid'?' ✕':''))+'</button>'; }).join('')+'</div>';
+    h+='<label class="flabel">Duty preferences <span style="text-transform:none;letter-spacing:0;color:var(--dm2)">- click to cycle neutral › prefer › avoid › cannot</span></label><div class="dchips">'+
+      allDutyNames.map(n=>{ const key=DUTY_INFO[n].key; const st=(m.prefs.cannot||[]).indexOf(key)>=0?'cannot':((m.prefs.prefer||[]).indexOf(key)>=0?'prefer':((m.prefs.avoid||[]).indexOf(key)>=0?'avoid':''));
+        return '<button class="dchip-tog '+st+'" onclick="cyclePref('+m.id+',\''+escJs(key)+'\')">'+esc(n)+(st==='prefer'?' ✓':(st==='avoid'?' ✕':(st==='cannot'?' ⛔':'')))+'</button>'; }).join('')+'</div>'+
+      '<div class="xd-note">Cannot: the Weekday Team Lead cannot assign this duty</div>';
     // notes
-    h+='<label class="flabel">Notes</label><textarea id="mdNotes" style="width:100%;min-height:60px" placeholder="Private notes…">'+esc(m.notes||'')+'</textarea>'+
+    h+='<label class="flabel" for="mdNotes">Notes</label><textarea id="mdNotes" style="width:100%;min-height:60px" placeholder="Private notes…">'+esc(m.notes||'')+'</textarea>'+
       '<button class="btn btn-ol btn-sm" style="margin-top:8px" onclick="saveMemberNotes('+m.id+')">Save notes</button>';
   } else {
     if(m.phone||m.email||m.notes){ h+='<div class="dp-sec">Contact</div><div class="dp-card">'+(m.phone?'<div class="dp-row"><span class="dl">Phone</span><span class="dv">'+esc(m.phone)+'</span></div>':'')+(m.email?'<div class="dp-row"><span class="dl">Email</span><span class="dv">'+esc(m.email)+'</span></div>':'')+(m.notes?'<div class="dp-row"><span class="dl">Notes</span><span class="dv" style="max-width:60%">'+esc(m.notes)+'</span></div>':'')+'</div>'; }
@@ -5114,9 +4965,11 @@ function addAway(id){ const m=memById(id); if(!m) return; const box=document.get
   updateMember(id,{away:away.sort()}).then(()=>openMemberDrawer(id)); }
 function removeAway(id,d){ const m=memById(id); if(!m) return; updateMember(id,{away:(m.away||[]).filter(x=>x!==d)}).then(()=>openMemberDrawer(id)); }
 function cyclePref(id,key){ const m=memById(id); if(!m) return; normMember(m); const pf=m.prefs.prefer,av=m.prefs.avoid;
-  const prefs={prefer:pf.slice(),avoid:av.slice()};
+  const cn=m.prefs.cannot;
+  const prefs=Object.assign({},m.prefs,{prefer:pf.slice(),avoid:av.slice(),cannot:cn.slice()});
   if(pf.indexOf(key)>=0){ prefs.prefer=pf.filter(k=>k!==key); prefs.avoid=av.concat([key]); }
-  else if(av.indexOf(key)>=0){ prefs.avoid=av.filter(k=>k!==key); }
+  else if(av.indexOf(key)>=0){ prefs.avoid=av.filter(k=>k!==key); prefs.cannot=cn.concat([key]); }
+  else if(cn.indexOf(key)>=0){ prefs.cannot=cn.filter(k=>k!==key); }
   else { prefs.prefer=pf.concat([key]); }
   updateMember(id,{prefs:prefs}).then(()=>openMemberDrawer(id)); }
 
@@ -5209,7 +5062,7 @@ function openWalkIn(ctx){
   const duties=[...new Set(dutiesForEvent(ev).map(d=>recName(d.name)))];
   oM('<h3>Add a walk-in</h3>'+
     '<div class="ib" style="margin-bottom:12px">For someone who was not rostered but has turned up in uniform. They can be from either team, and a duty is optional. They are marked Present for '+esc(ev.name)+' tonight. The roster is not changed.</div>'+
-    '<div class="frow"><label class="flabel" for="wiFind">Who</label><input type="search" id="wiFind" placeholder="Type a name" autocomplete="off" oninput="wiList()">'+
+    '<div class="frow"><label class="flabel" for="wiFind">Who</label><input type="search" id="wiFind" placeholder="Type a name" autocomplete="off" oninput="wiTyped()">'+
       '<div class="wi-list" id="wiList" role="listbox" aria-label="Members of either team"></div><input type="hidden" id="wiWho"></div>'+
     '<div class="frow"><label class="flabel" for="wiDuty">Duty (optional)</label><select id="wiDuty" onchange="document.getElementById(\'wiOtherRow\').style.display=this.value===\'__other\'?\'\':\'none\'">'+
       '<option value="">No duty</option>'+duties.map(n=>'<option>'+esc(n)+'</option>').join('')+'<option value="__other">Other\u2026</option></select></div>'+
@@ -5228,6 +5081,12 @@ function wiList(){
   document.getElementById('wiList').innerHTML=pool.length
     ? pool.slice(0,60).map(m=>'<button type="button" role="option" class="wi-opt'+(m.id===pick?' on':'')+'" aria-selected="'+(m.id===pick)+'" onclick="wiPick('+m.id+')">'+esc(m.name)+'<small>'+esc([m.gender,m.age_group,'Team '+m.team].filter(Boolean).join(' \u00b7 '))+'</small></button>').join('')
     : '<div class="empty-note" style="padding:12px">'+(q?'Nobody in either team matches that name. Add new people in Data Management on the Hub first.':'Everyone is already on tonight\u2019s list.')+'</div>';
+}
+/* Typing again after choosing someone drops the choice, so the box and the person saved cannot disagree. */
+function wiTyped(){
+  const w=document.getElementById('wiWho'), f=document.getElementById('wiFind');
+  if(w&&w.value){ const m=WI_CTX&&WI_CTX.members.find(x=>x.id===+w.value); if(!m||m.name!==f.value) w.value=''; }
+  wiList();
 }
 function wiPick(id){
   const m=WI_CTX.members.find(x=>x.id===id); if(!m) return;
@@ -5470,7 +5329,7 @@ function renderCoverPanels(){
     h+='<div class="pnl cover-pnl" style="margin-bottom:16px">'+
        '<div class="pnl-h">\u{1F91D} Covering \u00b7 Team '+esc(ev.team)+' \u00b7 '+esc(fmtNice(ev.date))+
        ' <span class="ct">'+esc(ev.name)+'</span></div><div class="pnl-b">'+
-       '<div class="ib" style="margin-bottom:12px">You are standing in for this event only. Marking attendance and swapping people here changes Team '+esc(ev.team)+'\u2019s roster for '+esc(fmtNice(ev.date))+' and nothing else.</div>';
+       '<div class="ib" style="margin-bottom:12px">You are standing in for this event only. Marking attendance here changes Team '+esc(ev.team)+'\u2019s register for '+esc(fmtNice(ev.date))+' and nothing else.</div>';
     const roll=coverRoll(c), wiOpen=isEventDay(ev);
     const marked=roll.filter(r=>c.att[r.m.id]&&c.att[r.m.id].status).length;
     h+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px"><div style="font-weight:800">'+marked+' of '+roll.length+' marked</div>'+
@@ -5654,7 +5513,7 @@ function renderAttendance(){
        (unseen.length?' \u00b7 not yet: '+unseen.map(r=>esc(r.m.name)).join(', '):' - everyone has')+
        '</div>';
   }
-  h+='<div class="tw"><div class="pnl-h">\u{1F465} On duty tonight <span class="ct">'+roll.length+'</span></div>';
+  h+='<div class="tw"><div class="pnl-h">\u{1F465} On duty'+(isEventDay(ev)?' tonight':'')+' <span class="ct">'+roll.length+'</span></div>';
   roll.forEach(r=>{
     const m=r.m, st=rec[m.id]&&rec[m.id].status;
     const btn=(o)=>IS_EDIT
@@ -5747,6 +5606,7 @@ function dutyStats(k){
   return out;
 }
 function cycleEventsSorted(k){ return eventsInCycle(k); }
+function extraCount(id){ return (EXTRA[id]||[]).length; }
 function renderAttendanceReport(k){
   const active=MEMBERS.filter(m=>m.status==='active');
   if(!active.length) return '<div class="empty-note">No active members.</div>';
@@ -5761,7 +5621,8 @@ function renderAttendanceReport(k){
     '<th>Member</th><th title="(Present + Late) as a share of Present, Late and Not present. Justified absences are excluded.">Attendance rate</th>'+
     '<th title="Late as a share of the times they turned up.">Lateness rate</th>'+
     '<th title="Every duty slot they have been rostered for, across all cycles. Not limited to the cycle selected.">Duties rostered (all time)</th>'+
-    '<th>P</th><th>L</th><th>J</th><th>N</th><th title="Turned up unrostered, in uniform, and were given a duty on the day. Already counted in P and L.">Walk-ins</th></tr></thead><tbody>';
+    '<th>P</th><th>L</th><th>J</th><th>N</th><th title="Turned up unrostered, in uniform, and were given a duty on the day. Already counted in P and L.">Walk-ins</th>'+
+    '<th title="Weekday duties done as a walk-in on a weekday shift. All time, not limited to the cycle selected. Not part of P, L, J, N, the rates or fairness.">Extra Duty <span style="font-weight:600">(all time)</span></th></tr></thead><tbody>';
   rows.forEach(r=>{
     const good=r.s.rate!=null&&r.s.rate>=90, bad=r.s.rate!=null&&r.s.rate<70;
     h+='<tr><td style="font-weight:800">'+esc(r.m.name)+'</td>'+
@@ -5769,7 +5630,7 @@ function renderAttendanceReport(k){
        '<td style="font-weight:800;color:'+((r.s.lateness||0)>25?'var(--gold-lt)':'var(--dt)')+'">'+pct(r.s.lateness)+'</td>'+
        '<td class="num" style="font-weight:800">'+r.d.total+'</td>'+
        '<td class="num">'+r.s.P+'</td><td class="num">'+r.s.L+'</td>'+
-       '<td class="num">'+r.s.J+'</td><td class="num">'+r.s.N+'</td><td class="num">'+(r.s.W||'')+'</td></tr>';
+       '<td class="num">'+r.s.J+'</td><td class="num">'+r.s.N+'</td><td class="num">'+(r.s.W||'')+'</td><td class="num">'+extraCount(r.m.id)+'</td></tr>';
   });
   return h+'</tbody></table></div></div>'+
     '<div class="ib" style="margin-top:12px">A justified absence is left out of the attendance rate entirely - giving notice costs nothing. Lateness is measured against the times someone actually turned up, so missing an event cannot make them look more punctual. A dash means they have never been rostered.</div>';
@@ -5839,7 +5700,7 @@ function renderDutyReporting(k){
     const flag = r.d.cyc>=mean+2 ? '<span class="bdg bdg-warn" style="margin-left:7px">carrying more</span>'
                : r.d.cyc<=mean-2 ? '<span class="bdg bdg-no" style="margin-left:7px">barely used</span>' : '';
     h+='<tr style="cursor:pointer" onclick="repMember='+r.m.id+';renderReports()" title="See every duty '+esc(r.m.name)+' has done">'+
-       '<td style="font-weight:800">'+esc(r.m.name)+flag+'</td>'+
+       '<td style="font-weight:800" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}">'+esc(r.m.name)+flag+'</td>'+
        '<td class="num" style="font-weight:900">'+r.d.cyc+'</td>'+
        '<td class="num" style="font-weight:800;color:var(--blue-lt)">'+r.d.recent+'</td>'+
        '<td class="num">'+r.d.prev+'</td>'+
@@ -5937,11 +5798,11 @@ function reportCSV(k){
   // Attendance: the same three headline numbers the table shows, so the
   // export and the screen cannot disagree.
   const ds=dutyStats(k);
-  let out='Member,Attendance rate %,Lateness rate %,Duties rostered (all time),Present,Late,Justified,Not present\n';
+  let out='Member,Attendance rate %,Lateness rate %,Duties rostered (all time),Present,Late,Justified,Not present,Extra Duty (all time)\n';
   active.forEach(m=>{
     const st=attendanceStats(m.id,k), d=ds[m.id]||{total:0};
     out+=[q(m.name), st.rate==null?'':st.rate, st.lateness==null?'':st.lateness,
-          d.total, st.P, st.L, st.J, st.N].join(',')+'\n';
+          d.total, st.P, st.L, st.J, st.N, extraCount(m.id)].join(',')+'\n';
   });
   return out;
 }
@@ -5966,7 +5827,7 @@ function renderAnnouncements(){
     }
     h+='<div class="dp-card" style="margin-bottom:8px;display:flex;gap:10px"><span style="font-size:15px">📣</span><div style="flex:1;min-width:0"><div style="font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word">'+esc(a.text)+'</div>'+
       '<div style="font-size:12px;color:var(--dm);margin-top:4px">'+esc(a.author||'')+(a.created_at?' · '+esc(fmtNice(String(a.created_at).slice(0,10))):'')+'</div></div>'+
-      (IS_EDIT?'<div style="flex:none"><button class="btn btn-ol btn-sm" onclick="annEditing='+a.id+';renderAnnouncements()">✎</button> <button class="btn btn-ol btn-sm" onclick="deleteAnn('+a.id+')">✕</button></div>':'')+'</div>';
+      (IS_EDIT?'<div style="flex:none"><button class="btn btn-ol btn-sm" aria-label="Edit announcement" title="Edit announcement" onclick="annEditing='+a.id+';renderAnnouncements()"><span aria-hidden="true">✎</span></button> <button class="btn btn-ol btn-sm" aria-label="Delete announcement" title="Delete announcement" onclick="deleteAnn('+a.id+')"><span aria-hidden="true">✕</span></button></div>':'')+'</div>';
   }
   if(IS_EDIT) h+='<div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><textarea id="annNew" style="flex:1;min-height:44px" placeholder="Post an announcement to '+esc(TEAM_NAME)+'…"></textarea><button class="btn btn-bl" onclick="postAnn()">Post</button></div>';
   h+='</div></div>'; el.innerHTML=h;
@@ -6223,7 +6084,13 @@ function clRefresh(){
 }
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) clRefresh(); });
 
+let _annBusy=false;
 async function postAnn(){
+  if(_annBusy) return;
+  _annBusy=true;
+  try{ await postAnnNow(); } finally{ _annBusy=false; }
+}
+async function postAnnNow(){
   const ta=document.getElementById('annNew'); const text=(ta&&ta.value||'').trim();
   if(!text) return toast('Write something first','err');
   const row={team:PAGE_TEAM,text:text,author:CU.display||CU.user};

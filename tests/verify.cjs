@@ -285,10 +285,10 @@ for(const vp of [{w:390,h:844,t:1},{w:820,h:1180,t:1},{w:1440,h:950,t:0}]){
     CU={user:'x',display:'X',perms:['facilitator'],uid:'u'}; o.facTeams=rpGroups(grantableRoles()).map(g=>g.id).join();
     o.spec=SPEC_TEAMS.map(t=>t.id).join(); o.chips=(specChipsHTML(['COOKING','XYZ'],'').match(/spec-chip active/g)||[]).length;
     return o; });
-  chk(r.cats==='Leadership|PHMU|Training & Development|Safety & Security|Ancillary Services','roles   picker groups follow the four categories',r.cats);
+  chk(r.cats==='Leadership|PHMU|Weekday|Training & Development|Safety & Security|Ancillary Services','roles   picker groups follow the four categories plus Weekday',r.cats);
   chk(r.cooking==='ck_lead,ck_alead,ck_team','roles   a team offers Team Lead, Assistant Team Lead and Volunteer',r.cooking);
   chk(r.beforeLevel===''&&r.afterLevel==='ck_lead','roles   no role until a level is chosen',r.beforeLevel+' / '+r.afterLevel);
-  chk(r.facTeams==='A,B','roles   a facilitator is still offered Teams A and B only',r.facTeams);
+  chk(r.facTeams==='A,B,WD','roles   a facilitator is offered Teams A and B, and the Weekday Team Lead role, only',r.facTeams);
   chk(/COOKING/.test(r.spec)&&/ABESHAFA/.test(r.spec)&&r.chips===2,'roles   User Management can assign every team, and keeps unknown values',r.spec);
   chk(p.errs.length===0,'roles   no page errors'); await p.context().close(); }
 
@@ -650,130 +650,189 @@ for(const file of ['teama.html','teamb.html']){
   chk(!r.busyFn&&r.busyYes&&!r.busyOtherDay,'double   '+file+' the clash check matches by name and by date only');
   chk(p.errs.length===0,'double   '+file+' no page errors'); await p.context().close(); }
 
-// ── Satada: seven nights, either team's page, owner chips and take over ──
+// ── Satada: the Hub page (facilitator and above) ──
+const MOCKDB=`(seed)=>{ const DB=Object.assign({iv_events:[],iv_roster:[],iv_attendance:[],audit_logs:[],iv_settings:[],iv_members:[]},seed||{}); let nid=500; const log=[];
+  const clause=(r,c)=>{ const [col,op,...v]=c.split('.'); const val=v.join('.'); return op==='eq'?String(r[col])===val:op==='neq'?String(r[col])!==val:op==='is'?(r[col]==null):false; };
+  const from=t=>{ const st={op:'select',f:[],pay:null}; DB[t]=DB[t]||[];
+    const q={ select(){return q;}, insert(x){st.op='insert';st.pay=x;return q;}, update(x){st.op='update';st.pay=x;return q;}, delete(){st.op='delete';return q;}, upsert(x){st.op='upsert';st.pay=x;return q;},
+      eq(c,v){st.f.push(r=>r[c]===v);return q;}, neq(c,v){st.f.push(r=>r[c]!==v);return q;}, gte(c,v){st.f.push(r=>r[c]>=v);return q;}, lte(c,v){st.f.push(r=>r[c]<=v);return q;}, lt(c,v){st.f.push(r=>r[c]<v);return q;},
+      in(c,a){st.f.push(r=>a.indexOf(r[c])>=0);return q;}, or(s){const cl=s.split(',');st.f.push(r=>cl.some(c=>clause(r,c)));return q;}, order(){return q;}, limit(){return q;},
+      maybeSingle(){return Promise.resolve({data:null,error:null});},
+      then(res,rej){ const rows=DB[t], hit=rows.filter(r=>st.f.every(f=>f(r))); let out;
+        if(st.op==='select') out={data:hit.map(r=>Object.assign({},r)),error:null};
+        else if(st.op==='insert'){ const arr=[].concat(st.pay); const made=[]; let dupe=false;
+          arr.forEach(x=>{ if(t==='iv_events'&&rows.some(r=>r.date===x.date&&r.name===x.name)) dupe=true; });
+          if(dupe) out={data:null,error:{message:'duplicate key value violates unique constraint'}};
+          else { arr.forEach(x=>{ const row=Object.assign({id:nid++},x); rows.push(row); made.push(Object.assign({},row)); }); log.push(['insert',t,arr.length,arr]); out={data:made,error:null}; } }
+        else if(st.op==='update'){ hit.forEach(r=>Object.assign(r,st.pay)); log.push(['update',t,st.pay,hit.map(r=>r.id)]); out={data:hit.map(r=>Object.assign({},r)),error:null}; }
+        else if(st.op==='delete'){ hit.forEach(r=>rows.splice(rows.indexOf(r),1)); log.push(['delete',t,hit.map(r=>r.id)]); out={data:hit.map(r=>Object.assign({},r)),error:null}; }
+        else { const arr=[].concat(st.pay); const made=[]; arr.forEach(x=>{ const row=Object.assign({id:nid++},x); rows.push(row); made.push(Object.assign({},row)); }); log.push(['upsert',t,arr]); out={data:made,error:null}; }
+        return Promise.resolve(out).then(res,rej); } };
+    return q; };
+  return {DB,log,sb:{from,rpc:async()=>({data:[],error:null}),channel:()=>({on(){return this;},subscribe(){return this;}}),removeChannel(){}}}; }`;
+{ const p=await open('index.html',{width:1300,height:950});
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; const M=__mk(); sb=M.sb; const {DB,log}=M;
+    let said=[]; window.confirm=m=>{ said.push(m); return window.__ans!==false; };
+    const toastTxt=()=>document.getElementById('toast').textContent, q=s=>document.querySelector(s), qa=s=>[...document.querySelectorAll(s)];
+    const vis=id=>{ const e=document.getElementById(id); return !!e&&getComputedStyle(e).display!=='none'; };
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const asUser=pm=>{ CU={user:'x',display:'Fac',perms:pm,uid:'u',email:'f@x'}; applyNavVisibility(); };
+    document.getElementById('app').style.display='block';
+    /* Who sees it */
+    asUser(['tl_a']); o.tlNav=vis('navSatada'); nav('satada'); o.tlRefused=!document.getElementById('page-satada').classList.contains('active')&&/access/i.test(toastTxt());
+    asUser(['ytl_b']); o.ytlNav=vis('navSatada'); asUser(['team_a']); o.volNav=vis('navSatada');
+    asUser(['facilitator']); o.facNav=vis('navSatada'); await wait(450);
+    const g=[...document.querySelectorAll('#topnav .tn-group')].find(x=>/Management/.test(x.querySelector('.tn-b').textContent));
+    o.barHas=!!g&&[...g.querySelectorAll('.tn-menu .tn-b')].some(b=>/Satada/.test(b.textContent));
+    asUser(['owner']); o.ownerNav=vis('navSatada');
+    asUser(['facilitator']);
+    /* A week two Sundays out holding a regular Friday and a Paanch Baar Saal */
+    const t0=todayNZ(), sun=addDaysISO(saNextSunday(),7), d=n=>addDaysISO(sun,n);
+    DB.iv_events.push({id:1,team:'A',date:d(5),name:'Friday Majlis',type:'friday',uniform:'Casual',youth:true,confirmed:false},{id:2,team:'B',date:d(3),name:'Paanch Baar Saal',type:'pbs',uniform:'Casual',youth:false,confirmed:false});
+    nav('satada'); await wait(150);
+    o.open=document.getElementById('page-satada').classList.contains('active');
+    o.formFirst=!!q('#saDate')&&qa('#saStrip .sa-tile').length===7;
+    /* The form: Sunday rules, seven tiles, live summary, Save gated */
+    saDate(''); o.noDate=/Pick the Sunday/.test(q('#saHint').textContent)&&q('#saGo').disabled;
+    saDate(d(1)); o.monday=/not a Sunday/.test(q('#saHint').textContent)&&q('#saHint').className.indexOf('bad')>=0&&q('#saGo').disabled;
+    saDate(addDaysISO(saWeekStart(t0),-7)); o.finished=/finished/.test(q('#saHint').textContent)&&q('#saGo').disabled;
+    saDate(sun); o.sundayOk=q('#saHint').className.indexOf('ok')>=0&&!q('#saGo').disabled;
+    o.defaults=SA.owners.join('')==='ABABABA'&&qa('#saStrip .sa-pick.on').map(b=>b.textContent).join('')==='ABABABA';
+    o.sum1=q('#saSum').textContent==='Team A: 4 nights · Team B: 3 nights';
+    saClearAll(); o.cleared=q('#saGo').disabled&&/7 not set/.test(q('#saSum').textContent);
+    for(let i=0;i<6;i++) saSet(i,'A'); o.sixNotEnough=q('#saGo').disabled&&/Team A: 6 nights · Team B: 0 nights · 1 not set/.test(q('#saSum').textContent);
+    saSet(6,'B'); o.sevenOk=!q('#saGo').disabled&&q('#saSum').textContent==='Team A: 6 nights · Team B: 1 night';
+    saAltAll(); saSet(3,'A'); o.sum2=q('#saSum').textContent==='Team A: 5 nights · Team B: 2 nights';
+    const owners=SA.owners.slice();
+    /* Save: replaced events listed, then one insert of seven */
+    log.length=0; said=[]; await saSubmit();
+    o.confirmList=said.length===1&&/will be replaced/.test(said[0])&&/Friday Majlis/.test(said[0])&&/Paanch Baar Saal/.test(said[0]);
+    const sat=DB.iv_events.filter(e=>e.type==='satada').sort((a,b)=>a.date<b.date?-1:1);
+    o.seven=sat.length===7&&sat.every((e,i)=>e.date===d(i)&&e.name==='Satada - '+SA_DAYS[i]);
+    o.owners=sat.map(e=>e.team).join()===owners.join();
+    o.youth=sat.every((e,i)=>e.youth===(i===5));
+    const ins=log.filter(l=>l[0]==='insert'&&l[1]==='iv_events'); o.oneInsert=ins.length===1&&ins[0][2]===7;
+    o.replaced=!DB.iv_events.some(e=>e.type==='friday'||e.type==='pbs');
+    o.audited=DB.audit_logs.some(a=>a.action==='add-satada');
+    /* The form is replaced by the panel, which stays */
+    o.panel=!q('#saDate')&&qa('#saMain .sa-tile[data-id]').length===7&&/Delete this satada/.test(q('#saMain').textContent)&&/Swap A and B/.test(q('#saMain').textContent);
+    await saReload(); await saReload(); o.stays=qa('#saMain .sa-tile[data-id]').length===7&&!q('#saDate');
+    o.chip=qa('#saWeeks .chip.active').length===1;
+    /* A second satada in the same week is refused */
+    saNew(); saDate(sun); o.dup=/already exist/.test(q('#saHint').textContent)&&q('#saGo').disabled; await saSubmit(); o.dupNoWrite=DB.iv_events.filter(e=>e.type==='satada').length===7;
+    /* Another week: it lists, and picking switches the panel */
+    const sun2=addDaysISO(sun,14);
+    for(let i=0;i<7;i++) DB.iv_events.push({id:900+i,team:i%2?'B':'A',date:addDaysISO(sun2,i),name:'Satada - '+SA_DAYS[i],type:'satada',uniform:'Casual',youth:i===5,confirmed:false});
+    await saReload(); o.twoChips=qa('#saWeeks .chip').length===2;
+    saPick(sun2); o.picked=SA.sel===sun2&&q('#saMain h2').textContent.indexOf(fmtDM(sun2))>=0; saPick(sun); o.pickedBack=q('#saMain h2').textContent.indexOf(fmtDM(sun))>=0;
+    /* Change one night */
+    const mon=sat[1]; log.length=0;
+    await saOwner(mon.id,'A'); o.moved=DB.iv_events.find(e=>e.id===mon.id).team==='A'&&log.some(l=>l[0]==='update'&&l[1]==='iv_events'&&l[2].team==='A'&&l[3].join()===String(mon.id));
+    o.movedAudit=DB.audit_logs.some(a=>a.action==='satada-owner'); o.stillPanel=qa('#saMain .sa-tile[data-id]').length===7&&/Team A: 6 nights/.test(q('#saSum').textContent);
+    /* A night with a roster: refused unless the roster is cleared */
+    const tue=sat[2], tueTeam=tue.team, tueTo=tueTeam==='A'?'B':'A'; DB.iv_roster.push({event_id:tue.id,data:{assign:{k:{m:[{id:1},{id:2}],f:[],x:[]}}}}); await saReload();
+    o.rosterShown=/Roster: 2 people/.test(q('#saMain .sa-tile[data-id="'+tue.id+'"]').textContent);
+    window.__ans=false; said=[]; await saOwner(tue.id,tueTo); o.rosterDeclined=said.length===1&&/Clear the roster/.test(said[0])&&DB.iv_events.find(e=>e.id===tue.id).team===tueTeam&&DB.iv_roster.length===1;
+    window.__ans=true; await saOwner(tue.id,tueTo); o.rosterCleared=DB.iv_events.find(e=>e.id===tue.id).team===tueTo&&DB.iv_roster.length===0;
+    /* Attendance marked: refused */
+    const wed=sat[3], wedTeam=wed.team; DB.iv_attendance.push({event_id:wed.id,member_id:1,status:'present'}); await saReload(); log.length=0;
+    await saOwner(wed.id,wedTeam==='A'?'B':'A'); o.attRefused=/Attendance/.test(toastTxt())&&DB.iv_events.find(e=>e.id===wed.id).team===wedTeam&&!log.some(l=>l[0]==='update');
+    /* A night that has passed: refused */
+    DB.iv_events.push({id:990,team:'A',date:addDaysISO(t0,-20),name:'Satada - Old',type:'satada',uniform:'Casual',youth:false,confirmed:false}); await saReload(); log.length=0;
+    await saOwner(990,'B'); o.pastRefused=/passed/.test(toastTxt())&&DB.iv_events.find(e=>e.id===990).team==='A'&&!log.some(l=>l[0]==='update');
+    DB.iv_events=DB.iv_events.filter(e=>e.id!==990); await saReload();
+    /* Swap the whole week: every night that can move does; the marked one stays */
+    saPick(sun); const before=Object.fromEntries(DB.iv_events.filter(e=>e.type==='satada'&&e.date>=sun&&e.date<=d(6)).map(e=>[e.id,e.team]));
+    await saSwap(sun);
+    const after=Object.fromEntries(DB.iv_events.filter(e=>e.type==='satada'&&e.date>=sun&&e.date<=d(6)).map(e=>[e.id,e.team]));
+    o.swapped=Object.keys(before).every(id=>+id===wed.id?after[id]===before[id]:after[id]!==before[id]);
+    o.swapAudit=DB.audit_logs.some(a=>a.action==='satada-swap');
+    /* Delete removes all seven of that week and only that week */
+    said=[]; await saDelete(sun);
+    o.deleted=!DB.iv_events.some(e=>e.type==='satada'&&e.date>=sun&&e.date<=d(6))&&DB.iv_events.filter(e=>e.type==='satada').length===7&&said.length===1&&/rosters? or attendance|roster or attendance/.test(said[0]);
+    o.delAudit=DB.audit_logs.some(a=>a.action==='delete-satada'); o.afterDelete=SA.sel===sun2&&qa('#saMain .sa-tile[data-id]').length===7;
+    /* Writes are refused for somebody below facilitator, even by calling the function */
+    asUser(['tl_a']); log.length=0; await saOwner(900,'B'); await saSwap(sun2); await saDelete(sun2); SA.date=addDaysISO(sun,28); SA.owners=saAlt(); await saSubmit();
+    o.tlNoWrite=!log.length;
+    return o; });
+  const j=JSON.stringify(r);
+  chk(!r.tlNav&&!r.ytlNav&&!r.volNav&&r.tlRefused,'satada   Hub: Team Leads and below do not see Satada, and nav(\'satada\') is refused',j);
+  chk(r.facNav&&r.ownerNav&&r.barHas&&r.open,'satada   Hub: a facilitator and above see Satada in the Management menu and can open it',j);
+  chk(r.formFirst&&r.noDate&&r.monday&&r.finished&&r.sundayOk,'satada   Hub form: needs a Sunday, not a finished week; Save is gated on it',j);
+  chk(r.defaults&&r.sum1&&r.cleared&&r.sixNotEnough&&r.sevenOk&&r.sum2,'satada   Hub form: seven tiles alternate A,B by default; summary counts are live; Save waits for all seven',j);
+  chk(r.confirmList&&r.seven&&r.owners&&r.youth&&r.oneInsert&&r.replaced&&r.audited,'satada   Hub: Save lists replaced events, then writes seven nights with the chosen teams in one insert, Friday youth, audit logged',j);
+  chk(r.panel&&r.stays&&r.chip&&r.dup&&r.dupNoWrite&&r.twoChips&&r.picked&&r.pickedBack,'satada   Hub: the form gives way to a panel that stays; existing satadas are listed and pickable; a duplicate week is refused',j);
+  chk(r.moved&&r.movedAudit&&r.stillPanel&&r.rosterShown&&r.rosterDeclined&&r.rosterCleared&&r.attRefused&&r.pastRefused,'satada   Hub panel: changing a night writes the owner and logs it; a roster must be cleared; attendance or a passed night is refused',j);
+  chk(r.swapped&&r.swapAudit,'satada   Hub panel: swap A and B moves every night that can move',j);
+  chk(r.deleted&&r.delAudit&&r.afterDelete,'satada   Hub panel: delete removes all seven nights of that week after a warning about rosters, and logs it',j);
+  chk(r.tlNoWrite,'satada   Hub: the write functions refuse a Team Lead even when called directly',j);
+  chk(p.errs.length===0,'satada   Hub no page errors',JSON.stringify(p.errs)); await p.context().close(); }
+{ const p=await open('index.html',{width:390,height:844},true);
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; const M=__mk(); sb=M.sb; window.confirm=()=>true; const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    document.getElementById('app').style.display='block'; CU={user:'x',display:'F',perms:['facilitator'],uid:'u'}; applyNavVisibility(); nav('satada'); await wait(200);
+    const chkLayout=()=>{ const t=[...document.querySelectorAll('#saStrip .sa-tile')].map(e=>e.getBoundingClientRect()), tops=[...new Set(t.map(r=>Math.round(r.top)))];
+      const bt=[...document.querySelectorAll('#saStrip button')].map(e=>e.getBoundingClientRect());
+      return {n:t.length,rows:tops.length,first:t.filter(r=>Math.round(r.top)===tops[0]).length,minBtn:Math.min(...bt.map(r=>r.height)),noScroll:document.documentElement.scrollWidth<=window.innerWidth+1,inside:t.every(r=>r.left>=0&&r.right<=window.innerWidth)}; };
+    o.form=chkLayout();
+    const sun=addDaysISO(saNextSunday(),7); saDate(sun); await saSubmit(); await wait(100); o.panel=chkLayout();
+    document.documentElement.setAttribute('data-theme','light'); o.light=chkLayout().noScroll; document.documentElement.removeAttribute('data-theme');
+    return o; });
+  const j=JSON.stringify(r);
+  chk(r.form.n===7&&r.form.rows===2&&r.form.first===4&&r.form.minBtn>=44&&r.form.noScroll&&r.form.inside,'satada   Hub form at 390px: tiles wrap 4+3 with big tap targets, no sideways scroll',j);
+  chk(r.panel.n===7&&r.panel.rows===2&&r.panel.minBtn>=44&&r.panel.noScroll&&r.panel.inside&&r.light,'satada   Hub panel at 390px: tiles wrap 4+3 with big tap targets, light theme fits',j);
+  chk(p.errs.length===0,'satada   Hub 390px no page errors',JSON.stringify(p.errs)); await p.context().close(); }
+
+// ── Satada on the team pages: no assignment controls; a Satada group at the top of Rostering ──
 for(const file of ['teama.html','teamb.html']){
   const p=await open(file,{width:1300,height:950});
   await p.evaluate(`(${SEED})(['tl_a','tl_b'])`);
+  await p.evaluate(`window.__mk=${MOCKDB}`);
   const r=await p.evaluate(async()=>{ const o={}; LOADED=true;
     const OT=OTHER_TEAM, ME=PAGE_TEAM, today=nzTodayISO();
-    /* An in-memory iv_events and friends, enough for the page's own reads and writes. */
-    const DB={iv_events:[],iv_roster:[],iv_attendance:[],audit_logs:[],iv_settings:[],iv_members:[]}; let nid=500; const log=[];
-    const clause=(r,c)=>{ const [col,op,...v]=c.split('.'); const val=v.join('.'); return op==='eq'?String(r[col])===val:op==='neq'?String(r[col])!==val:op==='is'?(r[col]==null):false; };
-    const from=t=>{ const st={op:'select',f:[],pay:null,opts:null}; DB[t]=DB[t]||[];
-      const q={ select(){return q;}, insert(x){st.op='insert';st.pay=x;return q;}, update(x){st.op='update';st.pay=x;return q;}, delete(){st.op='delete';return q;}, upsert(x,op){st.op='upsert';st.pay=x;st.opts=op;return q;},
-        eq(c,v){st.f.push(r=>r[c]===v);return q;}, neq(c,v){st.f.push(r=>r[c]!==v);return q;}, gte(c,v){st.f.push(r=>r[c]>=v);return q;}, lte(c,v){st.f.push(r=>r[c]<=v);return q;}, lt(c,v){st.f.push(r=>r[c]<v);return q;},
-        in(c,a){st.f.push(r=>a.indexOf(r[c])>=0);return q;}, or(s){const cl=s.split(',');st.f.push(r=>cl.some(c=>clause(r,c)));return q;}, order(){return q;}, limit(){return q;},
-        maybeSingle(){return Promise.resolve({data:null,error:null});},
-        then(res,rej){ const rows=DB[t], hit=rows.filter(r=>st.f.every(f=>f(r))); let out;
-          if(st.op==='select') out={data:hit.map(r=>Object.assign({},r)),error:null};
-          else if(st.op==='insert'){ const arr=[].concat(st.pay); const made=[]; let dupe=false;
-            arr.forEach(x=>{ if(t==='iv_events'&&rows.some(r=>r.date===x.date&&r.name===x.name)) dupe=true; });
-            if(dupe) out={data:null,error:{message:'duplicate key value violates unique constraint'}};
-            else { arr.forEach(x=>{ const row=Object.assign({id:nid++},x); rows.push(row); made.push(Object.assign({},row)); }); log.push(['insert',t,arr.length,arr]); out={data:made,error:null}; } }
-          else if(st.op==='update'){ hit.forEach(r=>Object.assign(r,st.pay)); log.push(['update',t,st.pay]); out={data:hit.map(r=>Object.assign({},r)),error:null}; }
-          else if(st.op==='delete'){ hit.forEach(r=>rows.splice(rows.indexOf(r),1)); log.push(['delete',t,hit.map(r=>r.id)]); out={data:hit.map(r=>Object.assign({},r)),error:null}; }
-          else { const arr=[].concat(st.pay); const made=[]; arr.forEach(x=>{ if(t==='iv_events'&&rows.some(r=>r.date===x.date&&r.name===x.name)) return; const row=Object.assign({id:nid++},x); rows.push(row); made.push(Object.assign({},row)); }); log.push(['upsert',t,arr]); out={data:made,error:null}; }
-          return Promise.resolve(out).then(res,rej); } };
-      return q; };
-    sb={from,rpc:async()=>({data:[],error:null}),channel:()=>({on(){return this;},subscribe(){return this;}}),removeChannel(){}};
-    const toastTxt=()=>document.getElementById('toast').textContent;
-    const q=s=>document.querySelector(s);
-    o.meta=TYPE_META.satada&&TYPE_META.satada.label==='SATADA'&&TYPE_META.satada.color!==TYPE_META.friday.color;
-
-    /* The Add Event type list never offers satada. */
-    openAddEvent(); o.types=[...document.querySelectorAll('#aeType option')].map(x=>x.value); cM();
-    o.noSatadaType=o.types.length>5&&o.types.indexOf('satada')<0;
-
-    /* A week two Sundays out, holding a regular Friday and a Paanch Baar Saal in the database. */
-    const sun=addDaysLocal(satNextSunday(),7), d=n=>addDaysLocal(sun,n);
-    DB.iv_events.push({id:1,team:ME,date:d(5),name:'Friday Majlis',type:'friday',uniform:'Casual',youth:true,confirmed:false},
-                      {id:2,team:OT,date:d(3),name:'Paanch Baar Saal',type:'pbs',uniform:'Casual',youth:false,confirmed:false});
-    EVENTS=[]; ROSTERS={};
-
-    /* Rejects a day that is not a Sunday. */
-    openAddSatada(); q('#saDate').value=d(1); satDateChanged();
-    o.hintMonday=/not a Sunday/.test(q('#saHint').textContent)&&q('#saHint').className.indexOf('bad')>=0;
-    await submitAddSatada(); o.mondayRefused=/not a Sunday/.test(toastTxt())&&!DB.iv_events.some(e=>e.type==='satada');
-    /* Rejects a week that has finished. */
-    q('#saDate').value=addDaysLocal(weekStart(today),-7); satDateChanged(); o.pastHint=/finished/.test(q('#saHint').textContent);
-
-    /* Default owners alternate, starting with this page's team. */
-    q('#saDate').value=sun; satDateChanged();
-    o.defaults=[0,1,2,3,4,5,6].map(i=>q('#saOwn'+i).value).join('');
-    o.defaultsOk=o.defaults===[0,1,2,3,4,5,6].map(i=>i%2===0?ME:OT).join('');
-    q('#saOwn3').value=ME;                                   // Wednesday: change one by hand
-    const owners=[0,1,2,3,4,5,6].map(i=>q('#saOwn'+i).value);
-    await submitAddSatada();
-    o.confirmList=/will be replaced/.test(q('#dcard').textContent)&&/Friday Majlis/.test(q('#dcard').textContent)&&/Paanch Baar Saal/.test(q('#dcard').textContent);
-    o.nothingYet=!DB.iv_events.some(e=>e.type==='satada')&&DB.iv_events.length===2;
-    await runSatadaPlan();
-    const sat=DB.iv_events.filter(e=>e.type==='satada').sort((a,b)=>a.date<b.date?-1:1);
-    o.seven=sat.length===7&&sat.every((e,i)=>e.date===d(i)&&e.name==='Satada - '+SATADA_DAYS[i]);
-    o.owners=sat.map(e=>e.team).join()===owners.join();
-    o.youth=sat.every((e,i)=>e.youth===(i===5));
-    o.oneInsert=log.filter(l=>l[0]==='insert'&&l[1]==='iv_events').length===1&&log.find(l=>l[0]==='insert'&&l[1]==='iv_events')[2]===7;
-    o.replaced=!DB.iv_events.some(e=>e.type==='friday'||e.type==='pbs');
-    o.audited=DB.audit_logs.some(a=>a.action==='add-satada');
-    o.localSeven=EVENTS.filter(isSatada).length===7;
-    /* A second one in the same week is refused. */
-    openAddSatada(); q('#saDate').value=sun; satDateChanged();
-    o.dupHint=/already exist/.test(q('#saHint').textContent);
-    await submitAddSatada(); o.dupRefused=/already exist/.test(toastTxt())&&DB.iv_events.filter(e=>e.type==='satada').length===7; cM();
-
-    /* Both pages show all seven nights, wherever the cycle says the date is. */
-    o.weekMap=(satWeekMap()[sun]||[]).length===7;
-    const shown=new Set();
-    for(const dt of [sun,d(6)]){ CAL={y:+dt.slice(0,4),m:+dt.slice(5,7)-1}; nav('calendar'); renderCalendar(); document.querySelectorAll('#body-calendar .cal-ev').forEach(b=>{ if(/^Satada/.test(b.textContent)) shown.add(b.textContent); }); }
-    o.calendar=shown.size===7;
-    o.calOwner=/Team [AB]/.test(document.getElementById('body-calendar').textContent);
-    openSatadaWeek(sun); o.weekView=ROSTER_VIEW==='satada'&&document.querySelectorAll('#body-roster .cv-day').length===7;
-    o.chips=document.querySelectorAll('#body-roster .cv-day .cv-pill.own').length===7;
-    o.pickerCard=(()=>{ openRosterHome(); return !!q('#body-roster .cy-card .cyc-tag')&&/Satada week/.test(document.getElementById('body-roster').textContent); })();
-    /* The query that loads events asks for this team's rows or any satada. */
-    EVENTS=[]; DB.iv_events.push({id:3,team:OT,date:d(0),name:'Other team regular',type:'friday',uniform:'Casual',youth:false,confirmed:false});
-    await loadAll();
-    o.loadsAll=EVENTS.filter(isSatada).length===7&&!EVENTS.some(e=>e.name==='Other team regular');
-    DB.iv_events=DB.iv_events.filter(e=>e.id!==3);
-
-    /* Non-owner page: read only, with Take over. Owner page: editable. */
-    const theirs=EVENTS.find(e=>isSatada(e)&&e.team===OT), mine=EVENTS.find(e=>isSatada(e)&&e.team===ME);
-    MEMBERS=[];for(let i=0;i<40;i++)MEMBERS.push({id:i+1,name:'M'+i,status:'active',gender:i%2?'Female':'Male',age_group:i<10?'child':i<24?'youth':'adult',nandi:i>=24&&i<26,away:[],prefs:{}});
-    openDay(theirs.id,true);
-    const dc=document.getElementById('day-'+theirs.id);
-    o.roLocked=evLocked(theirs)&&!evLocked(mine);
-    o.roText=!!dc&&/Owned by Team /.test(dc.textContent)&&/Take over this night/.test(dc.textContent)&&!/Build this day/.test(dc.textContent)&&!/Regenerate day/.test(dc.textContent);
-    await generateDay(theirs.id); o.roNoBuild=!ROSTERS[theirs.id];
-    openDay(mine.id,true); const mc=document.getElementById('day-'+mine.id);
-    o.ownEditable=!!mc&&/Build this day/.test(mc.textContent)&&!/Take over this night/.test(mc.textContent)&&/Change owner/.test(mc.textContent);
-    o.attNoTheirs=(()=>{ attEventId=null; renderAttendance(); return ![...document.querySelectorAll('#body-attendance select option')].some(x=>x.value==String(theirs.id)); })();
-
-    /* Take over writes the owner and logs it. */
-    log.length=0; openSatadaOwner(theirs.id); o.takeDlg=/Take over this night/.test(q('#dcard').textContent);
-    await doSatadaOwner(theirs.id,ME,false);
-    o.tookOver=theirs.team===ME&&DB.iv_events.find(e=>e.id===theirs.id).team===ME&&log.some(l=>l[0]==='update'&&l[1]==='iv_events'&&l[2].team===ME);
-    o.tookAudit=DB.audit_logs.some(a=>a.action==='satada-owner');
-    /* A night with a roster is not handed over silently. */
-    const withRoster=EVENTS.find(e=>isSatada(e)&&e.team===ME&&e.id!==theirs.id);
-    ROSTERS[withRoster.id]=generateEventData(withRoster); DB.iv_roster.push({event_id:withRoster.id,data:ROSTERS[withRoster.id]});
-    openSatadaOwner(withRoster.id); o.rosterWarn=/Clear the roster/.test(q('#dcard').textContent)&&withRoster.team===ME; cM();
-
-    /* Deleting needs the box ticked when a night has a roster, and removes all seven. */
-    const skipBefore=AUTO_SKIP.size;
-    openDeleteSatada(sun); await doDeleteSatada(sun,true); o.delNeedsTick=EVENTS.filter(isSatada).length===7&&/Tick the box/.test(toastTxt());
-    openDeleteSatada(sun); q('#saDelOk').checked=true; await doDeleteSatada(sun,true);
-    o.deleted=!DB.iv_events.some(e=>e.type==='satada')&&EVENTS.filter(isSatada).length===0;
-    o.skipClean=AUTO_SKIP.size===skipBefore;
+    const M=__mk(); sb=M.sb; const {DB,log}=M;
+    const toastTxt=()=>document.getElementById('toast').textContent, q=s=>document.querySelector(s), qa=s=>[...document.querySelectorAll(s)];
+    const sun=addDaysLocal(addDaysLocal(today,(7-dowIdx(today))%7),7), d=n=>addDaysLocal(sun,n);
+    for(let i=0;i<7;i++) DB.iv_events.push({id:300+i,team:i%2===0?ME:OT,date:d(i),name:'Satada - '+SATADA_DAYS[i],type:'satada',uniform:'Casual',youth:i===5,confirmed:false});
+    const mkMembers=()=>{ MEMBERS=[];for(let i=0;i<40;i++)MEMBERS.push({id:i+1,name:'M'+i,status:'active',gender:i%2?'Female':'Male',age_group:i<10?'child':i<24?'youth':'adult',nandi:i>=24&&i<26,away:[],prefs:{}}); };
+    EVENTS=[]; ROSTERS={}; await loadAll(); mkMembers();
+    o.loaded=EVENTS.filter(isSatada).length===7;
+    /* The assignment code is gone from the page */
+    o.gone=['openAddSatada','submitAddSatada','openSatadaOwner','doSatadaOwner','openDeleteSatada','doDeleteSatada','planSatada','openSatadaWeek'].every(n=>typeof window[n]==='undefined');
+    /* No Add Satada anywhere: roster home, a cycle, Add Event, a night's own page */
+    openRosterHome(); const home=document.getElementById('body-roster').textContent; o.homeNoAdd=!/Add Satada/.test(home);
+    const cyc=CYCLES.find(c=>c.status!=='historic'); openCycle(cyc.k); o.cycleNoAdd=!/Add Satada/.test(document.getElementById('body-roster').textContent);
+    openAddEvent(); o.dlgNoAdd=!/Satada/.test(document.getElementById('dcard').textContent); cM();
+    /* The Satada group sits at the top of Rostering, above the cycle list */
+    openRosterHome(); const g=q('#body-roster #satGroup'), firstCyc=q('#body-roster .cy-card:not([data-sat])');
+    o.groupTop=!!g&&!!firstCyc&&!!(g.compareDocumentPosition(firstCyc)&Node.DOCUMENT_POSITION_FOLLOWING)&&document.getElementById('body-roster').firstElementChild.classList.contains('ph')&&g.previousElementSibling.classList.contains('ph');
+    const own=qa('#body-roster [data-sat]').filter(e=>e.tagName==='BUTTON'), oth=qa('#body-roster [data-sat]').filter(e=>e.tagName!=='BUTTON');
+    o.counts=own.length===4&&oth.length===3&&qa('#body-roster [data-sat]').length===7;
+    o.ownChip=own.every(e=>e.querySelector('.cv-pill.own')&&!e.querySelector('.cv-pill.own.theirs')&&/Team /.test(e.textContent))&&own.every(e=>/Not built/.test(e.textContent));
+    o.otherRO=oth.every(e=>e.classList.contains('ro')&&e.getAttribute('aria-disabled')==='true'&&e.querySelector('.cv-pill.own.theirs')&&/Team /.test(e.textContent)&&!e.getAttribute('onclick'));
+    o.order=[...qa('#body-roster [data-sat]')].map(e=>e.getAttribute('data-sat')).join()==='300,301,302,303,304,305,306';
+    /* An own night opens the normal roster and builds exactly as before */
+    const mine=EVENTS.find(e=>e.id===300); own[0].click();
+    o.opens=ROSTER_VIEW==='event'&&selEventId===300&&new RegExp(fmtDowLong(mine.date)).test(document.getElementById('body-roster').textContent);
+    const pg=document.getElementById('body-roster').textContent;
+    o.pageNoControls=!/Take over|Change owner|Delete this satada|Add Satada/.test(pg)&&/Generate/.test(pg);
+    o.noWeekBtn=!/All cycles/.test(pg)||true;
+    await generateDay(300); o.built=!!ROSTERS[300]&&slotCounts(mine).generated>0;
+    openRosterHome(); const card=q('#body-roster [data-sat="300"]'); o.cardState=/On the calendar|Hidden/.test(card.textContent);
+    /* The other team's night: read only, no build, no take over; its own page opens only from elsewhere */
+    const theirs=EVENTS.find(e=>e.id===301); await generateDay(301); o.roNoBuild=!ROSTERS[301]&&evLocked(theirs);
+    selEventId=301; ROSTER_VIEW='event'; renderRoster(); const tp=document.getElementById('body-roster').textContent;
+    o.theirsPage=/Owned by Team /.test(tp)&&!/Take over|Change owner|Delete this satada/.test(tp)&&!/Generate/.test(tp);
+    selEventId=300; confirmDeleteEvent(); o.noDeleteDlg=!document.getElementById('dcard')||!/Delete event|Delete this satada/.test(document.getElementById('dcard').textContent||'');
+    /* Drawer from the calendar has no owner buttons either */
+    openEventDrawer(301); o.drawer=!/Take over|Change owner/.test(document.getElementById('drawer')?document.getElementById('drawer').textContent:document.body.textContent);
     return o; });
   const j=JSON.stringify(r);
-  chk(r.meta&&r.noSatadaType,'satada   '+file+' has its own colour and label, and Add Event does not offer it as a type',j);
-  chk(r.hintMonday&&r.mondayRefused&&r.pastHint,'satada   '+file+' Add Satada rejects a non-Sunday and a finished week',j);
-  chk(r.defaultsOk&&r.confirmList&&r.nothingYet,'satada   '+file+' owners alternate from this team, and replaced events are listed before anything is written',j);
-  chk(r.seven&&r.owners&&r.youth&&r.oneInsert&&r.replaced&&r.audited&&r.localSeven,'satada   '+file+' creates seven nights Sunday to Saturday in one insert, with the chosen owners and a youth Friday',j);
-  chk(r.dupHint&&r.dupRefused,'satada   '+file+' a second satada in the same week is refused',j);
-  chk(r.weekMap&&r.calendar&&r.calOwner&&r.weekView&&r.chips&&r.pickerCard&&r.loadsAll,'satada   '+file+' shows all seven nights with owner chips, whichever team owns them',j);
-  chk(r.roLocked&&r.roText&&r.roNoBuild&&r.ownEditable&&r.attNoTheirs,'satada   '+file+' the other team\'s night is read only with Take over; its own is editable',j);
-  chk(r.takeDlg&&r.tookOver&&r.tookAudit&&r.rosterWarn,'satada   '+file+' Take over writes the owner and logs it; a rostered night is not handed over silently',j);
-  chk(r.delNeedsTick&&r.deleted&&r.skipClean,'satada   '+file+' Delete this satada removes all seven, asks first when rostered, and leaves AUTO_SKIP alone',j);
+  chk(r.loaded&&r.gone&&r.homeNoAdd&&r.cycleNoAdd&&r.dlgNoAdd,'satada   '+file+' no Add Satada anywhere, and the create, owner and delete code is gone from the page',j);
+  chk(r.groupTop&&r.counts&&r.ownChip&&r.otherRO&&r.order,'satada   '+file+' the Satada group is at the top of Rostering: own nights are actionable with owner chips, the other team\'s are greyed and read only',j);
+  chk(r.opens&&r.pageNoControls&&r.built&&r.cardState,'satada   '+file+' an own night opens the normal roster and builds as before, with no owner or delete buttons',j);
+  chk(r.roNoBuild&&r.theirsPage&&r.noDeleteDlg&&r.drawer,'satada   '+file+' the other team\'s night stays read only with no Take over; satada nights cannot be deleted one by one',j);
   chk(p.errs.length===0,'satada   '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Satada: the cycle makes no Friday or Paanch Baar Saal in a satada week ──
@@ -942,7 +1001,7 @@ for(const file of ['teama.html','teamb.html']){
   chk(p.errs.length===0,'walkin  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Full screen button on every page ──
-for(const file of ['index.html','teama.html','teamb.html','av.html','safety.html','setup.html']){
+for(const file of ['index.html','teama.html','teamb.html','av.html','safety.html','setup.html','weekday.html']){
   const ctx=await b.newContext({viewport:{width:1300,height:900}}); const p=await ctx.newPage(); p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
   await ctx.route(u=>!String(u).startsWith(BASE),r=>r.abort());
   await p.goto(BASE+'/'+file,{waitUntil:'domcontentloaded'}); await p.waitForTimeout(1500);
@@ -995,7 +1054,7 @@ for(const file of ['index.html','teama.html','av.html']){
   chk(p.errs.length===0,'shapes  '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Type scale: nothing tiny, nothing shouting ──
-for(const file of ['teama.html','index.html','av.html']){
+for(const file of ['teama.html','index.html','av.html','weekday.html']){
   const p=await open(file,{width:1300,height:900});
   const r=await p.evaluate(()=>{ const o={tiny:[],heavy:[],lh:0}; const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
     while(w.nextNode()){ const t=w.currentNode, el=t.parentElement, tx=t.textContent.trim(); if(!tx||!el||/^(SCRIPT|STYLE)$/.test(el.tagName)) continue;
@@ -1084,6 +1143,194 @@ for(const file of ['teama.html','teamb.html']){
     chk((await p.evaluate(()=>CL.done.join()))==='lights','laptop  '+file+' one click ticks a row in the list');
     chk(p.errs.length===0,'laptop  '+file+' no page errors',p.errs.join(';')); await p.context().close(); }
   chk(cols['teama.html']!==cols['teamb.html'],'colour  Team A and Team B use different secondary colours',JSON.stringify(cols)); }
+
+// ── Weekday Team Lead: weekday.html, the Hub role, nav, Weekday Attendance, My Profile ──
+const WD_STUB=`(seed)=>{ const DB=Object.assign({profiles:[],iv_wd_shifts:[],iv_wd_attendance:[]},seed||{}); const calls=[]; let nid=100;
+  const from=t=>{ const st={op:'select',f:[],eqs:[],pay:null,sel:false,single:false}; DB[t]=DB[t]||[];
+    const q={ select(){st.sel=true;return q;}, insert(x){st.op='insert';st.pay=x;return q;}, update(x){st.op='update';st.pay=x;return q;}, delete(){st.op='delete';return q;}, upsert(x){st.op='upsert';st.pay=x;return q;},
+      eq(c,v){st.eqs.push([c,v]);st.f.push(r=>r[c]===v);return q;}, gte(c,v){st.f.push(r=>r[c]>=v);return q;}, lte(c,v){st.f.push(r=>r[c]<=v);return q;}, order(){return q;}, limit(){return q;}, maybeSingle(){st.single=true;return q;},
+      then(res,rej){ const rows=DB[t], hit=rows.filter(r=>st.f.every(f=>f(r))); let out;
+        calls.push({t,op:st.op,eqs:st.eqs,pay:st.pay});
+        if(st.op==='select') out={data:st.single?(hit[0]?Object.assign({},hit[0]):null):hit.map(r=>Object.assign({},r)),error:null};
+        else if(st.op==='insert'){ const x=Object.assign({},st.pay);
+          const dupe=t==='iv_wd_attendance'?rows.some(r=>r.date===x.date&&r.member_id===x.member_id&&r.duty===x.duty):t==='iv_wd_shifts'?rows.some(r=>r.date===x.date):false;
+          if(dupe) out={data:null,error:{message:'duplicate key value violates unique constraint',code:'23505'}};
+          else { if(t==='iv_wd_attendance'){ x.id=nid++; x.added_by_name='Lead One'; x.created_at=new Date().toISOString(); } rows.push(x); out={data:st.sel?[Object.assign({},x)]:null,error:null}; } }
+        else if(st.op==='update'){ hit.forEach(r=>Object.assign(r,st.pay)); out={data:st.sel?hit.map(r=>Object.assign({},r)):null,error:null}; }
+        else if(st.op==='delete'){ if(window.__refuseDelete){ out={data:[],error:null}; } else { hit.forEach(r=>rows.splice(rows.indexOf(r),1)); out={data:st.sel?hit.map(r=>Object.assign({},r)):null,error:null}; } }
+        else out={data:null,error:null};
+        return Promise.resolve(out).then(res,rej); } };
+    return q; };
+  const people=[{id:1,name:'Aly Kotadia',team:'A',cannot:['Nandi Line','nandi_passing']},{id:2,name:'Alia Ladha',team:'B',cannot:[]},{id:3,name:'Zahra Ali',team:null,cannot:[]}];
+  const sb={ auth:{getSession:async()=>({data:{session:{user:{id:'u1',email:'lead@x'}}}}),signOut:async()=>({})}, from,
+    rpc:async(n,a)=>{ calls.push({t:'rpc:'+n,op:'rpc',eqs:[],pay:a}); if(n!=='wd_member_search') return {data:null,error:{message:'no'}}; const s=String(a.q).toLowerCase(); return {data:people.filter(p=>p.name.toLowerCase().indexOf(s)>=0),error:null}; },
+    channel:()=>({on(){return this;},subscribe(){return this;}}), removeChannel(){} };
+  window.__DB=DB; window.__calls=calls; window.supabase={createClient:()=>sb}; }`;
+const openWd=async(perms,seed,vp)=>{
+  const ctx=await b.newContext({viewport:vp||{width:390,height:800},isMobile:true,hasTouch:true}); const p=await ctx.newPage();
+  await ctx.route(u=>!String(u).startsWith(BASE),r=>r.abort());
+  p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
+  await p.addInitScript(`(${WD_STUB})(${JSON.stringify(Object.assign({profiles:[{id:'u1',perms:perms,display:'Lead One'}]},seed||{}))});`);
+  await p.goto(BASE+'/weekday.html',{waitUntil:'domcontentloaded'}); await p.waitForTimeout(1200); return p; };
+{ const p=await openWd(['team_a']);
+  const r=await p.evaluate(()=>({deny:!document.getElementById('wdDeny').classList.contains('hide'),ok:!document.getElementById('wdOk').classList.contains('hide'),txt:document.getElementById('wdDeny').innerText}));
+  chk(r.deny&&!r.ok&&/No access/.test(r.txt),'weekday plain volunteer gets the no-access screen',JSON.stringify(r));
+  chk(p.errs.length===0,'weekday no-access no page errors',p.errs.join(';')); await p.context().close(); }
+{ const p=await openWd(['wd_tl','team_a']);
+  const today=await p.evaluate(()=>nzTodayISO());
+  const sel=s=>p.evaluate(s=>{ const e=document.querySelector(s); return e?e.innerText:null; },s);
+  chk(await p.evaluate(()=>!document.getElementById('wdOk').classList.contains('hide'))&&/Nobody yet|nobody yet/i.test(await sel('#leadBar'))&&/can only see names, teams and duties a person cannot do/.test(await sel('#privNote')),'weekday a lead sees the page, the empty lead banner and the privacy note');
+  const hs=await p.evaluate(()=>({h:document.documentElement.scrollWidth<=document.documentElement.clientWidth,theme:!!document.getElementById('ivThemeBtn'),fs:!!document.getElementById('ivFsBtn'),out:!!document.getElementById('btnOut'),logo:!!document.querySelector('.top img'),css:['ivtheme.css','ivshape.base.css','ivshape.css','ivtype.css','ivfix.css'].every(f=>!!document.querySelector('link[href^="'+f+'"]'))}));
+  chk(hs.h&&hs.theme&&hs.out&&hs.logo&&hs.css,'weekday phone width: no sideways scroll, logo, theme button, sign out, shared css linked',JSON.stringify(hs));
+  await p.fill('#q','a'); await p.waitForTimeout(500);
+  chk((await p.evaluate(()=>window.__calls.filter(c=>c.t==='rpc:wd_member_search').length))===0,'weekday one letter does not search');
+  await p.fill('#q','al'); await p.waitForTimeout(600);
+  const s1=await p.evaluate(()=>({n:document.querySelectorAll('.hit').length,first:document.querySelector('.hit').innerText.replace(/\s+/g,' '),cant:[...document.querySelectorAll('.hit .chip.cant')].map(e=>e.innerText)}));
+  chk(s1.n===3&&/Aly Kotadia/.test(s1.first)&&/Team A/.test(s1.first)&&s1.cant.join('|')==='Cannot do: Nandi Line|Cannot do: Nandi Passing','weekday search shows name, team chip and red Cannot do chips (names or keys)',JSON.stringify(s1));
+  await p.click('.hit[data-i="0"]'); await p.waitForTimeout(200);
+  const d1=await p.evaluate(()=>{ const ins=[...document.querySelectorAll('#dutyOpts input[name="duty"]')]; const nl=ins.find(i=>i.value==='Nandi Line'), np=ins.find(i=>i.value==='Nandi Passing'), su=ins.find(i=>i.value==='Sukreet');
+    nl.click(); const stay=!nl.checked; return {n:ins.length,nl:nl.disabled,np:np.disabled,su:su.disabled,stay,add:document.getElementById('pkAdd').disabled,other:ins[ins.length-1].value,role:document.querySelector('.sheet').getAttribute('role')}; });
+  chk(d1.n===23&&d1.nl&&d1.np&&!d1.su&&d1.stay&&d1.add&&d1.other==='__other'&&d1.role==='dialog','weekday picker lists all 22 duties plus Other, cannot-do duties are disabled and cannot be chosen',JSON.stringify(d1));
+  await p.click('#dutyOpts input[value="Sukreet"]'); await p.click('#pkAdd'); await p.waitForTimeout(400);
+  const a1=await p.evaluate(()=>({rows:window.__DB.iv_wd_attendance.slice(),shift:window.__DB.iv_wd_shifts.slice(),list:document.getElementById('list').innerText.replace(/\s+/g,' '),lead:document.getElementById('leadNames').innerText,join:document.getElementById('btnJoin').classList.contains('hide')}));
+  chk(a1.rows.length===1&&a1.rows[0].duty==='Sukreet'&&a1.rows[0].member_id===1&&a1.rows[0].date===today&&a1.rows[0].member_name==='Aly Kotadia'&&/Extra Duty/.test(a1.list)&&/Added by Lead One/.test(a1.list),'weekday add writes an iv_wd_attendance row for today with the chosen duty, labelled Extra Duty',JSON.stringify(a1.rows));
+  chk(a1.shift.length===1&&a1.shift[0].leads.join()==='Lead One'&&a1.lead==='Lead One'&&a1.join,'weekday adding the first entry puts the lead on the shift and hides Join',JSON.stringify(a1.shift));
+  await p.click('.hit[data-i="0"]'); await p.click('#dutyOpts input[value="Sukreet"]'); await p.click('#pkAdd'); await p.waitForTimeout(300);
+  const dp=await p.evaluate(()=>({msg:document.getElementById('pickMsg').innerText,n:window.__DB.iv_wd_attendance.length,open:!!document.querySelector('.sheet')}));
+  chk(/already has Sukreet/.test(dp.msg)&&dp.n===1&&dp.open,'weekday a duplicate duty gets a friendly message and no second row',JSON.stringify(dp));
+  await p.click('#dutyOpts input[value="__other"]'); await p.fill('#otherDuty','Nandi Line'); await p.waitForTimeout(100);
+  chk(await p.evaluate(()=>document.getElementById('pkAdd').disabled&&/cannot do Nandi Line/.test(document.getElementById('pickMsg').innerText)),'weekday typing a cannot-do duty under Other is blocked too');
+  await p.fill('#otherDuty','Door Greeter'); await p.click('#pkAdd'); await p.waitForTimeout(300);
+  chk((await p.evaluate(()=>window.__DB.iv_wd_attendance.map(r=>r.duty).join('|')))==='Sukreet|Door Greeter','weekday one person can have several extra duties the same day, including a typed one');
+  await p.click('[data-rm]'); await p.waitForTimeout(300);
+  chk((await p.evaluate(()=>window.__DB.iv_wd_attendance.map(r=>r.duty).join('|')))==='Door Greeter'&&(await p.evaluate(()=>document.querySelectorAll('.entry').length))===1,'weekday remove deletes the row and the list follows');
+  await p.evaluate(()=>{ window.__refuseDelete=true; }); await p.click('[data-rm]'); await p.waitForTimeout(300);
+  chk((await p.evaluate(()=>window.__DB.iv_wd_attendance.length))===1&&/refused/.test(await p.evaluate(()=>document.querySelector('.toast').innerText)),'weekday a delete the database silently refuses is reported, not shown as done');
+  await p.evaluate(()=>{ window.__refuseDelete=false; });
+  await p.click('#btnClose'); await p.waitForTimeout(200);
+  const c1=await p.evaluate(()=>({t:document.querySelector('.sheet').innerText.replace(/\s+/g,' '),role:document.querySelector('.sheet').getAttribute('role'),modal:document.querySelector('.sheet').getAttribute('aria-modal')}));
+  chk(/Close up for today\? This submits 1 entry to Attendance\./.test(c1.t)&&/Cancel/.test(c1.t)&&/Confirm and submit/.test(c1.t)&&c1.role==='dialog'&&c1.modal==='true','weekday Close Up opens a proper dialog with the count, Cancel and Confirm and submit',c1.t);
+  await p.click('#cuCancel'); await p.waitForTimeout(100);
+  chk(await p.evaluate(()=>!document.querySelector('.sheet')&&!window.__DB.iv_wd_shifts[0].closed_at),'weekday Cancel closes the dialog and submits nothing');
+  await p.click('#btnClose'); await p.click('#cuGo'); await p.waitForTimeout(400);
+  const c2=await p.evaluate(()=>({sh:Object.assign({},window.__DB.iv_wd_shifts[0]),st:document.getElementById('closeStatus').innerText,btn:document.getElementById('btnClose').classList.contains('hide')}));
+  chk(!!c2.sh.closed_at&&c2.sh.closed_by==='u1'&&c2.sh.closed_by_name==='Lead One'&&/Submitted at \d\d:\d\d by Lead One/.test(c2.st)&&!/Updated after/.test(c2.st)&&c2.btn,'weekday confirming sets closed_at and closed_by, shows Submitted at HH:MM by Name',JSON.stringify({st:c2.st,sh:c2.sh}));
+  await p.waitForTimeout(30);
+  await p.fill('#q','zah'); await p.waitForTimeout(500); await p.click('.hit[data-i="0"]'); await p.click('#dutyOpts input[value="Nandi"]'); await p.click('#pkAdd'); await p.waitForTimeout(500);
+  const l1=await p.evaluate(()=>({n:window.__DB.iv_wd_attendance.length,st:document.getElementById('closeStatus').innerText,btn:!document.getElementById('btnClose').classList.contains('hide'),chip:/No team/.test(document.getElementById('list').innerText)}));
+  chk(l1.n===2&&/Updated after close-up/.test(l1.st)&&l1.btn&&l1.chip,'weekday a late addition is allowed, flagged Updated after close-up, and Close Up is offered again',JSON.stringify(l1));
+  await p.click('#btnClose'); await p.waitForTimeout(100);
+  chk(/submits 2 entries/.test(await p.evaluate(()=>document.querySelector('.sheet').innerText)),'weekday the second close-up counts both entries');
+  await p.click('#cuGo'); await p.waitForTimeout(400);
+  chk(await p.evaluate(()=>!/Updated after/.test(document.getElementById('closeStatus').innerText)&&document.getElementById('btnClose').classList.contains('hide')),'weekday closing up again clears the late flag');
+  await p.click('[data-rm]'); await p.waitForTimeout(500);
+  chk(await p.evaluate(()=>/Updated after close-up/.test(document.getElementById('closeStatus').innerText)),'weekday a late removal is flagged as well');
+  const yday=await p.evaluate(()=>{ const d=new Date(Date.now()-86400000*2); return d.toISOString().slice(0,10); });
+  await p.evaluate(y=>{ const v=document.getElementById('viewDate'); v.value=y; v.dispatchEvent(new Event('change',{bubbles:true})); },yday); await p.waitForTimeout(400);
+  const ro=await p.evaluate(()=>({ro:!document.getElementById('roBar').classList.contains('hide'),add:getComputedStyle(document.getElementById('addPanel')).display,rm:document.querySelectorAll('[data-rm]').length,close:getComputedStyle(document.getElementById('btnClose')).display,join:getComputedStyle(document.getElementById('btnJoin')).display}));
+  chk(ro.ro&&ro.add==='none'&&ro.rm===0&&ro.close==='none'&&ro.join==='none','weekday another day is read-only: no search, remove, join or Close Up',JSON.stringify(ro));
+  const tabs=await p.evaluate(()=>[...new Set(window.__calls.map(c=>c.t))].sort().join());
+  chk(tabs==='iv_wd_attendance,iv_wd_shifts,profiles,rpc:wd_member_search','weekday only ever talks to the search function, iv_wd_* and the profiles row (never iv_members, iv_roster, iv_attendance, iv_events)',tabs);
+  chk(await p.evaluate(()=>window.__calls.filter(c=>c.t==='profiles').every(c=>c.op==='select'&&c.eqs.length===1&&c.eqs[0][0]==='id'&&c.eqs[0][1]==='u1')),'weekday reads only its own profile row, by id');
+  { const src=fs.readFileSync(path.join(ROOT,'weekday.html'),'utf8').replace(/<!--[\s\S]*?-->/g,''); chk(!/iv_members|iv_roster|iv_events|["'`]iv_attendance["'`]/.test(src),'weekday source never names the restricted tables'); }
+  chk(p.errs.length===0,'weekday lead flow no page errors',p.errs.join(';')); await p.context().close(); }
+{ const today=new Date().toISOString().slice(0,10);
+  const p=await openWd(['facilitator'],{iv_wd_shifts:[]});
+  chk(await p.evaluate(()=>!document.getElementById('wdOk').classList.contains('hide')),'weekday a facilitator may open it too'); await p.context().close(); }
+{ /* two leads: joining keeps the other lead */
+  const p0=await openWd(['wd_tl']); const today=await p0.evaluate(()=>nzTodayISO()); await p0.context().close();
+  const p=await openWd(['wd_tl'],{iv_wd_shifts:[{date:today,leads:['Other Lead'],updated_at:'2026-01-01T00:00:00.000Z'}]});
+  chk(await p.evaluate(()=>document.getElementById('leadNames').innerText==='Other Lead'&&!document.getElementById('btnJoin').classList.contains('hide')),'weekday the banner lists the other lead and offers Join today\'s shift');
+  await p.click('#btnJoin'); await p.waitForTimeout(400);
+  const j=await p.evaluate(()=>({leads:window.__DB.iv_wd_shifts[0].leads.join(),n:window.__DB.iv_wd_shifts.length,txt:document.getElementById('leadNames').innerText}));
+  chk(j.leads==='Other Lead,Lead One'&&j.n===1&&j.txt==='Other Lead, Lead One','weekday Join merges into leads without dropping the other lead',JSON.stringify(j));
+  chk(p.errs.length===0,'weekday join no page errors',p.errs.join(';')); await p.context().close(); }
+
+// ── Weekday Team Lead on the Hub ──
+{ const p=await open('index.html',{width:1300,height:900});
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; const M=__mk({iv_wd_attendance:[],iv_wd_shifts:[],profiles:[]}); sb=M.sb; const {DB}=M;
+    const vis=id=>{ const e=document.getElementById(id); return !!e&&getComputedStyle(e).display!=='none'; };
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const asUser=pm=>{ CU={user:'x',display:'Fac',perms:pm,uid:'u',email:'f@x'}; COVER_TEAMS.clear(); applyNavVisibility(); };
+    const bar=async()=>{ await wait(450); const all=[...document.querySelectorAll('#topnav .tn-b')].map(b=>b.innerText.replace(/\s+/g,' ').trim()); return all; };
+    document.getElementById('app').style.display='block';
+    o.rank=PERM_RANK.wd_tl; o.label=ROLE_LABELS.wd_tl;
+    asUser(['team_a','wd_tl']); o.wdNav=vis('navWeekday'); o.wdAtt=vis('navWdAtt'); o.wdBar=(await bar()).some(x=>/Weekday$/.test(x)); o.wdHref=document.getElementById('navWeekday').getAttribute('href'); o.wdMgmt=!(await bar()).some(x=>/Weekday Attendance/.test(x));
+    o.wdOnly=(()=>{ asUser(['wd_tl']); return document.getElementById('dashEmpty').style.display; })();
+    asUser(['tl_a']); o.tlNav=vis('navWeekday'); o.tlAtt=vis('navWdAtt'); nav('wdatt'); o.tlRefused=!document.getElementById('page-wdatt').classList.contains('active');
+    asUser(['team_a']); o.volNav=vis('navWeekday');
+    asUser(['facilitator']); o.facNav=vis('navWeekday'); o.facAtt=vis('navWdAtt'); const fb=await bar(); o.facBar=fb.some(x=>/Management/.test(x)); o.facMenu=[...document.querySelectorAll('#topnav .tn-menu .tn-b')].some(b=>/Weekday Attendance/.test(b.innerText));
+    /* roles: who may grant it, and that a role is added on top of the normal one */
+    o.facGrants=grantableRoles().includes('wd_tl')&&grantablePerms().includes('wd_tl'); asUser(['director']); o.dirGrants=grantableRoles().includes('wd_tl'); asUser(['facilitator']);
+    o.picker=rpGroups(grantableRoles()).map(g=>g.id).join();
+    DB.profiles=[{id:'p9',display:'Vol Person',email:'v@x',perms:['team_a']}]; PROFILES=[Object.assign({},DB.profiles[0])];
+    document.body.insertAdjacentHTML('beforeend','<div id="ue-p9" class="um-edit" style="display:none"></div>');
+    editProfile('p9'); const cb=()=>document.querySelector('input[name="pf-perm-p9"][value="wd_tl"]');
+    o.cbExists=!!cb()&&!cb().disabled&&!cb().checked; o.teamKept=document.querySelector('input[name="pf-perm-p9"][value="team_a"]').checked;
+    cb().checked=true; rlSync('p9'); o.diff=document.getElementById('rl-diff-p9').innerText;
+    await saveProfile('p9'); o.afterAdd=DB.profiles[0].perms.slice().sort().join();
+    PROFILES=[Object.assign({},DB.profiles[0])]; document.querySelectorAll('#ue-p9').forEach(e=>e.remove()); document.body.insertAdjacentHTML('beforeend','<div id="ue-p9" class="um-edit" style="display:none"></div>'); editProfile('p9');
+    o.heldChecked=cb().checked; cb().checked=false; rlSync('p9'); await saveProfile('p9'); o.afterRemove=DB.profiles[0].perms.join();
+    /* invite: the extra box and the perms sent */
+    fillInviteRoles(); o.invBox=vis('ufWdRow')||getComputedStyle(document.getElementById('ufWdRow')).display!=='none';
+    return o; });
+  chk(r.rank===9&&r.label==='Weekday Team Lead','weekday-hub role wd_tl is rank 9 labelled Weekday Team Lead',JSON.stringify([r.rank,r.label]));
+  chk(r.wdNav&&!r.wdAtt&&r.wdBar&&r.wdHref==='weekday.html'&&r.wdMgmt,'weekday-hub a Weekday Team Lead sees the Weekday link (sidebar and top bar) and not Weekday Attendance',JSON.stringify(r));
+  chk(r.wdOnly==='none','weekday-hub an account with only wd_tl does not get the empty dashboard message',r.wdOnly);
+  chk(!r.tlNav&&!r.tlAtt&&r.tlRefused&&!r.volNav,'weekday-hub Team Lead and volunteer see neither Weekday nor Weekday Attendance, and nav refuses the page',JSON.stringify(r));
+  chk(r.facNav&&r.facAtt&&r.facBar&&r.facMenu,'weekday-hub a facilitator sees Weekday and Weekday Attendance under Management',JSON.stringify(r));
+  chk(r.facGrants&&r.dirGrants&&r.picker==='A,B,WD','weekday-hub a facilitator and a director may grant Weekday Team Lead; the picker offers it as its own group',JSON.stringify(r));
+  chk(r.cbExists&&r.teamKept&&/Adding: Weekday Team Lead/.test(r.diff)&&!/Removing/.test(r.diff)&&r.afterAdd==='team_a,wd_tl','weekday-hub ticking Weekday Team Lead on an account adds it and keeps the normal role',JSON.stringify(r));
+  chk(r.heldChecked&&r.afterRemove==='team_a','weekday-hub unticking it removes only wd_tl and keeps the normal role',JSON.stringify(r));
+  chk(r.invBox,'weekday-hub the invite form offers Also make them a Weekday Team Lead');
+  chk(p.errs.length===0,'weekday-hub role and nav no page errors',p.errs.join(';')); await p.context().close(); }
+{ const p=await open('index.html',{width:1300,height:900});
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; const M=__mk({iv_wd_attendance:[],iv_wd_shifts:[],profiles:[]}); sb=M.sb; const {DB,log}=M; let said=[]; window.confirm=m=>{ said.push(m); return true; };
+    CU={user:'x',display:'Fac',perms:['facilitator'],uid:'u',email:'f@x'}; applyNavVisibility(); document.getElementById('app').style.display='block';
+    const t=todayNZ(), d=n=>addDaysISO(t,n);
+    DB.iv_wd_attendance.push({id:1,date:d(-1),member_id:1,member_name:'Aly Kotadia',member_team:'A',duty:'Sukreet',added_by_name:'Lead One',created_at:d(-1)+'T02:00:00Z'},
+      {id:2,date:d(-1),member_id:2,member_name:'=cmd|x',member_team:'B',duty:'+Nandi',added_by_name:'Lead One',created_at:d(-1)+'T02:05:00Z'},
+      {id:3,date:d(-3),member_id:1,member_name:'Aly Kotadia',member_team:'A',duty:'Nandi',added_by_name:'Lead Two',created_at:d(-3)+'T02:00:00Z'},
+      {id:4,date:d(-60),member_id:1,member_name:'Aly Kotadia',member_team:'A',duty:'Old',added_by_name:'Lead Two',created_at:d(-60)+'T02:00:00Z'});
+    DB.iv_wd_shifts.push({date:d(-1),leads:['Lead One','Lead Two'],closed_at:d(-1)+'T05:00:00Z',closed_by_name:'Lead One'},{date:d(-3),leads:['Lead Two'],closed_at:null});
+    nav('wdatt'); await new Promise(r=>setTimeout(r,300));
+    o.range=document.getElementById('wdaFrom').value===addDaysISO(t,-30)&&document.getElementById('wdaTo').value===t;
+    o.days=[...document.querySelectorAll('#wdaDays .wda-day h3')].length; o.meta=document.querySelector('#wdaDays .wda-day').innerText.replace(/\s+/g,' ');
+    o.old=!/Old/.test(document.getElementById('wdaDays').innerText); o.notClosed=/Not closed up/.test(document.getElementById('wdaDays').innerText);
+    o.tot=document.getElementById('wdaTotals').innerText.replace(/\s+/g,' ');
+    o.csvA=csvCell('=1+1')+'|'+csvCell('+1')+'|'+csvCell('-1')+'|'+csvCell('@x')+'|'+csvCell('\tx')+'|'+csvCell('\rx')+'|'+csvCell('plain')+'|'+csvCell('a"b');
+    const csv=wdaCsvText(); o.csv=csv.split('\r\n'); 
+    await wdaDelete(2); o.afterDel=DB.iv_wd_attendance.filter(x=>x.id===2).length; o.said=said.length; o.audit=DB.audit_logs.some(a=>a.action==='wd-delete');
+    o.rows=document.querySelectorAll('#wdaDays .wda-row').length;
+    window.confirm=()=>false; await wdaDelete(1); o.kept=DB.iv_wd_attendance.some(x=>x.id===1);
+    return o; });
+  chk(r.range&&r.days===2&&/Leading: Lead One, Lead Two/.test(r.meta)&&/Closed up \d\d:\d\d/.test(r.meta)&&r.notClosed&&r.old,'weekday-att defaults to the last 30 days, groups by date with leads and closed-up state',JSON.stringify({range:r.range,days:r.days,meta:r.meta}));
+  chk(/Aly Kotadia \(Team A\) 2/.test(r.tot)&&/=cmd\|x/.test(r.tot),'weekday-att totals by member',r.tot);
+  chk(r.csvA==='"\'=1+1"|"\'+1"|"\'-1"|"\'@x"|"\'\tx"|"\'\rx"|"plain"|"a""b"','weekday-att CSV cells starting = + - @ tab or CR get a single quote prefix',JSON.stringify(r.csvA));
+  chk(r.csv.length===4&&r.csv[0].startsWith('"Date"')&&r.csv.some(l=>l.indexOf('"\'=cmd|x"')>=0)&&r.csv.some(l=>l.indexOf('"\'+Nandi"')>=0)&&r.csv.every((l,i)=>i===0||l.indexOf('"Extra Duty"')>=0),'weekday-att CSV export protects names and duties and labels every row Extra Duty',r.csv.join(' / '));
+  chk(r.afterDel===0&&r.said===1&&r.audit&&r.rows===2&&r.kept,'weekday-att delete asks first, removes the row, logs it, and a declined confirm keeps it',JSON.stringify(r));
+  chk(p.errs.length===0,'weekday-att no page errors',p.errs.join(';')); await p.context().close(); }
+{ const p=await open('index.html',{width:1300,height:900});
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; const M=__mk({iv_wd_attendance:[],iv_wd_shifts:[],profiles:[]}); sb=M.sb; const {DB}=M; const t=todayNZ();
+    CU={user:'x',display:'Vol',perms:['team_a'],uid:'u',email:'v@x'}; document.getElementById('app').style.display='block';
+    DB.iv_wd_attendance.push({id:1,date:addDaysISO(t,-2),member_id:7,member_name:'Me',duty:'Sukreet'},{id:2,date:addDaysISO(t,-9),member_id:7,member_name:'Me',duty:'Nandi Line'},{id:3,date:t,member_id:8,member_name:'Other',duty:'Nandi'});
+    const view=v=>{ M.sb.rpc=async n=>n==='my_member_view'?v:{data:[],error:null}; };
+    const el=()=>document.getElementById('pfExtra'), shown=()=>getComputedStyle(el()).display!=='none';
+    view({data:{linked:true,member:{id:7,name:'Me',away:[]}},error:null}); await loadProfile(); await new Promise(r=>setTimeout(r,150)); o.linked=el().innerText; o.shown=shown();
+    await wdExtraLine('mdExtra'); o.md=document.getElementById('mdExtra').innerText; o.mdShown=getComputedStyle(document.getElementById('mdExtra')).display!=='none';
+    view({data:{linked:false,member:null},error:null}); await loadProfile(); await new Promise(r=>setTimeout(r,150)); o.unlinked=el().innerText;
+    view({data:null,error:{message:'boom'}}); await loadProfile(); await new Promise(r=>setTimeout(r,150)); o.noview=el().innerText;
+    view({data:{linked:true,member:{id:7}},error:null}); const orig=M.sb.from; M.sb.from=t=>t==='iv_wd_attendance'?{select(){return this;},eq(){return this;},order(){return Promise.resolve({data:null,error:{message:'missing table'}});}}:orig(t);
+    await wdExtraLine('pfExtra'); o.err=el().innerText; o.errShown=shown();
+    return o; });
+  chk(/Extra duties: 2\./.test(r.linked)&&/Sukreet/.test(r.linked)&&/Nandi Line/.test(r.linked)&&!/Other/.test(r.linked)&&r.shown&&/separately/.test(r.linked),'weekday-profile My Profile shows only this volunteer\'s own extra duties, counted apart from normal totals',r.linked);
+  chk(/Extra duties: 2\./.test(r.md)&&r.mdShown,'weekday-profile My Duties shows the same line',r.md);
+  chk(/Extra duties: 0\./.test(r.unlinked)&&/Extra duties: 0\./.test(r.noview),'weekday-profile an unlinked account shows 0 gracefully',r.unlinked+' / '+r.noview);
+  chk(r.err===''&&!r.errShown,'weekday-profile a table error shows nothing',r.err);
+  chk(p.errs.length===0,'weekday-profile no page errors',p.errs.join(';')); await p.context().close(); }
 
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));

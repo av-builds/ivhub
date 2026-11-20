@@ -38,6 +38,8 @@ const RANK: Record<string, number> = {
   ytl_a: 7, ytl_b: 7, av_atl: 7,
   av_yatl: 8,
   av_coord: 9,
+  // Weekday Team Lead: a temporary lead that stacks on top of a normal role (team_a, tl_a and so on).
+  wd_tl: 9,
   team_a: 10, team_b: 10, av_team: 10,
 };
 // Division and team roles, generated from the same chart index.html's
@@ -91,6 +93,7 @@ const ROLE_INFO: Record<string, { label: string; blurb: string }> = {
   av_coord: { label: "AV Team Co-ordinator", blurb: "You co-ordinate day-to-day AV duties alongside the AV leads. You sit between the AV youth leads and AV volunteers in the chain of command." },
   team_a: { label: "IV Team A Volunteer", blurb: "You are a Team A volunteer. You can see your own duties, your away dates and the Team A calendar. Your Team Lead builds the roster and will place you on it." },
   team_b: { label: "IV Team B Volunteer", blurb: "You are a Team B volunteer. You can see your own duties, your away dates and the Team B calendar. Your Team Lead builds the roster and will place you on it." },
+  wd_tl: { label: "Weekday Team Lead", blurb: "You lead the extra duties on weekdays and any day without a Team A or Team B event. You can add people to extra duties for today, remove them, and close up at the end of the day. You see names, teams and the duties a person cannot do, nothing more." },
   av_team: { label: "AV Team Volunteer", blurb: "You are an AV volunteer. You can see your own duties, your away dates and the AV calendar. The AV leads build the roster and will place you on it." },
 };
 for (const [k, label] of Object.entries(DIVISION_LABELS)) {
@@ -228,29 +231,50 @@ Deno.serve(async (req) => {
           if (typeof p === "string") { try { p = JSON.parse(p); } catch { p = []; } }
           if (!Array.isArray(p)) p = [];
 
-          // Throttle before any side effect: one mail per address per 10
-          // minutes, and a global ceiling so the shared mail quota (which
-          // admin invites and resets also draw on) cannot be drained.
-          // Both counts run for every address, known or not.
+          // Throttle before any side effect, from a table only this function
+          // can touch (clients cannot plant or read these rows):
+          //  - per caller: at most 6 requests in 10 minutes from one origin
+          //    (counted for every request, so one source cannot flood the
+          //    function or lock a volunteer out of their own reset);
+          //  - per address: one mail in 10 minutes;
+          //  - global: 100 mails in 10 minutes, so the shared mail quota
+          //    (admin invites and resets also draw on it) cannot be drained.
+          // Every count runs for every address, known or not.
           const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-          const mine = await svc.from("audit_logs").select("id", { count: "exact", head: true })
-            .eq("username", key).eq("action", "Requested own password reset").gte("ts", since);
-          const all = await svc.from("audit_logs").select("id", { count: "exact", head: true })
-            .eq("action", "Requested own password reset").gte("ts", since);
-          const throttled = (mine.count ?? 0) > 0 || (all.count ?? 0) >= 20;
+          const rawIp = (req.headers.get("cf-connecting-ip") ||
+            (req.headers.get("x-forwarded-for") || "").split(",")[0] || "unknown").trim();
+          const ipBytes = new TextEncoder().encode("reset|" + rawIp);
+          const ipKey = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", ipBytes)))
+            .slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+          await svc.from("reset_throttle").insert({ kind: "ip", key: ipKey });
+          const byIp = await svc.from("reset_throttle").select("id", { count: "exact", head: true })
+            .eq("kind", "ip").eq("key", ipKey).gte("ts", since);
+          const mine = await svc.from("reset_throttle").select("id", { count: "exact", head: true })
+            .eq("kind", "addr").eq("key", key).gte("ts", since);
+          const all = await svc.from("reset_throttle").select("id", { count: "exact", head: true })
+            .eq("kind", "all").gte("ts", since);
+          const throttled = (byIp.count ?? 0) > 6 || (mine.count ?? 0) > 0 || (all.count ?? 0) >= 100;
+          // Old counters are dropped as we go so the table stays small.
+          if (Math.random() < 0.05) {
+            await svc.from("reset_throttle").delete().lt("ts", new Date(Date.now() - 24 * 3600 * 1000).toISOString());
+          }
 
           // Volunteers only: an explicit allow list (every role known and at
           // rank 10). Anyone who can change a roster, manage an account or
           // read the audit log still gets their reset sent by a person, and
           // so do accounts with no role or an unrecognised one.
           const list = p as string[];
-          const volunteer = list.length > 0 && list.every((x) => isPerm(x) && RANK[x] === 10);
+          // wd_tl rides on top of a volunteer role and does not make the account a leader for this purpose,
+          // but it must come with at least one rank 10 role, so a lone wd_tl is still sent by a person.
+          const volunteer = list.some((x) => isPerm(x) && RANK[x] === 10) &&
+            list.every((x) => isPerm(x) && (RANK[x] === 10 || x === "wd_tl"));
           if (valid && who?.id && volunteer && !throttled) {
             await syncRoleMeta(svc, who.id, list);
             const { error: mailErr } = await svc.auth.resetPasswordForEmail(addr, { redirectTo: safeRedirect(peek.redirectTo) });
             // Logged only when a mail really went out, so the log (and the
             // throttle that reads it) grows with mail sent, not with requests.
             if (!mailErr) {
+              await svc.from("reset_throttle").insert([{ kind: "addr", key }, { kind: "all", key: "all" }]);
               await svc.from("audit_logs").insert({
                 ts: new Date().toISOString(),
                 username: addr, user_display: addr,
@@ -448,7 +472,7 @@ Deno.serve(async (req) => {
     ["owner", "developer", "director", "deputy_director", "phmu_lead", "iv_admin"].includes(p)
   );
   const facilitatorOnly = (perms as string[]).includes("facilitator") && !isIvTop;
-  const FACILITATOR_MAY = ["tl_a", "ytl_a", "tl_b", "ytl_b", "team_a", "team_b"];
+  const FACILITATOR_MAY = ["tl_a", "ytl_a", "tl_b", "ytl_b", "team_a", "team_b", "wd_tl"];
 
   const refused = wanted.filter((p) =>
     facilitatorOnly ? !FACILITATOR_MAY.includes(p) : RANK[p] <= callerRank
