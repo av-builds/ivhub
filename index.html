@@ -4083,7 +4083,7 @@ async function deleteMember(row){
     if(sb){ const c = await sb.from('iv_wd_attendance').select('id', {count:'exact', head:true}).eq('member_id', row.id); if(!c.error) nExtra = c.count || 0; }
   }catch(e){}
   if(!confirm(`Delete member "${row.name}" (${memberTeamLabel(row)})? This cannot be undone.` +
-    (nExtra ? `\n\nThis also permanently deletes ${nExtra} weekday Extra Duty attendance record${nExtra === 1 ? '' : 's'}. To keep their history, cancel and use "They have left - revoke access" instead.` : '') +
+    (nExtra ? `\n\nTheir ${nExtra} weekday Extra Duty record${nExtra === 1 ? '' : 's'} stay in the weekday attendance history under their name, no longer linked to a member.` : '') +
     (hasLogin ? `\n\nThey have a login. Deleting the member does not remove it - to take away their access use "They have left - revoke access" first.` : ''))) return;
   if(!sb){ toast('No database connection - cannot delete.', 'err'); return; }
   if(!await dbWrite('Deleting the member', ()=>sb.from('iv_members').delete().eq('id', row.id))) return;

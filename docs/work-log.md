@@ -235,3 +235,6 @@ Requests for a password reset are now limited per origin (6 per 10 minutes), per
 
 ### database-and-edge: 0 fixed, 8 left
 
+
+## Update: database changes from feature testing pass 2
+Rosters now follow their event, AV leads can read the AV change log, weekday leads can no longer delete a shift, reopening a shift clears who closed it, extra database permissions were removed, Extra Duty history is kept when a member is deleted, and the weekday name search ignores wildcard-only searches. While testing I found and fixed a conflict that would have stopped member deletion when extra duties existed.
