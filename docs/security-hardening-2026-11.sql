@@ -110,3 +110,16 @@ create policy app_users_write on public.app_users for all to authenticated
 --   checklist_set ignores the client-supplied name; iv_wd_attendance added to the realtime publication.
 -- STILL OPEN (owner decision): hide member phone/email/dob/notes from ordinary signed-in users (needs a directory view
 --   first); AV and division leads can write both teams' data; anon DML grants; per-address limit on password reset.
+
+-- ===================================================================
+-- APPLIED: scope_writes_to_team_leads
+-- AV and division pages only READ iv_members (checked: no writes to iv_members, iv_events, iv_roster, iv_attendance,
+-- iv_settings or announcements from av.html, safety.html or any division page), so those roles no longer write team data.
+--  * is_team_lead(); can_edit_team(t) = rank <= 5, or a Team Lead / Youth Team Lead of team t.
+--  * announcements_write uses can_edit_team(team).
+--  * iv_settings_write: rank <= 5, or a team lead for any key except 'anchor', with auto_skip_<team> limited to that team.
+--  * app_settings_write unchanged (AV pages write it).
+-- Simulated (rolled back): tl_a writes team A only, tl_b team B only, ytl_a team A, facilitator both and the anchor;
+-- an_lead, av_yatl, av_coord and a volunteer write none of it; AV roles keep app_settings.
+-- STILL OPEN: hide member contact details and notes from ordinary signed-in users (little data today: 1 email, 10 notes);
+-- anon DML grants; per-address limit on password reset; script signatures on the Supabase library.

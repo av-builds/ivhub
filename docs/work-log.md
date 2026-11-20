@@ -161,3 +161,6 @@ Seven agents tested every feature area and fixed what failed. Fixed counts and t
   - Admin stats are paged.
   - The weekday-team tests run in CI.
 - **Left for the owner.** Hiding members' phone, email, date of birth and notes from ordinary signed-in users; AV and division leads writing both teams' data; script signatures on the Supabase library; a per-address limit on password resets; closing anonymous database grants.
+
+## Update: AV and division leads no longer write team data
+Only Team Leads and Youth Team Leads (for their own team) and Facilitators and above can now write members, events, rosters, attendance, announcements and the cycle settings. AV and division leads only read those tables on their pages, so nothing they use changed. Tested with real accounts in a rolled-back simulation.
