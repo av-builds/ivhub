@@ -53,6 +53,8 @@ input[type=date]{width:auto;}
 .ro{padding:10px 14px;border-radius:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#FBBF24;font-size:14px;line-height:1.5;margin-bottom:12px;}
 .priv{font-size:13px;color:var(--dm);margin-top:10px;line-height:1.5;}
 .chip{display:inline-flex;align-items:center;min-height:26px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--db);background:rgba(75,163,220,.1);color:#BFE6FA;font-family:inherit;white-space:nowrap;}
+.hit .chip{max-width:100%;min-width:0;}
+.hit .chip.cant{white-space:normal;overflow-wrap:anywhere;}
 .chip.cant{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.45);color:#FCA5A5;}
 .chip.extra{background:rgba(252,211,77,.12);border-color:rgba(252,211,77,.4);color:var(--gold);}
 .res{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
@@ -266,10 +268,14 @@ async function joinShift(quiet){
 /* After close-up, any change makes the submission out of date: stamp the shift so the page can say so. */
 async function touchAfterClose(){
   if(!S.shift || !S.shift.closed_at) return;
-  const res = await writeShift(cur=>cur && cur.closed_at ? {} : null);
+  const stamp = cur=>cur && cur.closed_at ? {edited_at:new Date().toISOString()} : null;
+  let res = await writeShift(stamp);
+  if(res.error && /edited_at/i.test(res.error.message || '')) res = await writeShift(cur=>cur && cur.closed_at ? {} : null);   // column not there yet
   if(res.row && res.row.date === S.date) S.shift = res.row;
 }
-const lateEdit = () => !!(S.shift && S.shift.closed_at && S.shift.updated_at && S.shift.updated_at > S.shift.closed_at);
+const lateEdit = () => { const sh = S.shift; if(!sh || !sh.closed_at) return false;
+  if('edited_at' in sh) return !!sh.edited_at && sh.edited_at > sh.closed_at;   // only add/remove after close-up counts
+  return !!sh.updated_at && sh.updated_at > sh.closed_at; };                    // older cache without the column
 
 /* ── render ── */
 function render(){
@@ -416,7 +422,9 @@ async function confirmClose(){
   S.busy = true; $('cuGo').disabled = true; const day = S.date;
   try{
     const now = new Date().toISOString();
-    const res = await writeShift(cur=>({closed_at:now, closed_by:S.uid, closed_by_name:S.name, leads:withMe(cur), updated_at:now}), day);
+    const close = extra => cur=>Object.assign({closed_at:now, closed_by:S.uid, closed_by_name:S.name, leads:withMe(cur), updated_at:now}, extra);
+    let res = await writeShift(close({edited_at:null}), day);
+    if(res.error && /edited_at/i.test(res.error.message || '')) res = await writeShift(close({}), day);   // column not there yet
     if(!res.row){ toast(res.error ? 'Could not close up - ' + res.error.message : 'Could not close up - the database refused it.', true); const g = $('cuGo'); if(g) g.disabled = false; return; }
     if(res.row.date === S.date) S.shift = res.row;
     closeSheet(); render(); settleFocus(); toast('Submitted to Attendance');

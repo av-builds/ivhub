@@ -1152,7 +1152,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
   </div>
 </div>
 <!-- APP -->
-<button id="menuBtn" onclick="toggleSidebar()">☰</button>
+<button id="menuBtn" onclick="toggleSidebar()" aria-label="Open menu">☰</button>
 <div id="sideOverlay" onclick="closeSidebar()"></div>
 <div id="app">
   <aside class="sidebar">
@@ -1181,7 +1181,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <div><div style="font-size:13px;font-weight:700;" id="unm">Administrator</div><div style="font-size:12px;color:var(--dm);" id="url">Admin</div></div>
         <span style="cursor:pointer;color:var(--dm);font-size:13px;margin-left:auto;display:flex;align-items:center;gap:8px;">
           <span id="syncDot" title="Sync status" style="width:8px;height:8px;border-radius:50%;background:#555;display:inline-block;flex-shrink:0;transition:background .3s;"></span>
-          <span onclick="logout()" title="Logout">⏏</span>
+          <span onclick="logout()" title="Logout" aria-label="Log out">⏏</span>
         </span>
       </div>
     </div>
@@ -1272,9 +1272,9 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         </div>
         <!-- Month Nav -->
         <div class="r-nav">
-          <button class="r-nav-btn" onclick="chMo(-1)">‹</button>
+          <button class="r-nav-btn" onclick="chMo(-1)" aria-label="Previous month">‹</button>
           <h2 id="calTitle"></h2>
-          <button class="r-nav-btn" onclick="chMo(1)">›</button>
+          <button class="r-nav-btn" onclick="chMo(1)" aria-label="Next month">›</button>
           <div class="r-legend" aria-label="Colour key">
             <span class="lg lg-mj"><i></i>Majalis</span>
             <span class="lg lg-tr"><i></i>Training</span>
@@ -3723,7 +3723,7 @@ function rolePills(v){
   const roles=Array.isArray(v.roles)&&v.roles.length?v.roles:(v.type?[v.type]:[]);
   const pills=roles.map(r=>{
     const cfg=ROLE_CFG.find(x=>x.key===r)||{cls:'tm',dot:'#3B82F6'};
-    return `<span class="role-pill ${cfg.cls}">${esc(r)}<span class="rp-x" data-role="${esc(r)}" onclick="removeRole(${v.id},this.dataset.role,event)">×</span></span>`;
+    return `<span class="role-pill ${cfg.cls}">${esc(r)}<span class="rp-x" aria-label="Remove role ${esc(r)}" data-role="${esc(r)}" onclick="removeRole(${v.id},this.dataset.role,event)">×</span></span>`;
   }).join('');
   const hasMore = ROLE_CFG.some(rc=>!roles.includes(rc.key));
   const addBtn = hasMore
@@ -3890,7 +3890,7 @@ function renderVolCards(){
             ${(v.bds||'').split(',').filter(d=>d.trim()).map(d=>`
               <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(192,57,43,0.12);border:1px solid rgba(192,57,43,0.25);border-radius:5px;padding:2px 8px;font-size:12px;color:#f88;">
                 ${fd(d.trim())}
-                <span data-date="${esc(d.trim())}" onclick="removeBusyDate(${v.id}, this.dataset.date)" style="cursor:pointer;font-size:14px;opacity:.7;line-height:1;">×</span>
+                <span aria-label="Remove date ${esc(d.trim())}" data-date="${esc(d.trim())}" onclick="removeBusyDate(${v.id}, this.dataset.date)" style="cursor:pointer;font-size:14px;opacity:.7;line-height:1;">×</span>
               </span>`).join('')}
           </div>
         </div>

@@ -153,7 +153,7 @@ html{scroll-behavior:smooth;}
 html[data-theme="light"] .sa-hint.ok,html[data-theme="light"] .sa-pick.t-a.on,html[data-theme="light"] .sa-own.t-a{color:#1B6B3A;}
 html[data-theme="light"] .sa-pick.t-b.on,html[data-theme="light"] .sa-own.t-b{color:#A8402F;}
 @media(max-width:700px){.sa-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}.sa-pick{min-height:52px;}}
-@media(max-width:420px){.sa-strip{gap:6px;}.sa-tile{padding:10px 5px 8px;}.sa-dd{font-size:13px;}}
+@media(max-width:420px){.sa-pair{gap:8px;}.sa-tile{padding:10px 5px 8px;}.sa-dd{font-size:13px;}}
 
 /* ─── HERO ─── */
 .hero{background:linear-gradient(135deg,#020B18 0%,#071628 50%,#050D1C 100%);border:1px solid rgba(75,163,220,.15);
@@ -1096,7 +1096,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       <section class="panel" id="awayPanel" style="display:none;animation-delay:.04s;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div><h2 style="margin:0;">I&rsquo;m Away</h2><div class="sub" style="margin-top:2px;">Dates you cannot make. The roster will not pick you for these days.</div></div>
-          <div class="ha" id="awayCtl"><input type="date" id="awayPick"><button class="btn btn-bl" id="awayAdd">Add date</button></div>
+          <div class="ha" id="awayCtl"><input type="date" id="awayPick" aria-label="Away date"><button class="btn btn-bl" id="awayAdd">Add date</button></div>
         </div>
         <div id="awayReadOnly" class="hint-banner" style="display:none;"></div>
         <div id="awayWarn" class="hint-banner" style="display:none;"></div>
@@ -1363,7 +1363,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
         <h2>Cycle Anchor</h2>
         <div class="ap-note">The cycle containing this Chandraat belongs to this team; all other cycles alternate A↔B from it. Changing the anchor re-labels every cycle on the team pages.</div>
         <div class="ap-inline">
-          <div class="fg"><label>Anchor Chandraat</label><input type="date" id="apAnchorDate" style="color-scheme:dark;"></div>
+          <div class="fg"><label>Anchor Chandraat</label><input type="date" id="apAnchorDate" aria-label="Anchor Chandraat date" style="color-scheme:dark;"></div>
           <div class="fg"><label>Belongs To</label><select id="apAnchorTeam"><option value="A">Team A</option><option value="B">Team B</option></select></div>
           <button class="btn btn-bl" id="apAnchorSave">Save Anchor</button>
         </div>
@@ -3700,7 +3700,7 @@ function renderLinking(){
             + (sugg.length ? '<div class="link-sugg">' + sugg.map(s=>
                 '<button class="btn btn-bl btn-sm" data-lka="' + esc(p.id) + '" data-lkm="' + s.m.id + '">Link '
                 + esc(s.m.name) + '<small>' + esc(s.why) + '</small></button>').join('') + '</div>' : '')
-            + '<div class="link-pick"><select data-lkpick="' + esc(p.id) + '">' + memberOptionsFree('') + '</select>'
+            + '<div class="link-pick"><select aria-label="Member to link" data-lkpick="' + esc(p.id) + '">' + memberOptionsFree('') + '</select>'
             + '<button class="btn btn-ol btn-sm" data-lkgo="' + esc(p.id) + '">Link</button></div>'
           + '</div></div>';
       }).join(''));
@@ -3792,7 +3792,7 @@ function editPanelHTML(r){
               `<button class="btn btn-bl btn-sm" data-linkto="${esc(s.p.id)}">Link ${esc(accountLabel(s.p))}`
               + `<small>${esc(s.why)}</small></button>`).join('') + `</div>`
           : '')
-      + `<div class="link-pick"><select data-linkpick>${accountOptions('')}</select>`
+      + `<div class="link-pick"><select data-linkpick aria-label="Account to link">${accountOptions('')}</select>`
       + `<button class="btn btn-ol btn-sm" data-act="linkpick">Link this account</button></div></div>`;
   }
   return `<div class="mem-edit" data-panel="${r.id}">
@@ -3808,14 +3808,14 @@ function editPanelHTML(r){
       <div class="fg"><label>Specialized Teams</label>
         ${specChipsHTML(spec, specDis)}
       </div>
-      <div class="fg"><label>Gender</label><select data-ef="gender"><option${(r.gender || 'Male') === 'Male' ? ' selected' : ''}>Male</option><option${r.gender === 'Female' ? ' selected' : ''}>Female</option></select></div>
-      <div class="fg"><label>Age Group</label><select data-ef="age_group">${AGE_OPTS.map(([v,l])=>`<option value="${v}"${v === (r.age_group || 'adult') ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="fg"><label>Gender</label><select data-ef="gender" aria-label="Gender"><option${(r.gender || 'Male') === 'Male' ? ' selected' : ''}>Male</option><option${r.gender === 'Female' ? ' selected' : ''}>Female</option></select></div>
+      <div class="fg"><label>Age Group</label><select data-ef="age_group" aria-label="Age group">${AGE_OPTS.map(([v,l])=>`<option value="${v}"${v === (r.age_group || 'adult') ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
       <div class="fg"><label>Status</label><div><button type="button" class="pill-tgl ${active ? 'on' : 'off'}" data-ef="status">${active ? 'Active' : 'Inactive'}</button></div></div>
       <!-- Team details. The same columns the team page's People screen edits, so
            either screen changes the one record. -->
       <div class="fg"><label>Nandi certified</label><div><button type="button" class="pill-tgl ${r.nandi ? 'on' : 'off'}" data-ef="nandi">${r.nandi ? 'Certified' : 'Not certified'}</button></div></div>
-      <div class="fg"><label>Phone</label><input type="tel" data-ef="phone" value="${esc(r.phone || '')}" autocomplete="off"></div>
-      <div class="fg" style="grid-column:1/-1"><label>Notes</label><textarea data-ef="notes" rows="2" style="width:100%">${esc(r.notes || '')}</textarea></div>
+      <div class="fg"><label>Phone</label><input type="tel" data-ef="phone" aria-label="Phone" value="${esc(r.phone || '')}" autocomplete="off"></div>
+      <div class="fg" style="grid-column:1/-1"><label>Notes</label><textarea data-ef="notes" aria-label="Notes" rows="2" style="width:100%">${esc(r.notes || '')}</textarea></div>
     </div>
     ${linkbox}
     <div class="um-form-acts">
@@ -4059,7 +4059,12 @@ async function revokeMemberAccess(row){
 
 async function deleteMember(row){
   const hasLogin = (PROFILES||[]).some(p=>String(p.member_id) === String(row.id));
+  let nExtra = 0;
+  try{
+    if(sb){ const c = await sb.from('iv_wd_attendance').select('id', {count:'exact', head:true}).eq('member_id', row.id); if(!c.error) nExtra = c.count || 0; }
+  }catch(e){}
   if(!confirm(`Delete member "${row.name}" (${memberTeamLabel(row)})? This cannot be undone.` +
+    (nExtra ? `\n\nThis also permanently deletes ${nExtra} weekday Extra Duty attendance record${nExtra === 1 ? '' : 's'}. To keep their history, cancel and use "They have left - revoke access" instead.` : '') +
     (hasLogin ? `\n\nThey have a login. Deleting the member does not remove it - to take away their access use "They have left - revoke access" first.` : ''))) return;
   if(!sb){ toast('No database connection - cannot delete.', 'err'); return; }
   if(!await dbWrite('Deleting the member', ()=>sb.from('iv_members').delete().eq('id', row.id))) return;
@@ -4768,9 +4773,9 @@ function vlFormHTML(r){
   const age = ageFromDob(r.dob);
   const ageTxt = age != null ? age + ' years' : (r.age_group ? ({child:'Child (under 12)',youth:'Youth (12–17)',adult:'Adult (18+)'})[r.age_group] : '-');
   return '<div class="um-grid" style="margin-top:10px;">'+
-    '<div class="fg"><label>Date of birth</label><input type="date" data-vf="dob" value="'+esc(r.dob||'')+'"'+(VL.hasDob?'':' disabled')+' oninput="vlAge(this)"></div>'+
+    '<div class="fg"><label>Date of birth</label><input type="date" data-vf="dob" aria-label="Date of birth" value="'+esc(r.dob||'')+'"'+(VL.hasDob?'':' disabled')+' oninput="vlAge(this)"></div>'+
     '<div class="fg"><label>Age</label><div class="vl-age" data-vage>'+esc(ageTxt)+'</div></div>'+
-    '<div class="fg"><label>Gender</label><select data-vf="gender"><option'+((r.gender||'Male')==='Male'?' selected':'')+'>Male</option><option'+(r.gender==='Female'?' selected':'')+'>Female</option></select></div>'+
+    '<div class="fg"><label>Gender</label><select data-vf="gender" aria-label="Gender"><option'+((r.gender||'Male')==='Male'?' selected':'')+'>Male</option><option'+(r.gender==='Female'?' selected':'')+'>Female</option></select></div>'+
     '<div class="fg"><label>Phone number</label><input type="tel" data-vf="phone" value="'+esc(r.phone||'')+'" placeholder="e.g. 021 123 4567" autocomplete="off"'+(VL.hasPhone?'':' disabled')+'></div>'+
     '<div class="fg"><label>Email</label><input type="email" data-vf="email" value="'+esc(r.email||'')+'" placeholder="name@example.com" autocomplete="off"></div>'+
     '</div><div class="um-form-acts"><button class="btn btn-ol" onclick="vlEdit('+r.id+')">Cancel</button>'+
@@ -5349,7 +5354,7 @@ function renderSubmit(){
     return `<div class="sb-row">
       <div class="st" title="${esc(s.label)}">${s.icon}</div>
       <div class="sb-nm">${esc(m.name)}<small>${esc(s.label)}</small></div>
-      <div class="emwrap"><input type="email" data-em="${m.id}" value="${esc(typed)}"
+      <div class="emwrap"><input type="email" data-em="${m.id}" aria-label="Email address" value="${esc(typed)}"
         placeholder="their own email address" autocomplete="off"${settled?' disabled':''}></div>
       <label class="sb-inc${canPick?'':' off'}"><input type="checkbox" data-inc="${m.id}"${checked?' checked':''}${canPick?'':' disabled'}> Invite</label>
     </div>`;
@@ -5580,7 +5585,7 @@ function renderApprove(){
           return `<div class="bt-row">
             <div class="sb-nm">${esc(it.name || '-')}${it.note?`<small style="text-transform:none;letter-spacing:0;color:var(--gold-lt)">${esc(it.note)}</small>`:''}</div>
             <div class="em">${esc(it.email||'')}</div>
-            <div>${pending ? `<select data-role="${it.id}">${roleOpts(it.role)}</select>` : `<span class="stat ${sc}">${sl}</span>`}</div>
+            <div>${pending ? `<select data-role="${it.id}" aria-label="Role">${roleOpts(it.role)}</select>` : `<span class="stat ${sc}">${sl}</span>`}</div>
             ${pending ? `<label class="sb-inc"><input type="checkbox" data-ok="${it.id}" checked> Approve</label>` : '<div></div>'}
           </div>`;
         }).join('')}
@@ -5745,9 +5750,18 @@ async function loadStats(){
     return;
   }
   try{
+    const pageAll = async (table, cols)=>{ /* paged: PostgREST caps a response at 1000 rows */
+      let out = [];
+      for(let from = 0; ; from += 1000){
+        const res = await sb.from(table).select(cols).order(table === 'iv_roster' ? 'event_id' : 'id', {ascending:true}).range(from, from + 999);
+        if(res.error) return res;
+        out = out.concat(res.data || []);
+        if((res.data || []).length < 1000) return {data: out, error: null};
+      }
+    };
     const [eres, rres] = await Promise.all([
-      sb.from('iv_events').select('id,team,date,confirmed'),
-      sb.from('iv_roster').select('*')
+      pageAll('iv_events', 'id,team,date,confirmed'),
+      pageAll('iv_roster', 'event_id,data')
     ]);
     if(eres.error) throw eres.error;
     if(rres.error) throw rres.error;
@@ -5851,7 +5865,7 @@ function renderOverrideRows(){
     const ov = apOverrides[iso] || '';
     html += `<div class="ov-row">
       <div class="ov-computed tnum">${esc(fmtLong(iso))} <small>· computed (${esc(iso)})</small></div>
-      <input type="date" data-ck="${esc(iso)}" value="${esc(ov)}">
+      <input type="date" data-ck="${esc(iso)}" aria-label="Override for ${esc(iso)}" value="${esc(ov)}">
       ${ov ? '<span class="pchip">overridden</span>' : ''}
     </div>`;
   }

@@ -141,3 +141,23 @@ Seven agents tested every feature area and fixed what failed. Fixed counts and t
 
 ### database-roles: 0 fixed, 6 left
 
+
+## Update: second sweep (Job 3)
+- **Sweep.** Eight reviewers combed the site again and every finding was independently challenged. 40 were confirmed.
+- **Database fixes applied.**
+  - A Weekday Team Lead who also holds a normal role keeps their duties, members and attendance.
+  - Rosters are keyed by event, so two events on one day can each hold a roster.
+  - Weekday attendance stamps can't be forged by editing a row.
+  - Checklist ticks record the real signed-in user.
+  - Weekday attendance now sends live updates.
+- **Front-end fixes.**
+  - A failed reload no longer wipes the team page.
+  - Cards, rows and the AV sidebar work from the keyboard.
+  - Nested dialogs and the Safety sheet manage focus properly.
+  - Missing button labels were added.
+  - Phone layout fixes on the weekday, Satada and roster pages, and the readability of the red cannot-do chip.
+  - The weekday page no longer shows "Updated after close-up" after joining a shift.
+  - The delete-member warning mentions weekday history.
+  - Admin stats are paged.
+  - The weekday-team tests run in CI.
+- **Left for the owner.** Hiding members' phone, email, date of birth and notes from ordinary signed-in users; AV and division leads writing both teams' data; script signatures on the Supabase library; a per-address limit on password resets; closing anonymous database grants.

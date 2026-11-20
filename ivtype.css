@@ -95,7 +95,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .cell-badge.badge-tr{font-size:13px!important;font-weight:700!important}
 .cell.ev-jk.ev-training .duty div:last-child{font-size:14px!important;font-weight:700!important}
 .cell.ev-jk.ev-training .duty-name{font-weight:700!important}
-.chip{font-size:15px!important;font-weight:600!important}
+.chip{font-size:13px!important;font-weight:600!important}
 .chip .chip-more{font-size:14px!important;line-height:1.4!important}
 .chip .chip-note{font-size:12px!important;font-weight:700!important}
 .chip-uni{font-size:12px!important;font-weight:700!important}
@@ -159,6 +159,8 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .dash-date{font-size:14px!important}
 .dash-greet{font-weight:700!important;line-height:1.4!important}
 .dash-today{font-size:15px!important}
+.datebar .d{font-weight:600!important}
+.datebar label{font-size:13px!important}
 .day-tog span{font-size:13px!important;font-weight:500!important}
 .dayb{font-weight:700!important;font-size:13px!important;line-height:1.4!important}
 .dc-av{font-weight:700!important;line-height:1.4!important}
@@ -208,6 +210,9 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .empty-gen h3{font-weight:700!important}
 .empty-gen p{font-size:14px!important}
 .empty-note{font-size:14px!important}
+.entry .by{font-size:13px!important}
+.entry .wd-duty{font-size:15px!important}
+.entry .who{font-weight:600!important}
 .ev-badge{font-size:12px!important;font-weight:700!important}
 .ev-banner .d{font-size:14px!important}
 .ev-banner .t{font-weight:700!important}
@@ -261,6 +266,8 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .hero-greet{font-weight:700!important;line-height:1.4!important}
 .hero-sub{font-size:13px!important;font-weight:600!important;letter-spacing:.06em!important}
 .hint-banner{font-size:14px!important;font-weight:600!important}
+.hit{font-weight:500!important;line-height:1.4!important}
+.hit .n{font-weight:600!important}
 .hm-bar em{font-size:14px!important;font-weight:700!important}
 .hm-bar span{font-size:15px!important;font-weight:600!important}
 .hm-big{font-weight:700!important}
@@ -292,7 +299,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .hm-t{font-weight:700!important;line-height:1.4!important}
 .hm-tabs button{font-size:15px!important;font-weight:700!important}
 .hm-tag{font-size:13px!important;font-weight:700!important}
-.hub{font-size:15px!important;font-weight:700!important}
+.hub{font-size:15px!important;font-weight:600!important}
 .hub-link{font-size:14px!important;font-weight:700!important}
 .ib{font-size:14px!important}
 .ib a{font-weight:700!important}
@@ -304,6 +311,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .iv-w-greet{font-weight:700!important;line-height:1.4!important}
 .iv-w-team{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
 .lbtn{font-weight:700!important}
+.lead b{font-weight:600!important}
 .lead-tag{font-size:11px!important;font-weight:700!important}
 .lede{font-size:15px!important}
 .legend{font-size:13px!important}
@@ -379,6 +387,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .noaccess h2{font-weight:700!important}
 .noaccess p{font-size:15px!important}
 .ntag{font-size:12px!important;font-weight:700!important}
+.opt .chip{font-size:13px!important}
 .ov-computed{font-size:14px!important;font-weight:600!important}
 .ov-computed small{font-weight:500!important}
 .ov-row input[type=date]{font-size:13px!important}
@@ -399,6 +408,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .pn{font-size:13px!important;font-weight:600!important}
 .pnl-h{font-size:13px!important;font-weight:700!important}
 .pnl-h .ct{font-size:13px!important;font-weight:600!important}
+.priv{font-size:14px!important}
 .pub-bar .pb-done{font-size:14px!important;font-weight:700!important}
 .pub-bar .pb-k{font-size:12px!important;font-weight:700!important;letter-spacing:.06em!important}
 .pub-bar .pb-s{font-size:15px!important;font-weight:600!important}
@@ -420,6 +430,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .rl-grp .gn{font-size:14px!important;font-weight:700!important}
 .rl-none{font-size:14px!important}
 .rl-opt span{font-size:13px!important;font-weight:700!important}
+.ro{font-size:15px!important}
 .ro-crumbs .rc-here{font-size:14px!important;font-weight:700!important}
 .ro-crumbs .rc-nav .btn{line-height:1.4!important}
 .ro-note{font-size:14px!important;font-weight:600!important}
@@ -441,6 +452,14 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .rx-sub{font-weight:700!important}
 .rx-t thead th{font-size:15px!important;font-weight:700!important}
 .rx-title{font-weight:700!important}
+.sa-dd{font-weight:700!important;font-size:14px!important}
+.sa-dn{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
+.sa-hint{font-size:14px!important;font-weight:700!important}
+.sa-note{font-size:14px!important}
+.sa-own{font-size:13px!important;font-weight:700!important}
+.sa-pick{font-weight:700!important}
+.sa-st{font-size:13px!important;font-weight:700!important;line-height:1.4!important}
+.sa-sum{font-size:15px!important;font-weight:700!important}
 .sb-empty{font-size:15px!important}
 .sb-inc{font-size:13px!important;font-weight:700!important}
 .sb-iv{font-size:15px!important;font-weight:700!important}
@@ -474,6 +493,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .st-nums{font-size:13px!important}
 .st-nums b{font-size:15px!important}
 .stat{font-size:12px!important;font-weight:700!important}
+.sub{font-size:14px!important}
 .sup-tag{font-size:12px!important;font-weight:700!important}
 .tab{font-weight:700!important;line-height:1.4!important}
 .td-date b{font-size:12px!important;font-weight:700!important;letter-spacing:.06em!important}
@@ -490,14 +510,14 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .tl-d span{font-weight:700!important}
 .tl-n em{font-size:13px!important;font-weight:600!important}
 .tl-n strong{font-weight:700!important}
-.toast{font-size:14px!important;font-weight:600!important}
+.toast{font-size:15px!important;font-weight:600!important}
 .tonight .tn-k{font-size:12px!important;font-weight:700!important;letter-spacing:.06em!important}
 .tonight .tn-s{font-size:14px!important;font-weight:600!important}
 .tonight .tn-t{font-weight:700!important}
 .toolbar input[type=search]{font-size:14px!important}
 .toolbar input[type=text]{font-size:14px!important}
 .toolbar select{font-size:14px!important}
-.top .t b{font-weight:700!important}
+.top .t b{font-weight:600!important;font-size:15px!important;line-height:1.4!important}
 .top .t span{font-size:13px!important}
 .tpill{font-size:13px!important;font-weight:700!important}
 .uav{font-size:14px!important;font-weight:700!important}
@@ -521,10 +541,16 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .walkin-tag{font-size:11px!important;font-weight:700!important}
 .warn{font-size:14px!important}
 .warn-chip{font-size:13px!important;font-weight:700!important}
+.wda-meta{font-size:14px!important}
+.wda-row{font-size:15px!important}
+.wda-row .sm{font-size:13px!important}
+.wda-row .who{font-weight:600!important}
+.wda-tot{font-size:15px!important}
 .wi{font-size:15px!important}
 .wi-opt{font-size:15px!important}
 .wl-list{font-size:15px!important}
 .ws{font-size:15px!important}
+.xd-note{font-size:13px!important}
 .xperm{font-size:13px!important}
 b{font-weight:700!important}
 body.tp .tn-b.tn-blk{font-size:13px!important;font-weight:600!important}
@@ -532,10 +558,13 @@ body.tp .tn-b.tn-hub{font-size:14px!important}
 body.tp .tn-blk .tn-bd{font-size:12px!important;font-weight:700!important}
 body.tp .tn-menu .tn-b{font-size:15px!important;font-weight:600!important}
 body.tp .tn-menu .tn-b.tn-sub{font-size:14px!important}
-h1{font-weight:700!important}
-h2{font-weight:700!important}
+h1{font-weight:600!important}
+h2{font-weight:600!important}
 html[data-team] .dash-greet{font-weight:700!important;line-height:1.4!important}
+input[type=date]{font-weight:500!important;line-height:1.4!important}
 input[type=number]{font-weight:600!important;line-height:1.4!important}
+input[type=search]{font-weight:500!important;line-height:1.4!important}
+input[type=text]{font-weight:500!important;line-height:1.4!important}
 select{font-weight:600!important;line-height:1.4!important}
 strong{font-weight:700!important}
 table.exp-t td{font-size:15px!important}

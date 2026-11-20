@@ -136,9 +136,35 @@
   }
   function scan(root){ [].forEach.call((root||document).querySelectorAll('select'),wire); }
 
+  /* ── keyboard access for click-only elements ──
+     A div or span with an onclick attribute is invisible to the keyboard. Give each one role=button, tabindex=0 and
+     Enter/Space activation. Links, form controls, summary, anything already focusable or carrying a role, hidden
+     elements, rows that hold their own controls, and empty click-catchers (backdrops) are left alone. */
+  var NATIVE=/^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY|OPTION|LABEL|AREA|IFRAME|VIDEO|AUDIO)$/, TBL=/^(TR|TD|TH)$/;
+  function btnUp(el){
+    if(el.__ivb||NATIVE.test(el.tagName)||el.hasAttribute('tabindex')||el.hasAttribute('role')||el.isContentEditable) return;
+    if(el.closest('[aria-hidden=true],[inert]')) return;
+    if(el.querySelector('a[href],button,input,select,textarea,summary,[tabindex],[role=button]')) return;
+    var lbl=el.getAttribute('aria-label')||el.getAttribute('title');
+    if(!el.textContent.trim()&&!lbl) return;
+    el.__ivb=true; el.tabIndex=0;
+    if(!TBL.test(el.tagName)) el.setAttribute('role','button');
+    if(!el.hasAttribute('aria-label')&&!el.textContent.replace(/[^\w]/g,'')&&lbl) el.setAttribute('aria-label',lbl);
+  }
+  function btnScan(root){
+    if(root.nodeType!==1) return;
+    if(root.hasAttribute('onclick')) btnUp(root);
+    if(root.querySelectorAll) [].forEach.call(root.querySelectorAll('[onclick]'),btnUp);
+  }
+  document.addEventListener('keydown',function(e){
+    var el=e.target;
+    if(!el||!el.__ivb||e.defaultPrevented||e.altKey||e.ctrlKey||e.metaKey||(e.key!=='Enter'&&e.key!==' ')) return;
+    e.preventDefault(); el.click();
+  });
+
   window.IVP={popup:popup,close:close,scan:scan};
   function boot(){
-    scan();
+    scan(); btnScan(document.body);
     // Pages build most of their selects after load.
     try{ new MutationObserver(function(muts){
       // A menu whose select was replaced or whose options were rebuilt would otherwise write the pick into a stale element.
@@ -150,6 +176,7 @@
       for(var i=0;i<muts.length;i++) for(var j=0;j<muts[i].addedNodes.length;j++){
         var n=muts[i].addedNodes[j]; if(n.nodeType!==1) continue;
         if(n.tagName==='SELECT') wire(n); else if(n.querySelectorAll) scan(n);
+        btnScan(n);
       }
     }).observe(document.body,{childList:true,subtree:true}); }catch(e){}
   }
@@ -171,16 +198,27 @@
     for(var i=0;i<all.length;i++) if(shown(all[i])) t=all[i];
     return t;
   }
+  var stack=[];                                          // open dialogs, oldest first, each with the control that was focused when it opened
   function syncDialogs(first){
     dq=0;
     var t=topDialog();
     if(t===activeDlg) return;
     var was=activeDlg; activeDlg=t;
+    var prev=stack; stack=prev.filter(function(e){ return e.d.isConnected&&shown(e.d); });
+    var gone=prev.filter(function(e){ return stack.indexOf(e)<0; });
     if(t){
-      if(!was&&!first&&!t.contains(document.activeElement)){
-        var f=focusable(t)[0];
-        if(!f){ if(!t.hasAttribute('tabindex')) t.setAttribute('tabindex','-1'); f=t; }
-        try{ f.focus({preventScroll:true}); }catch(e){}
+      var known=stack.some(function(e){ return e.d===t; });
+      if(!known){
+        var ae=document.activeElement;
+        stack.push({d:t,opener:ae&&ae!==document.body&&!t.contains(ae)?ae:null});
+        if(!first&&!t.contains(ae)){
+          var f=focusable(t)[0];
+          if(!f){ if(!t.hasAttribute('tabindex')) t.setAttribute('tabindex','-1'); f=t; }
+          try{ f.focus({preventScroll:true}); }catch(e){}
+        }
+      } else {
+        // A dialog stacked on this one closed: give focus back to the control that opened it.
+        for(var i=gone.length-1;i>=0;i--){ var o=gone[i].opener; if(o&&o.isConnected&&o.focus&&t.contains(o)){ try{ o.focus({preventScroll:true}); }catch(e){} break; } }
       }
     } else if(was&&lastOut&&lastOut.isConnected&&lastOut.focus){
       try{ lastOut.focus({preventScroll:true}); }catch(e){}

@@ -95,3 +95,18 @@ create policy app_users_write on public.app_users for all to authenticated
 --  * TRUNCATE, TRIGGER, REFERENCES revoked from anon and authenticated.
 -- NOT applied: app_users policy tightening (live pages read it), iv_roster primary key move to event_id,
 -- anon privilege revoke (some policies are TO public). Dashboard-only: leaked-password protection, shorter OTP expiry.
+
+-- ===================================================================
+-- APPLIED (weekday_team_leads, low_risk_followups, sweep2_database_fixes)
+-- weekday_team_leads: rank_of knows wd_tl (rank 9); is_wd(); nz_today(); tables iv_wd_shifts and iv_wd_attendance
+--   with RLS (read for leaders, weekday leads and a volunteer's own rows; write for facilitator+ or a weekday lead on
+--   today's NZ date); stamp trigger; wd_member_search(q) (names, team, cannot-do duties only); restrictive read
+--   policies so a weekday lead cannot read member, roster or attendance data; guard allows facilitators to assign wd_tl.
+-- low_risk_followups: app_settings_write also for is_av_admin(); set_my_away uses nz_today(); duplicate profile
+--   self-update policies dropped; auth.uid() wrapped in selects on profiles, log and cover policies.
+-- sweep2_database_fixes: is_pure_wd() (the restriction now applies only to a weekday lead with no other normal role);
+--   iv_roster primary key moved from date to event_id (two events on one day can each hold a roster; date has a plain
+--   index); iv_wd_att_freeze and iv_wd_shift_stamp triggers (stamps cannot be forged by UPDATE); iv_wd_shifts.edited_at;
+--   checklist_set ignores the client-supplied name; iv_wd_attendance added to the realtime publication.
+-- STILL OPEN (owner decision): hide member phone/email/dob/notes from ordinary signed-in users (needs a directory view
+--   first); AV and division leads can write both teams' data; anon DML grants; per-address limit on password reset.
