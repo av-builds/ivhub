@@ -231,16 +231,33 @@ Deno.serve(async (req) => {
           if (typeof p === "string") { try { p = JSON.parse(p); } catch { p = []; } }
           if (!Array.isArray(p)) p = [];
 
-          // Throttle before any side effect: one mail per address per 10
-          // minutes, and a global ceiling so the shared mail quota (which
-          // admin invites and resets also draw on) cannot be drained.
-          // Both counts run for every address, known or not.
+          // Throttle before any side effect, from a table only this function
+          // can touch (clients cannot plant or read these rows):
+          //  - per caller: at most 6 requests in 10 minutes from one origin
+          //    (counted for every request, so one source cannot flood the
+          //    function or lock a volunteer out of their own reset);
+          //  - per address: one mail in 10 minutes;
+          //  - global: 100 mails in 10 minutes, so the shared mail quota
+          //    (admin invites and resets also draw on it) cannot be drained.
+          // Every count runs for every address, known or not.
           const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-          const mine = await svc.from("audit_logs").select("id", { count: "exact", head: true })
-            .eq("username", key).eq("action", "Requested own password reset").gte("ts", since);
-          const all = await svc.from("audit_logs").select("id", { count: "exact", head: true })
-            .eq("action", "Requested own password reset").gte("ts", since);
-          const throttled = (mine.count ?? 0) > 0 || (all.count ?? 0) >= 20;
+          const rawIp = (req.headers.get("cf-connecting-ip") ||
+            (req.headers.get("x-forwarded-for") || "").split(",")[0] || "unknown").trim();
+          const ipBytes = new TextEncoder().encode("reset|" + rawIp);
+          const ipKey = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", ipBytes)))
+            .slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+          await svc.from("reset_throttle").insert({ kind: "ip", key: ipKey });
+          const byIp = await svc.from("reset_throttle").select("id", { count: "exact", head: true })
+            .eq("kind", "ip").eq("key", ipKey).gte("ts", since);
+          const mine = await svc.from("reset_throttle").select("id", { count: "exact", head: true })
+            .eq("kind", "addr").eq("key", key).gte("ts", since);
+          const all = await svc.from("reset_throttle").select("id", { count: "exact", head: true })
+            .eq("kind", "all").gte("ts", since);
+          const throttled = (byIp.count ?? 0) > 6 || (mine.count ?? 0) > 0 || (all.count ?? 0) >= 100;
+          // Old counters are dropped as we go so the table stays small.
+          if (Math.random() < 0.05) {
+            await svc.from("reset_throttle").delete().lt("ts", new Date(Date.now() - 24 * 3600 * 1000).toISOString());
+          }
 
           // Volunteers only: an explicit allow list (every role known and at
           // rank 10). Anyone who can change a roster, manage an account or
@@ -257,6 +274,7 @@ Deno.serve(async (req) => {
             // Logged only when a mail really went out, so the log (and the
             // throttle that reads it) grows with mail sent, not with requests.
             if (!mailErr) {
+              await svc.from("reset_throttle").insert([{ kind: "addr", key }, { kind: "all", key: "all" }]);
               await svc.from("audit_logs").insert({
                 ts: new Date().toISOString(),
                 username: addr, user_display: addr,

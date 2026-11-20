@@ -164,3 +164,6 @@ Seven agents tested every feature area and fixed what failed. Fixed counts and t
 
 ## Update: AV and division leads no longer write team data
 Only Team Leads and Youth Team Leads (for their own team) and Facilitators and above can now write members, events, rosters, attendance, announcements and the cycle settings. AV and division leads only read those tables on their pages, so nothing they use changed. Tested with real accounts in a rolled-back simulation.
+
+## Update: password reset limit
+Requests for a password reset are now limited per origin (6 per 10 minutes), per address (one mail per 10 minutes) and overall (100 mails per 10 minutes). The counters live in a private table the browser can't read or write, so nobody can plant fake entries to trigger or dodge the limit. The reply stays the same for every request. The invite function is live as version 17.

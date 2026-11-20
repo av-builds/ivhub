@@ -123,3 +123,10 @@ create policy app_users_write on public.app_users for all to authenticated
 -- an_lead, av_yatl, av_coord and a volunteer write none of it; AV roles keep app_settings.
 -- STILL OPEN: hide member contact details and notes from ordinary signed-in users (little data today: 1 email, 10 notes);
 -- anon DML grants; per-address limit on password reset; script signatures on the Supabase library.
+
+-- ===================================================================
+-- APPLIED: reset_throttle_table (and invite-user edge function version 17)
+-- Password-reset requests are throttled from a table only the edge function can use (reset_throttle, RLS on, no client
+-- grants): at most 6 requests per 10 minutes from one origin (hashed), one mail per address per 10 minutes, and 100 mails
+-- per 10 minutes overall. The reply stays the same generic sentence with the same timing. Clients can no longer insert the
+-- audit row 'Requested own password reset' (audit_logs_insert check).
