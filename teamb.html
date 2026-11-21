@@ -839,6 +839,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 @media(max-width:520px){.cy-grid.sat{grid-template-columns:1fr 1fr;gap:8px;}}
 .cy-legend .cal-legend{margin-left:0;}
 .cy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
+.sat-none{font-size:13px;color:var(--dm);padding:12px 14px;border:1px dashed var(--db);margin:0 0 6px;line-height:1.5;}
 .cy-sec{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--dm2);margin:26px 0 10px;}
 .cy-card{position:relative;display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;color:var(--dt);
   background:var(--ds);background-image:var(--surface-grad);border:var(--hairline);border-radius:var(--r-lg);
@@ -3704,7 +3705,8 @@ function satNightCardHTML(e,today){
 function satGroupHTML(){
   const today=nzTodayISO(), wk=satWeekMap();
   const nights=[]; Object.keys(wk).sort().forEach(w=>{ if(addDaysLocal(w,6)>=today) wk[w].forEach(e=>nights.push(e)); });
-  if(!nights.length) return '';
+  if(!nights.length) return '<div class="cy-sec" id="satGroup" style="margin-top:4px">Satada · every night, both teams</div>'+
+    '<div class="sat-none">No satada is scheduled. When a Facilitator sets one up (Hub, Management, Satada), its seven nights appear here, each with the team that runs it.</div>';
   return '<div class="cy-sec" id="satGroup" style="margin-top:4px">Satada · every night, both teams</div>'+
     '<div class="cy-grid sat">'+nights.map(e=>satNightCardHTML(e,today)).join('')+'</div>';
 }
