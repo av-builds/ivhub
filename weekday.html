@@ -195,7 +195,7 @@ function nzHM(iso){
 const longDate = iso => new Date(iso + 'T12:00:00').toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
 let sb = null;
-const S = { uid:'', name:'', today:'', date:'', follow:true, shift:null, rows:[], busy:false, seq:0, results:[], lastQ:'', loadErr:false, loadSeq:0 };
+const S = { uid:'', name:'', today:'', date:'', follow:true, shift:null, rows:[], busy:false, seq:0, results:[], lastQ:'', loadErr:false, loadSeq:0, mut:0 };
 const isToday = () => S.date === S.today;
 
 function permList(p){
@@ -215,10 +215,14 @@ function cannotNames(list){
   return out;
 }
 
+const dbMsg = e => { const m = (e && e.message) || 'unknown error'; return /row-level security|permission denied|violates/i.test(m) ? 'you may not be allowed to change this day (is it still the same day?)' : m; };
+/* A page left open past midnight must not write to yesterday: check the clock before every write. */
+function dayMoved(){ if(S.uid && nzTodayISO() !== S.today){ rollover(); toast('A new day has started. Showing today.', false); return true; } return false; }
+
 /* ── data ── */
-async function loadDay(){
+async function loadDay(quiet){
   if(!sb) return;
-  const d = S.date, mine = ++S.loadSeq;
+  const d = S.date, mine = ++S.loadSeq, mut = S.mut;
   let sh, at;
   try{
     [sh, at] = await Promise.all([
@@ -227,6 +231,8 @@ async function loadDay(){
     ]);
   }catch(e){ sh = at = {error:{message:(e && e.message) || 'network error'}}; }
   if(mine !== S.loadSeq || d !== S.date) return;               // another day was picked while this one loaded
+  if(mut !== S.mut) return;                                    // a write finished meanwhile: this read may be older than it
+  if(quiet && (sh.error || at.error)) return;                  // background refresh: keep what is on screen
   S.loadErr = !!(sh.error || at.error);
   if(S.loadErr){ toast('Could not read the day - ' + ((sh.error || at.error).message || 'unknown error'), true); }
   if(!sh.error) S.shift = sh.data || null;
@@ -259,23 +265,26 @@ async function writeShiftTry(build, day){
 }
 const withMe = cur => { const leads = cur && Array.isArray(cur.leads) ? cur.leads.slice() : []; if(leads.indexOf(S.name) < 0) leads.push(S.name); return leads; };
 async function joinShift(quiet){
-  if(!isToday()) return false;
+  if(!isToday() || dayMoved()) return false;
+  const jb = $('btnJoin'); if(!quiet) jb.disabled = true;
   const res = await writeShift(cur=>{ const leads = withMe(cur); return cur && Array.isArray(cur.leads) && cur.leads.indexOf(S.name) >= 0 ? null : {leads}; });
-  if(res.row){ if(res.row.date === S.date) S.shift = res.row; render(); if(!quiet) toast('You are leading today'); return true; }
-  toast(res.error ? 'Could not join the shift - ' + res.error.message : 'Could not join the shift - the database refused it.', true);
+  jb.disabled = false;
+  if(res.row){ S.mut++; if(res.row.date === S.date) S.shift = res.row; render(); if(!quiet) toast('You are leading today'); return true; }
+  toast(res.error ? 'Could not join the shift - ' + dbMsg(res.error) : 'Could not join the shift - the database refused it.', true);
   return false;
 }
 /* After close-up, any change makes the submission out of date: stamp the shift so the page can say so. */
 async function touchAfterClose(){
-  if(!S.shift || !S.shift.closed_at) return;
-  const stamp = cur=>cur && cur.closed_at ? {edited_at:new Date().toISOString()} : null;
+  /* Read fresh, not S.shift: another lead may have closed up since this page last looked. The stamp is never earlier
+     than closed_at, so a slow device clock cannot hide a late change. */
+  const stamp = cur=>cur && cur.closed_at ? {edited_at:new Date(Math.max(Date.now(), Date.parse(cur.closed_at) + 1)).toISOString()} : null;
   let res = await writeShift(stamp);
   if(res.error && /edited_at/i.test(res.error.message || '')) res = await writeShift(cur=>cur && cur.closed_at ? {} : null);   // column not there yet
-  if(res.row && res.row.date === S.date) S.shift = res.row;
+  if(res.row && res.row.date === S.date){ S.mut++; S.shift = res.row; }
 }
 const lateEdit = () => { const sh = S.shift; if(!sh || !sh.closed_at) return false;
-  if('edited_at' in sh) return !!sh.edited_at && sh.edited_at > sh.closed_at;   // only add/remove after close-up counts
-  return !!sh.updated_at && sh.updated_at > sh.closed_at; };                    // older cache without the column
+  if('edited_at' in sh) return !!sh.edited_at && Date.parse(sh.edited_at) > Date.parse(sh.closed_at);   // only add/remove after close-up counts
+  return !!sh.updated_at && Date.parse(sh.updated_at) > Date.parse(sh.closed_at); };                    // older cache without the column
 
 /* ── render ── */
 function render(){
@@ -301,7 +310,8 @@ function render(){
   const sh = S.shift, closed = !!(sh && sh.closed_at), late = lateEdit();
   $('closeStatus').innerHTML = closed
     ? 'Submitted at '+esc(nzHM(sh.closed_at))+' by '+esc(sh.closed_by_name || 'a lead')+(late ? '<span class="chip extra late">Updated after close-up</span>' : '')
-    : !today ? 'This day was not submitted.' : (S.rows.length ? 'Not submitted yet. Close up when you are done.' : 'Nothing to submit yet.');
+    : S.loadErr ? 'Could not load this day, so its status is unknown.'
+    : !today ? (S.date > S.today ? 'This day has not happened yet.' : 'This day was not submitted.') : (S.rows.length ? 'Not submitted yet. Close up when you are done.' : 'Nothing to submit yet.');
   const b = $('btnClose'); b.classList.toggle('hide', !today || (closed && !late));
   b.textContent = 'Close Up';
 }
@@ -311,14 +321,15 @@ let qTimer = null;
 function onQuery(){
   clearTimeout(qTimer);
   const v = $('q').value.trim();
-  if(v.length < 2){ S.seq++; S.results = []; $('res').innerHTML = v ? '<div class="sub">Keep typing, at least 2 letters.</div>' : ''; return; }
+  if(v.replace(/[%_]/g,'').trim().length < 2){ S.seq++; S.results = []; $('res').innerHTML = v ? '<div class="sub">Keep typing, at least 2 letters.</div>' : ''; return; }
   qTimer = setTimeout(()=>runSearch(v), 280);
 }
 async function runSearch(v){
   const mine = ++S.seq; S.lastQ = v;
+  if(!$('res').querySelector('.hit')) $('res').innerHTML = '<div class="sub">Searching…</div>';
   let r; try{ r = await sb.rpc('wd_member_search', {q: v}); }catch(e){ r = {error:{message:(e && e.message) || 'network error'}}; }
   if(mine !== S.seq) return;                                   // a newer search has started
-  if(r.error){ S.results = []; $('res').innerHTML = '<div class="sub">Search failed - ' + esc(r.error.message || 'try again') + '</div>'; return; }
+  if(r.error){ S.results = []; $('res').innerHTML = '<div class="sub">Search failed - ' + esc(dbMsg(r.error)) + '</div>'; return; }
   S.results = Array.isArray(r.data) ? r.data : [];
   $('res').innerHTML = S.results.length ? S.results.map((m,i)=>{
     const cn = cannotNames(m.cannot);
@@ -352,6 +363,7 @@ document.addEventListener('keydown', e=>{
 
 let PICK = null;
 function openPicker(m){
+  if(!m) return;
   PICK = {m, cannot: cannotNames(m.cannot).map(norm)};
   const opt = (n,i)=>{ const dis = PICK.cannot.indexOf(norm(n)) >= 0;
     return '<label class="opt'+(dis?' dis':'')+'"><input type="radio" name="duty" value="'+esc(n)+'"'+(dis?' disabled aria-disabled="true"':'')+'><span class="nm">'+esc(n)+'</span>'+(dis?'<span class="chip cant">Cannot do</span>':'')+'</label>'; };
@@ -364,7 +376,7 @@ function openPicker(m){
 }
 function pickedDuty(){
   const r = document.querySelector('#dutyOpts input[name="duty"]:checked'); if(!r) return '';
-  return r.value === '__other' ? $('otherDuty').value.trim() : r.value;
+  return r.value === '__other' ? $('otherDuty').value.replace(/\s+/g,' ').trim() : r.value;
 }
 function syncPicker(){
   const r = document.querySelector('#dutyOpts input[name="duty"]:checked'), other = r && r.value === '__other';
@@ -376,7 +388,7 @@ function syncPicker(){
 async function addEntry(){
   if(S.busy || !PICK) return;
   const m = PICK.m, duty = pickedDuty();
-  if(!duty || PICK.cannot.indexOf(norm(cannotKey(duty))) >= 0 || !isToday()) return;
+  if(!duty || PICK.cannot.indexOf(norm(cannotKey(duty))) >= 0 || !isToday() || dayMoved()) return;
   if(S.rows.some(x=>String(x.member_id) === String(m.id) && norm(x.duty) === norm(duty))){ $('pickMsg').textContent = m.name + ' already has ' + duty + ' as an extra duty today.'; return; }
   S.busy = true; $('pkAdd').disabled = true;
   const day = S.date;
@@ -387,11 +399,12 @@ async function addEntry(){
     const say = t => { const a = $('pickMsg'), b = $('pkAdd'); if(a) a.textContent = t; if(b) b.disabled = false; };   // the dialog may be gone (midnight)
     if(r.error){
       const dupe = /duplicate key|unique|23505/i.test((r.error.message||'') + (r.error.code||''));
-      say(dupe ? m.name + ' already has ' + duty + ' as an extra duty today.' : 'Could not add - ' + (r.error.message || 'unknown error')); return;
+      if(dupe && day === S.date) loadDay(true);                      // another lead added it first: show it
+      say(dupe ? m.name + ' already has ' + duty + ' as an extra duty today.' : 'Could not add - ' + dbMsg(r.error)); return;
     }
     const row = Array.isArray(r.data) ? r.data[0] : r.data;
     if(!row){ say('Could not add - the database refused it. You may not be allowed to add on this day.'); return; }
-    if(row.date === S.date) S.rows.push(row);
+    if(row.date === S.date){ S.rows.push(row); S.mut++; }
     closeSheet(); PICK = null; render(); toast('Added ' + m.name + ' - ' + duty);
     const leads = S.shift && Array.isArray(S.shift.leads) ? S.shift.leads : [];
     if(day === S.date){ if(leads.indexOf(S.name) < 0) await joinShift(true);
@@ -400,35 +413,54 @@ async function addEntry(){
   } finally { S.busy = false; }
 }
 async function removeEntry(id){
-  if(S.busy || !isToday()) return;
+  if(S.busy || !isToday() || dayMoved()) return;
   const row = S.rows.find(r=>String(r.id) === String(id)); if(!row) return;
-  S.busy = true;
+  S.busy = true; document.querySelectorAll('[data-rm]').forEach(x=>{ x.disabled = true; });
   try{
     let r; try{ r = await sb.from('iv_wd_attendance').delete().eq('id', row.id).select(); }catch(e){ r = {error:{message:(e && e.message) || 'network error'}}; }
-    if(r.error){ toast('Could not remove - ' + r.error.message, true); return; }
-    if(!r.data || !r.data.length){ toast('Could not remove - the database refused it.', true); return; }
-    S.rows = S.rows.filter(x=>String(x.id) !== String(id)); render(); toast('Removed ' + row.member_name + ' - ' + row.duty);
+    if(r.error){ toast('Could not remove - ' + dbMsg(r.error), true); return; }
+    if(!r.data || !r.data.length){
+      /* Either another lead removed it first, or the database refused: read the day again to tell which. */
+      S.busy = false; S.mut++; await loadDay();
+      toast(S.rows.some(x=>String(x.id) === String(id)) ? 'Could not remove - the database refused it.' : row.member_name + ' was already removed by another lead.', S.rows.some(x=>String(x.id) === String(id)));
+      return;
+    }
+    S.mut++; S.rows = S.rows.filter(x=>String(x.id) !== String(id)); render(); toast('Removed ' + row.member_name + ' - ' + row.duty);
     if(row.date === S.date){ await touchAfterClose(); render(); }
-  } finally { S.busy = false; }
+  } finally { S.busy = false; render(); }
 }
 function openClose(){
-  if(!isToday()) return;
+  if(!isToday() || dayMoved()) return;
   const n = S.rows.length;
   openSheet('<h2 id="sheetTitle">Close up for today?</h2><div class="sub">Close up for today? This submits '+n+' '+(n === 1 ? 'entry' : 'entries')+' to Attendance.</div>'+
     '<div class="btns"><button type="button" class="hub" id="cuCancel">Cancel</button><button type="button" class="hub primary" id="cuGo">Confirm and submit</button></div>');
 }
 async function confirmClose(){
-  if(S.busy || !isToday()) return;
+  if(S.busy || !isToday() || dayMoved()) return;
   S.busy = true; $('cuGo').disabled = true; const day = S.date;
   try{
     const now = new Date().toISOString();
-    const close = extra => cur=>Object.assign({closed_at:now, closed_by:S.uid, closed_by_name:S.name, leads:withMe(cur), updated_at:now}, extra);
+    /* Two leads closing up at once: if another lead already submitted and nothing changed since, leave their submission as it is. */
+    let already = null;
+    const close = extra => cur=>{
+      if(cur && cur.closed_at && !('edited_at' in cur && cur.edited_at && Date.parse(cur.edited_at) > Date.parse(cur.closed_at))){ already = cur; return null; }
+      already = null; return Object.assign({closed_at:now, closed_by:S.uid, closed_by_name:S.name, leads:withMe(cur), updated_at:now}, extra); };
     let res = await writeShift(close({edited_at:null}), day);
     if(res.error && /edited_at/i.test(res.error.message || '')) res = await writeShift(close({}), day);   // column not there yet
-    if(!res.row){ toast(res.error ? 'Could not close up - ' + res.error.message : 'Could not close up - the database refused it.', true); const g = $('cuGo'); if(g) g.disabled = false; return; }
-    if(res.row.date === S.date) S.shift = res.row;
-    closeSheet(); render(); settleFocus(); toast('Submitted to Attendance');
+    if(!res.row){ toast(res.error ? 'Could not close up - ' + dbMsg(res.error) : 'Could not close up - the database refused it.', true); const g = $('cuGo'); if(g) g.disabled = false; return; }
+    S.mut++; if(res.row.date === S.date) S.shift = res.row;
+    closeSheet(); render(); settleFocus();
+    toast(already ? 'Already submitted at ' + nzHM(already.closed_at) + ' by ' + (already.closed_by_name || 'another lead') : 'Submitted to Attendance');
   } finally { S.busy = false; }
+}
+
+/* Past midnight in New Zealand a page left open moves on to the new day. */
+function rollover(){
+  if(!S.uid) return;
+  const t = nzTodayISO(); if(t === S.today) return;
+  const was = S.today; S.today = t;
+  if(S.follow || S.date === was || S.date === t){ S.date = t; S.follow = true; S.shift = null; S.rows = []; S.loadErr = false; S.mut++; PICK = null; closeSheet(); render(); loadDay(); }
+  else render();
 }
 
 /* ── access ── */
@@ -451,15 +483,8 @@ function wire(){
   $('sheetHost').addEventListener('input', e=>{ if(PICK && e.target.id === 'otherDuty') syncPicker(); });
   $('sheetHost').addEventListener('keydown', e=>{ if(e.key === 'Enter' && PICK && e.target.id === 'otherDuty'){ e.preventDefault(); if(!$('pkAdd').disabled) addEntry(); } });
   $('sheetHost').addEventListener('change', e=>{ if(PICK && e.target.value === '__other' && e.target.checked) $('otherDuty').focus(); });
-  /* Past midnight in New Zealand a page left open moves on to the new day. */
-  function rollover(){
-    if(!S.uid) return;
-    const t = nzTodayISO(); if(t === S.today) return;
-    const was = S.today; S.today = t;
-    if(S.follow || S.date === was || S.date === t){ S.date = t; S.follow = true; S.shift = null; S.rows = []; S.loadErr = false; PICK = null; closeSheet(); render(); loadDay(); }
-    else render();
-  }
-  setInterval(rollover, 60000);
+  /* Every minute: move on at midnight, and pick up what other leads added or removed (quietly, without a dialog open). */
+  setInterval(()=>{ rollover(); if(!document.hidden && S.uid && !$('sheetHost').firstChild && !S.busy) loadDay(true); }, 60000);
   /* A phone asleep or a background tab does not run the timer: catch up, and pick up what other leads did, when the page is seen again. */
   document.addEventListener('visibilitychange', ()=>{ if(document.hidden || !S.uid) return; rollover(); if(!$('sheetHost').firstChild && !S.busy) loadDay(); });
 }
@@ -468,12 +493,15 @@ async function start(){
   const lib = window.supabase;
   if(!lib || !lib.createClient){ show('wdDeny'); $('denyMsg').textContent = 'Could not reach the server. Check your connection and reload.'; return; }
   sb = lib.createClient(SB_URL, SB_KEY);
-  const { data } = await sb.auth.getSession(), sess = data && data.session;
-  if(!sess || !sess.user){ location.replace('index.html'); return; }
-  const { data: prof, error: pe } = await sb.from('profiles').select('perms,display').eq('id', sess.user.id).maybeSingle();
+  let sess, prof, pe;
+  try{
+    const g = await sb.auth.getSession(); sess = g.data && g.data.session;
+    if(!sess || !sess.user){ location.replace('index.html'); return; }
+    const pr = await sb.from('profiles').select('perms,display,username').eq('id', sess.user.id).maybeSingle(); prof = pr.data; pe = pr.error;
+  }catch(e){ pe = e || {}; }
   if(pe){ show('wdDeny'); $('denyMsg').textContent = 'Could not check your access. Check your connection and reload.'; return; }
   S.uid = sess.user.id;
-  S.name = ((prof && prof.display) || sess.user.email || 'Weekday lead').trim();
+  S.name = ((prof && (prof.display || prof.username)) || 'Weekday lead').trim();     // never the email: names are shown to the other leads
   if(!allowed(permList(prof && prof.perms))){ show('wdDeny'); return; }
   S.today = nzTodayISO(); S.date = S.today;
   show('wdOk'); render(); await loadDay();

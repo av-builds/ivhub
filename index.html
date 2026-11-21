@@ -1624,6 +1624,9 @@ const AV_ADMIN   = ()=>hasPerm(...IV_TOP,'av_admin','av_atl','av_yatl','av_coord
 const USERS_ADMIN= ()=>hasPerm(...IV_TOP,'facilitator');
 /* Weekday Team Lead page: the lead themselves, and Facilitator and above. */
 const WD_VIEW   = ()=>hasPerm('wd_tl') || myRank() <= 5;
+/* A login that holds Weekday Team Lead and nothing else. The database hides the member list, the rosters and attendance from it (is_pure_wd()), so those read as empty rather than as an error. */
+const IS_PURE_WD = ()=>hasPerm('wd_tl') && rankOf((CU.perms||[]).filter(p=>p !== 'wd_tl')) >= 99;
+const PURE_WD_NOTE = 'IV rosters are not readable from a Weekday-only login, so Team A and Team B duties are not listed here.';
 /* What a Facilitator may hand out. Mirrors FACILITATOR_MAY in the invite-user function. */
 const FAC_MAY    = ['tl_a','ytl_a','tl_b','ytl_b','team_a','team_b','wd_tl'];
 /* Duty Stats has been removed from the Hub, so nobody is shown it. */
@@ -1869,6 +1872,10 @@ const canManageAccounts = ()=>myRank() <= MANAGE_RANK;
 /* You may act on someone only if you outrank them, and only if your own
    rank is one that manages accounts at all. */
 function canManageProfile(perms){ return canManageAccounts() && rankOf(perms) > myRank(); }
+/* The database lets a Facilitator write an account only when every role on it is one a Facilitator may hand out, so
+   an AV or division account cannot be renamed, linked or re-roled by one (a reset or a revoke still works). */
+const FAC_LOCK_MSG = 'A Facilitator cannot change the name, link or roles of an account that holds AV or division roles. A reset or revoking access still works.';
+const facLocked = perms=>hasPerm('facilitator') && !IV_ADMIN() && rankOf(perms) > myRank() && (perms||[]).some(p=>FAC_MAY.indexOf(p) < 0);
 function canManageUser(role){ return grantableRoles().includes(role); }
 
 /* ─── Duty templates (contract - verbatim defaults) ─── */
@@ -2249,7 +2256,7 @@ function sessionFromProfile(user, prof){
     email:     user.email || '',
     display:   (prof && prof.display) || (prof && prof.username) || (user.email||'').split('@')[0],
     perms:     perms,
-    role:      perms[0] || '',
+    role:      perms.slice().sort((x,y)=>rankOf([x]) - rankOf([y]))[0] || '',   // the highest role, whatever order the database lists them in
     member_id: (prof && prof.member_id) || null,
     uid:       user.id
   };
@@ -2443,7 +2450,7 @@ async function doLogout(){
   try{ VL.rows = []; VL.logins = {}; VL.open = null; }catch(e){}
   try{ AL.mem = null; AL.all = null; AL.admins = []; }catch(e){}
   /* Satada, Weekday Attendance and duties hold other people's rows: do not leave them for the next sign-in. */
-  try{ Object.assign(SA, {weeks:{}, rost:{}, att:{}, sel:null, form:false, date:'', owners:saAlt(), busy:false, err:'', loaded:false}); Object.assign(WDA, {rows:[], shifts:[], err:''}); }catch(e){}
+  try{ Object.assign(SA, {weeks:{}, rost:{}, rrow:{}, att:{}, sel:null, form:false, date:'', owners:saAlt(), busy:false, err:'', loaded:false}); Object.assign(WDA, {rows:[], shifts:[], err:''}); }catch(e){}
   dutyCache = null; _mdNames = null; _myNameResolved = null; mdShotData = null;
   ['saWeeks','saMain','wdaDays','wdaTotals','homeDash'].forEach(id=>{ const el = $(id); if(el) el.innerHTML = ''; });
   { const r = $('mdResults'); if(r) r.innerHTML = '<div class="md-empty"><div class="big">🔍</div>Enter your name above to find your upcoming duties.<br>Your name is remembered on this device.</div>'; }
@@ -2575,6 +2582,8 @@ const LEAD_TEAMS = {
   B:  { label:'Team B',  url:'teamb.html', pages:[['calendar','📅','Calendar'],['checklist','☑️','Checklist'],['roster','📋','Roster'],['attendance','✅','Attendance'],['reports','📊','Numbers'],['members','👥','People'],['announce','📣','Announcements']] },
   AV: { label:'AV Team', url:'av.html',    pages:[['calendar','📅','Roster'],['myduties','🗓️','My Duties'],['volunteers','👥','People'],['events','🕌','Add-ons'],['stats','📊','Duty Stats']] },
 };
+/* Weekday Team Lead: not a team a person is rostered into, so it is not in LEAD_KEYS. The home dashboard adds it for wd_tl. */
+LEAD_TEAMS.WD = { label:'Weekday', url:'weekday.html', land:'', pages:[] };
 DIVISIONS.forEach(d=>{
   LEAD_KEYS[d.key.toUpperCase()] = divPerms(d);
   LEAD_TEAMS[d.key.toUpperCase()] = { label:d.name, url:d.url, land:'',
@@ -2840,7 +2849,7 @@ async function loadHubVolunteerCards(){
 
   // Who to ask: the leads of the team they are actually on.
   let leads = [];
-  if(MY_MEMBER && MY_MEMBER.team){
+  if(MY_MEMBER && MY_MEMBER.team && !IS_PURE_WD()){
     try{
       const {data} = await sb.from('iv_members').select('name,rank,team,status,spec')
         .eq('team', MY_MEMBER.team).in('rank', ['Team Leader','Team Lead','Assistant Team Lead']);
@@ -2854,7 +2863,7 @@ async function loadHubVolunteerCards(){
 
   el.innerHTML =
       hubCard('My next duty', nextDuty ? esc(fmtLong(nextDuty.date)) : '-',
-              nextDuty ? esc(nextDuty.duty || 'IV duty') : (MY_MEMBER ? 'nothing rostered yet' : 'your account is not linked to your name'),
+              nextDuty ? esc(nextDuty.duty || 'IV duty') : (IS_PURE_WD() ? 'team rosters are not shown to a Weekday-only login' : MY_MEMBER ? 'nothing rostered yet' : 'your account is not linked to your name'),
               nextDuty ? 'a' : '', "nav('myduties')")
     + hubCard('My away dates', away.length,
               away.length ? 'next: ' + esc(fmtLong(away[0])) : 'available for every event', '')
@@ -3088,6 +3097,7 @@ async function openMyDuties(){
   const r = await resolveMyName();
   if(noteEl){ noteEl.innerHTML = r.note || ''; noteEl.style.display = r.note ? 'block' : 'none'; }
   if(!input.value && r.name){ input.value = r.name; }
+  if(noteEl && IS_PURE_WD()){ noteEl.innerHTML = (r.note ? r.note + '<br>' : '') + esc(PURE_WD_NOTE); noteEl.style.display = 'block'; }
   wdExtraLine('mdExtra');
   if(input.value.trim()) runDutySearch();
 }
@@ -3101,7 +3111,7 @@ async function loadMyTeamCards(){
   try{
     const {data:mv} = await sb.rpc('my_member_view');
     const m = mv && mv.member ? mv.member : null;
-    if(!m || (m.team!=='A' && m.team!=='B')){ panel.style.display='none'; return; }
+    if(!m || (m.team!=='A' && m.team!=='B') || IS_PURE_WD()){ panel.style.display='none'; return; }
     const [att, mem] = await Promise.all([
       sb.rpc('member_attendance_totals',{p_team:m.team}),
       sb.from('iv_members').select('name,team,rank,spec,status').eq('team',m.team)
@@ -3575,19 +3585,28 @@ function linkSuggestions(member){
 /* The one write. Setting member_id to null unlinks. */
 async function setAccountLink(profileId, memberId){
   if(!sb) { toast('No database connection.', 'err'); return false; }
+  const target = (PROFILES||[]).find(x=>String(x.id) === String(profileId));
+  if(target && facLocked(permsOf(target))){ toast(FAC_LOCK_MSG, 'err'); return false; }
   /* profiles_guard refuses changes to somebody else's account, and it
      refuses them the quiet way - no error, no rows, just nothing happening.
      This used to inspect only `error`, so a link the database would not
      make still said "Linked." and drew the link on screen; the next reload
      put it back. Linking is what decides whose duties somebody sees, so
-     getting a false yes here sends a volunteer to the wrong roster. */
-  const ok = await dbWrite('Saving the link',
+     getting a false yes here sends a volunteer to the wrong roster.
+     The guard also leaves your OWN account's link as it was while still
+     returning the row, so the stored value is read back, not just the count. */
+  const rows = await dbWriteRows('Saving the link',
     ()=>sb.from('profiles').update({member_id: memberId}).eq('id', profileId),
     /* One account per person is enforced in the database, so this is the
        likely failure and deserves a sentence rather than a code. */
     {hint: e=>/duplicate key|unique/i.test(e.message || '')
       ? 'That person already has an account linked. Unlink the other one first.' : null});
-  if(!ok) return false;
+  if(!rows) return false;
+  const kept = rows[0] ? rows[0].member_id : undefined;
+  if(kept !== undefined && String(kept == null ? '' : kept) !== String(memberId == null ? '' : memberId)){
+    toast('Saving the link failed - the database kept the old link. Your own account can only be linked by somebody above you.', 'err');
+    return false;
+  }
   const p = (PROFILES||[]).find(x=>String(x.id) === String(profileId));
   if(p) p.member_id = memberId;
   const m = memberId ? (mRows||[]).find(x=>String(x.id) === String(memberId)) : null;
@@ -4064,11 +4083,15 @@ async function deleteMember(row){
     if(sb){ const c = await sb.from('iv_wd_attendance').select('id', {count:'exact', head:true}).eq('member_id', row.id); if(!c.error) nExtra = c.count || 0; }
   }catch(e){}
   if(!confirm(`Delete member "${row.name}" (${memberTeamLabel(row)})? This cannot be undone.` +
-    (nExtra ? `\n\nThis also permanently deletes ${nExtra} weekday Extra Duty attendance record${nExtra === 1 ? '' : 's'}. To keep their history, cancel and use "They have left - revoke access" instead.` : '') +
+    (nExtra ? `\n\nTheir ${nExtra} weekday Extra Duty record${nExtra === 1 ? '' : 's'} stay in the weekday attendance history under their name, no longer linked to a member.` : '') +
     (hasLogin ? `\n\nThey have a login. Deleting the member does not remove it - to take away their access use "They have left - revoke access" first.` : ''))) return;
   if(!sb){ toast('No database connection - cannot delete.', 'err'); return; }
   if(!await dbWrite('Deleting the member', ()=>sb.from('iv_members').delete().eq('id', row.id))) return;
   mRows = mRows.filter(r=>r.id !== row.id);
+  /* The database unlinks a deleted member's login; the copies held here have to follow or Admin Logins keeps showing them as linked. */
+  (PROFILES||[]).forEach(p=>{ if(String(p.member_id) === String(row.id)) p.member_id = null; });
+  if(AL.mem) AL.mem = AL.mem.filter(m=>m.id !== row.id);
+  VL.rows = VL.rows.filter(m=>m.id !== row.id); delete VL.logins[String(row.id)];
   if(mOpenId === row.id) mOpenId = null;
   auditLog('Deleted member', 'members', `${row.name} (${memberTeamLabel(row)})`);
   toast('Deleted ' + row.name);
@@ -4279,7 +4302,7 @@ async function deleteAccount(id){
    from weekday.html. Facilitator and above can read every row and delete
    one; the database decides (RLS), so a refused delete comes back as no
    rows and dbWrite says so. */
-const WDA = {from:'', to:'', rows:[], shifts:[], err:''};
+const WDA = {from:'', to:'', rows:[], shifts:[], err:'', seq:0};
 const nzHM = iso=>{ try{ return new Date(iso).toLocaleTimeString('en-NZ',{timeZone:'Pacific/Auckland',hour:'2-digit',minute:'2-digit',hour12:false}); }catch(e){ return ''; } };
 /* A cell that opens with = + - @ tab or CR is read as a formula by a spreadsheet. A leading single quote makes it plain text. */
 function csvCell(v){
@@ -4299,13 +4322,17 @@ async function wdaLoad(){
   if(!from || !to || from > to){ $('wdaMsg').textContent = 'Choose a start date that is not after the end date.'; return; }
   WDA.from = from; WDA.to = to; WDA.err = '';
   $('wdaMsg').textContent = 'Loading.';
+  const seq = ++WDA.seq;   // two quick range changes can answer out of order; only the latest one is drawn
   const [a, sh] = await Promise.all([
     sb.from('iv_wd_attendance').select('*').gte('date', from).lte('date', to).order('date', {ascending:false}).order('created_at'),
     sb.from('iv_wd_shifts').select('*').gte('date', from).lte('date', to).order('date', {ascending:false})
   ]);
+  if(seq !== WDA.seq || !PAGES.wdatt()) return;
   if(a.error || sh.error){ WDA.err = 'Could not read weekday attendance - ' + ((a.error || sh.error).message || 'unknown error'); WDA.rows = []; WDA.shifts = []; }
   else { WDA.rows = a.data || []; WDA.shifts = sh.data || []; }
   wdaRender();
+  /* The database sends 1000 rows at most, so a long range can be cut short without any error. */
+  if(!WDA.err && WDA.rows.length >= 1000) $('wdaMsg').textContent += ' Only the first 1000 entries are shown, so the totals are incomplete. Choose a shorter range.';
 }
 function wdaRender(){
   const days = {};
@@ -4321,7 +4348,7 @@ function wdaRender(){
       (d.rows.length ? d.rows.map(r=>'<div class="wda-row" data-id="'+esc(r.id)+'"><span class="who">'+esc(r.member_name)+'</span>'+
         '<span class="chip">'+esc(r.member_team ? 'Team ' + r.member_team : 'No team')+'</span>'+
         '<span>'+esc(r.duty)+'</span><span class="sm">added by '+esc(r.added_by_name || '-')+(r.created_at ? ' at '+esc(nzHM(r.created_at)) : '')+'</span>'+
-        '<button class="btn btn-red" onclick="wdaDelete('+Number(r.id)+')">Delete</button></div>').join('') : '<div class="wda-meta">No entries.</div>')+
+        '<button class="btn btn-red" onclick="wdaDelete('+Number(r.id)+')" aria-label="Delete '+esc(r.member_name)+' - '+esc(r.duty)+'">Delete</button></div>').join('') : '<div class="wda-meta">No entries.</div>')+
       '</div>';
   }).join('');
   const tot = {};
@@ -4400,7 +4427,7 @@ const SA_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Sa
 const saDow = iso=>new Date(iso+'T12:00:00').getDay();
 const saWeekStart = iso=>addDaysISO(iso, -saDow(iso));
 const saAlt = ()=>[0,1,2,3,4,5,6].map(i=>i%2===0 ? 'A' : 'B');
-const SA = {weeks:{}, rost:{}, att:{}, sel:null, form:false, date:'', owners:saAlt(), busy:false, err:'', loaded:false};
+const SA = {weeks:{}, rost:{}, rrow:{}, att:{}, sel:null, form:false, date:'', owners:saAlt(), busy:false, err:'', loaded:false};
 function saNextSunday(){ const t = todayNZ(); return addDaysISO(t, (7 - saDow(t)) % 7); }
 function saPeople(data){
   const ids = [], a = (data && data.assign) || {};
@@ -4422,20 +4449,20 @@ async function saReload(){
   if(!sb){ SA.err = 'No database connection.'; saRender(); return false; }
   const ev = await sb.from('iv_events').select('*').eq('type','satada').order('date');
   if(ev.error){ SA.err = 'Could not read the satadas - ' + (ev.error.message || ev.error); saRender(); return false; }
-  const rows = ev.data || [], ids = rows.map(e=>e.id), rost = {}, att = {};
+  const rows = ev.data || [], ids = rows.map(e=>e.id), rost = {}, rrow = {}, att = {};
   if(ids.length){
     const [ro, at] = await Promise.all([
       sb.from('iv_roster').select('event_id,data').in('event_id', ids),
       sb.from('iv_attendance').select('event_id,status').in('event_id', ids)]);
     const bad = ro.error || at.error;
     if(bad){ SA.err = 'Could not check the rosters - ' + (bad.message || bad); saRender(); return false; }
-    (ro.data||[]).forEach(r=>{ const n = saPeople(r.data); if(n) rost[r.event_id] = n; });
+    (ro.data||[]).forEach(r=>{ const n = saPeople(r.data); if(n) rost[r.event_id] = n; rrow[r.event_id] = true; });
     (at.data||[]).forEach(r=>{ if(r.status) att[r.event_id] = (att[r.event_id]||0) + 1; });
   }
   const weeks = {};
   rows.forEach(e=>{ (weeks[saWeekStart(e.date)] = weeks[saWeekStart(e.date)] || []).push(e); });
   Object.keys(weeks).forEach(w=>weeks[w].sort((a,b)=>a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  SA.weeks = weeks; SA.rost = rost; SA.att = att; SA.err = ''; SA.loaded = true;
+  SA.weeks = weeks; SA.rost = rost; SA.rrow = rrow; SA.att = att; SA.err = ''; SA.loaded = true;
   if(!SA.form && !(SA.sel && weeks[SA.sel])){
     const ws = Object.keys(weeks).sort(), t = todayNZ();
     SA.sel = ws.find(w=>addDaysISO(w,6) >= t) || ws[ws.length-1] || null;
@@ -4585,10 +4612,10 @@ async function saRun(plan){
 function saPanelHTML(w){
   const evs = SA.weeks[w] || [], today = todayNZ();
   const tiles = evs.map(e=>{
-    const i = saDow(e.date), n = SA.rost[e.id] || 0, att = SA.att[e.id] || 0, past = e.date < today, to = e.team === 'A' ? 'B' : 'A';
+    const i = saDow(e.date), n = SA.rost[e.id] || 0, att = SA.att[e.id] || 0, past = e.date < today, to = e.team === 'A' ? 'B' : 'A', tm = e.team === 'A' || e.team === 'B' ? e.team : '';
     const state = att ? 'Attendance marked' : past ? 'Night has passed' : n ? 'Roster: ' + n + ' ' + (n === 1 ? 'person' : 'people') : 'No roster yet';
     return '<div class="sa-tile" data-id="'+esc(e.id)+'"><div class="sa-dn">'+esc(SA_DAYS[i].slice(0,3))+'</div><div class="sa-dd">'+esc(fmtDM(e.date))+'</div>'+
-      '<span class="sa-own t-'+esc(e.team.toLowerCase())+'">Team '+esc(e.team)+'</span>'+
+      '<span class="sa-own t-'+tm.toLowerCase()+'">'+(tm ? 'Team '+tm : 'No team')+'</span>'+
       '<div class="sa-st'+(att || past ? '' : n ? ' has' : '')+'">'+esc(state)+'</div>'+
       '<button class="btn btn-ol sa-mv" onclick="saOwner('+Number(e.id)+',\''+to+'\')" aria-label="Move '+esc(SA_DAYS[i])+' to Team '+to+'">To '+to+'</button></div>';
   }).join('');
@@ -4612,11 +4639,16 @@ async function saOwner(id, to){
     if(n){
       if(!confirm(ev.name + ' (' + fmtDM(ev.date) + ') already has a roster of ' + n + ' ' + (n === 1 ? 'person' : 'people') + ' from Team ' + was +
           '.\n\nMoving it to Team ' + to + ' with them still on it would leave volunteers rostered by a lead who is not theirs.\n\nClear the roster and move the night to Team ' + to + '?')) return;
+    }
+    /* An empty roster row is cleared too, so the new team's lead starts from nothing rather than from the old team's blank. */
+    if(n || SA.rrow[id]){
       if(!await dbWrite('Clearing the roster', ()=>sb.from('iv_roster').delete().eq('event_id', id),
           {verify: ()=>sb.from('iv_roster').select('event_id').eq('event_id', id)})) return;
       patch.confirmed = false;
     }
-    if(!await dbWrite('Changing the team', ()=>sb.from('iv_events').update(patch).eq('id', id))) { await saReload(); return; }
+    if(!await dbWrite('Changing the team', ()=>sb.from('iv_events').update(patch).eq('id', id))) {
+      if(n) toast('The roster was cleared but the night could not be moved. Try the move again.', 'err');
+      await saReload(); return; }
     auditLog('satada-owner', 'events', ev.name + ' ' + ev.date + ' - Team ' + was + ' to Team ' + to + (n ? ' (roster cleared)' : ''));
     await saReload();
     toast(ev.name + ' is now Team ' + to + '\'s');
@@ -4633,9 +4665,9 @@ async function saSwap(w){
     const today = todayNZ();
     const move = evs.filter(e=>e.date >= today && !SA.att[e.id]), stay = evs.filter(e=>move.indexOf(e) < 0);
     if(!move.length) return toast('Every night of this satada has passed or has attendance, so none can move.', 'err');
-    const clear = move.filter(e=>SA.rost[e.id]);
+    const clear = move.filter(e=>SA.rost[e.id] || SA.rrow[e.id]), cleared = clear.filter(e=>SA.rost[e.id]);
     const msg = 'Swap Team A and Team B for ' + move.length + ' night' + (move.length === 1 ? '' : 's') + ' of the week of ' + fmtDM(w) + '?' +
-      (clear.length ? '\n\nThese nights have rosters, which are cleared: ' + clear.map(e=>fmtDM(e.date) + ' (' + SA.rost[e.id] + ')').join(', ') + '.' : '') +
+      (cleared.length ? '\n\nThese nights have rosters, which are cleared: ' + cleared.map(e=>fmtDM(e.date) + ' (' + SA.rost[e.id] + ')').join(', ') + '.' : '') +
       (stay.length ? '\n\nThese stay as they are (passed or attendance marked): ' + stay.map(e=>fmtDM(e.date)).join(', ') + '.' : '');
     if(!confirm(msg)) return;
     if(clear.length){
@@ -4666,7 +4698,11 @@ async function saDelete(w){
     const ids = evs.map(e=>e.id);
     if(!await dbWrite('Deleting the satada', ()=>sb.from('iv_events').delete().in('id', ids),
         {verify: ()=>sb.from('iv_events').select('id').in('id', ids)})) { await saReload(); return; }
-    auditLog('delete-satada', 'events', 'Satada ' + w + ' - removed ' + ids.length + ' nights');
+    /* iv_roster is keyed by event_id with no cascade, so the rosters are removed here or they stay behind with nothing to belong to. */
+    const rids = ids.filter(i=>SA.rrow[i]);
+    let orphan = false;
+    if(rids.length) orphan = !await dbWrite('Removing the rosters of the deleted nights', ()=>sb.from('iv_roster').delete().in('event_id', rids), {rows:false});
+    auditLog('delete-satada', 'events', 'Satada ' + w + ' - removed ' + ids.length + ' nights' + (rids.length ? ', ' + rids.length + ' roster' + (rids.length === 1 ? '' : 's') + (orphan ? ' left behind' : '') : ''));
     SA.sel = null;
     await saReload();
     toast('Satada deleted');
@@ -4778,8 +4814,17 @@ function vlFormHTML(r){
     '<div class="fg"><label>Gender</label><select data-vf="gender" aria-label="Gender"><option'+((r.gender||'Male')==='Male'?' selected':'')+'>Male</option><option'+(r.gender==='Female'?' selected':'')+'>Female</option></select></div>'+
     '<div class="fg"><label>Phone number</label><input type="tel" data-vf="phone" value="'+esc(r.phone||'')+'" placeholder="e.g. 021 123 4567" autocomplete="off"'+(VL.hasPhone?'':' disabled')+'></div>'+
     '<div class="fg"><label>Email</label><input type="email" data-vf="email" value="'+esc(r.email||'')+'" placeholder="name@example.com" autocomplete="off"></div>'+
+    vlWdHTML(r)+
     '</div><div class="um-form-acts"><button class="btn btn-ol" onclick="vlEdit('+r.id+')">Cancel</button>'+
     '<button class="btn btn-bl" onclick="vlSave('+r.id+')">Save</button></div>';
+}
+/* The one role a volunteer's login can be given from here: Weekday Team Lead, stacked on whatever they already hold. */
+function vlWdHTML(r){
+  const lg = VL.logins[String(r.id)]; if(!lg) return '';
+  const pm = permsOf(lg);
+  if(!canManageProfile(pm) || !grantableRoles().includes('wd_tl') || facLocked(pm)) return '';
+  return '<div class="fg" style="grid-column:1/-1"><label>Weekday</label><label class="rl-opt"><input type="checkbox" data-vf="wd"'+(pm.includes('wd_tl')?' checked':'')+' aria-label="Weekday Team Lead"><span>Weekday Team Lead</span></label>'+
+    '<div class="mem-hint">Lets them lead the weekday shift on the Weekday page. Their other roles stay as they are.</div></div>';
 }
 function vlAge(inp){
   const a = ageFromDob(inp.value), el = inp.closest('.um-edit').querySelector('[data-vage]');
@@ -4804,9 +4849,19 @@ async function vlSave(id){
     patch.dob = dob;
     const a = ageFromDob(dob); if(a != null) patch.age_group = groupForAge(a);
   }
+  const lg = VL.logins[String(id)], wdEl = box.querySelector('[data-vf="wd"]');
+  let wdPerms = null;
+  if(lg && wdEl){ const cur = permsOf(lg); if(wdEl.checked !== cur.includes('wd_tl')) wdPerms = wdEl.checked ? cur.concat(['wd_tl']) : cur.filter(k=>k !== 'wd_tl'); }
   if(!await dbWrite('Saving the volunteer', ()=>sb.from('iv_members').update(patch).eq('id', id))) return;
   Object.assign(r, patch);
   auditLog('Updated volunteer details', 'members', r.name);
+  if(wdPerms){
+    /* Only the Weekday role is added or taken off; every other role on the login is sent back exactly as it was. */
+    if(!await dbWrite('Saving the Weekday Team Lead role', ()=>sb.from('profiles').update({perms: wdPerms}).eq('id', lg.id))){ renderVLogins(); return; }
+    auditLog('Updated login', 'login', (lg.email||lg.id) + ' - Weekday Team Lead ' + (wdPerms.includes('wd_tl') ? 'added' : 'removed') + ' · access ' + (wdPerms.map(k=>ROLE_LABELS[k]||k).join(', ') || 'none'));
+    lg.perms = wdPerms;
+    if(!wdPerms.length) delete VL.logins[String(id)];
+  }
   toast('Saved ✓'); VL.open = null; renderVLogins();
 }
 /* Admin Logins is everyone above volunteer, and anyone who has no role yet
@@ -4841,9 +4896,10 @@ function alCats(r){
   if(pm.some(x=>/^(tl|ytl)_[ab]$/.test(x))) c.push('tl');
   if(pm.some(x=>/^av/.test(x))) c.push('av');
   if(pm.some(x=>AL_DIV.test(x))) c.push('div');
+  if(pm.includes('wd_tl')) c.push('wd');
   return c;
 }
-const AL_FILTERS = [['all','All'],['lead','Leadership'],['tl','Team leads'],['av','AV'],['div','Divisions'],['none','No access']];
+const AL_FILTERS = [['all','All'],['lead','Leadership'],['tl','Team leads'],['av','AV'],['div','Divisions'],['wd','Weekday'],['none','No access']];
 function alInitials(r){
   const n = String(r.display || r.username || r.email || '?').trim().split(/[\s.@_-]+/).filter(Boolean);
   return ((n[0]||'?')[0] + (n.length > 1 ? n[1][0] : '')).toUpperCase();
@@ -5000,6 +5056,7 @@ function editProfile(id){
 async function saveProfile(id){
   const r = PROFILES.find(x=>String(x.id)===String(id)); if(!r) return;
   const self = CU && CU.uid === r.id;
+  if(!self && facLocked(permsOf(r))){ toast(FAC_LOCK_MSG, 'err'); return; }
   const display = ($('pf-display-'+id)||{}).value || '';
   const memEl = $('pf-member-'+id);
   const patch = { display: display.trim() || null };
@@ -5057,7 +5114,9 @@ let MY_LINKED = false;
 /* ═══ MY PROFILE: a person's own display name and contact details ═══ */
 async function loadProfile(){
   $('pfDisplay').value = CU.display || '';
-  $('pfLocked').innerHTML = 'Role: <b>' + esc(roleLabel(CU)) + '</b>. Sign-in email: <b>' + esc(CU.email || 'not set') + '</b>.';
+  /* Every role they hold, not only the highest: a Weekday Team Lead on top of a Team A volunteer should see both. */
+  const myRoles = (CU.perms||[]).filter(k=>ROLE_LABELS[k]).sort((x,y)=>rankOf([x]) - rankOf([y])).map(k=>ROLE_LABELS[k]);
+  $('pfLocked').innerHTML = (myRoles.length > 1 ? 'Roles: <b>' + esc(myRoles.join(' + ')) : 'Role: <b>' + esc(roleLabel(CU))) + '</b>. Sign-in email: <b>' + esc(CU.email || 'not set') + '</b>.';
   let view = null;
   if(sb && CU.uid){ try{ const r = await sb.rpc('my_member_view'); view = r.error ? null : r.data; }catch(e){} }
   const m = view && view.member && view.linked ? view.member : null;
@@ -6494,6 +6553,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     if(CU && myRank() <= 5){ add('A'); add('B'); }
     if(CU && (myRank() <= 4 || (typeof AV_ADMIN==='function' && AV_ADMIN()))) add('AV');
     myLeadTeams().forEach(add);
+    if(CU && hasPerm('wd_tl')) add('WD');   // the Weekday page, for the lead themselves
     return out;
   }
   function divisionOf(k){ for(var i=0;i<DIVISIONS.length;i++){ if(DIVISIONS[i].key.toUpperCase()===k) return DIVISIONS[i]; } return null; }
@@ -6608,7 +6668,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       (sub?'<span class="hm-psub">'+esc(sub)+'</span>':'')+
       '<span class="hm-row"><span class="hm-cta">'+esc(cta)+'</span>'+(chips||[]).map(function(c){ return '<a class="hm-chip" href="'+c.href+'" onclick="rememberTeam(\''+key+'\')">'+esc(c.t)+'</a>'; }).join('')+'</span></span></div>';
   }
-  function subFor(k){ return k==='AV' ? 'The monthly roster, your team and the week ahead.' : (/^(A|B)$/.test(k) ? 'Calendar, roster, attendance and people, all in one place.' : ''); }
+  function subFor(k){ return k==='WD' ? 'Add extra duties and close up the weekday shift.' : k==='AV' ? 'The monthly roster, your team and the week ahead.' : (/^(A|B)$/.test(k) ? 'Calendar, roster, attendance and people, all in one place.' : ''); }
   function chipsFor(key){
     var T = LEAD_TEAMS[key]; if(!T || !/^(A|B|AV)$/.test(key)) return [];
     return T.pages.slice(0,3).map(function(p){ return { t:p[2], href: T.url + '?p=' + p[0] }; });

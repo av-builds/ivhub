@@ -130,3 +130,19 @@ create policy app_users_write on public.app_users for all to authenticated
 -- grants): at most 6 requests per 10 minutes from one origin (hashed), one mail per address per 10 minutes, and 100 mails
 -- per 10 minutes overall. The reply stays the same generic sentence with the same timing. Clients can no longer insert the
 -- audit row 'Requested own password reset' (audit_logs_insert check).
+
+-- ===================================================================
+-- APPLIED: feature_pass2_database_changes, wd_att_freeze_allows_member_unlink
+--  * iv_roster rows follow their event (foreign key, on delete cascade). One orphan roster row (event no longer existed)
+--    was copied to public.iv_roster_orphan_backup (no client access) before being removed.
+--  * audit_logs_read: rank <= 5 as before, plus AV Team Lead, Assistant and Youth Assistant for the AV-tagged entries.
+--  * Weekday leads can insert and update shifts for today but not delete them; reopening a shift clears who closed it.
+--  * TRUNCATE, REFERENCES, TRIGGER revoked from anon and authenticated on every public table; anon lost INSERT, UPDATE,
+--    DELETE on every public table (and default privileges); reads for anon were not touched.
+--  * iv_wd_attendance.member_id is nullable with ON DELETE SET NULL: deleting a member keeps their Extra Duty history under
+--    the stored name. The freeze trigger lets member_id be cleared (never changed to another member).
+--  * wd_member_search returns nothing for wildcard-only queries.
+--  * auth.uid() wrapped in selects on the invite batch and item policies.
+-- Simulated and rolled back: owner, facilitator, tl_a, tl_b, an_lead, av_yatl, av_coord, volunteer reads and writes as
+-- expected; av_yatl reads the AV change log; a pure weekday lead cannot delete a shift; deleting a member keeps extra duty.
+-- DASHBOARD ONLY: leaked-password protection and a shorter email OTP expiry.

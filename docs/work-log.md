@@ -167,3 +167,74 @@ Only Team Leads and Youth Team Leads (for their own team) and Facilitators and a
 
 ## Update: password reset limit
 Requests for a password reset are now limited per origin (6 per 10 minutes), per address (one mail per 10 minutes) and overall (100 mails per 10 minutes). The counters live in a private table the browser can't read or write, so nobody can plant fake entries to trigger or dodge the limit. The reply stays the same for every request. The invite function is live as version 17.
+
+## Update: feature testing pass 2
+
+### hub-everything: 12 fixed, 6 left
+- Deleting a satada left its iv_roster rows behind (iv_roster has no FK or cascade to iv_events), although the confirm said rosters are deleted with it
+- Moving a satada night (single or whole-week swap) to the other team left an empty roster row from the old team in place, so the new team's lead inherited a blank built roster
+- A satada night with a null team crashed the whole satada panel render (e.team.toLowerCase())
+- An existing Team A/B volunteer could not be made a Weekday Team Lead from the Hub at all: linked volunteers are hidden from Admin Logins and Volunteer Logins had no role control
+- A Facilitator opening or linking an account holding AV or division roles got a cryptic 'A Facilitator may only assign Team A, Team B...' error for even a display-name or link change (verified with a rolled-back simulatio
+- Linking your own login to a member showed 'Linked.' although profiles_guard silently kept the old link (row is returned with the old value)
+- Weekday Team Leads had no Quick Access card on the Hub home, so a pure wd_tl saw only an empty duties box
+- Pure Weekday-only logins saw misleading 'nothing rostered yet' / 'no lead listed' because the restrictive wd_limit_* policies return empty sets for rosters and members
+- Weekday Attendance: overlapping range loads could draw an older answer over a newer one, and a range over 1000 rows was silently truncated by the database cap
+- After deleting a member, Admin Logins/Volunteer Logins kept showing their login as linked until reload
+- My Profile showed only the single highest role for a stacked account (Weekday Team Lead hid the Team A volunteer role); session role was perms[0] regardless of rank
+- Weekday-only accounts could not be found in Admin Logins filters
+
+### team-pages: 18 fixed, 5 left
+- Two events on the same date both rostered the same people (the generator only avoided other-team and AV double-ups); a 36-person team ended with all 36 on both rosters
+- Infinite request loop on the Attendance page when the walk-in members read fails and an other-team walk-in exists (loadAllMembers failed, redraw re-requested immediately; the page froze)
+- A failed core read at load (iv_events, iv_members, iv_roster, attendance, announcements) rendered an empty calendar with no message; reload failures were console-only
+- The Database/Save warning banners (#dbHint and the 'roster NOT saved' #saveWarn) were painted underneath the calendar hero banner and effectively invisible on the Calendar page
+- Calendar grid widened past the viewport (1570px at 1440) when an event had a long name, because 1fr columns grow to the nowrap button
+- A lead covering the other team's event saw the cover panel on the Calendar page but marking attendance or walk-ins redrew only the hidden dashboard, so ticks did not appear
+- Quick clicks on duty preference chips or away dates overwrote each other (second click built its patch from the old copy, the first change silently vanished)
+- Checklist ticks made while the shared checklist was unreachable were wiped by the next successful reply (server state overwrote local state)
+- Checklist warning always said the owner must run docs/checklist.sql, even for a permission or network failure
+- Bell row for 'attendance not marked' was labelled 'Cover'
+- Bell kept listing an event as 'attendance not marked' forever when a rostered person was later made inactive or deleted (they can never be marked)
+- Export PNG for the other team's satada night was titled and footed 'Team A' (this page's team) instead of the owner
+- Day dialog for a date holding a satada night showed only the satada night and hid the cycle owner's other events that day
+- A failed other-team events load for a month was never retried (OTHER_EV[key] stayed empty)
+- Unsaved-roster warning persisted for an event that was deleted (here or on another device) and could never be retried
+- Sync from Hub said 'Synced' even when the load failed
+- Stand-in (non-lead) dashboard showed today's or the next DRAFT roster of the team's event
+- Attendance report tooltip said walk-ins were 'given a duty' while the dialog allows no duty
+
+### weekday-page: 11 fixed, 4 left
+- Late edit after close-up not flagged when this page's copy of the shift was stale (another lead closed up since page load, or this lead was already in leads)
+- Second lead confirming Close Up overwrote the first lead's submission (closed_at and closed_by_name changed)
+- Removing an entry another lead already removed showed 'the database refused it' and left it on screen
+- Duplicate add because another lead had already added it showed the message but the list stayed stale
+- Search for only wildcard characters (for example '%%') passed the 2-letter check; the database strips % and _ so it would list the first 20 members
+- Writes just after midnight (before the 60 s timer) went to yesterday and failed with a raw row-level-security error
+- Lead's display name fell back to their email address, which is then shown to other leads in 'Leading today' and stored in leads[]
+- Page stuck forever on 'Checking your access' if getSession or the profile read threw (offline)
+- A failed day load said 'Not submitted yet' or 'This day was not submitted', which is wrong when the status is unknown; future days also said 'not submitted'
+- Stale view when leads work for hours: other leads' additions only appeared on tab refocus
+- Late-edit comparison used raw string compare of timestamps (fragile with differing fraction digits or offsets); Other duty typed with doubled spaces could dodge the cannot-do and duplicate checks
+
+### av-and-divisions: 7 fixed, 5 left
+- Long unbroken names pushed the Roster Needs Attention banner past the screen, giving a sideways page scroll at 390px
+- Long unbroken text was clipped in audit log rows and Majalis/Add-on cards (text and delete button cut off at 390px)
+- On a slow connection AV page showed a username/password form (Sign In, which only redirects to the Hub) while the sign-in was still being checked
+- A Developer could press Clear All Audit Logs, confirm, and then be refused by the database (delete policy is my_rank()=0, owner only)
+- Safety page: when a read failed (roster, settings, availability or members) the page carried on with empty defaults, so Auto-fill could overwrite days locked by hand and People & numbers Save could overwrite the real hea
+- Safety Reset this day reported success when the database silently refused the delete (RLS returns 0 rows without an error)
+- Page could sit forever on Checking your access / Checking your invitation if the session check threw
+
+### shared-and-a11y: 5 fixed, 5 left
+- Select/menu popup (z-index 3000) rendered behind the Hub's fixed drawers and modals (.al-drawer and .mds-ov, z-index 5000), so dropdowns inside them would open invisibly
+- AV page edit modal #mbox had no dialog role, so it got no focus trap, no initial focus, no focus restore and no accessible name
+- Held Enter or Space on a keyboard-upgraded div/span fired repeated clicks (native buttons do not repeat Space)
+- Forced-colors (Windows high contrast): slanted clip-path buttons, fields, chips, menus and dialogs lost their edges because backgrounds are removed
+- Reduced motion: dashboard entrance (ivRise), hm-skel shimmer, veil fade and popup fade were not covered by any reduced-motion rule
+
+### database-and-edge: 0 fixed, 8 left
+
+
+## Update: database changes from feature testing pass 2
+Rosters now follow their event, AV leads can read the AV change log, weekday leads can no longer delete a shift, reopening a shift clears who closed it, extra database permissions were removed, Extra Duty history is kept when a member is deleted, and the weekday name search ignores wildcard-only searches. While testing I found and fixed a conflict that would have stopped member deletion when extra duties existed.

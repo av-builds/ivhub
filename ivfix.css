@@ -111,3 +111,13 @@ html[data-theme="light"] #vlList .um-meta b{color:#0B6B47!important;}
 .cal-legend{gap:0 5px;}
 .cal-legend i{margin-right:0;}
 .cal-legend i:not(:first-child){margin-left:14px;}
+/* forced-colors: the slanted shapes are drawn by a clip-path over a background, which high contrast removes, leaving
+   buttons and fields with no edge. Give them a plain outlined box instead. */
+@media (forced-colors:active){
+  button,.btn,select,input:not([type=checkbox]):not([type=radio]),textarea,.ivp-pop,.ivp-opt,.chip,.iv-theme-btn,.dcard,.mbox,.sheet{clip-path:none!important;border:1px solid ButtonText!important;}
+  .ivp-opt.on{border-color:Highlight!important;}
+}
+/* entrance and shimmer animations that no page-level rule covers */
+@media (prefers-reduced-motion:reduce){
+  #page-dashboard>*,.hm-pc,.hm-skel,#ivVeil,#ivVeil.iv-show,.ivp-pop{animation:none!important;}
+}
