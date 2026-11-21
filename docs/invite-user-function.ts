@@ -214,11 +214,10 @@ Deno.serve(async (req) => {
       const said = { ok: true, message: "If that address has an account, a link is on its way." };
       const addr = String(peek.email ?? "").trim().toLowerCase();
       const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-      const t0 = Date.now();
 
-      // Every branch does the same lookups and then waits out the same
-      // minimum time, so the reply cannot tell a volunteer's address from a
-      // leader's or from one that does not exist. The mail itself is sent in
+      // Every branch does the same lookups and the reply waits a fixed time,
+      // so the reply cannot tell a volunteer's address from a leader's or
+      // from one that does not exist. The mail itself is sent in
       // the background (waitUntil) so a slow send does not show either.
       const work = (async () => {
         try {
@@ -286,9 +285,9 @@ Deno.serve(async (req) => {
         } catch { /* never let a failure here change the answer */ }
       })();
       try { (globalThis as any).EdgeRuntime?.waitUntil?.(work); } catch { /* not available locally */ }
-      await Promise.race([work, sleep(2500)]);
-      const left = 800 - (Date.now() - t0);
-      if (left > 0) await sleep(left);
+      // Not awaited: the reply goes out after the same fixed delay on every
+      // branch, so its timing says nothing about the address.
+      await sleep(1500);
       return json(said);
     }
   }

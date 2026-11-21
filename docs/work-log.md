@@ -238,3 +238,12 @@ Requests for a password reset are now limited per origin (6 per 10 minutes), per
 
 ## Update: database changes from feature testing pass 2
 Rosters now follow their event, AV leads can read the AV change log, weekday leads can no longer delete a shift, reopening a shift clears who closed it, extra database permissions were removed, Extra Duty history is kept when a member is deleted, and the weekday name search ignores wildcard-only searches. While testing I found and fixed a conflict that would have stopped member deletion when extra duties existed.
+
+## Update: third sweep fixes
+- **Cycles.** A mistyped year in a Chandraat override is now refused (Team pages and Hub), and event auto-creation is capped per cycle. The Hub's Cycle Anchor editor, which saved but changed nothing, was removed.
+- **Checklist** no longer blanks at New Zealand midnight during a late night.
+- **Sign-out** on the team and AV pages now only signs out that device, no longer waits forever on a stalled connection, and forgets the remembered name. The Hub clears all per-person state, including Rapid Link and Satada.
+- **Team pages.** Attendance loads past the 1000-row limit, a roster save warns if someone else changed it first, and Satada owner chips no longer clip on phones.
+- **Hub.** Weekday Attendance refreshes its default range, duplicate member names are caught, a Satada owner change also clears any stand-in, and the Satada form buttons are larger on phones.
+- **AV page.** Uses New Zealand time for today, takes permissions only from the profile, and loads its roster in pages.
+- **Reset emails.** The reply time no longer depends on whether the address is a volunteer.

@@ -1702,7 +1702,7 @@ function esc(s){
    date for most of the NZ day (and shifted dates during daylight saving).
    Always derive YYYY-MM-DD from local time via these helpers. */
 function localDS(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function todayDS(){ return localDS(new Date()); }
+function todayDS(){ return new Intl.DateTimeFormat('en-CA',{timeZone:'Pacific/Auckland',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); }
 /* Collision-resistant numeric id - Date.now() alone can collide when two
    admins add records in the same millisecond. */
 function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
@@ -1993,9 +1993,28 @@ async function loadFromDB(){
     await loadRecDates();
     const vR = await sb.from('volunteers').select('*');
     if(vR.error){ console.error('volunteers error:', vR.error); throw vR.error; }
-    const mR = await sb.from('majalis').select('*').order('date');
+    const mRows = [];
+    let mR = {error:null};
+    for(let from=0;;from+=1000){
+      const pg = await sb.from('majalis').select('*').order('date').range(from, from+999);
+      if(pg.error){ mR = pg; break; }
+      mRows.push(...(pg.data||[]));
+      if(!pg.data || pg.data.length<1000) break;
+    }
+    mR.data = mRows;
     if(mR.error){ console.error('majalis error:', mR.error); throw mR.error; }
-    const rR = await sb.from('roster').select('*');
+    /* Page past PostgREST's 1000-row cap. If a page fails the whole load
+       fails, so a truncated roster can never look empty and be regenerated
+       over manual days. */
+    const rRows = [];
+    let rR = {error:null};
+    for(let from=0;;from+=1000){
+      const pg = await sb.from('roster').select('*').order('date').range(from, from+999);
+      if(pg.error){ rR = pg; break; }
+      rRows.push(...(pg.data||[]));
+      if(!pg.data || pg.data.length<1000) break;
+    }
+    rR.data = rRows;
     if(rR.error){ console.error('roster error:', rR.error); throw rR.error; }
     vols = (vR.data||[]).map(r=>{
       const d = r.data || r; // handle both {id, data:{...}} and flat row
@@ -2550,15 +2569,11 @@ function refreshSessionPerms(){
     console.warn('Account "'+CU.user+'" not found in app_users - keeping the hub-issued session as-is.');
     return;
   }
-  // app_users is this page's own legacy user table and predates the Hub's
-  // permission system. It used to replace the session's perms outright,
-  // which silently stripped anything granted in the Hub but not mirrored
-  // here - a Developer would sign in with full access and be demoted a
-  // moment later, on this page only. Union instead: app_users may add AV
-  // roles, it may never remove what profiles granted.
-  const legacy = (fresh.permsAll && fresh.permsAll.length) ? fresh.permsAll.slice() : (fresh.perms || [fresh.role] || []);
+  // Permission comes only from profiles (CU.permsAuth). The legacy app_users
+  // table is a second, weakly guarded store, so it is used for the display
+  // name only and never merged into the session's perms.
   const auth = Array.isArray(CU.permsAuth) ? CU.permsAuth : [];
-  CU.perms = auth.concat((legacy||[]).filter(p=>p && auth.indexOf(p)<0));
+  if(Array.isArray(CU.permsAuth)) CU.perms = auth.slice();
   CU.role = roleFromPerms(normalizePermList(CU.perms));
   CU.display = fresh.display;
   try{ localStorage.setItem('ivhub_session', JSON.stringify(window.CU)); }catch(e){}
@@ -2758,12 +2773,14 @@ async function logout(){
   // ran signOut() first, so by the time the insert went out there was no
   // token on it and the audit log's insert policy - which only accepts
   // signed-in writers - turned it away. Every AV sign-out went unrecorded.
-  await auditLog('Signed out', 'logout', `Session ended`);
-  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  // Capped at 4s so a dead connection cannot stop the sign-out.
+  try{ await Promise.race([auditLog('Signed out', 'logout', `Session ended`), new Promise(res=>setTimeout(res,4000))]); }catch(e){}
+  try{ if(sb) await sb.auth.signOut({scope:'local'}); }catch(e){}
   window.CU = null;
   // Clear all data so next login starts fresh
   vols=[]; majalisEvs=[]; trainings=[]; avEvents=[]; roster={}; auditLogs=[]; hubAvSet=null;
   localStorage.removeItem('ivhub_session');
+  try{ localStorage.removeItem('ivhub_myname'); }catch(e){}
   // Reset calendar to current month
   calMo=new Date().getMonth(); calYr=new Date().getFullYear();
   sessionStorage.removeItem('jk_calMo');
@@ -5581,10 +5598,8 @@ function handleUserChange(payload){
     if(window.CU && CU.user === row.username){
       const fresh = USERS[row.username];
       const before = JSON.stringify(CU.perms||[]);
-      CU.role = fresh.role;
-      const legacy = (fresh.permsAll && fresh.permsAll.length) ? fresh.permsAll.slice() : (fresh.perms||[]);
       const auth = Array.isArray(CU.permsAuth) ? CU.permsAuth : [];
-      CU.perms = auth.concat(legacy.filter(p=>p && auth.indexOf(p)<0));
+      CU.perms = auth.slice();
       CU.role = roleFromPerms(normalizePermList(CU.perms));
       CU.display = fresh.display;
       try{ localStorage.setItem('ivhub_session', JSON.stringify(window.CU)); }catch(e){}

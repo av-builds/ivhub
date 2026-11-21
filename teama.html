@@ -853,7 +853,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .cy-card.ro{opacity:.6;cursor:default;}
 .cy-card.ro:hover{transform:none;box-shadow:none;border-color:inherit;opacity:.6;}
 .cy-grid.past .cy-card:hover{opacity:1;}
-.cy-top{display:flex;align-items:center;gap:8px;}
+.cy-top{display:flex;align-items:center;gap:4px 8px;flex-wrap:wrap;}
 .cy-count{margin-left:auto;font-size:12px;font-weight:800;color:var(--dm);}
 .cy-name{font-size:20px;font-weight:900;letter-spacing:.01em;line-height:1.15;margin-top:4px;}
 .cy-dates{font-size:12.5px;font-weight:700;color:var(--dm);}
@@ -1533,6 +1533,7 @@ async function verifyAuth(){
 }
 function denyAccess(kind){
   try{ localStorage.removeItem('ivhub_session'); }catch(e){}
+  try{ localStorage.removeItem('ivhub_myname'); }catch(e){}
   const offline = kind==='offline';
   document.body.insertAdjacentHTML('beforeend',
     '<div class="noaccess"><div class="box"><div style="font-size:30px">'+(offline?'\u{1F4E1}':'\u{1F512}')+'</div>'+
@@ -1548,9 +1549,12 @@ function denyAccess(kind){
    accepts writes from someone signed in - so leaving this page recorded
    nothing at all, while the Hub and the AV page both recorded it. */
 async function signOut(){
-  try{ await auditLog('Signed out','login',(CU&&(CU.display||CU.user)||'Someone')+' signed out of '+TEAM_NAME); }catch(e){}
-  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  /* The audit insert needs the live session, so it goes first, but a dead
+     connection must not stop the person signing out: cap the wait. */
+  try{ await Promise.race([auditLog('Signed out','login',(CU&&(CU.display||CU.user)||'Someone')+' signed out of '+TEAM_NAME), new Promise(r=>setTimeout(r,4000))]); }catch(e){}
+  try{ if(sb) await sb.auth.signOut({scope:'local'}); }catch(e){}   // this device only: other devices keep their sessions
   try{ localStorage.removeItem('ivhub_session'); }catch(e){}
+  try{ localStorage.removeItem('ivhub_myname'); }catch(e){}
   ivGo('index.html');
 }
 
@@ -1731,6 +1735,9 @@ function cycleForDate(iso){
 }
 function inCycleK(iso,k){ return iso>=cyStart(k)&&iso<cyStart(k+1); }
 function nzTodayISO(){ return nzDateStr(new Date()); }
+/* The checklist belongs to the night, not the calendar day: before 06:00 NZ
+   a late night is still being closed, so it keeps the previous date. */
+function clNightISO(){ return nzDateStr(new Date(Date.now()-6*3600000)); }
 const MON_UP=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 function cycleLabel(k){
   const s=cyStart(k),e=cyStart(k+1);
@@ -2082,9 +2089,17 @@ async function byEventId(table, ids){
   if(!ids.length) return {data:[]};
   const out=[];
   for(let i=0;i<ids.length;i+=IN_CHUNK){
-    const {data,error}=await sb.from(table).select('*').in('event_id',ids.slice(i,i+IN_CHUNK));
-    if(error) return {error:error};
-    out.push.apply(out,data||[]);
+    const chunk=ids.slice(i,i+IN_CHUNK);
+    /* The server returns at most 1000 rows per request however few ids are
+       asked for, so page until a short page comes back. */
+    for(let from=0;;from+=1000){
+      let qy=sb.from(table).select('*').in('event_id',chunk).order('event_id');
+      if(table==='iv_attendance') qy=qy.order('member_id');
+      const {data,error}=await qy.range(from,from+999);
+      if(error) return {error:error};
+      out.push.apply(out,data||[]);
+      if(!data||data.length<1000) break;
+    }
   }
   return {data:out};
 }
@@ -2155,7 +2170,7 @@ async function loadAll(){
   if(tot.error) console.warn('member_attendance_totals:',tot.error.message||tot.error);
   else (tot.data||[]).forEach(r=>{ ATT_TOTALS[r.member_id]=r; });
   if(ro.error){ console.warn('iv_roster:',ro.error.message||ro.error); if(tableMissing(ro.error))DB_MISSING=true; }
-  else { const nr={}; (ro.data||[]).forEach(r=>{ nr[r.event_id]=r.data||{assign:{},manual:{}}; }); ROSTERS=nr; }
+  else { const nr={}; (ro.data||[]).forEach(r=>{ nr[r.event_id]=r.data||{assign:{},manual:{}}; ROSTER_SEEN[r.event_id]=r.updated_at||null; }); ROSTERS=nr; }
   if(an.error){ console.warn('announcements:',an.error.message||an.error); if(tableMissing(an.error))DB_MISSING=true; }
   else ANNS=an.data||[];
   if(at.error){ console.warn('iv_attendance:',at.error.message||at.error); }
@@ -2205,10 +2220,10 @@ async function autoCreateEvents(){
   const satWeeks=new Set(Object.keys(satWeekMap()));   // weeks the satada has taken over
   for(const c of CYCLES){
     if(c.end<=today) continue; // never historic
-    let d=new Date(c.start+'T12:00:00');
+    let d=new Date(c.start+'T12:00:00'), guard=0;
     while(true){
       const iso=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
-      if(iso>=c.end) break;
+      if(iso>=c.end||++guard>45) break;   // a mistyped override must not fan out into years of Fridays
       if(d.getDay()===5&&!satWeeks.has(weekStart(iso))) want.push({team:PAGE_TEAM,date:iso,name:'Friday Majlis',type:'friday',uniform:'Casual',youth:true,confirmed:false});
       d.setDate(d.getDate()+1);
     }
@@ -2626,6 +2641,7 @@ function canon(v){
   if(v&&typeof v==='object') return '{'+Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
   return JSON.stringify(v);
 }
+let ROSTER_SEEN = {};           // event id -> iv_roster.updated_at as last read or written here
 let ROSTER_UNSAVED = {};        // event id -> the roster that is not safely stored
 function unsavedCount(){ return Object.keys(ROSTER_UNSAVED).length; }
 async function saveRoster(eventId, opts){
@@ -2637,6 +2653,22 @@ async function saveRoster(eventId, opts){
   /* Long enough to cover the write and the read-back. The old 1.5s could
      lapse mid-save, letting our own change bounce back as a reload. */
   pauseRT(6000);
+  /* Stale check: if the stored row changed since this tab read it, someone
+     else saved in between. Do not overwrite their work silently. */
+  try{
+    const seen = ROSTER_SEEN[eventId];
+    if(seen){
+      const {data:cur, error:ce} = await sb.from('iv_roster').select('updated_at').eq('event_id', eventId).maybeSingle();
+      if(!ce && cur && cur.updated_at && cur.updated_at !== seen){
+        ROSTER_SEEN[eventId] = cur.updated_at;
+        delete ROSTER_UNSAVED[eventId];
+        if(!quiet) toast('This roster was changed by someone else. Your edit was not saved.', 'err');
+        if(confirm('This roster was changed by someone else since you opened it, so your last edit was NOT saved over theirs.\n\nReload the latest roster now?')){ try{ await loadAll(); }catch(e){} try{ renderRoster(); }catch(e){} }
+        renderSaveWarning();
+        return false;
+      }
+    }
+  }catch(e){ /* a failed check must not block a normal save */ }
   let err = null;
   for(let attempt = 0; attempt < 2; attempt++){
     try{
@@ -2653,7 +2685,8 @@ async function saveRoster(eventId, opts){
   if(!err){
     // Read it back. Sent and stored are not the same claim.
     try{
-      const {data, error} = await sb.from('iv_roster').select('event_id,data').eq('event_id', eventId);
+      const {data, error} = await sb.from('iv_roster').select('event_id,data,updated_at').eq('event_id', eventId);
+      if(!error && data && data.length===1) ROSTER_SEEN[eventId] = data[0].updated_at||null;
       if(error) err = error;
       else if(!data || !data.length) err = {message:'the row was accepted but is not there when read back'};
       else if(data.length > 1) err = {message:'there are ' + data.length + ' roster rows for this event, so the save did not replace the old one cleanly. Tell the admin.'};
@@ -4543,10 +4576,11 @@ function openCycleSettings(){
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" onclick="saveCycleSettings()">Save</button></div>';
   oM(h); renderOvRows();
 }
+function isoShift(iso,n){ const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
 function renderOvRows(){
   const box=document.getElementById('dcard'); const wrap=box?box.querySelector('#ovRows'):null; if(!wrap) return;
   wrap.innerHTML=CYCLES.map(c=>{ const raw=nzDateStr(newMoonDate(c.k)); const cur=OVERRIDES[raw]||'';
-    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px"><span style="flex:1;color:var(--dm)">Chandraat <b style="color:var(--dt)" class="num">'+esc(raw)+'</b> ('+esc(cycleLabel(c.k))+')</span><input type="date" class="ov-in" data-raw="'+esc(raw)+'" value="'+esc(cur)+'" style="width:160px"></div>';
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px"><span style="flex:1;color:var(--dm)">Chandraat <b style="color:var(--dt)" class="num">'+esc(raw)+'</b> ('+esc(cycleLabel(c.k))+')</span><input type="date" class="ov-in" data-raw="'+esc(raw)+'" min="'+esc(isoShift(raw,-3))+'" max="'+esc(isoShift(raw,3))+'" value="'+esc(cur)+'" style="width:160px"></div>';
   }).join('');
 }
 async function saveCycleSettings(){
@@ -4562,7 +4596,16 @@ async function saveCycleSettings(){
     if(data&&data.value&&typeof data.value==='object') Object.assign(newOv,data.value);
     else Object.assign(newOv,OVERRIDES);
   }catch(e){ Object.assign(newOv,OVERRIDES); }
-  (box?box.querySelectorAll('#ovRows .ov-in'):[]).forEach(inp=>{ const raw=inp.getAttribute('data-raw'),v=(inp.value||'').trim(); if(v&&v!==raw) newOv[raw]=v; else delete newOv[raw]; });
+  let badOv='';
+  (box?box.querySelectorAll('#ovRows .ov-in'):[]).forEach(inp=>{ const raw=inp.getAttribute('data-raw'),v=(inp.value||'').trim();
+    if(v&&v!==raw){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(v)||v<isoShift(raw,-3)||v>isoShift(raw,3)){ if(!badOv) badOv=raw; return; }
+      newOv[raw]=v;
+    } else delete newOv[raw]; });
+  if(badOv) return toast('Chandraat '+badOv+': the override must be within 3 days of the computed date','err');
+  /* Cycles must still run in order once the overrides are applied. */
+  if(CYCLES.length){ const k0=CYCLES[0].k-1, k1=CYCLES[CYCLES.length-1].k;
+    for(let k=k0;k<=k1;k++){ if(chandraatISO(k,newOv)>=chandraatISO(k+1,newOv)) return toast('That override would put two cycles out of order','err'); } }
   /* Written before OVERRIDES moves. The overrides decide where every
      cycle starts, so a refused save that had already been applied locally
      left this browser rostering to dates no other browser agreed with - and then autoCreateEvents() created events on them. */
@@ -5353,7 +5396,7 @@ async function loadCovering(){
     const teams=[...new Set(mine.map(e=>e.team).filter(Boolean))];
     const [{data:ro},{data:at},{data:me}] = await Promise.all([
       sb.from('iv_roster').select('*').in('event_id',ids),
-      sb.from('iv_attendance').select('*').in('event_id',ids),
+      byEventId('iv_attendance',ids),
       sb.from('iv_members').select('*').in('team',teams),
     ]);
     const rosters={}; (ro||[]).forEach(r=>rosters[r.event_id]=r.data);
@@ -5933,7 +5976,7 @@ function clApply(row){
 }
 function clSaveLocal(){ try{ localStorage.setItem(clLocalKey(),JSON.stringify({done:CL.done,dayType:CL.dayType})); }catch(e){} }
 async function clLoad(){
-  const day=nzTodayISO();
+  const day=clNightISO();
   if(CL.day!==day){
     CL.day=day; CL.done=[]; CL.deferred=[]; CL.hist=[]; CL.hasRow=false; CL.armed=false; CL.by=''; CL.at=null;
     CL.dayType=clDefaultDayType();
@@ -5947,7 +5990,7 @@ async function clLoad(){
 }
 function renderChecklist(){
   const el=document.getElementById('body-checklist'); if(!el) return;
-  if(!CL.loaded||CL.day!==nzTodayISO()){
+  if(!CL.loaded||CL.day!==clNightISO()){
     if(!el.innerHTML.trim()) el.innerHTML=skeletonHTML();
     if(!CL.loading){ CL.loading=true; CL.loaded=false; clLoad().then(()=>{ CL.loading=false; if(curPage==='checklist') clRender(); }); }
     return;
