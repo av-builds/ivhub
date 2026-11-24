@@ -146,3 +146,15 @@ create policy app_users_write on public.app_users for all to authenticated
 -- Simulated and rolled back: owner, facilitator, tl_a, tl_b, an_lead, av_yatl, av_coord, volunteer reads and writes as
 -- expected; av_yatl reads the AV change log; a pure weekday lead cannot delete a shift; deleting a member keeps extra duty.
 -- DASHBOARD ONLY: leaked-password protection and a shorter email OTP expiry.
+
+-- ===================================================================
+-- APPLIED: sweep3_database_fixes
+--  * profiles: clients can no longer insert or delete rows (the edge function and signup trigger do); drops
+--    profiles_insert_admin and profiles_delete_lower, revokes INSERT and DELETE from authenticated.
+--  * app_settings_write: is_av_admin() only (owner/admin tier plus av_admin, av_atl, av_yatl, av_coord).
+--  * audit_logs.id comes from audit_logs_id_seq (the epoch-plus-random default collided on bursts); audit_cap trigger caps
+--    action at 100 characters, detail at 1000 and data at 4000 bytes for browser writes.
+--  * iv_attendance and safety_avail follow their member (foreign keys, on delete cascade; no orphans existed).
+-- Simulated (rolled back): bursts of audit inserts from tl_a, av_yatl, volunteer succeed with distinct ids; details are cut
+-- to 1000; the reserved reset action is refused; profile inserts are denied for everyone; app_settings writes work for
+-- av_yatl and av_coord and not for tl_a, volunteer or a facilitator who holds no AV role.
