@@ -4418,8 +4418,18 @@ async function wdExtraLine(id){
      marked; a night with a roster only moves if the roster is cleared in the
      same step, because the people on it belong to the old team's lead.
    - Deleting removes all seven. The cycle's own Friday and Paanch Baar Saal
-     come back on the next automatic run of a team page. */
+     come back on the next automatic run of a team page.
+   - A night a Team Lead added by hand on a team page (Add Event, name
+     'Evening Satada', type custom) is part of the satada: this page lists it,
+     counts it, can move it to the other team, and never creates a second
+     night on its date. It is not ours to delete or replace, so Delete this
+     satada only removes the nights created here, and Create fills in the
+     dates that hold no satada night. */
 const SA_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const saIsName = e=>!!e && e.type !== 'satada' && /satada/i.test(e.name || '');
+const saHub = e=>e.type === 'satada';
+const saIsNight = e=>saHub(e) || saIsName(e);
+const saHas = w=>(SA.weeks[w]||[]).some(saHub);
 const saDow = iso=>new Date(iso+'T12:00:00').getDay();
 const saWeekStart = iso=>addDaysISO(iso, -saDow(iso));
 const saAlt = ()=>[0,1,2,3,4,5,6].map(i=>i%2===0 ? 'A' : 'B');
@@ -4436,16 +4446,16 @@ function saValidate(iso){
   if(!iso) return 'Pick the Sunday the satada starts on.';
   if(saDow(iso) !== 0) return fmtLong(iso) + ' is not a Sunday. A satada runs Sunday to Saturday.';
   if(addDaysISO(iso,6) < todayNZ()) return 'That week has already finished.';
-  if((SA.weeks[iso]||[]).length) return 'Satada nights already exist in the week of ' + fmtDM(iso) + '.';
+  if(saHas(iso)) return 'Satada nights already exist in the week of ' + fmtDM(iso) + '.';
   return '';
 }
 /* Reads every satada night, which nights hold a roster, and which have
    attendance. Safe to call at any time; it re-renders the page. */
 async function saReload(){
   if(!sb){ SA.err = 'No database connection.'; saRender(); return false; }
-  const ev = await sb.from('iv_events').select('*').eq('type','satada').order('date');
+  const ev = await sb.from('iv_events').select('*').or('type.eq.satada,name.ilike.%satada%').order('date');
   if(ev.error){ SA.err = 'Could not read the satadas - ' + (ev.error.message || ev.error); saRender(); return false; }
-  const rows = ev.data || [], ids = rows.map(e=>e.id), rost = {}, rrow = {}, att = {};
+  const rows = (ev.data || []).filter(saIsNight), ids = rows.map(e=>e.id), rost = {}, rrow = {}, att = {};
   if(ids.length){
     const [ro, at] = await Promise.all([
       sb.from('iv_roster').select('event_id,data').in('event_id', ids),
@@ -4484,9 +4494,11 @@ function saRender(){
   main.innerHTML = SA.sel && SA.weeks[SA.sel] ? saPanelHTML(SA.sel) : '';
 }
 function saPick(w){ SA.form = false; SA.sel = w; saRender(); }
-function saNew(){
-  SA.form = true; SA.date = saNextSunday(); SA.owners = saAlt();
-  while(SA.date && (SA.weeks[SA.date]||[]).length) SA.date = addDaysISO(SA.date, 7);
+function saNew(sun){
+  SA.form = true; SA.date = typeof sun === 'string' && sun ? sun : saNextSunday(); SA.owners = saAlt();
+  while(SA.date && saHas(SA.date)) SA.date = addDaysISO(SA.date, 7);
+  /* Nights already in that week keep their team in the tiles, so the summary reads as the week really is. */
+  (SA.weeks[SA.date]||[]).forEach(e=>{ const i = saDow(e.date); if(e.team === 'A' || e.team === 'B') SA.owners[i] = e.team; });
   saRender();
 }
 function saCancelForm(){ SA.form = false; if(!SA.sel || !SA.weeks[SA.sel]){ const ws = Object.keys(SA.weeks).sort(); SA.sel = ws[ws.length-1] || null; } if(!SA.sel) SA.form = true; saRender(); }
@@ -4499,7 +4511,7 @@ function saTileHTML(i){
     '</div></div>';
 }
 function saFormHTML(){
-  if(!SA.date){ SA.date = saNextSunday(); while((SA.weeks[SA.date]||[]).length) SA.date = addDaysISO(SA.date, 7); }
+  if(!SA.date){ SA.date = saNextSunday(); while(saHas(SA.date)) SA.date = addDaysISO(SA.date, 7); }
   return '<h2>New satada</h2><p class="sa-note">A majalis every night, Sunday to Saturday. For that week the normal cycle makes no Friday Majlis or Paanch Baar Saal. Pick the Sunday, then choose which team runs each night.</p>'+
     '<div class="fg" style="max-width:260px"><label for="saDate">Sunday the satada starts</label>'+
     '<input type="date" id="saDate" value="'+esc(SA.date)+'" min="'+esc(saWeekStart(todayNZ()))+'" oninput="saDate(this.value)" onchange="saDate(this.value)"></div>'+
@@ -4520,7 +4532,9 @@ function saFormUpdate(){
   const hint = $('saHint'), go = $('saGo'); if(!hint || !go) return;
   const err = saValidate(SA.date), ok = !err;
   hint.className = 'sa-hint ' + (ok ? 'ok' : 'bad');
-  hint.textContent = ok ? 'OK: ' + fmtDM(SA.date) + ' to ' + fmtDM(addDaysISO(SA.date,6)) : 'Not allowed: ' + err;
+  const kept = ok ? (SA.weeks[SA.date]||[]) : [];
+  hint.textContent = ok ? 'OK: ' + fmtDM(SA.date) + ' to ' + fmtDM(addDaysISO(SA.date,6)) +
+    (kept.length ? '. Already a satada night this week, so kept as they are: ' + kept.map(e=>SA_DAYS[saDow(e.date)].slice(0,3) + ' ' + fmtDM(e.date) + ' (Team ' + e.team + ')').join(', ') : '') : 'Not allowed: ' + err;
   const sun = ok || (SA.date && saDow(SA.date) === 0);
   for(let i=0;i<7;i++){
     const d = $('saTD'+i); if(d) d.textContent = sun ? fmtDM(addDaysISO(SA.date,i)) : '-';
@@ -4546,7 +4560,7 @@ async function saPlan(sun, owners){
   const wk = await sb.from('iv_events').select('*').gte('date', sun).lte('date', sat);
   if(wk.error) return {err: 'Could not read that week - ' + (wk.error.message || wk.error)};
   const have = wk.data || [];
-  if(have.some(e=>e.type === 'satada')) return {err: 'Satada nights already exist in the week of ' + fmtDM(sun) + '.'};
+  if(have.some(saHub)) return {err: 'Satada nights already exist in the week of ' + fmtDM(sun) + '.'};
   const busy = new Set();
   if(have.length){
     const ids = have.map(e=>e.id);
@@ -4557,12 +4571,14 @@ async function saPlan(sun, owners){
   const rows = [], del = [], skip = [];
   for(let i=0;i<7;i++){
     const d = addDaysISO(sun, i), regs = have.filter(e=>e.date === d);
+    const sn = regs.find(saIsName);
+    if(sn){ skip.push({date:d, name:sn.name, team:sn.team, why:'it is already a satada night run by Team ' + sn.team + (busy.has(sn.id) ? ' and has a roster or attendance' : '') + '; change its team on this page afterwards'}); continue; }
     const hold = regs.find(e=>busy.has(e.id) || (e.type !== 'friday' && e.type !== 'pbs'));
     if(hold){ skip.push({date:d, name:hold.name, team:hold.team, why: busy.has(hold.id) ? 'it already has a roster or attendance' : 'it is not an automatic event'}); continue; }
     regs.forEach(e=>del.push(e));
     rows.push({team:owners[i], date:d, name:'Satada - ' + SA_DAYS[i], type:'satada', uniform:'Casual', youth:i === 5, confirmed:false});
   }
-  if(!rows.length) return {err: 'Every date in that week already holds a roster or another event, so no satada night could be made.'};
+  if(!rows.length) return {err: 'Every date in that week already holds a satada night, a roster or another event, so no new satada night could be made.'};
   return {sun:sun, rows:rows, del:del, skip:skip};
 }
 async function saSubmit(){
@@ -4609,7 +4625,7 @@ function saPanelHTML(w){
   const evs = SA.weeks[w] || [], today = todayNZ();
   const tiles = evs.map(e=>{
     const i = saDow(e.date), n = SA.rost[e.id] || 0, att = SA.att[e.id] || 0, past = e.date < today, to = e.team === 'A' ? 'B' : 'A', tm = e.team === 'A' || e.team === 'B' ? e.team : '';
-    const state = att ? 'Attendance marked' : past ? 'Night has passed' : n ? 'Roster: ' + n + ' ' + (n === 1 ? 'person' : 'people') : 'No roster yet';
+    const state = (att ? 'Attendance marked' : past ? 'Night has passed' : n ? 'Roster: ' + n + ' ' + (n === 1 ? 'person' : 'people') : 'No roster yet') + (saHub(e) ? '' : ' · added by a lead');
     return '<div class="sa-tile" data-id="'+esc(e.id)+'"><div class="sa-dn">'+esc(SA_DAYS[i].slice(0,3))+'</div><div class="sa-dd">'+esc(fmtDM(e.date))+'</div>'+
       '<span class="sa-own t-'+tm.toLowerCase()+'">'+(tm ? 'Team '+tm : 'No team')+'</span>'+
       '<div class="sa-st'+(att || past ? '' : n ? ' has' : '')+'">'+esc(state)+'</div>'+
@@ -4618,9 +4634,10 @@ function saPanelHTML(w){
   return '<div class="sa-head"><h2>Satada: '+esc(saRange(w))+'</h2><span class="al-pill sa-badge">'+esc(saStatus(w))+'</span></div>'+
     '<div class="sa-sum" id="saSum">'+esc(saSumText(evs.map(e=>e.team)))+'</div>'+
     '<div class="sa-strip" id="saStrip">'+tiles+'</div>'+
+    (evs.length < 7 ? '<p class="sa-note">Only '+evs.length+' of the 7 nights are set. <button class="btn btn-bl" onclick="saNew(\''+esc(w)+'\')">Add the other nights</button></p>' : '')+
     '<p class="sa-note">Tap a night\'s button to give it to the other team. A night with a roster only moves if the roster is cleared; a night that has passed, or has attendance marked, cannot move. Changes show on both team pages straight away.</p>'+
     '<div class="sa-acts"><button class="btn btn-ol" onclick="saSwap(\''+esc(w)+'\')">Swap A and B for the whole week</button><span style="flex:1"></span>'+
-    '<button class="btn btn-red" onclick="saDelete(\''+esc(w)+'\')">Delete this satada</button></div>';
+    (evs.some(saHub) ? '<button class="btn btn-red" onclick="saDelete(\''+esc(w)+'\')">Delete this satada</button>' : '')+'</div>';
 }
 const saFlat = ()=>[].concat(...Object.keys(SA.weeks).map(w=>SA.weeks[w]));
 async function saOwner(id, to){
@@ -4687,9 +4704,10 @@ async function saDelete(w){
   SA.busy = true;
   try{
     if(!await saReload()) return;
-    const evs = SA.weeks[w] || []; if(!evs.length) return;
+    const evs = (SA.weeks[w] || []).filter(saHub); if(!evs.length) return toast('The nights of this week were added by a team lead on a team page, so they are deleted there.', 'err');
+    const kept = (SA.weeks[w] || []).length - evs.length;
     const held = evs.filter(e=>SA.rost[e.id] || SA.att[e.id]);
-    if(!confirm('Delete this satada?\n\nAll ' + evs.length + ' nights of the week of ' + fmtDM(w) + ' are deleted, for both teams. The regular Friday Majlis and Paanch Baar Saal come back on the next automatic run. This cannot be undone.' +
+    if(!confirm('Delete this satada?\n\nAll ' + evs.length + ' nights of the week of ' + fmtDM(w) + ' that were created here are deleted, for both teams.' + (kept ? ' The ' + kept + ' night' + (kept === 1 ? '' : 's') + ' added by a team lead on a team page ' + (kept === 1 ? 'is' : 'are') + ' kept.' : '') + (kept ? '' : ' The regular Friday Majlis and Paanch Baar Saal come back on the next automatic run.') + ' This cannot be undone.' +
         (held.length ? '\n\n' + held.length + ' night' + (held.length === 1 ? ' has' : 's have') + ' a roster or attendance, which are deleted with them: ' + held.map(e=>fmtDM(e.date) + ' (Team ' + e.team + ')').join(', ') + '.' : ''))) return;
     const ids = evs.map(e=>e.id);
     if(!await dbWrite('Deleting the satada', ()=>sb.from('iv_events').delete().in('id', ids),

@@ -652,11 +652,11 @@ for(const file of ['teama.html','teamb.html']){
 
 // ── Satada: the Hub page (facilitator and above) ──
 const MOCKDB=`(seed)=>{ const DB=Object.assign({iv_events:[],iv_roster:[],iv_attendance:[],audit_logs:[],iv_settings:[],iv_members:[]},seed||{}); let nid=500; const log=[];
-  const clause=(r,c)=>{ const [col,op,...v]=c.split('.'); const val=v.join('.'); return op==='eq'?String(r[col])===val:op==='neq'?String(r[col])!==val:op==='is'?(r[col]==null):false; };
+  const clause=(r,c)=>{ const [col,op,...v]=c.split('.'); const val=v.join('.'); return op==='eq'?String(r[col])===val:op==='neq'?String(r[col])!==val:op==='is'?(r[col]==null):op==='ilike'?String(r[col]||'').toLowerCase().includes(val.replace(/%/g,'').toLowerCase()):false; };
   const from=t=>{ const st={op:'select',f:[],pay:null}; DB[t]=DB[t]||[];
     const q={ select(){return q;}, insert(x){st.op='insert';st.pay=x;return q;}, update(x){st.op='update';st.pay=x;return q;}, delete(){st.op='delete';return q;}, upsert(x){st.op='upsert';st.pay=x;return q;},
       eq(c,v){st.f.push(r=>r[c]===v);return q;}, neq(c,v){st.f.push(r=>r[c]!==v);return q;}, gte(c,v){st.f.push(r=>r[c]>=v);return q;}, lte(c,v){st.f.push(r=>r[c]<=v);return q;}, lt(c,v){st.f.push(r=>r[c]<v);return q;},
-      in(c,a){st.f.push(r=>a.indexOf(r[c])>=0);return q;}, or(s){const cl=s.split(',');st.f.push(r=>cl.some(c=>clause(r,c)));return q;}, order(){return q;}, limit(){return q;},
+      in(c,a){st.f.push(r=>a.indexOf(r[c])>=0);return q;}, or(s){const cl=s.split(',');st.f.push(r=>cl.some(c=>clause(r,c)));return q;}, order(){return q;}, limit(){return q;}, range(){return q;},
       maybeSingle(){return Promise.resolve({data:null,error:null});},
       then(res,rej){ const rows=DB[t], hit=rows.filter(r=>st.f.every(f=>f(r))); let out;
         if(st.op==='select') out={data:hit.map(r=>Object.assign({},r)),error:null};
@@ -834,6 +834,107 @@ for(const file of ['teama.html','teamb.html']){
   chk(r.opens&&r.pageNoControls&&r.built&&r.cardState,'satada   '+file+' an own night opens the normal roster and builds as before, with no owner or delete buttons',j);
   chk(r.roNoBuild&&r.theirsPage&&r.noDeleteDlg&&r.drawer,'satada   '+file+' the other team\'s night stays read only with no Take over; satada nights cannot be deleted one by one',j);
   chk(p.errs.length===0,'satada   '+file+' no page errors',JSON.stringify(p.errs)); await p.context().close(); }
+
+// ── Satada added by hand ('Evening Satada', type custom) joins the Satada group; the Hub treats it as part of the week ──
+for(const file of ['teama.html','teamb.html']){
+  const p=await open(file,{width:1300,height:950});
+  await p.evaluate(`(${SEED})(['tl_a','tl_b'])`);
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; LOADED=true;
+    const ME=PAGE_TEAM, today=nzTodayISO();
+    const M=__mk(); sb=M.sb; const {DB}=M;
+    const q=s=>document.querySelector(s), qa=s=>[...document.querySelectorAll(s)];
+    const sun=addDaysLocal(today,-dowIdx(today)), d=n=>addDaysLocal(sun,n);
+    /* the live data: three hand-made Evening Satada events (team A) in the running week, with rosters, plus the cycle's own Friday */
+    const mkEv=(id,n,name,type,team,conf)=>DB.iv_events.push({id,team,date:d(n),name,type,uniform:'Casual',youth:type==='friday',confirmed:conf});
+    mkEv(80,0,'Evening Satada','custom','A',false); mkEv(113,1,'Evening Satada','custom','A',true); mkEv(114,3,'Evening Satada','custom','A',true); mkEv(13,5,'Friday Majlis','friday','A',false);
+    mkEv(61,2,'Staff Meeting','custom','A',false);
+    const ro={assign:{'Number 1':{m:[{id:3,name:'M2'}],f:[],x:[]}},gen_at:'2026-01-01'};
+    [80,113,114].forEach(id=>DB.iv_roster.push({event_id:id,data:JSON.parse(JSON.stringify(ro))}));
+    EVENTS=[]; ROSTERS={}; await loadAll();
+    o.loaded=[80,113,114].every(id=>EVENTS.some(e=>e.id===id))&&!EVENTS.some(e=>e.id===61&&ME==='B');
+    o.isNight=[80,113,114].every(id=>isSatNight(EVENTS.find(e=>e.id===id)))&&!isSatNight(EVENTS.find(e=>e.name==='Friday Majlis'));
+    o.typeKept=EVENTS.filter(e=>[80,113,114].includes(e.id)).every(e=>e.type==='custom'&&!isSatada(e));
+    o.week=Object.keys(satWeekMap()).join()===sun&&satWeekMap()[sun].length===3;
+    openRosterHome();
+    const cards=qa('#body-roster [data-sat]'), ids=cards.map(c=>+c.getAttribute('data-sat'));
+    o.group=ids.join()==='80,113,114';
+    const past=cards.filter(c=>+c.getAttribute('data-sat')&&EVENTS.find(e=>e.id===+c.getAttribute('data-sat')).date<today);
+    o.pastGrey=past.every(c=>c.classList.contains('st-historic'))&&cards.filter(c=>!past.includes(c)).every(c=>!c.classList.contains('st-historic'));
+    o.owner=cards.every(c=>c.querySelector('.cv-pill.own')&&/Team A/.test(c.querySelector('.cv-pill.own').textContent));
+    if(ME==='A') o.mineOpen=cards.every(c=>c.tagName==='BUTTON'&&!c.classList.contains('ro'));
+    else o.theirsRO=cards.every(c=>c.tagName!=='BUTTON'&&c.classList.contains('ro')&&c.getAttribute('aria-disabled')==='true');
+    o.notice=!/No satada is scheduled/.test(document.getElementById('body-roster').textContent);
+    /* ownership and delete stay as they were */
+    o.ro=[80,113,114].every(id=>satRO(EVENTS.find(e=>e.id===id))===(ME==='B'));
+    /* the roster and the duty list are the ordinary custom ones */
+    const ev=EVENTS.find(e=>e.id===113); o.duties=dutiesForEvent(ev).map(x=>x.key).join()===dutiesForEvent({...ev,type:'custom',name:'Other'}).map(x=>x.key).join();
+    o.rosterKept=JSON.stringify(ROSTERS[113])===JSON.stringify(ro);
+    if(ME==='A'){ cards[1].click(); o.opens=ROSTER_VIEW==='event'&&selEventId===113&&/Evening Satada/.test(document.getElementById('body-roster').textContent); o.crumb=/Satada/.test(q('#body-roster .ro-crumbs').textContent); }
+    /* calendar chip carries the satada mark */
+    CAL={y:+d(1).slice(0,4),m:+d(1).slice(5,7)-1}; nav('calendar'); renderCalendar();
+    const chips=qa('#body-calendar .cal-ev').filter(c=>/Evening Satada/.test(c.textContent));
+    o.chips=chips.length===3&&chips.every(c=>/Team A/.test(c.title)&&/solid/.test(c.getAttribute('style')||''));
+    nav('dashboard'); o.dash=true;
+    /* the cycle's own Friday is not touched, and a satada week stops the cycle adding its Friday/PBS */
+    o.friday=(ME==='B'||EVENTS.some(e=>e.id===13))&&inSatWeek(d(5));
+    /* the query fetches by name as well */
+    o.q=true; return o; });
+  const j=JSON.stringify(r);
+  chk(r.loaded&&r.isNight&&r.typeKept&&r.week,'satada   '+file+' hand-made "Evening Satada" events are loaded, recognised as satada nights, and stay type custom',j);
+  chk(r.group&&r.pastGrey&&r.owner&&r.notice&&(file==='teama.html'?r.mineOpen:r.theirsRO),'satada   '+file+' the Satada group lists them with the owner chip; nights already past this week are greyed as done; team A opens, team B reads only',j);
+  chk(r.ro&&r.duties&&r.rosterKept&&(file!=='teama.html'||(r.opens&&r.crumb)),'satada   '+file+' their roster and duty list are unchanged; an own night opens the normal roster',j);
+  chk(r.chips&&r.friday,'satada   '+file+' the calendar marks them as satada nights with the owner team',j);
+  chk(p.errs.length===0,'satada   '+file+' hand-made nights no page errors',JSON.stringify(p.errs)); await p.context().close(); }
+{ const p=await open('teamb.html',{width:1300,height:950});
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const M=__mk(); sb=M.sb; const calls=[]; const real=sb.from;
+    sb.from=t=>{ const q=real(t), o=q.or; q.or=s=>{ if(t==='iv_events') calls.push(s); return o(s); }; return q; };
+    await loadAll(); return calls; });
+  chk(r.some(s=>/team\.eq\.B/.test(s)&&/type\.eq\.satada/.test(s)&&/name\.ilike\.%satada%/.test(s)),'satada   teamb.html loads events by name match as well as team and type',JSON.stringify(r));
+  await p.context().close(); }
+
+// ── Hub: a satada week with hand-made nights in it ──
+{ const p=await open('index.html',{width:1300,height:950});
+  await p.evaluate(`window.__mk=${MOCKDB}`);
+  const r=await p.evaluate(async()=>{ const o={}; const M=__mk(); sb=M.sb; const {DB,log}=M;
+    let said=[]; window.confirm=m=>{ said.push(m); return true; };
+    const q=s=>document.querySelector(s), qa=s=>[...document.querySelectorAll(s)], wait=ms=>new Promise(r=>setTimeout(r,ms));
+    CU={user:'x',display:'Fac',perms:['facilitator'],uid:'u',email:'f@x'}; applyNavVisibility(); document.getElementById('app').style.display='block';
+    const t0=todayNZ(), sun=saWeekStart(t0), d=n=>addDaysISO(sun,n);
+    const mkEv=(id,n,name,type,team)=>DB.iv_events.push({id,team,date:d(n),name,type,uniform:'Casual',youth:false,confirmed:true});
+    mkEv(80,0,'Evening Satada','custom','A'); mkEv(113,1,'Evening Satada','custom','A'); mkEv(114,3,'Evening Satada','custom','A'); mkEv(13,5,'Friday Majlis','friday','A'); mkEv(12,2,'Paanch Baar Saal','pbs','A');
+    [80,113,114,13].forEach(id=>DB.iv_roster.push({event_id:id,data:{assign:{k:{m:[{id:1}],f:[],x:[]}}}}));
+    nav('satada'); await wait(250);
+    /* the running week is listed and open, with the hand-made nights in it */
+    o.listed=qa('#saMain .sa-tile[data-id]').length===3&&qa('#saWeeks .chip').length===1&&/added by a lead/.test(q('#saMain').textContent);
+    o.noDelete=!/Delete this satada/.test(q('#saMain').textContent)&&/Add the other nights/.test(q('#saMain').textContent);
+    o.sum=/Team A: 3 nights/.test(q('#saSum').textContent);
+    /* add the other nights */
+    saNew(sun); o.formDate=SA.date===sun&&/kept as they are/.test(q('#saHint').textContent)&&!q('#saGo').disabled;
+    o.tiles=SA.owners[0]==='A'&&SA.owners[1]==='A'&&SA.owners[3]==='A';
+    SA.owners=['A','B','B','A','B','A','B']; log.length=0; said=[]; await saSubmit();
+    o.confirm=said.length===1&&/already a satada night/.test(said[0])&&/Evening Satada/.test(said[0]);
+    const made=DB.iv_events.filter(e=>e.type==='satada');
+    o.made=made.map(e=>e.date.slice(8)).sort().join()===[2,4,6].map(n=>d(n).slice(8)).join();
+    o.noDupes=!made.some(e=>[0,1,3].some(n=>e.date===d(n)));
+    o.kept=[80,113,114].every(id=>DB.iv_events.some(e=>e.id===id&&e.type==='custom'&&e.team==='A'))&&DB.iv_roster.length===4&&log.filter(l=>l[0]==='delete').every(l=>l[2].join()==='12');
+    o.friday=DB.iv_events.some(e=>e.id===13);
+    await wait(50); o.panel=qa('#saMain .sa-tile[data-id]').length===3+made.length;
+    /* re-own a hand-made night: its team moves, its roster is cleared after asking, nothing else is touched */
+    log.length=0; said=[]; await saOwner(114,'B'); const e114=DB.iv_events.find(e=>e.id===114);
+    o.reown=e114.team==='B'&&e114.type==='custom'&&e114.name==='Evening Satada'&&said.length===1&&/Clear the roster/.test(said[0])&&!DB.iv_roster.some(r=>r.event_id===114);
+    /* delete removes only the nights made here */
+    said=[]; await saDelete(sun);
+    o.del=!DB.iv_events.some(e=>e.type==='satada')&&[80,113,114].every(id=>DB.iv_events.some(e=>e.id===id))&&/kept/.test(said[0]||'');
+    /* a week holding only hand-made nights does not block Create; a Hub satada does */
+    saNew(sun); o.again=SA.date===sun&&!q('#saGo').disabled;
+    return o; });
+  const j=JSON.stringify(r);
+  chk(r.listed&&r.noDelete&&r.sum,'satada   Hub: the hand-made nights of the running week are listed in the panel, with no Delete and an Add the other nights button',j);
+  chk(r.formDate&&r.tiles&&r.confirm&&r.noDupes&&r.kept&&r.friday&&r.panel,'satada   Hub: creating the rest of a week keeps the hand-made nights, makes no duplicate and replaces nothing',j);
+  chk(r.reown&&r.del&&r.again,'satada   Hub: a hand-made night can be re-owned; Delete only removes the nights made in the Hub',j);
+  chk(p.errs.length===0,'satada   Hub hand-made nights no page errors',JSON.stringify(p.errs)); await p.context().close(); }
 
 // ── Satada: the cycle makes no Friday or Paanch Baar Saal in a satada week ──
 for(const file of ['teama.html','teamb.html']){
@@ -1148,7 +1249,7 @@ for(const file of ['teama.html','teamb.html']){
 const WD_STUB=`(seed)=>{ const DB=Object.assign({profiles:[],iv_wd_shifts:[],iv_wd_attendance:[]},seed||{}); const calls=[]; let nid=100;
   const from=t=>{ const st={op:'select',f:[],eqs:[],pay:null,sel:false,single:false}; DB[t]=DB[t]||[];
     const q={ select(){st.sel=true;return q;}, insert(x){st.op='insert';st.pay=x;return q;}, update(x){st.op='update';st.pay=x;return q;}, delete(){st.op='delete';return q;}, upsert(x){st.op='upsert';st.pay=x;return q;},
-      eq(c,v){st.eqs.push([c,v]);st.f.push(r=>r[c]===v);return q;}, gte(c,v){st.f.push(r=>r[c]>=v);return q;}, lte(c,v){st.f.push(r=>r[c]<=v);return q;}, order(){return q;}, limit(){return q;}, maybeSingle(){st.single=true;return q;},
+      eq(c,v){st.eqs.push([c,v]);st.f.push(r=>r[c]===v);return q;}, gte(c,v){st.f.push(r=>r[c]>=v);return q;}, lte(c,v){st.f.push(r=>r[c]<=v);return q;}, order(){return q;}, limit(){return q;}, range(){return q;}, maybeSingle(){st.single=true;return q;},
       then(res,rej){ const rows=DB[t], hit=rows.filter(r=>st.f.every(f=>f(r))); let out;
         calls.push({t,op:st.op,eqs:st.eqs,pay:st.pay});
         if(st.op==='select') out={data:st.single?(hit[0]?Object.assign({},hit[0]):null):hit.map(r=>Object.assign({},r)),error:null};
