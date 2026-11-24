@@ -850,10 +850,12 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 .cy-card.st-current::before{background:linear-gradient(90deg,#059669,var(--green-lt),transparent 85%);}
 .cy-card:hover{transform:translateY(-3px);border-color:rgba(75,163,220,.38);box-shadow:0 12px 30px rgba(2,11,24,.45);}
 .cy-grid.past .cy-card{opacity:.72;}
+.cy-grid.sat .cy-card.st-historic{opacity:.72;}
+.cy-grid.sat .cy-card.st-historic:hover{opacity:1;}
 .cy-card.ro{opacity:.6;cursor:default;}
 .cy-card.ro:hover{transform:none;box-shadow:none;border-color:inherit;opacity:.6;}
 .cy-grid.past .cy-card:hover{opacity:1;}
-.cy-top{display:flex;align-items:center;gap:8px;}
+.cy-top{display:flex;align-items:center;gap:4px 8px;flex-wrap:wrap;}
 .cy-count{margin-left:auto;font-size:12px;font-weight:800;color:var(--dm);}
 .cy-name{font-size:20px;font-weight:900;letter-spacing:.01em;line-height:1.15;margin-top:4px;}
 .cy-dates{font-size:12.5px;font-weight:700;color:var(--dm);}
@@ -1533,6 +1535,7 @@ async function verifyAuth(){
 }
 function denyAccess(kind){
   try{ localStorage.removeItem('ivhub_session'); }catch(e){}
+  try{ localStorage.removeItem('ivhub_myname'); }catch(e){}
   const offline = kind==='offline';
   document.body.insertAdjacentHTML('beforeend',
     '<div class="noaccess"><div class="box"><div style="font-size:30px">'+(offline?'\u{1F4E1}':'\u{1F512}')+'</div>'+
@@ -1548,9 +1551,12 @@ function denyAccess(kind){
    accepts writes from someone signed in - so leaving this page recorded
    nothing at all, while the Hub and the AV page both recorded it. */
 async function signOut(){
-  try{ await auditLog('Signed out','login',(CU&&(CU.display||CU.user)||'Someone')+' signed out of '+TEAM_NAME); }catch(e){}
-  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  /* The audit insert needs the live session, so it goes first, but a dead
+     connection must not stop the person signing out: cap the wait. */
+  try{ await Promise.race([auditLog('Signed out','login',(CU&&(CU.display||CU.user)||'Someone')+' signed out of '+TEAM_NAME), new Promise(r=>setTimeout(r,4000))]); }catch(e){}
+  try{ if(sb) await sb.auth.signOut({scope:'local'}); }catch(e){}   // this device only: other devices keep their sessions
   try{ localStorage.removeItem('ivhub_session'); }catch(e){}
+  try{ localStorage.removeItem('ivhub_myname'); }catch(e){}
   ivGo('index.html');
 }
 
@@ -1731,6 +1737,9 @@ function cycleForDate(iso){
 }
 function inCycleK(iso,k){ return iso>=cyStart(k)&&iso<cyStart(k+1); }
 function nzTodayISO(){ return nzDateStr(new Date()); }
+/* The checklist belongs to the night, not the calendar day: before 06:00 NZ
+   a late night is still being closed, so it keeps the previous date. */
+function clNightISO(){ return nzDateStr(new Date(Date.now()-6*3600000)); }
 const MON_UP=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 function cycleLabel(k){
   const s=cyStart(k),e=cyStart(k+1);
@@ -1790,22 +1799,30 @@ const EID_NAMES=['Eid-al-Fitr','Eid-al-Adha','Eid-al-Ghadir','Yawm-i Ali'];
    the whole week; only the owning page may roster or edit a night. */
 const SATADA_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const isSatada=e=>!!e&&e.type==='satada';
+/* A night somebody added by hand through Add Event ('Evening Satada', type
+   custom) is a satada night too: it joins the Satada group, the calendar
+   marks and the week map, and when it is the other team's it is read only.
+   It stays an ordinary custom event underneath (its duties, its roster, its
+   deletion, the cycle views), so only the display and ownership rules use
+   isSatNight; everything that is about the Hub's own rows keeps isSatada. */
+const SAT_NAME=/satada/i;
+const isSatNight=e=>!!e&&(e.type==='satada'||(!!e.name&&SAT_NAME.test(e.name)));
 const dowIdx=iso=>new Date(iso+'T12:00:00').getDay();
 const isFridayDate=iso=>dowIdx(iso)===5;
 /* A satada's Friday keeps the Friday extras: the Youth Congregation switch
    and the MPH duties behind it. */
 const youthCapable=ev=>!!ev&&(ev.type==='friday'||(ev.type==='satada'&&isFridayDate(ev.date)));
 /* Read only on this page: somebody else's night. */
-const satRO=ev=>isSatada(ev)&&ev.team!==PAGE_TEAM;
+const satRO=ev=>isSatNight(ev)&&ev.team!==PAGE_TEAM;
 const mineEv=ev=>!satRO(ev);
 const weekStart=iso=>addDaysLocal(iso,-dowIdx(iso));
 function satWeekMap(){
   const m={};
-  EVENTS.forEach(e=>{ if(isSatada(e)) (m[weekStart(e.date)]=m[weekStart(e.date)]||[]).push(e); });
+  EVENTS.forEach(e=>{ if(isSatNight(e)) (m[weekStart(e.date)]=m[weekStart(e.date)]||[]).push(e); });
   Object.keys(m).forEach(w=>m[w].sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0));
   return m;
 }
-const ownerChip=ev=>isSatada(ev)?'<span class="cv-pill own'+(ev.team===PAGE_TEAM?'':' theirs')+'">Team '+esc(ev.team)+'</span>':'';
+const ownerChip=ev=>isSatNight(ev)?'<span class="cv-pill own'+(ev.team===PAGE_TEAM?'':' theirs')+'">Team '+esc(ev.team)+'</span>':'';
 
 /* ════════════════════════════════════════════
    DUTY RULE ENGINE (ported from Irfan's production roster app)
@@ -2053,9 +2070,9 @@ function eventsInCycle(k){ return EVENTS.filter(e=>inCycleK(e.date,k)).sort((a,b
 /* The roster page's cycle views leave satada nights out: they have their own
    week view, and building a cycle must not touch them. Counts and reports
    still use eventsInCycle, which includes them. */
-function cycleEvs(k){ return eventsInCycle(k).filter(e=>!isSatada(e)); }
+function cycleEvs(k){ return eventsInCycle(k).filter(e=>!isSatada(e)&&!satRO(e)); }
 /* Something this page shows: in one of its cycles, or any satada night. */
-const inView=e=>isSatada(e)||CYCLES.some(c=>inCycleK(e.date,c.k));
+const inView=e=>isSatNight(e)||CYCLES.some(c=>inCycleK(e.date,c.k));
 function isAway(m,date){ return Array.isArray(m.away)&&m.away.indexOf(date)>=0; }
 function normMember(m){ if(!Array.isArray(m.away)) m.away=[]; if(!m.prefs||typeof m.prefs!=='object'||Array.isArray(m.prefs)) m.prefs={}; if(!Array.isArray(m.prefs.prefer)) m.prefs.prefer=[]; if(!Array.isArray(m.prefs.avoid)) m.prefs.avoid=[]; if(!Array.isArray(m.prefs.cannot)) m.prefs.cannot=[];
   /* A duty sits in at most one of prefer/avoid/cannot; cannot is the hard block and wins. */
@@ -2082,9 +2099,17 @@ async function byEventId(table, ids){
   if(!ids.length) return {data:[]};
   const out=[];
   for(let i=0;i<ids.length;i+=IN_CHUNK){
-    const {data,error}=await sb.from(table).select('*').in('event_id',ids.slice(i,i+IN_CHUNK));
-    if(error) return {error:error};
-    out.push.apply(out,data||[]);
+    const chunk=ids.slice(i,i+IN_CHUNK);
+    /* The server returns at most 1000 rows per request however few ids are
+       asked for, so page until a short page comes back. */
+    for(let from=0;;from+=1000){
+      let qy=sb.from(table).select('*').in('event_id',chunk).order('event_id');
+      if(table==='iv_attendance') qy=qy.order('member_id');
+      const {data,error}=await qy.range(from,from+999);
+      if(error) return {error:error};
+      out.push.apply(out,data||[]);
+      if(!data||data.length<1000) break;
+    }
   }
   return {data:out};
 }
@@ -2108,7 +2133,7 @@ async function loadAll(){
   const [st,me,ev,an]=await Promise.all([
     q(()=>sb.from('iv_settings').select('*').in('key',['chandraat_overrides','auto_skip_'+PAGE_TEAM])),
     q(()=>sb.from('iv_members').select('*').eq('team',PAGE_TEAM)),
-    q(()=>sb.from('iv_events').select('*').or('team.eq.'+PAGE_TEAM+',type.eq.satada').order('date')),
+    q(()=>sb.from('iv_events').select('*').or('team.eq.'+PAGE_TEAM+',type.eq.satada,name.ilike.%satada%').order('date')),
     q(()=>sb.from('announcements').select('*').eq('team',PAGE_TEAM).order('created_at',{ascending:false}).limit(ANN_LIMIT)),
   ]);
   if(st.error){ console.warn('iv_settings:',st.error.message||st.error); if(tableMissing(st.error))DB_MISSING=true; }
@@ -2155,7 +2180,7 @@ async function loadAll(){
   if(tot.error) console.warn('member_attendance_totals:',tot.error.message||tot.error);
   else (tot.data||[]).forEach(r=>{ ATT_TOTALS[r.member_id]=r; });
   if(ro.error){ console.warn('iv_roster:',ro.error.message||ro.error); if(tableMissing(ro.error))DB_MISSING=true; }
-  else { const nr={}; (ro.data||[]).forEach(r=>{ nr[r.event_id]=r.data||{assign:{},manual:{}}; }); ROSTERS=nr; }
+  else { const nr={}; (ro.data||[]).forEach(r=>{ nr[r.event_id]=r.data||{assign:{},manual:{}}; ROSTER_SEEN[r.event_id]=r.updated_at||null; }); ROSTERS=nr; }
   if(an.error){ console.warn('announcements:',an.error.message||an.error); if(tableMissing(an.error))DB_MISSING=true; }
   else ANNS=an.data||[];
   if(at.error){ console.warn('iv_attendance:',at.error.message||at.error); }
@@ -2186,7 +2211,7 @@ async function saveAutoSkip(){
    matches, but only when nothing has been rostered on it. */
 /* A date inside a Sunday-Saturday week that holds satada nights. The
    satada takes the week over, so the cycle creates nothing there. */
-function inSatWeek(iso){ const w=weekStart(iso); return EVENTS.some(e=>isSatada(e)&&weekStart(e.date)===w); }
+function inSatWeek(iso){ const w=weekStart(iso); return EVENTS.some(e=>isSatNight(e)&&weekStart(e.date)===w); }
 async function dropStalePbs(want){
   const today=nzTodayISO();
   const stale=EVENTS.filter(e=>e.type==='pbs'&&e.date>today&&e.team===PAGE_TEAM&&!inSatWeek(e.date)&&!want.some(w=>w.type==='pbs'&&w.date===e.date)
@@ -2205,10 +2230,10 @@ async function autoCreateEvents(){
   const satWeeks=new Set(Object.keys(satWeekMap()));   // weeks the satada has taken over
   for(const c of CYCLES){
     if(c.end<=today) continue; // never historic
-    let d=new Date(c.start+'T12:00:00');
+    let d=new Date(c.start+'T12:00:00'), guard=0;
     while(true){
       const iso=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
-      if(iso>=c.end) break;
+      if(iso>=c.end||++guard>45) break;   // a mistyped override must not fan out into years of Fridays
       if(d.getDay()===5&&!satWeeks.has(weekStart(iso))) want.push({team:PAGE_TEAM,date:iso,name:'Friday Majlis',type:'friday',uniform:'Casual',youth:true,confirmed:false});
       d.setDate(d.getDate()+1);
     }
@@ -2626,6 +2651,7 @@ function canon(v){
   if(v&&typeof v==='object') return '{'+Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
   return JSON.stringify(v);
 }
+let ROSTER_SEEN = {};           // event id -> iv_roster.updated_at as last read or written here
 let ROSTER_UNSAVED = {};        // event id -> the roster that is not safely stored
 function unsavedCount(){ return Object.keys(ROSTER_UNSAVED).length; }
 async function saveRoster(eventId, opts){
@@ -2637,6 +2663,22 @@ async function saveRoster(eventId, opts){
   /* Long enough to cover the write and the read-back. The old 1.5s could
      lapse mid-save, letting our own change bounce back as a reload. */
   pauseRT(6000);
+  /* Stale check: if the stored row changed since this tab read it, someone
+     else saved in between. Do not overwrite their work silently. */
+  try{
+    const seen = ROSTER_SEEN[eventId];
+    if(seen){
+      const {data:cur, error:ce} = await sb.from('iv_roster').select('updated_at').eq('event_id', eventId).maybeSingle();
+      if(!ce && cur && cur.updated_at && cur.updated_at !== seen){
+        ROSTER_SEEN[eventId] = cur.updated_at;
+        delete ROSTER_UNSAVED[eventId];
+        if(!quiet) toast('This roster was changed by someone else. Your edit was not saved.', 'err');
+        if(confirm('This roster was changed by someone else since you opened it, so your last edit was NOT saved over theirs.\n\nReload the latest roster now?')){ try{ await loadAll(); }catch(e){} try{ renderRoster(); }catch(e){} }
+        renderSaveWarning();
+        return false;
+      }
+    }
+  }catch(e){ /* a failed check must not block a normal save */ }
   let err = null;
   for(let attempt = 0; attempt < 2; attempt++){
     try{
@@ -2653,7 +2695,8 @@ async function saveRoster(eventId, opts){
   if(!err){
     // Read it back. Sent and stored are not the same claim.
     try{
-      const {data, error} = await sb.from('iv_roster').select('event_id,data').eq('event_id', eventId);
+      const {data, error} = await sb.from('iv_roster').select('event_id,data,updated_at').eq('event_id', eventId);
+      if(!error && data && data.length===1) ROSTER_SEEN[eventId] = data[0].updated_at||null;
       if(error) err = error;
       else if(!data || !data.length) err = {message:'the row was accepted but is not there when read back'};
       else if(data.length > 1) err = {message:'there are ' + data.length + ' roster rows for this event, so the save did not replace the old one cleanly. Tell the admin.'};
@@ -3153,7 +3196,7 @@ function renderDashboard(){
      the next day this team is on - a blank panel on an off-cycle day would
      look broken rather than correct. */
   {
-    const ownsDay=e=>isSatada(e)?e.team===PAGE_TEAM:teamForCycle(cycleForDate(e.date))===PAGE_TEAM;
+    const ownsDay=e=>isSatNight(e)?e.team===PAGE_TEAM:teamForCycle(cycleForDate(e.date))===PAGE_TEAM;
     const seeable=e=>IS_EDIT||e.confirmed;   // a draft is for the leads only
     const mineUpc=upc.filter(e=>ownsDay(e)&&seeable(e));
     const dayEv=EVENTS.filter(e=>e.date===today&&ownsDay(e)&&seeable(e));
@@ -3187,7 +3230,7 @@ function renderDashboard(){
     const tag=satRO(e)?'<span class="next-tag today">Team '+esc(e.team)+'</span>':e.confirmed?'<span class="next-tag ok">Confirmed</span>':(sc.missing?'<span class="next-tag warn">'+sc.missing+' gaps</span>':(sc.generated?'<span class="next-tag ok">Filled</span>':'<span class="next-tag today">Draft</span>'));
     const d=new Date(e.date+'T12:00:00');
     h+='<div class="next-row" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}" onclick="event.stopPropagation();openEventDrawer('+e.id+')"><div class="next-d"><div class="d num">'+d.getDate()+'</div><div class="w">'+esc(MON_UP[d.getMonth()])+'</div></div>'+
-      '<div class="next-who"><div class="n">'+esc(e.name)+(isSatada(e)?' '+ownerChip(e):'')+'</div><div class="m">'+esc(fmtDowLong(e.date))+' · '+esc(e.uniform||'Casual')+'</div></div>'+tag+'</div>';
+      '<div class="next-who"><div class="n">'+esc(e.name)+(isSatNight(e)?' '+ownerChip(e):'')+'</div><div class="m">'+esc(fmtDowLong(e.date))+' · '+esc(e.uniform||'Casual')+'</div></div>'+tag+'</div>';
   });
   h+='</div></div>';
   h+='<div class="pnl"><div class="pnl-h">📣 Announcements</div><div class="pnl-b" style="padding:10px">';
@@ -3815,7 +3858,7 @@ function dayCardHTML(e,edit){
   let h='<div class="cv-day'+(open?' open':'')+'" id="day-'+e.id+'">'+
     '<button class="cv-dh" aria-expanded="'+(open?'true':'false')+'" onclick="openDay('+e.id+')">'+
       '<span class="ce-date"><b>'+d.getDate()+'</b><span>'+MON_UP[d.getMonth()]+'</span><small>'+esc(fmtDowLong(e.date).slice(0,3))+'</small></span>'+
-      '<span class="ce-main"><span class="ce-nm">'+esc(e.name)+'<span class="ev-badge" style="background:'+tm.color+'">'+esc(tm.label)+'</span>'+(isSatada(e)?' '+ownerChip(e):'')+'</span>'+
+      '<span class="ce-main"><span class="ce-nm">'+esc(e.name)+'<span class="ev-badge" style="background:'+tm.color+'">'+esc(tm.label)+'</span>'+(isSatNight(e)?' '+ownerChip(e):'')+'</span>'+
         '<span class="cv-sub">'+sum+' · '+esc(e.uniform||'Casual')+(e.cover_name?' · cover: '+esc(e.cover_name):'')+'</span></span>'+
       pill+'<span class="cv-car" aria-hidden="true">›</span></button>';
   if(open){
@@ -3916,15 +3959,15 @@ async function generateDay(id,opts){
   if(!plan) return toast('This event cannot be built','err');
   if(opts&&opts.midCycle) plan.midCycle=opts.midCycle;
   PLAN_OPEN.clear(); PLAN_OPEN.add(id);
-  if(isSatada(ev)){ ROSTER_VIEW='event'; ROSTER_OPEN=id; selEventId=id; }
+  if(isSatNight(ev)){ ROSTER_VIEW='event'; ROSTER_OPEN=id; selEventId=id; }
   else { ROSTER_VIEW='cycle'; ROSTER_K=ROSTER_BAR_K=k; ROSTER_OPEN=id; selEventId=id; }
   await applyPlan(plan,{publish:'new'});
-  if(isSatada(ev)&&ROSTER_PLAN===plan){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }   // the night's own page has no summary panel; do not leave a receipt for the cycle view to pick up
+  if(isSatNight(ev)&&ROSTER_PLAN===plan){ ROSTER_PLAN=null; PLAN_OPEN.clear(); }   // the night's own page has no summary panel; do not leave a receipt for the cycle view to pick up
 }
 
 /* ── 3. ONE EVENT ── */
 function renderEventPage(ev){
-  const k=cycleForDate(ev.date), sat=isSatada(ev), wk=weekStart(ev.date);
+  const k=cycleForDate(ev.date), sat=isSatNight(ev), wk=weekStart(ev.date);
   const evs=sat?(satWeekMap()[wk]||[]):cycleEvs(k), i=evs.findIndex(e=>e.id===ev.id);
   const prev=i>0?evs[i-1]:null, next=i>=0&&i<evs.length-1?evs[i+1]:null;
   let h='<div class="ro-crumbs"><button class="btn btn-ol btn-sm" onclick="'+(sat?'openRosterHome()':'openCycle('+k+')')+'">'+esc(sat?'Satada '+fmtShort(wk):cyclePretty(k))+'</button>'+
@@ -3965,7 +4008,7 @@ function renderEventView(ev){
     '<div class="u">'+esc(ev.uniform||'Casual')+' Uniform</div></div>';
   // action bar
   h+='<div class="ev-actions">';
-  if(isSatada(ev)) h+=ownerChip(ev);
+  if(isSatNight(ev)) h+=ownerChip(ev);
   if(youthCapable(ev)&&canEd) h+='<button class="pill '+(ev.youth?'on':'')+'" onclick="toggleYouth()">Youth Congregation: '+(ev.youth?'ON':'OFF')+'</button>';
   else if(youthCapable(ev)) h+='<span class="pill '+(ev.youth?'on':'')+'" style="cursor:default">Youth Congregation: '+(ev.youth?'ON':'OFF')+'</span>';
   if(canEd){
@@ -3999,7 +4042,7 @@ function renderEventView(ev){
     if(!IS_EDIT||hist) return h+'<div class="empty-gen"><div class="zap">📄</div><h3>No roster</h3><p>No duty assignments were recorded.</p></div>';
     return h+'<div class="empty-gen"><div class="zap">⚡</div><h3>Ready to Generate</h3><p>Automatically assign all duties for this event.</p>'+
       '<div class="btns"><button class="btn btn-bl" onclick="generateDay('+ev.id+')">⚡ Generate</button>'+
-      (isSatada(ev)?'<button class="btn btn-ol" onclick="generateSatadaNights(\''+weekStart(ev.date)+'\')">Build all my nights</button>'
+      (isSatNight(ev)?'<button class="btn btn-ol" onclick="generateSatadaNights(\''+weekStart(ev.date)+'\')">Build all my nights</button>'
                    :'<button class="btn btn-ol" onclick="askGenerateCycle('+cycleForDate(ev.date)+')">Generate All (cycle)</button>')+'</div>'+
       '<div class="rules-line">Rules: cycle fairness carried across three cycles · no duty repeats within a cycle · Nandi requires certification · children only at entrances &amp; Nandi Passing · away-dates skipped · age groups step up when a pool runs out · duty preferences honoured on ties · Seating &amp; Discipline is 1 adult + 1 youth per gender · Prayer Hall Entrance takes children then youth, never adults</div></div>';
   }
@@ -4543,10 +4586,11 @@ function openCycleSettings(){
     '<div class="macts"><button class="btn btn-ol" onclick="cM()">Cancel</button><button class="btn btn-bl" onclick="saveCycleSettings()">Save</button></div>';
   oM(h); renderOvRows();
 }
+function isoShift(iso,n){ const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
 function renderOvRows(){
   const box=document.getElementById('dcard'); const wrap=box?box.querySelector('#ovRows'):null; if(!wrap) return;
   wrap.innerHTML=CYCLES.map(c=>{ const raw=nzDateStr(newMoonDate(c.k)); const cur=OVERRIDES[raw]||'';
-    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px"><span style="flex:1;color:var(--dm)">Chandraat <b style="color:var(--dt)" class="num">'+esc(raw)+'</b> ('+esc(cycleLabel(c.k))+')</span><input type="date" class="ov-in" data-raw="'+esc(raw)+'" value="'+esc(cur)+'" style="width:160px"></div>';
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px"><span style="flex:1;color:var(--dm)">Chandraat <b style="color:var(--dt)" class="num">'+esc(raw)+'</b> ('+esc(cycleLabel(c.k))+')</span><input type="date" class="ov-in" data-raw="'+esc(raw)+'" min="'+esc(isoShift(raw,-3))+'" max="'+esc(isoShift(raw,3))+'" value="'+esc(cur)+'" style="width:160px"></div>';
   }).join('');
 }
 async function saveCycleSettings(){
@@ -4562,7 +4606,16 @@ async function saveCycleSettings(){
     if(data&&data.value&&typeof data.value==='object') Object.assign(newOv,data.value);
     else Object.assign(newOv,OVERRIDES);
   }catch(e){ Object.assign(newOv,OVERRIDES); }
-  (box?box.querySelectorAll('#ovRows .ov-in'):[]).forEach(inp=>{ const raw=inp.getAttribute('data-raw'),v=(inp.value||'').trim(); if(v&&v!==raw) newOv[raw]=v; else delete newOv[raw]; });
+  let badOv='';
+  (box?box.querySelectorAll('#ovRows .ov-in'):[]).forEach(inp=>{ const raw=inp.getAttribute('data-raw'),v=(inp.value||'').trim();
+    if(v&&v!==raw){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(v)||v<isoShift(raw,-3)||v>isoShift(raw,3)){ if(!badOv) badOv=raw; return; }
+      newOv[raw]=v;
+    } else delete newOv[raw]; });
+  if(badOv) return toast('Chandraat '+badOv+': the override must be within 3 days of the computed date','err');
+  /* Cycles must still run in order once the overrides are applied. */
+  if(CYCLES.length){ const k0=CYCLES[0].k-1, k1=CYCLES[CYCLES.length-1].k;
+    for(let k=k0;k<=k1;k++){ if(chandraatISO(k,newOv)>=chandraatISO(k+1,newOv)) return toast('That override would put two cycles out of order','err'); } }
   /* Written before OVERRIDES moves. The overrides decide where every
      cycle starts, so a refused save that had already been applied locally
      left this browser rostering to dates no other browser agreed with - and then autoCreateEvents() created events on them. */
@@ -4582,7 +4635,7 @@ function openEventDrawer(id){
     '<div class="dp-date">'+esc(ev.name)+'</div><div class="dp-dow">'+esc(fmtDowLong(ev.date))+' · '+esc(fmtNice(ev.date))+'</div>'+
     '<div class="dp-chips"><span class="dp-chip lock" style="background:'+tm.color+'22;color:#fff;border-color:'+tm.color+'">'+esc(tm.label)+'</span>'+
     '<span class="dp-chip lock">'+esc(ev.uniform||'Casual')+' Uniform</span>'+
-    (isSatada(ev)?ownerChip(ev):'')+
+    (isSatNight(ev)?ownerChip(ev):'')+
     (ev.confirmed?'<span class="dp-chip ok">✓ Confirmed</span>':'')+
     (isHistoricEvent(ev)?'<span class="dp-chip lock">Historical</span>':'')+'</div>';
   if(satRO(ev)) h+='<div class="ib" style="margin-top:12px">Owned by Team '+esc(ev.team)+'. Their lead builds this roster and marks attendance, so it is read only here.</div>';
@@ -4630,7 +4683,7 @@ function tonightStrip(){
       '<div class="tn-t">'+esc(e.name)+' '+ownerChip(e)+'</div><div class="tn-s">Owned by Team '+esc(e.team)+' - their lead builds the roster and marks attendance</div></div>'+
       '<div class="tn-btns">'+(sc.generated?'<button class="btn btn-ol" onclick="openDayDuties(\''+today+'\',this)">Who\u2019s on</button>':'')+'</div></div>';
     return '<div class="tonight"><div class="tn-txt"><div class="tn-k">Tonight</div>'+
-      '<div class="tn-t">'+esc(e.name)+(isSatada(e)?' '+ownerChip(e):'')+'</div><div class="tn-s">'+info+'</div></div>'+
+      '<div class="tn-t">'+esc(e.name)+(isSatNight(e)?' '+ownerChip(e):'')+'</div><div class="tn-s">'+info+'</div></div>'+
       '<div class="tn-btns">'+
       (sc.generated?'<button class="btn btn-ol" onclick="openDayDuties(\''+today+'\',this)">Who\u2019s on</button>'
                    :'<button class="btn btn-bl" onclick="selectEvent('+e.id+')">Build roster</button>')+
@@ -4664,7 +4717,7 @@ function zoomFromCell(src){
 let _dayTok=0;
 async function openDayDuties(iso,src){
   const tok=++_dayTok;
-  const satNight=EVENTS.find(e=>e.date===iso&&isSatada(e));
+  const satNight=EVENTS.find(e=>e.date===iso&&isSatNight(e));
   const owner=satNight?satNight.team:teamForCycle(cycleForDate(iso));
   const head='<h3>'+esc(fmtNice(iso))+'</h3>'+
     '<p style="font-size:13px;color:var(--dm);margin:-4px 0 14px">Team '+esc(owner)+
@@ -4678,7 +4731,7 @@ async function openDayDuties(iso,src){
   /* Nothing local - either the other team's day, or simply not loaded. A
      satada night is local for both teams, but the cycle's own team may hold
      another event on the same date, so a satada date is fetched as well. */
-  if((!evs.length||evs.some(isSatada)) && sb && !DB_MISSING){
+  if((!evs.length||evs.some(isSatNight)) && sb && !DB_MISSING){
     try{
       const {data:ev}=await sb.from('iv_events').select('*').eq('date',iso);
       const have=new Set(evs.map(e=>e.id)); evs=evs.concat((ev||[]).filter(e=>!have.has(e.id))).sort((a,b)=>a.id-b.id);
@@ -4737,7 +4790,7 @@ async function loadOtherEvents(y,m){
     const last=new Date(y,m+1,0).getDate();
     const {data,error}=await sb.from('iv_events').select('id,date,name,team,confirmed,type').neq('team',PAGE_TEAM).gte('date',key+'-01').lte('date',key+'-'+pad2(last));
     if(error) throw error;
-    OTHER_EV[key]=(data||[]).filter(e=>e.type!=='satada');   // satada nights of both teams are already in EVENTS
+    OTHER_EV[key]=(data||[]).filter(e=>!isSatNight(e));   // satada nights of both teams are already in EVENTS
     if(OTHER_EV[key].length && typeof curPage!=='undefined' && curPage==='calendar') renderCalendar();
   }catch(e){ delete OTHER_EV[key]; console.warn('other team events not loaded:',e.message||e); }   // forgotten, so the next draw asks again
 }
@@ -4823,7 +4876,7 @@ function renderCalendar(){
       const sc=slotCounts(e);
       const st=e.confirmed?'lv':(sc.generated?'dr':'nb');
       const label=e.confirmed?'On the calendar':(sc.generated?'Draft':'Not built');
-      const sat=isSatada(e);
+      const sat=isSatNight(e);
       h+='<button class="cal-ev st-'+st+(e.confirmed?' conf':'')+'"'+(sat?' style="border-left:5px solid '+TYPE_META.satada.color+'"':'')+' title="'+esc(e.name)+(sat?' \u00b7 Team '+esc(e.team):'')+' - '+esc(fmtNice(e.date))+'" onclick="event.stopPropagation();openEventDrawer('+e.id+')">'+esc(e.name)+'</button>'+
          '<span class="cal-st st-'+st+'">'+(sat?'Team '+esc(e.team)+' \u00b7 ':'')+label+(sc.generated&&sc.missing?' · <b>'+sc.missing+' short</b>':'')+'</span>';
     }
@@ -4840,7 +4893,7 @@ function renderCalendar(){
   const myIds=new Set(tdMyDuties().map(x=>x.ev.id));
   h+='<div class="cal-tl">'+(tl.length?tl.map(x=>{
     const d=new Date(x.e.date+'T12:00:00'), sc=x.own?slotCounts(x.e):null;
-    const st=(isSatada(x.e)?'Team '+x.e.team+' \u00b7 ':'')+(x.own?(x.e.confirmed?'On the calendar':(sc.generated?'Draft':'Not built')):('Team '+x.e.team+(x.e.confirmed?' · On the calendar':' · Draft')));
+    const st=(isSatNight(x.e)?'Team '+x.e.team+' \u00b7 ':'')+(x.own?(x.e.confirmed?'On the calendar':(sc.generated?'Draft':'Not built')):('Team '+x.e.team+(x.e.confirmed?' · On the calendar':' · Draft')));
     return '<button type="button" class="tl-row'+(x.own&&myIds.has(x.e.id)?' mine':'')+'" onclick="'+(x.own?'openEventDrawer('+x.e.id+')':'openDayDuties(\''+x.e.date+'\',this)')+'">'+
       '<div class="tl-d"><b>'+MON_UP[d.getMonth()]+'</b><span>'+d.getDate()+'</span><i>'+d.toLocaleDateString('en-NZ',{weekday:'short'})+'</i></div>'+
       '<div class="tl-n"><strong>'+esc(x.e.name)+'</strong><em>'+esc(st)+(x.own&&sc&&sc.generated&&sc.missing?' · '+sc.missing+' short':'')+'</em></div></button>';
@@ -5353,7 +5406,7 @@ async function loadCovering(){
     const teams=[...new Set(mine.map(e=>e.team).filter(Boolean))];
     const [{data:ro},{data:at},{data:me}] = await Promise.all([
       sb.from('iv_roster').select('*').in('event_id',ids),
-      sb.from('iv_attendance').select('*').in('event_id',ids),
+      byEventId('iv_attendance',ids),
       sb.from('iv_members').select('*').in('team',teams),
     ]);
     const rosters={}; (ro||[]).forEach(r=>rosters[r.event_id]=r.data);
@@ -5933,7 +5986,7 @@ function clApply(row){
 }
 function clSaveLocal(){ try{ localStorage.setItem(clLocalKey(),JSON.stringify({done:CL.done,dayType:CL.dayType})); }catch(e){} }
 async function clLoad(){
-  const day=nzTodayISO();
+  const day=clNightISO();
   if(CL.day!==day){
     CL.day=day; CL.done=[]; CL.deferred=[]; CL.hist=[]; CL.hasRow=false; CL.armed=false; CL.by=''; CL.at=null;
     CL.dayType=clDefaultDayType();
@@ -5947,7 +6000,7 @@ async function clLoad(){
 }
 function renderChecklist(){
   const el=document.getElementById('body-checklist'); if(!el) return;
-  if(!CL.loaded||CL.day!==nzTodayISO()){
+  if(!CL.loaded||CL.day!==clNightISO()){
     if(!el.innerHTML.trim()) el.innerHTML=skeletonHTML();
     if(!CL.loading){ CL.loading=true; CL.loaded=false; clLoad().then(()=>{ CL.loading=false; if(curPage==='checklist') clRender(); }); }
     return;

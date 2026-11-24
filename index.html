@@ -153,7 +153,7 @@ html{scroll-behavior:smooth;}
 html[data-theme="light"] .sa-hint.ok,html[data-theme="light"] .sa-pick.t-a.on,html[data-theme="light"] .sa-own.t-a{color:#1B6B3A;}
 html[data-theme="light"] .sa-pick.t-b.on,html[data-theme="light"] .sa-own.t-b{color:#A8402F;}
 @media(max-width:700px){.sa-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}.sa-pick{min-height:52px;}}
-@media(max-width:420px){.sa-pair{gap:8px;}.sa-tile{padding:10px 5px 8px;}.sa-dd{font-size:13px;}}
+@media(max-width:420px){.sa-pair{grid-template-columns:1fr;gap:8px;}.sa-tile{padding:10px 5px 8px;}.sa-dd{font-size:13px;}}
 
 /* ─── HERO ─── */
 .hero{background:linear-gradient(135deg,#020B18 0%,#071628 50%,#050D1C 100%);border:1px solid rgba(75,163,220,.15);
@@ -562,6 +562,7 @@ html[data-theme="light"] .al-pill.p-av{color:#3A559E;}html[data-theme="light"] .
 .al-prev li b{width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;background:rgba(134,228,154,.18);color:#4ADE80;}
 .al-prev li.no b{background:rgba(255,255,255,.06);color:var(--dm);}
 @media(max-width:1000px){.al-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}.al-tile{height:226px;}.al-num{font-size:32px;}.al-lab{font-size:10px;letter-spacing:.08em;}.al-face{padding:14px 14px 12px;}}
+@media(max-width:400px){.al-tile{height:252px;}}
 @media(max-width:820px){
   .al-head{display:none;}
   .al-row{grid-template-columns:1fr;gap:10px;margin-bottom:10px;padding:16px;border:1px solid var(--db);background:var(--ds);}
@@ -1360,16 +1361,6 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
       </div>
 
       <section class="panel">
-        <h2>Cycle Anchor</h2>
-        <div class="ap-note">The cycle containing this Chandraat belongs to this team; all other cycles alternate A↔B from it. Changing the anchor re-labels every cycle on the team pages.</div>
-        <div class="ap-inline">
-          <div class="fg"><label>Anchor Chandraat</label><input type="date" id="apAnchorDate" aria-label="Anchor Chandraat date" style="color-scheme:dark;"></div>
-          <div class="fg"><label>Belongs To</label><select id="apAnchorTeam"><option value="A">Team A</option><option value="B">Team B</option></select></div>
-          <button class="btn btn-bl" id="apAnchorSave">Save Anchor</button>
-        </div>
-      </section>
-
-      <section class="panel">
         <h2>Chandraat Overrides</h2>
         <div class="ap-note">Computed new-moon dates (Pacific/Auckland) for the surrounding lunations. If the announced Chandraat differs, set the actual date - leave blank to use the computed date.</div>
         <div id="apOvList"></div>
@@ -1508,16 +1499,8 @@ function initSupabase(){
          the Hub kept looking signed in while every query failed. */
       sb.auth.onAuthStateChange(ev=>{
         if(ev !== 'SIGNED_OUT' || LOGGING_OUT || !CU || !CU.uid) return;
-        CU = { perms: [] }; AUTH_USER = null; MY_PROFILE = null;
-        try{ localStorage.removeItem('ivhub_session'); }catch(e){}
-        /* Whoever signs in next on this page must not inherit this
-           person's directory, accounts or lists (doLogout clears the same). */
-        _lastView = null;
-        try{ localStorage.removeItem('ivhub_myname'); }catch(e){}
-        mRows = []; PROFILES = []; MY_MEMBER = null; MY_AWAY = []; AUDIT_ROWS = [];
-        try{ VL.rows = []; VL.logins = {}; VL.open = null; }catch(e){}
-        try{ AL.mem = null; AL.all = null; AL.admins = []; }catch(e){}
-        ['mdName','mList','umList','vlList','auList'].forEach(id=>{ const el = $(id); if(!el) return; if(el.tagName === 'INPUT') el.value = ''; else el.innerHTML = ''; });
+        CU = { perms: [] };
+        clearSessionState();
         $('lp').value = '';
         $('app').style.display = 'none';
         $('loginScreen').style.display = 'flex';
@@ -2434,11 +2417,9 @@ async function doLogin(){
    log's insert policy rejects. Sign-outs went unrecorded whenever it lost
    that race. Awaiting in order removes the race entirely. */
 let LOGGING_OUT = false;
-async function doLogout(){
-  LOGGING_OUT = true;
-  /* Waits for the entry, but not forever: on a dead connection the sign-out must still happen. */
-  try{ await Promise.race([auditLog('Signed out', 'login', (CU.display || CU.user || 'Someone') + ' signed out'), new Promise(r=>setTimeout(r, 4000))]); }catch(e){}
-  try{ if(sb) await sb.auth.signOut({scope:'local'}); }catch(e){}
+/* Every per-user global and its DOM, cleared on every sign-out path so
+   the next person on this page inherits nothing. */
+function clearSessionState(){
   AUTH_USER = null; MY_PROFILE = null;
   try{ localStorage.removeItem('ivhub_session'); }catch(e){}
   /* Per-user state must not carry over to whoever signs in next on this
@@ -2450,7 +2431,7 @@ async function doLogout(){
   try{ VL.rows = []; VL.logins = {}; VL.open = null; }catch(e){}
   try{ AL.mem = null; AL.all = null; AL.admins = []; }catch(e){}
   /* Satada, Weekday Attendance and duties hold other people's rows: do not leave them for the next sign-in. */
-  try{ Object.assign(SA, {weeks:{}, rost:{}, rrow:{}, att:{}, sel:null, form:false, date:'', owners:saAlt(), busy:false, err:'', loaded:false}); Object.assign(WDA, {rows:[], shifts:[], err:''}); }catch(e){}
+  try{ Object.assign(SA, {weeks:{}, rost:{}, rrow:{}, att:{}, sel:null, form:false, date:'', owners:saAlt(), busy:false, err:'', loaded:false}); Object.assign(WDA, {rows:[], shifts:[], err:'', from:'', to:'', defTo:''}); }catch(e){}
   dutyCache = null; _mdNames = null; _myNameResolved = null; mdShotData = null;
   ['saWeeks','saMain','wdaDays','wdaTotals','homeDash'].forEach(id=>{ const el = $(id); if(el) el.innerHTML = ''; });
   { const r = $('mdResults'); if(r) r.innerHTML = '<div class="md-empty"><div class="big">🔍</div>Enter your name above to find your upcoming duties.<br>Your name is remembered on this device.</div>'; }
@@ -2459,6 +2440,15 @@ async function doLogout(){
     const el = $(id); if(!el) return;
     if('value' in el && el.tagName === 'INPUT') el.value = ''; else el.innerHTML = '';
   });
+  try{ sbEmails = {}; sbPicked = {}; sbPending = {}; sbBatches = []; sbTeam = null; apvBatches = []; stData = null; mProfiles = []; }catch(e){}
+  ['sbList','apvList'].forEach(id=>{ const el = $(id); if(el) el.innerHTML = ''; });
+}
+async function doLogout(){
+  LOGGING_OUT = true;
+  /* Waits for the entry, but not forever: on a dead connection the sign-out must still happen. */
+  try{ await Promise.race([auditLog('Signed out', 'login', (CU.display || CU.user || 'Someone') + ' signed out'), new Promise(r=>setTimeout(r, 4000))]); }catch(e){}
+  try{ if(sb) await sb.auth.signOut({scope:'local'}); }catch(e){}
+  clearSessionState();
   LOGGING_OUT = false;
   CU = { perms: [] };
   $('app').style.display = 'none';
@@ -2705,6 +2695,8 @@ function showApp(){
   if(window.ivSplash) ivSplash('hub');
   $('loginScreen').style.display = 'none';
   $('app').style.display = 'block';
+  /* A remembered name belongs to one account: drop it when a different one signs in. */
+  try{ if(CU.uid){ if(localStorage.getItem('ivhub_myuid') !== CU.uid) localStorage.removeItem('ivhub_myname'); localStorage.setItem('ivhub_myuid', CU.uid); } }catch(e){}
   const name = CU.display || CU.user || '';
   $('tbName').textContent = name;
   $('tbRole').textContent = roleLabel(CU);
@@ -4114,12 +4106,14 @@ async function addMemberRun(){
   if(!name){ toast('Please enter the member\'s name.', 'err'); return; }
   if(!sb){ toast('No database connection - cannot add members.', 'err'); return; }
   if(name.length > 80){ toast('That name is too long (80 characters at most).', 'err'); return; }
-  if((mRows||[]).some(m=>String(m.name||'').trim().toLowerCase() === name.toLowerCase()) &&
-     !confirm('There is already a member called "' + name + '". Add another with the same name?')) return;
   const rank = panel.querySelector('#maRank').value;
   const lead = rankIsLeadership(rank);
   const activePill = panel.querySelector('.tpill.active');
   const team = lead ? null : (activePill ? activePill.getAttribute('data-t') : null);
+  const sameName = (mRows||[]).filter(m=>String(m.name||'').trim().toLowerCase() === name.toLowerCase());
+  /* The database allows one name per team, so a same-team match can never be saved. */
+  if(team && sameName.some(m=>m.team === team)){ toast('A member called "' + name + '" already exists in Team ' + team + '. Add a middle initial to tell them apart.', 'err'); return; }
+  if(sameName.length && !confirm('There is already a member called "' + name + '". Add another with the same name?')) return;
   const spec = Array.from(panel.querySelectorAll('.spec-chip.active')).map(b=>b.getAttribute('data-spec'));
   const base = {
     team, name,
@@ -4312,7 +4306,9 @@ function csvCell(v){
 }
 function wdaInit(){
   if(!PAGES.wdatt()) return;
-  if(!WDA.from){ WDA.to = todayNZ(); WDA.from = addDaysISO(WDA.to, -30); }
+  const t = todayNZ();
+  /* Untouched default range: move it to today on each entry. */
+  if(!WDA.from || (WDA.defTo && WDA.to === WDA.defTo && WDA.defTo !== t)){ WDA.to = t; WDA.from = addDaysISO(t, -30); WDA.defTo = t; }
   $('wdaFrom').value = WDA.from; $('wdaTo').value = WDA.to;
   wdaLoad();
 }
@@ -4422,8 +4418,18 @@ async function wdExtraLine(id){
      marked; a night with a roster only moves if the roster is cleared in the
      same step, because the people on it belong to the old team's lead.
    - Deleting removes all seven. The cycle's own Friday and Paanch Baar Saal
-     come back on the next automatic run of a team page. */
+     come back on the next automatic run of a team page.
+   - A night a Team Lead added by hand on a team page (Add Event, name
+     'Evening Satada', type custom) is part of the satada: this page lists it,
+     counts it, can move it to the other team, and never creates a second
+     night on its date. It is not ours to delete or replace, so Delete this
+     satada only removes the nights created here, and Create fills in the
+     dates that hold no satada night. */
 const SA_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const saIsName = e=>!!e && e.type !== 'satada' && /satada/i.test(e.name || '');
+const saHub = e=>e.type === 'satada';
+const saIsNight = e=>saHub(e) || saIsName(e);
+const saHas = w=>(SA.weeks[w]||[]).some(saHub);
 const saDow = iso=>new Date(iso+'T12:00:00').getDay();
 const saWeekStart = iso=>addDaysISO(iso, -saDow(iso));
 const saAlt = ()=>[0,1,2,3,4,5,6].map(i=>i%2===0 ? 'A' : 'B');
@@ -4440,16 +4446,16 @@ function saValidate(iso){
   if(!iso) return 'Pick the Sunday the satada starts on.';
   if(saDow(iso) !== 0) return fmtLong(iso) + ' is not a Sunday. A satada runs Sunday to Saturday.';
   if(addDaysISO(iso,6) < todayNZ()) return 'That week has already finished.';
-  if((SA.weeks[iso]||[]).length) return 'Satada nights already exist in the week of ' + fmtDM(iso) + '.';
+  if(saHas(iso)) return 'Satada nights already exist in the week of ' + fmtDM(iso) + '.';
   return '';
 }
 /* Reads every satada night, which nights hold a roster, and which have
    attendance. Safe to call at any time; it re-renders the page. */
 async function saReload(){
   if(!sb){ SA.err = 'No database connection.'; saRender(); return false; }
-  const ev = await sb.from('iv_events').select('*').eq('type','satada').order('date');
+  const ev = await sb.from('iv_events').select('*').or('type.eq.satada,name.ilike.%satada%').order('date');
   if(ev.error){ SA.err = 'Could not read the satadas - ' + (ev.error.message || ev.error); saRender(); return false; }
-  const rows = ev.data || [], ids = rows.map(e=>e.id), rost = {}, rrow = {}, att = {};
+  const rows = (ev.data || []).filter(saIsNight), ids = rows.map(e=>e.id), rost = {}, rrow = {}, att = {};
   if(ids.length){
     const [ro, at] = await Promise.all([
       sb.from('iv_roster').select('event_id,data').in('event_id', ids),
@@ -4488,9 +4494,11 @@ function saRender(){
   main.innerHTML = SA.sel && SA.weeks[SA.sel] ? saPanelHTML(SA.sel) : '';
 }
 function saPick(w){ SA.form = false; SA.sel = w; saRender(); }
-function saNew(){
-  SA.form = true; SA.date = saNextSunday(); SA.owners = saAlt();
-  while(SA.date && (SA.weeks[SA.date]||[]).length) SA.date = addDaysISO(SA.date, 7);
+function saNew(sun){
+  SA.form = true; SA.date = typeof sun === 'string' && sun ? sun : saNextSunday(); SA.owners = saAlt();
+  while(SA.date && saHas(SA.date)) SA.date = addDaysISO(SA.date, 7);
+  /* Nights already in that week keep their team in the tiles, so the summary reads as the week really is. */
+  (SA.weeks[SA.date]||[]).forEach(e=>{ const i = saDow(e.date); if(e.team === 'A' || e.team === 'B') SA.owners[i] = e.team; });
   saRender();
 }
 function saCancelForm(){ SA.form = false; if(!SA.sel || !SA.weeks[SA.sel]){ const ws = Object.keys(SA.weeks).sort(); SA.sel = ws[ws.length-1] || null; } if(!SA.sel) SA.form = true; saRender(); }
@@ -4503,7 +4511,7 @@ function saTileHTML(i){
     '</div></div>';
 }
 function saFormHTML(){
-  if(!SA.date){ SA.date = saNextSunday(); while((SA.weeks[SA.date]||[]).length) SA.date = addDaysISO(SA.date, 7); }
+  if(!SA.date){ SA.date = saNextSunday(); while(saHas(SA.date)) SA.date = addDaysISO(SA.date, 7); }
   return '<h2>New satada</h2><p class="sa-note">A majalis every night, Sunday to Saturday. For that week the normal cycle makes no Friday Majlis or Paanch Baar Saal. Pick the Sunday, then choose which team runs each night.</p>'+
     '<div class="fg" style="max-width:260px"><label for="saDate">Sunday the satada starts</label>'+
     '<input type="date" id="saDate" value="'+esc(SA.date)+'" min="'+esc(saWeekStart(todayNZ()))+'" oninput="saDate(this.value)" onchange="saDate(this.value)"></div>'+
@@ -4524,7 +4532,9 @@ function saFormUpdate(){
   const hint = $('saHint'), go = $('saGo'); if(!hint || !go) return;
   const err = saValidate(SA.date), ok = !err;
   hint.className = 'sa-hint ' + (ok ? 'ok' : 'bad');
-  hint.textContent = ok ? 'OK: ' + fmtDM(SA.date) + ' to ' + fmtDM(addDaysISO(SA.date,6)) : 'Not allowed: ' + err;
+  const kept = ok ? (SA.weeks[SA.date]||[]) : [];
+  hint.textContent = ok ? 'OK: ' + fmtDM(SA.date) + ' to ' + fmtDM(addDaysISO(SA.date,6)) +
+    (kept.length ? '. Already a satada night this week, so kept as they are: ' + kept.map(e=>SA_DAYS[saDow(e.date)].slice(0,3) + ' ' + fmtDM(e.date) + ' (Team ' + e.team + ')').join(', ') : '') : 'Not allowed: ' + err;
   const sun = ok || (SA.date && saDow(SA.date) === 0);
   for(let i=0;i<7;i++){
     const d = $('saTD'+i); if(d) d.textContent = sun ? fmtDM(addDaysISO(SA.date,i)) : '-';
@@ -4550,7 +4560,7 @@ async function saPlan(sun, owners){
   const wk = await sb.from('iv_events').select('*').gte('date', sun).lte('date', sat);
   if(wk.error) return {err: 'Could not read that week - ' + (wk.error.message || wk.error)};
   const have = wk.data || [];
-  if(have.some(e=>e.type === 'satada')) return {err: 'Satada nights already exist in the week of ' + fmtDM(sun) + '.'};
+  if(have.some(saHub)) return {err: 'Satada nights already exist in the week of ' + fmtDM(sun) + '.'};
   const busy = new Set();
   if(have.length){
     const ids = have.map(e=>e.id);
@@ -4561,12 +4571,14 @@ async function saPlan(sun, owners){
   const rows = [], del = [], skip = [];
   for(let i=0;i<7;i++){
     const d = addDaysISO(sun, i), regs = have.filter(e=>e.date === d);
+    const sn = regs.find(saIsName);
+    if(sn){ skip.push({date:d, name:sn.name, team:sn.team, why:'it is already a satada night run by Team ' + sn.team + (busy.has(sn.id) ? ' and has a roster or attendance' : '') + '; change its team on this page afterwards'}); continue; }
     const hold = regs.find(e=>busy.has(e.id) || (e.type !== 'friday' && e.type !== 'pbs'));
     if(hold){ skip.push({date:d, name:hold.name, team:hold.team, why: busy.has(hold.id) ? 'it already has a roster or attendance' : 'it is not an automatic event'}); continue; }
     regs.forEach(e=>del.push(e));
     rows.push({team:owners[i], date:d, name:'Satada - ' + SA_DAYS[i], type:'satada', uniform:'Casual', youth:i === 5, confirmed:false});
   }
-  if(!rows.length) return {err: 'Every date in that week already holds a roster or another event, so no satada night could be made.'};
+  if(!rows.length) return {err: 'Every date in that week already holds a satada night, a roster or another event, so no new satada night could be made.'};
   return {sun:sun, rows:rows, del:del, skip:skip};
 }
 async function saSubmit(){
@@ -4613,7 +4625,7 @@ function saPanelHTML(w){
   const evs = SA.weeks[w] || [], today = todayNZ();
   const tiles = evs.map(e=>{
     const i = saDow(e.date), n = SA.rost[e.id] || 0, att = SA.att[e.id] || 0, past = e.date < today, to = e.team === 'A' ? 'B' : 'A', tm = e.team === 'A' || e.team === 'B' ? e.team : '';
-    const state = att ? 'Attendance marked' : past ? 'Night has passed' : n ? 'Roster: ' + n + ' ' + (n === 1 ? 'person' : 'people') : 'No roster yet';
+    const state = (att ? 'Attendance marked' : past ? 'Night has passed' : n ? 'Roster: ' + n + ' ' + (n === 1 ? 'person' : 'people') : 'No roster yet') + (saHub(e) ? '' : ' · added by a lead');
     return '<div class="sa-tile" data-id="'+esc(e.id)+'"><div class="sa-dn">'+esc(SA_DAYS[i].slice(0,3))+'</div><div class="sa-dd">'+esc(fmtDM(e.date))+'</div>'+
       '<span class="sa-own t-'+tm.toLowerCase()+'">'+(tm ? 'Team '+tm : 'No team')+'</span>'+
       '<div class="sa-st'+(att || past ? '' : n ? ' has' : '')+'">'+esc(state)+'</div>'+
@@ -4622,9 +4634,10 @@ function saPanelHTML(w){
   return '<div class="sa-head"><h2>Satada: '+esc(saRange(w))+'</h2><span class="al-pill sa-badge">'+esc(saStatus(w))+'</span></div>'+
     '<div class="sa-sum" id="saSum">'+esc(saSumText(evs.map(e=>e.team)))+'</div>'+
     '<div class="sa-strip" id="saStrip">'+tiles+'</div>'+
+    (evs.length < 7 ? '<p class="sa-note">Only '+evs.length+' of the 7 nights are set. <button class="btn btn-bl" onclick="saNew(\''+esc(w)+'\')">Add the other nights</button></p>' : '')+
     '<p class="sa-note">Tap a night\'s button to give it to the other team. A night with a roster only moves if the roster is cleared; a night that has passed, or has attendance marked, cannot move. Changes show on both team pages straight away.</p>'+
     '<div class="sa-acts"><button class="btn btn-ol" onclick="saSwap(\''+esc(w)+'\')">Swap A and B for the whole week</button><span style="flex:1"></span>'+
-    '<button class="btn btn-red" onclick="saDelete(\''+esc(w)+'\')">Delete this satada</button></div>';
+    (evs.some(saHub) ? '<button class="btn btn-red" onclick="saDelete(\''+esc(w)+'\')">Delete this satada</button>' : '')+'</div>';
 }
 const saFlat = ()=>[].concat(...Object.keys(SA.weeks).map(w=>SA.weeks[w]));
 async function saOwner(id, to){
@@ -4635,7 +4648,7 @@ async function saOwner(id, to){
     const ev = saFlat().find(e=>e.id === id); if(!ev || ev.team === to) return;
     if(ev.date < todayNZ()) return toast('That night has already passed, so its team cannot change.', 'err');
     if(SA.att[id]) return toast('Attendance has already been marked for that night, so its team cannot change.', 'err');
-    const n = SA.rost[id] || 0, patch = {team: to}, was = ev.team;
+    const n = SA.rost[id] || 0, patch = {team: to, cover_uid: null, cover_name: null, cover_by: null}, was = ev.team;
     if(n){
       if(!confirm(ev.name + ' (' + fmtDM(ev.date) + ') already has a roster of ' + n + ' ' + (n === 1 ? 'person' : 'people') + ' from Team ' + was +
           '.\n\nMoving it to Team ' + to + ' with them still on it would leave volunteers rostered by a lead who is not theirs.\n\nClear the roster and move the night to Team ' + to + '?')) return;
@@ -4678,7 +4691,7 @@ async function saSwap(w){
     }
     for(const t of ['A','B']){
       const ids = move.filter(e=>e.team !== t).map(e=>e.id); if(!ids.length) continue;
-      if(!await dbWrite('Changing the teams', ()=>sb.from('iv_events').update({team:t}).in('id', ids))) { await saReload(); return; }
+      if(!await dbWrite('Changing the teams', ()=>sb.from('iv_events').update({team:t, cover_uid:null, cover_name:null, cover_by:null}).in('id', ids))) { await saReload(); return; }
     }
     auditLog('satada-swap', 'events', 'Satada ' + w + ' - swapped ' + move.map(e=>e.date.slice(5) + ' Team ' + e.team + ' to Team ' + (e.team === 'A' ? 'B' : 'A')).join(', ') +
       (clear.length ? '; cleared ' + clear.length + ' roster' + (clear.length === 1 ? '' : 's') : '') + (stay.length ? '; ' + stay.length + ' kept' : ''));
@@ -4691,9 +4704,10 @@ async function saDelete(w){
   SA.busy = true;
   try{
     if(!await saReload()) return;
-    const evs = SA.weeks[w] || []; if(!evs.length) return;
+    const evs = (SA.weeks[w] || []).filter(saHub); if(!evs.length) return toast('The nights of this week were added by a team lead on a team page, so they are deleted there.', 'err');
+    const kept = (SA.weeks[w] || []).length - evs.length;
     const held = evs.filter(e=>SA.rost[e.id] || SA.att[e.id]);
-    if(!confirm('Delete this satada?\n\nAll ' + evs.length + ' nights of the week of ' + fmtDM(w) + ' are deleted, for both teams. The regular Friday Majlis and Paanch Baar Saal come back on the next automatic run. This cannot be undone.' +
+    if(!confirm('Delete this satada?\n\nAll ' + evs.length + ' nights of the week of ' + fmtDM(w) + ' that were created here are deleted, for both teams.' + (kept ? ' The ' + kept + ' night' + (kept === 1 ? '' : 's') + ' added by a team lead on a team page ' + (kept === 1 ? 'is' : 'are') + ' kept.' : '') + (kept ? '' : ' The regular Friday Majlis and Paanch Baar Saal come back on the next automatic run.') + ' This cannot be undone.' +
         (held.length ? '\n\n' + held.length + ' night' + (held.length === 1 ? ' has' : 's have') + ' a roster or attendance, which are deleted with them: ' + held.map(e=>fmtDM(e.date) + ' (Team ' + e.team + ')').join(', ') + '.' : ''))) return;
     const ids = evs.map(e=>e.id);
     if(!await dbWrite('Deleting the satada', ()=>sb.from('iv_events').delete().in('id', ids),
@@ -5900,20 +5914,16 @@ function approxLunationK(d){
 }
 async function loadAdminPanel(){
   if(!hasPerm('owner','developer')) return;
-  let anchor = { date:'2026-06-15', team:'B' };
   apOverrides = {};
   if(sb){
     try{
-      const {data, error} = await sb.from('iv_settings').select('*').in('key', ['anchor','chandraat_overrides']);
+      const {data, error} = await sb.from('iv_settings').select('*').in('key', ['chandraat_overrides']);
       if(error) throw error;
       (data || []).forEach(row=>{
-        if(row.key === 'anchor' && row.value && row.value.date) anchor = row.value;
         if(row.key === 'chandraat_overrides' && row.value) apOverrides = row.value;
       });
     }catch(e){ console.warn('iv_settings unavailable:', e.message || e); toast('Settings could not be loaded - showing defaults.', 'err'); }
   }
-  $('apAnchorDate').value = anchor.date || '';
-  $('apAnchorTeam').value = anchor.team === 'A' ? 'A' : 'B';
   renderOverrideRows();
 }
 function renderOverrideRows(){
@@ -5924,27 +5934,11 @@ function renderOverrideRows(){
     const ov = apOverrides[iso] || '';
     html += `<div class="ov-row">
       <div class="ov-computed tnum">${esc(fmtLong(iso))} <small>· computed (${esc(iso)})</small></div>
-      <input type="date" data-ck="${esc(iso)}" aria-label="Override for ${esc(iso)}" value="${esc(ov)}">
+      <input type="date" data-ck="${esc(iso)}" min="${esc(addDaysISO(iso,-3))}" max="${esc(addDaysISO(iso,3))}" aria-label="Override for ${esc(iso)}" value="${esc(ov)}">
       ${ov ? '<span class="pchip">overridden</span>' : ''}
     </div>`;
   }
   $('apOvList').innerHTML = html;
-}
-async function saveAnchor(){
-  if(!hasPerm('owner','developer')) return;
-  const date = $('apAnchorDate').value;
-  const team = $('apAnchorTeam').value;
-  if(!date){ toast('Please pick the anchor Chandraat date.', 'err'); return; }
-  if(!confirm(`Set the cycle anchor?\n\nThe cycle containing Chandraat ${date} will belong to Team ${team}; all other cycles alternate from it.`)) return;
-  if(!sb){ toast('No database connection - cannot save.', 'err'); return; }
-  /* The anchor decides which team owns which cycle, for every page. A
-     save that only happened in this browser would have one Owner
-     rostering a cycle the other team believes is theirs. */
-  if(!await dbWrite('Saving the cycle anchor',
-      ()=>sb.from('iv_settings').upsert({ key:'anchor', value:{ date, team } }),
-      {hint: e=>isMissingTable(e) ? 'iv_settings table is missing - run SETUP.sql first.' : null})) return;
-  auditLog('Updated cycle anchor', 'admin', `${date} › Team ${team}`);
-  toast('Cycle anchor saved.');
 }
 async function saveOverrides(){
   if(!hasPerm('owner','developer')) return;
@@ -5958,6 +5952,17 @@ async function saveOverrides(){
     if(v && v !== ck) map[ck] = v;
   });
   Object.keys(apOverrides).forEach(ck=>{ if(!listed.has(ck)) map[ck] = apOverrides[ck]; });
+  /* A mistyped year would stretch a cycle across decades, so an override
+     must sit within 3 days of its computed date and keep the cycles in order. */
+  const dayN = iso=>Math.round(Date.parse(iso + 'T12:00:00Z') / 86400000);
+  for(const ck of Object.keys(map)){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(map[ck]) || isNaN(dayN(map[ck])) || Math.abs(dayN(map[ck]) - dayN(ck)) > 3){
+      toast('The override for ' + ck + ' (' + map[ck] + ') must be within 3 days of the computed date.', 'err'); return; }
+  }
+  const eff = Array.from(listed).sort().map(ck=>map[ck] || ck);
+  for(let i = 1; i < eff.length; i++){
+    if(!(dayN(eff[i - 1]) < dayN(eff[i]))){ toast('Overrides ' + eff[i - 1] + ' and ' + eff[i] + ' are out of order.', 'err'); return; }
+  }
   const n = Object.keys(map).length;
   if(!confirm(`Save Chandraat overrides?\n\n${n} override${n === 1 ? '' : 's'} will be stored; blank rows use the computed date.`)) return;
   if(!sb){ toast('No database connection - cannot save.', 'err'); return; }
@@ -6078,7 +6083,6 @@ function bindUI(){
     renderStats();
   }));
   /* admin panel */
-  $('apAnchorSave').addEventListener('click', saveAnchor);
   $('apOvSave').addEventListener('click', saveOverrides);
   /* forgotten password - volunteers only, enforced on the server */
   const lr = $('lnkReset');
@@ -6116,7 +6120,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   if(authed) showApp();
   else if(ALLOW_LEGACY_LOGIN && loadSession()) showApp();
   else {
-    try{ localStorage.removeItem('ivhub_session'); }catch(e){}
+    try{ localStorage.removeItem('ivhub_session'); localStorage.removeItem('ivhub_myname'); }catch(e){}
     $('loginScreen').style.display = 'flex'; $('lu').focus();
     /* An invite or reset link that is spent or out of date arrives as
        #error=...&error_code=otp_expired, or as a token with no session

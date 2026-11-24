@@ -471,7 +471,7 @@ function wire(){
   $('list').addEventListener('click', e=>{ const b = e.target.closest('[data-rm]'); if(b) removeEntry(b.dataset.rm); });
   $('btnJoin').addEventListener('click', ()=>joinShift(false));
   $('btnClose').addEventListener('click', openClose);
-  $('btnOut').addEventListener('click', async ()=>{ try{ await sb.auth.signOut({scope:'local'}); }catch(e){} location.replace('index.html'); });
+  $('btnOut').addEventListener('click', async ()=>{ try{ localStorage.removeItem('ivhub_myname'); localStorage.removeItem('ivhub_session'); }catch(e){} try{ await Promise.race([sb.auth.signOut({scope:'local'}), new Promise(r=>setTimeout(r,4000))]); }catch(e){} location.replace('index.html'); });
   $('viewDate').addEventListener('change', ()=>{ const v = $('viewDate').value; if(!/^\d{4}-\d\d-\d\d$/.test(v)){ render(); return; } S.date = v; S.follow = (v === S.today); S.shift = null; S.rows = []; S.loadErr = false; render(); loadDay(); });
   $('sheetHost').addEventListener('click', e=>{
     const id = e.target.id;
