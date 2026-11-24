@@ -543,7 +543,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .vh-pill{font-size:13px!important;font-weight:700!important;line-height:1.4!important}
 .vh-pill b{font-weight:700!important}
 .vh-rec b{font-weight:700!important}
-.vh-rec small{font-weight:700!important;letter-spacing:.06em!important}
+.vh-rec small{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
 .vh-s{font-weight:700!important}
 .vl-age{font-weight:700!important}
 .walkin-tag{font-size:11px!important;font-weight:700!important}
@@ -568,6 +568,7 @@ body.tp .tn-menu .tn-b{font-size:15px!important;font-weight:600!important}
 body.tp .tn-menu .tn-b.tn-sub{font-size:14px!important}
 h1{font-weight:600!important}
 h2{font-weight:600!important}
+html .vh-h{font-weight:700!important}
 html[data-team] .dash-greet{font-weight:700!important;line-height:1.4!important}
 input[type=date]{font-weight:500!important;line-height:1.4!important}
 input[type=number]{font-weight:600!important;line-height:1.4!important}

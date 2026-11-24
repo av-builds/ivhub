@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "description": "Regression suite for the IV Hub pages. The site itself is static HTML and needs none of this to run.",
-  "scripts": { "test": "node tests/verify.cjs && node tests/wd-team.cjs" },
+  "scripts": { "test": "node tests/verify.cjs && node tests/wd-team.cjs && node -e \"var f='tests/sweep4-team.cjs';if(require('fs').existsSync(f))process.exit(require('child_process').spawnSync(process.execPath,[f],{stdio:'inherit'}).status||0)\" && node -e \"var f='tests/sweep4-hub.cjs';if(require('fs').existsSync(f))process.exit(require('child_process').spawnSync(process.execPath,[f],{stdio:'inherit'}).status||0)\"" },
   "devDependencies": { "playwright": "^1.40.0" }
 }

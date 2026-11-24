@@ -395,12 +395,12 @@ tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(75,163,22
 .vh-txt{flex:1;min-width:0;}
 .vh-dots{border-top:3px dotted #E23A48;height:0;margin:0 0 7px;}
 .vh-dots.b{border-top-color:#4BA3DC;margin:7px 0 0;}
-.vh-h{display:block;margin:0;font-size:clamp(19px,4.6vw,28px);line-height:1.05;font-weight:900;letter-spacing:.07em!important;text-transform:uppercase;color:#FF4D5A;}
-.vh-s{display:block;margin-top:4px;font-size:clamp(13px,3.2vw,15px);line-height:1.35;font-weight:800;color:#8CC4F5;}
+.vh-h{display:block;margin:0;font-size:clamp(19px,4.6vw,28px);line-height:1.05;font-weight:700;letter-spacing:.07em!important;text-transform:uppercase;color:#FF4D5A;}
+.vh-s{display:block;margin-top:4px;font-size:clamp(13px,3.2vw,15px);line-height:1.35;font-weight:700;color:#8CC4F5;}
 .vh-rec{flex:none;align-self:stretch;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 18px;
-  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);background:linear-gradient(135deg,#1B6FC8,#2B7BD6);color:#fff;text-align:center;}
-.vh-rec small{font-size:9.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;opacity:.9;white-space:nowrap;}
-.vh-rec b{font-size:28px;line-height:1;font-weight:900;letter-spacing:.06em;}
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);background:linear-gradient(135deg,#175FB0,#1B6FC8);color:#fff;text-align:center;}
+.vh-rec small{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:1;white-space:nowrap;}
+.vh-rec b{font-size:28px;line-height:1;font-weight:700;letter-spacing:.06em;}
 .vh-body{padding:14px var(--vh-sl) 18px;}
 .vh-body>.tw{margin-bottom:0;}
 @keyframes vhIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -428,7 +428,7 @@ tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(75,163,22
 html .vh-frame,html .vh-ring,html .vh-in{clip-path:var(--vh-poly);}
 html .vh-band{clip-path:none;}
 html .vh-rec{clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);}
-html .vh-h{font-weight:800!important;line-height:1.05!important;}
+html .vh-h{line-height:1.05!important;}
 html .rx .rx-vf{border-color:#D62839!important;clip-path:none;}
 html .rx .rx-vb,html .rx .rx-vfi{clip-path:none;}
 table.duty{min-width:560px;}
@@ -798,7 +798,7 @@ tr.exp-sec td{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#4BA3DC
   .uout,.dpx,#sbCollapse,#menuBtn{display:inline-flex;align-items:center;justify-content:center;}
   .chip{justify-content:flex-start;padding:8px 12px;font-size:14px;}
   .chip .chip-more{font-size:15px;}
-  .btn-sm{padding:10px 15px;}
+  .btn-sm{padding:10px 15px;min-width:44px;}
   .att-btn{padding:10px 16px;font-size:15px;}
   .pill,.dchip-tog,.seg button{padding:11px 16px;}
   .cal-ev{padding:8px 7px;font-size:12.5px;white-space:normal;}
@@ -1861,7 +1861,9 @@ const isSatada=e=>!!e&&e.type==='satada';
    It stays an ordinary custom event underneath (its duties, its roster, its
    deletion, the cycle views), so only the display and ownership rules use
    isSatNight; everything that is about the Hub's own rows keeps isSatada. */
-const SAT_NAME=/satada/i;
+/* Only a night's own name counts ('Evening Satada', 'Satada Day 1', 'Satada - Sunday'),
+   never an event that merely mentions it ('Satada Prep Meeting'). */
+const SAT_NAME=/^\s*(evening\s+|morning\s+|afternoon\s+|late\s+)?satada(\s+(night|day)\s*\d*|\s*\d+|\s*-\s*\w+)?\s*$/i;
 const isSatNight=e=>!!e&&(e.type==='satada'||(!!e.name&&SAT_NAME.test(e.name)));
 const dowIdx=iso=>new Date(iso+'T12:00:00').getDay();
 const isFridayDate=iso=>dowIdx(iso)===5;
@@ -2279,6 +2281,7 @@ async function dropStalePbs(want){
   if(await dbWrite('Removing a Paanch Baar Saal left on its old date',()=>sb.from('iv_events').delete().in('id',ids).eq('team',PAGE_TEAM)))
     EVENTS=EVENTS.filter(e=>ids.indexOf(e.id)<0);
 }
+const _autoHeldTold=new Set();
 async function autoCreateEvents(){
   if(!IS_EDIT||!sb||DB_MISSING) return;
   const today=nzTodayISO();
@@ -2301,6 +2304,19 @@ async function autoCreateEvents(){
   await dropStalePbs(want);
   const missing=want.filter(w=>!AUTO_SKIP.has(w.date+'|'+w.type)&&!EVENTS.some(e=>e.date===w.date&&(e.name===w.name||e.type===w.type)));
   if(!missing.length) return;
+  /* The key is (date,name) across both teams. A cycle boundary moved onto a
+     Friday the other team already holds would be ignored by the insert and
+     then read as a refusal: say who holds it, once, and do not try again. */
+  try{
+    const o=await sb.from('iv_events').select('date,name,team').neq('team',PAGE_TEAM).in('date',missing.map(m=>m.date));
+    if(!o.error&&o.data&&o.data.length){
+      const held=[];
+      for(let i=missing.length-1;i>=0;i--){ const w=missing[i], h=o.data.find(x=>x.date===w.date&&x.name===w.name);
+        if(h){ missing.splice(i,1); held.unshift(w.name+' on '+w.date+' belongs to Team '+h.team+'.'); AUTO_SKIP.add(w.date+'|'+w.type); } }
+      if(held.length){ const k=held.join(' '); if(!_autoHeldTold.has(k)){ _autoHeldTold.add(k); toast(k+' Ask a Facilitator to move it.','err'); } }
+      if(!missing.length) return;
+    }
+  }catch(e){ /* the check is a courtesy; the insert still reports its own failure */ }
   pauseRT(2000);
   /* This runs on load without anybody asking for it, so it stays quiet
      when it has nothing to add - but a refusal is not nothing. A lead
@@ -2350,7 +2366,7 @@ function rtBusy(){
 let _rtFails=0;
 function rtReload(delay){ if(_rtT)clearTimeout(_rtT); _rtT=setTimeout(async()=>{
   if(_pauseRT||rtBusy()){ rtReload(); return; }
-  const t0=Date.now(), keep=ROSTERS;
+  const t0=Date.now(), keep=ROSTERS, keepSeen=Object.assign({},ROSTER_SEEN);
   const ok=await loadAll();
   /* A core read failed: what is held is still the last good copy. Do not
      render over it; try again later, backing off. */
@@ -2360,7 +2376,7 @@ function rtReload(delay){ if(_rtT)clearTimeout(_rtT); _rtT=setTimeout(async()=>{
   await loadCovering(); CYCLES=buildCycles();
   /* A write began while the read was out: what came back may be older
      than it. Keep what we hold and read again once things are quiet. */
-  if(_lastWrite>=t0){ ROSTERS=keep; rtReload(); return; }
+  if(_lastWrite>=t0){ ROSTERS=keep; ROSTER_SEEN=keepSeen; rtReload(); return; }
   Object.keys(ROSTER_UNSAVED).forEach(id=>{ ROSTERS[id]=ROSTER_UNSAVED[id]; });
   renderSaveWarning(); if(rtBusy()) return; renderCurrent(); },delay>0?delay:1200); }
 
@@ -2712,7 +2728,17 @@ function canon(v){
 let ROSTER_SEEN = {};           // event id -> iv_roster.updated_at as last read or written here
 let ROSTER_UNSAVED = {};        // event id -> the roster that is not safely stored
 function unsavedCount(){ return Object.keys(ROSTER_UNSAVED).length; }
-async function saveRoster(eventId, opts){
+/* One save at a time per event: a second save waits for the first and then
+   reads the stamp that first save left, so two quick saves from this tab
+   never look like somebody else's edit. */
+const _saveQ = {};
+function saveRoster(eventId, opts){
+  const run = ()=>saveRosterNow(eventId, opts);
+  const p = (_saveQ[eventId] || Promise.resolve()).then(run, run);
+  _saveQ[eventId] = p.catch(()=>{});
+  return p;
+}
+async function saveRosterNow(eventId, opts){
   const quiet = opts && opts.quiet;
   if(!sb || DB_MISSING){ ROSTER_UNSAVED[eventId] = ROSTERS[eventId]; return false; }
   const body = ROSTERS[eventId];
@@ -2728,10 +2754,15 @@ async function saveRoster(eventId, opts){
     if(seen){
       const {data:cur, error:ce} = await sb.from('iv_roster').select('updated_at').eq('event_id', eventId).maybeSingle();
       if(!ce && cur && cur.updated_at && cur.updated_at !== seen){
-        ROSTER_SEEN[eventId] = cur.updated_at;
-        delete ROSTER_UNSAVED[eventId];
+        /* ROSTER_SEEN moves on only when the latest roster is actually loaded
+           (loadAll sets it). If they decline, it stays old, the edit stays
+           flagged unsaved, and the next save is checked again. */
         if(!quiet) toast('This roster was changed by someone else. Your edit was not saved.', 'err');
-        if(confirm('This roster was changed by someone else since you opened it, so your last edit was NOT saved over theirs.\n\nReload the latest roster now?')){ try{ await loadAll(); }catch(e){} try{ renderRoster(); }catch(e){} }
+        if(confirm('This roster was changed by someone else since you opened it, so your last edit was NOT saved over theirs.\n\nReload the latest roster now?')){
+          delete ROSTER_UNSAVED[eventId];
+          try{ await loadAll(); }catch(e){}
+          try{ renderRoster(); }catch(e){}
+        } else ROSTER_UNSAVED[eventId] = body;
         renderSaveWarning();
         return false;
       }
@@ -2744,7 +2775,7 @@ async function saveRoster(eventId, opts){
          every save was refused with 23502 (null value in column "date").
          The date is the event's own, which is what the column is for. */
       const evForDate = EVENTS.find(e=>e.id===eventId);
-      const {error} = await sb.from('iv_roster').upsert({event_id:eventId, date:evForDate?evForDate.date:null, data:body},{onConflict:'event_id'});
+      const {error} = await sb.from('iv_roster').upsert({event_id:eventId, date:evForDate?evForDate.date:null, data:JSON.parse(JSON.stringify(body))},{onConflict:'event_id'});
       if(!error){ err = null; break; }
       err = error;
     }catch(e){ err = e; }
@@ -4141,9 +4172,9 @@ function huddleMsg(ev){ return evTeamName(ev)+' volunteers on duty: report to th
 function huddleToggleHTML(ev,canEd){
   if(!canEd||!IS_EDIT||!ev) return '';
   const on=huddleOn(ev), built=!!(ROSTERS[ev.id]&&ROSTERS[ev.id].assign&&slotCounts(ev).generated);
-  return '<button class="btn btn-ol btn-vh" aria-pressed="'+(on?'true':'false')+'" onclick="toggleHuddle('+ev.id+')" title="'+
+  return '<button class="btn btn-ol btn-vh" aria-pressed="'+(on?'true':'false')+'" onclick="toggleHuddle('+ev.id+')" aria-label="Volunteer Huddle" title="'+
     esc(built?'Frame this roster with a Volunteer Huddle notice: the team on duty goes to the REC after Nandi Kriya.'
-             :'Switch the Volunteer Huddle notice on or off. It shows around the roster once the roster is built.')+'">Volunteer Huddle: '+(on?'ON':'OFF')+'</button>';
+             :'Switch the Volunteer Huddle notice on or off. It shows around the roster once the roster is built.')+'"><span aria-hidden="true">Volunteer Huddle: '+(on?'ON':'OFF')+'</span></button>';
 }
 function huddleWrap(ev,inner){
   if(!huddleOn(ev)) return inner;
@@ -4164,8 +4195,15 @@ function huddleExportOpen(ev){
     '<div class="vh-recx">Conducted in<b>REC</b></div></div><div class="rx-vfi">';
 }
 function huddleExportClose(ev){ return huddleOn(ev)?'</div></div>':''; }
+let _huddleBusy=false;
 async function toggleHuddle(id){
+  if(_huddleBusy) return;
   const ev=EVENTS.find(e=>e.id===id); if(!ev||!IS_EDIT||isHistoricEvent(ev)||satRO(ev)) return;
+  _huddleBusy=true;
+  const hb=document.querySelector('.btn-vh'); if(hb) hb.disabled=true;
+  try{ await toggleHuddleNow(ev); }finally{ _huddleBusy=false; const b=document.querySelector('.btn-vh'); if(b) b.disabled=false; }
+}
+async function toggleHuddleNow(ev){
   const existed=!!ROSTERS[ev.id], wasUnsaved=Object.prototype.hasOwnProperty.call(ROSTER_UNSAVED,ev.id);
   const r=ensureRoster(ev), was=r.huddle===true, next=!was;
   if(next) r.huddle=true; else delete r.huddle;
@@ -5491,12 +5529,15 @@ document.addEventListener('click', function(e){
    returns member ids only: no addresses, no timestamps, and nothing
    about anybody who is not on this roster. */
 let SEEN={};              // event id -> Set(member id)
+const SEEN_TRIED=new Set();   // ids already asked once: a failing call is not repeated on every render
 async function loadSeen(eventId){
-  if(!sb||DB_MISSING||eventId==null||SEEN[eventId]) return;
+  if(!sb||DB_MISSING||eventId==null||SEEN[eventId]||SEEN_TRIED.has(eventId)) return false;
+  SEEN_TRIED.add(eventId);
   try{
     const {data,error}=await sb.rpc('roster_seen',{p_event_id:eventId});
     if(!error) SEEN[eventId]=new Set(Array.isArray(data)?data:[]);
   }catch(e){ /* older database - the line simply does not appear */ }
+  return !!SEEN[eventId];
 }
 
 let COVERING=[];          // events elsewhere that I have been asked to cover
@@ -5687,7 +5728,7 @@ function renderAttendance(){
   const roll=attendanceRoll(ev);
   const walkInOpen=IS_EDIT&&isEventDay(ev);
   if(walkInOpen) h+='<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-bl btn-sm" onclick="addWalkInHere()">\uFF0B Add walk-in</button></div>';
-  if(ev.confirmed && !SEEN[ev.id]) loadSeen(ev.id).then(()=>{ if(curPage==='attendance') renderAttendance(); });
+  if(ev.confirmed && !SEEN[ev.id] && !SEEN_TRIED.has(ev.id)) loadSeen(ev.id).then(got=>{ if(got&&SEEN[ev.id]&&curPage==='attendance') renderAttendance(); });
   const rec=ATTEND[ev.id]||{};
   if(!roll.length){
     h+='<div class="empty-note">Nobody is rostered for this event yet - generate the roster first.</div>';

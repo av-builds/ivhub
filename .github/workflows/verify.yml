@@ -7,6 +7,7 @@ on:
   pull_request:
     paths: ['*.html', '*.js', '*.css', 'tools/**', 'tests/**', 'package.json', 'package-lock.json', '.github/workflows/verify.yml']
   workflow_dispatch:
+permissions: { contents: read }
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -16,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
       - run: npm ci
+      # Fails when the generated stylesheets are stale relative to the pages.
+      - run: python3 tools/shape-gen.py && python3 tools/type-gen.py && git diff --exit-code -- ivshape.css ivtype.css
       # The cache is only a download shortcut. It was keyed on package.json, whose "^1.40.0" lets
       # Playwright move to a newer release that wants a newer browser build than the cached one,
       # so a cache hit could leave the browser missing. Installing every run is a no-op when the

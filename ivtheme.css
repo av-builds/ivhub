@@ -740,7 +740,9 @@ html[data-team="cobalt"] .dash-greet{text-shadow:none;}
 #page-dashboard .hero-greet,#page-dashboard .hero-sub,#page-dashboard .dash-greet,#page-dashboard .dash-date,#page-dashboard .dash-greet::before{display:none!important;}
 #page-dashboard .dash-hero,#page-dashboard .hero{padding-top:18px;padding-bottom:18px;}
 #page-dashboard .hero-inner{display:none;}
-#page-dashboard .hero{padding:0 0 4px;display:flex;justify-content:flex-end;}
+#page-dashboard .hero:has(>.hero-inner){padding:0 0 4px;display:flex;justify-content:flex-end;}
+/* team heroes are clipped by a 14px slant on the right: keep the clock and LIVE label clear of it */
+#page-dashboard .hero:not(:has(>.hero-inner)){padding-right:max(22px,calc(var(--ivp-sl,14px) + 8px));}
 
 /* ── LIGHT ("white") VERSIONS: dashboard banner, opening welcome, loading curtain ──
    They follow the site theme. Same layout and hover; pale ground, dark ink, and each team's

@@ -251,3 +251,12 @@ Rosters now follow their event, AV leads can read the AV change log, weekday lea
 ## Update: Satada recognition and Volunteer Huddle
 - **Satada.** Hand-made "Evening Satada" nights now show in the Satada group on Rostering and in the calendar on both team pages (Team B sees them read-only), and the Hub's Satada page lists them and can add the missing nights without duplicates.
 - **Volunteer Huddle.** A per-night toggle on the roster page. When on, the roster gets a navy, red and blue frame telling the team on duty to go to the REC after Nandi Kriya. It is saved with the roster (no database change), carried into the roster image export, and shows as a note on My Duties and the next-duty card in the Hub.
+
+## Update: fourth sweep fixes
+- **Roster saves.** Saves are queued per night, a cancelled "someone else changed this" prompt keeps the check active, and the huddle toggle can no longer show a false "not saved" error on a double tap.
+- **Satada names.** A name merely containing "satada" (like "Satada Prep Meeting") no longer counts as a satada night or blocks the week's Friday.
+- **Attendance page** no longer loops when its lookup fails. **Hub** no longer shows the sign-in form to a signed-in person while one read stalls, reads satada attendance past 1,000 rows, and warns that deleting a member deletes their attendance.
+- **Cycle changes.** If a changed Chandraat date leaves the other team holding a Friday, a clear message names the date and team.
+- **Look.** The team Dashboard clock is no longer clipped, the huddle frame's small text is legible, small touch buttons are at least 44px wide, and the full screen and huddle buttons have fixed names.
+- **Checks.** The automatic checks get read-only permissions and fail if the generated style files drift. The new tests run with the others.
+- **Database changes waiting on approval:** a fresh timestamp on every roster update, a limit of 60 log entries a minute per person, weekday attendance tied to real members, and bounded weekday shift lists.
