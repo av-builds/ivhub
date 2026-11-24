@@ -243,6 +243,10 @@ html[data-theme="light"] .sa-pick.t-b.on,html[data-theme="light"] .sa-own.t-b{co
 .badge-b{background:var(--pur-bg);color:#C4A5F5;border:1px solid var(--pur-bd);}
 .badge-av{background:var(--gold-bg);color:var(--gold-lt);border:1px solid var(--gold-bd);}
 .chip-warn{font-size:11px;font-weight:900;padding:3px 9px;border-radius:20px;background:var(--gold-bg);color:var(--gold-lt);border:1px solid var(--gold-bd);white-space:nowrap;letter-spacing:0.03em;}
+.vh-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px 4px 10px;background:#0C2461;color:#8CC4F5;font-size:11.5px;font-weight:800;line-height:1.25;flex-wrap:wrap;column-gap:5px;
+  clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);box-shadow:inset 3px 0 0 #E23A48;max-width:100%;}
+.vh-pill b{color:#FF6B76;font-weight:900;letter-spacing:.04em;text-transform:uppercase;}
+.vh-pill.blk{display:flex;width:fit-content;margin-top:8px;}
 .chip-uni{font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(122,174,203,.1);color:var(--dm);border:1px solid var(--db);white-space:nowrap;}
 .md-empty{text-align:center;padding:30px 16px;color:var(--dm);font-size:14px;line-height:1.7;}
 .md-empty .big{font-size:30px;margin-bottom:8px;}
@@ -2855,7 +2859,7 @@ async function loadHubVolunteerCards(){
 
   el.innerHTML =
       hubCard('My next duty', nextDuty ? esc(fmtLong(nextDuty.date)) : '-',
-              nextDuty ? esc(nextDuty.duty || 'IV duty') : (IS_PURE_WD() ? 'team rosters are not shown to a Weekday-only login' : MY_MEMBER ? 'nothing rostered yet' : 'your account is not linked to your name'),
+              nextDuty ? esc(nextDuty.duty || 'IV duty') + huddlePill(nextDuty, true) : (IS_PURE_WD() ? 'team rosters are not shown to a Weekday-only login' : MY_MEMBER ? 'nothing rostered yet' : 'your account is not linked to your name'),
               nextDuty ? 'a' : '', "nav('myduties')")
     + hubCard('My away dates', away.length,
               away.length ? 'next: ' + esc(fmtLong(away[0])) : 'available for every event', '')
@@ -2900,6 +2904,10 @@ function namesOf(v){
   if(Array.isArray(v)) return v.filter(x=>typeof x==='string' && x.trim());
   if(typeof v === 'string' && v.trim()) return [v];
   return [];
+}
+/* Volunteer Huddle: the lead switched it on for that event's roster (iv_roster.data.huddle). */
+function huddlePill(e, blk){
+  return e && e.huddle ? '<span class="vh-pill' + (blk ? ' blk' : '') + '" title="Volunteer Huddle"><b>Volunteer Huddle</b> REC after Nandi Kriya</span>' : '';
 }
 async function fetchDutyData(){
   if(dutyCache) return dutyCache;
@@ -2955,7 +2963,8 @@ async function fetchDutyData(){
                   duty: `Team ${ev.team}: ${dutyDisplayName(dutyKey)}`,
                   event: ev.name || 'IV Event',
                   source: 'IV-' + ev.team + '-' + ev.id,
-                  team: ev.team, uniform: ev.uniform || 'Casual'
+                  team: ev.team, uniform: ev.uniform || 'Casual',
+                  huddle: !!(byId[ev.id] && byId[ev.id].huddle === true)
                 });
               });
             });
@@ -2998,6 +3007,7 @@ function dutyCardHTML(e, overlap, idx){
     <div class="dcard-main">
       <div class="dcard-duty">${esc(e.duty)}</div>
       <div class="dcard-ev">${esc(e.event)}</div>
+      ${huddlePill(e, true)}
     </div>
     <div class="dcard-badges"><span class="badge ${badgeCls}">${badgeTxt}</span>${uni}${warn}</div>
   </div>`;
@@ -6754,7 +6764,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     var n = Math.max(0, dd(todayNZ(), e.date));
     return '<div class="hm-duty hm-c-'+team+(e.kind==='training'?' training':'')+'" style="animation-delay:'+Math.min(i*0.05,0.4)+'s"><span class="hm-dot"></span>'+
       '<div class="hm-dd"><b>'+mon(e.date)+'</b><span>'+dnum(e.date)+'</span><em>'+fmtDW(e.date)+'</em></div>'+
-      '<div class="hm-dm"><div class="hm-t">'+esc(e.event||e.duty)+'</div><div class="hm-s">'+esc(e.duty)+(e.uniform?' · '+esc(e.uniform)+' uniform':'')+'</div></div>'+
+      '<div class="hm-dm"><div class="hm-t">'+esc(e.event||e.duty)+'</div><div class="hm-s">'+esc(e.duty)+(e.uniform?' · '+esc(e.uniform)+' uniform':'')+'</div>'+huddlePill(e,true)+'</div>'+
       '<span class="hm-tag">'+(e.kind==='training'?'Training':(e.team==='AV'?'AV':'Team '+esc(e.team)))+'</span></div>';
   }
   async function dutiesHTML(lead){
@@ -6779,7 +6789,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     var first = mine[0], n = Math.max(0, dd(todayNZ(), first.date)), pct = Math.max(0.06, 1-Math.min(7,n)/7);
     return '<section class="hm-sec"><h3 class="hm-h">Your upcoming duties</h3><div class="hm-duties">'+
       '<div class="hm-next hm-c-'+(first.team==='AV'?'av':first.team==='B'?'b':'a')+'"><div class="hm-k"><i></i>Next up</div>'+
-        '<div class="hm-nrow">'+ring(pct, n<=0?'0':String(n), n===1?'DAY':'DAYS')+'<div><div class="hm-big">'+esc(first.event||first.duty)+'</div><div class="hm-t">'+esc(first.duty)+'</div><div class="hm-s">'+esc(longDate(first.date))+(first.uniform?' · '+esc(first.uniform)+' uniform':'')+'</div></div></div>'+
+        '<div class="hm-nrow">'+ring(pct, n<=0?'0':String(n), n===1?'DAY':'DAYS')+'<div><div class="hm-big">'+esc(first.event||first.duty)+'</div><div class="hm-t">'+esc(first.duty)+'</div><div class="hm-s">'+esc(longDate(first.date))+(first.uniform?' · '+esc(first.uniform)+' uniform':'')+'</div>'+huddlePill(first,true)+'</div></div>'+
         '<div class="hm-row"><button type="button" class="hm-cta" onclick="nav(\'myduties\')">Open My Duties</button></div></div>'+
       '<div class="hm-line">'+mine.slice(0,6).map(dutyItem).join('')+'</div></div></section>';
   }

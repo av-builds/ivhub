@@ -247,3 +247,7 @@ Rosters now follow their event, AV leads can read the AV change log, weekday lea
 - **Hub.** Weekday Attendance refreshes its default range, duplicate member names are caught, a Satada owner change also clears any stand-in, and the Satada form buttons are larger on phones.
 - **AV page.** Uses New Zealand time for today, takes permissions only from the profile, and loads its roster in pages.
 - **Reset emails.** The reply time no longer depends on whether the address is a volunteer.
+
+## Update: Satada recognition and Volunteer Huddle
+- **Satada.** Hand-made "Evening Satada" nights now show in the Satada group on Rostering and in the calendar on both team pages (Team B sees them read-only), and the Hub's Satada page lists them and can add the missing nights without duplicates.
+- **Volunteer Huddle.** A per-night toggle on the roster page. When on, the roster gets a navy, red and blue frame telling the team on duty to go to the REC after Nandi Kriya. It is saved with the roster (no database change), carried into the roster image export, and shows as a note on My Duties and the next-duty card in the Hub.
