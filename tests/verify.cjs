@@ -1332,6 +1332,105 @@ const openWd=async(perms,seed,vp)=>{
   chk(r.err===''&&!r.errShown,'weekday-profile a table error shows nothing',r.err);
   chk(p.errs.length===0,'weekday-profile no page errors',p.errs.join(';')); await p.context().close(); }
 
+// ── Volunteer Huddle: a per-event flag inside the roster data, a toggle, a frame, export, Hub note ──
+const HDMOCK=`(()=>{ const store={}, audits=[], ups=[];
+  const sbm={from:t=>({
+    upsert:async row=>{ if(t==='iv_roster'){ ups.push(JSON.parse(JSON.stringify(row))); store[row.event_id]=JSON.parse(JSON.stringify(row.data)); } return {error:null}; },
+    insert:async row=>{ if(t==='audit_logs') audits.push(row); return {error:null}; },
+    select:()=>({eq:async(c,v)=>({data:store[v]?[{event_id:v,data:JSON.parse(JSON.stringify(store[v]))}]:[],error:null})})}),
+    channel:()=>({on(){return this;},subscribe(){return this;}}),removeChannel(){}};
+  return {sb:sbm,store,audits,ups}; })()`;
+{ const p=await open('teama.html',{width:1300,height:950});
+  await p.evaluate(`(${SEED})(['tl_a'])`);
+  const r=await p.evaluate(`(async()=>{ const o={}, H=${HDMOCK}; sb=H.sb; DB_MISSING=false;
+    const q=s=>document.querySelector('#body-roster '+s);
+    nav('roster'); openFullRoster(1);
+    const btn=()=>q('.btn-vh');
+    o.editorBtn=!!btn()&&btn().getAttribute('aria-pressed')==='false'&&/Volunteer Huddle/.test(btn().textContent);
+    o.frameOffInit=!q('.vh-frame');
+    o.noFlagSafe=ROSTERS[1].huddle===undefined&&canon(ROSTERS[1]).indexOf('huddle')<0;
+    await toggleHuddle(1);
+    o.onPressed=btn().getAttribute('aria-pressed')==='true';
+    o.payload=H.ups.length===1&&H.ups[0].data.huddle===true&&H.ups[0].event_id===1&&H.ups[0].data.assign&&Object.keys(H.ups[0].data.assign).length>0;
+    o.audit=H.audits.some(a=>a.action==='huddle'&&/Friday Majlis/.test(a.detail)&&a.detail.indexOf(EVENTS[0].date)>=0&&/ON/.test(a.detail));
+    o.notUnsaved=!ROSTER_UNSAVED[1];
+    o.frame=!!q('.vh-frame .vh-band')&&q('.vh-h').textContent==='Volunteer Huddle'&&getComputedStyle(q('.vh-h')).textTransform==='uppercase';
+    o.msg=q('.vh-s').textContent;
+    o.icon=!!q('.vh-band svg.vh-ico')&&q('.vh-frame .duty')!=null;
+    o.canon=canon({a:1,huddle:true})!==canon({a:1});
+    o.regen=generateEventData(EVENTS[0]).huddle===true;
+    const plan=buildPlan(cycleForDate(EVENTS[0].date),1); o.plan=!!plan&&plan.staged[1].huddle===true;
+    await toggleHuddle(1);
+    o.offPressed=btn().getAttribute('aria-pressed')==='false'&&!q('.vh-frame');
+    o.offPayload=H.ups.length===2&&!('huddle' in H.ups[1].data);
+    o.offAudit=H.audits.some(a=>a.action==='huddle'&&/OFF/.test(a.detail));
+    openFullRoster(3); o.unbuiltBtn=!!btn();
+    await toggleHuddle(3);
+    o.created=!!ROSTERS[3]&&ROSTERS[3].huddle===true&&H.store[3]&&H.store[3].huddle===true;
+    o.noFrameEmpty=!q('.vh-frame');
+    const real=saveRoster; saveRoster=async()=>false; await toggleHuddle(3); saveRoster=real;
+    o.revert=ROSTERS[3].huddle===true;
+    return o; })()`);
+  chk(r.editorBtn,'huddle  editors get a Volunteer Huddle toggle (aria-pressed false) on the roster page',JSON.stringify(r));
+  chk(r.frameOffInit&&r.noFlagSafe,'huddle  no frame and no key when the flag was never set');
+  chk(r.onPressed&&r.payload,'huddle  turning it on writes data.huddle=true in the roster save payload with the duties intact',JSON.stringify(r));
+  chk(r.audit&&r.offAudit,'huddle  on and off are written to the audit log with event name and date');
+  chk(r.notUnsaved&&r.canon,'huddle  read-back compare counts the flag (canon differs with it)');
+  chk(r.frame&&r.icon&&r.msg==='Team A volunteers on duty: report to the REC after Nandi Kriya','huddle  the frame, uppercase heading, icon and team message render',r.msg);
+  chk(r.regen&&r.plan,'huddle  the flag survives regenerating the roster');
+  chk(r.offPressed&&r.offPayload,'huddle  off removes the frame and the key');
+  chk(r.unbuiltBtn&&r.created&&r.noFrameEmpty,'huddle  an event with no roster row can be toggled (the row is created)');
+  chk(r.revert,'huddle  a refused save leaves the previous state on screen');
+  chk(p.errs.length===0,'huddle  no page errors',p.errs.join(';')); await p.context().close(); }
+{ const p=await open('teama.html',{width:1300,height:950});
+  await p.evaluate(`(${SEED})(['team_a'])`);
+  const r=await p.evaluate(async()=>{ const o={}; ROSTERS[2].huddle=true; o.edit=IS_EDIT;
+    o.volToggle=huddleToggleHTML(EVENTS[1],true)==='';
+    const h=renderEventView(EVENTS[1]); o.volFrame=/class="vh-frame"/.test(h)&&/Team A volunteers on duty/.test(h)&&!/btn-vh/.test(h);
+    return o; });
+  chk(r.volToggle&&r.volFrame,'huddle  a non-editor gets the frame but no toggle',JSON.stringify(r));
+  await p.context().close(); }
+for(const [tn,vw] of [['A',1300],['B',390]]){ for(const th of ['dark','light']){
+  const p=await open('team'+tn.toLowerCase()+'.html',vw===390?{width:390,height:844}:{width:vw,height:900},vw===390);
+  await p.evaluate(`document.documentElement.setAttribute('data-theme','${th}')`);
+  await p.evaluate(`(${SEED})(['tl_'+PAGE_TEAM.toLowerCase()])`);
+  const r=await p.evaluate(async()=>{ ROSTERS[1].huddle=true; nav('roster'); openFullRoster(1); await new Promise(r=>setTimeout(r,800));
+    const f=document.querySelector('#body-roster .vh-frame'), band=document.querySelector('#body-roster .vh-band'), tab=document.querySelector('#body-roster .vh-body');
+    const fr=f.getBoundingClientRect(), br=band.getBoundingClientRect(), tr=tab.getBoundingClientRect();
+    return {over:document.documentElement.scrollWidth-innerWidth, noOverlap:tr.top>=br.bottom-0.5, inside:fr.right<=innerWidth+0.5&&fr.left>=-0.5,
+      txt:document.querySelector('#body-roster .vh-s').textContent}; });
+  chk(r.over<=0&&r.noOverlap&&r.inside,'huddle  Team '+tn+' '+th+' '+vw+'px: frame fits, no horizontal scroll, band does not overlap the roster',JSON.stringify(r));
+  chk(r.txt.indexOf('Team '+tn+' volunteers on duty')===0,'huddle  Team '+tn+' '+th+' names its own team',r.txt);
+  chk(p.errs.length===0,'huddle  Team '+tn+' '+th+' no page errors',p.errs.join(';')); await p.context().close(); } }
+// export carries the frame and message when on, and is unchanged when off
+{ const p=await open('teama.html',{width:1300,height:950});
+  await p.evaluate(`(${SEED})(['tl_a'])`);
+  const r=await p.evaluate(async()=>{ const o={}; let cap=null;
+    ensureH2C=async()=>{}; window.html2canvas=async el=>{ cap=el.outerHTML; return {toDataURL:()=>'data:image/png;base64,AAAA'}; };
+    sb=null; selEventId=1; ROSTERS[1].huddle=true; await exportPNG(); o.on=cap;
+    delete ROSTERS[1].huddle; cap=null; await exportPNG(); o.off=cap; return o; });
+  chk(r.on&&/rx-vf/.test(r.on)&&/Volunteer Huddle/.test(r.on)&&/Team A volunteers on duty: report to the REC after Nandi Kriya/.test(r.on)&&/rx-title/.test(r.on),'huddle  the exported image includes the frame and message when on');
+  chk(r.off&&!/rx-vf|Huddle/.test(r.off)&&/rx-title/.test(r.off),'huddle  the exported image is unchanged when off');
+  chk(p.errs.length===0,'huddle  export no page errors',p.errs.join(';')); await p.context().close(); }
+// Hub: duty note carried from iv_roster data.huddle
+{ const p=await open('index.html',{width:1100,height:900});
+  const r=await p.evaluate(async()=>{ const o={}; const t=todayNZ(), d1=addDaysISO(t,3), d2=addDaysISO(t,5);
+    const rows={roster:[],iv_events:[{id:71,team:'A',date:d1,name:'Friday Majlis',confirmed:true,uniform:'Casual'},{id:72,team:'B',date:d2,name:'PBS',confirmed:true,uniform:'Casual'}],
+      iv_roster:[{event_id:71,data:{assign:{door:{m:[{id:1,name:'Test Person'}],f:[]}},huddle:true}},{event_id:72,data:{assign:{door:{m:[{id:1,name:'Test Person'}],f:[]}}}}]};
+    sb={from:t0=>{ const q={select(){return q;},eq(){return q;},gte(){return q;},lte(){return q;},in(){return q;},then(a,b){return Promise.resolve({data:rows[t0]||[],error:null}).then(a,b);}}; return q; }};
+    dutyCache=null; const {entries}=await fetchDutyData();
+    const a=entries.find(e=>e.date===d1), b2=entries.find(e=>e.date===d2);
+    o.flags=a.huddle===true&&b2.huddle===false;
+    o.cardOn=dutyCardHTML(a,false,0).indexOf('vh-pill')>=0&&/Volunteer Huddle/.test(dutyCardHTML(a,false,0))&&/REC after Nandi Kriya/.test(dutyCardHTML(a,false,0));
+    o.cardOff=dutyCardHTML(b2,false,0).indexOf('vh-pill')<0;
+    document.getElementById('mdName').value='Test Person'; await runDutySearch();
+    o.list=document.querySelectorAll('#mdResults .vh-pill').length===1;
+    const pill=document.querySelector('#mdResults .vh-pill'); o.bg=pill?getComputedStyle(pill).backgroundColor:'';
+    return o; });
+  chk(r.flags&&r.cardOn&&r.cardOff,'huddle  Hub carries data.huddle onto the duty entry and shows the note only when set',JSON.stringify(r));
+  chk(r.list&&r.bg==='rgb(12, 36, 97)','huddle  My Duties shows one navy Volunteer Huddle pill',JSON.stringify(r));
+  chk(p.errs.length===0,'huddle  Hub no page errors',p.errs.join(';')); await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);

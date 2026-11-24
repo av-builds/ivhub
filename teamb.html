@@ -375,6 +375,62 @@ tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(75,163,22
 .ev-banner .u{margin-left:auto;font-size:12px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:5px 12px;border-radius:99px;color:#fff;flex:none;}
 .ro-note{display:flex;align-items:center;gap:8px;background:var(--gold-bg);border:1px solid var(--gold-bd);color:var(--gold-lt);font-size:13px;font-weight:700;border-radius:10px;padding:9px 14px;margin-bottom:12px;}
 .ev-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;}
+
+/* ── VOLUNTEER HUDDLE: toggle and frame ──────────────────────────────
+   The frame is three nested slanted layers (gradient edge, navy ring, panel)
+   because border plus clip-path would cut the border off at the corners. */
+.btn.btn-vh{display:inline-flex;align-items:center;gap:7px;}
+.btn.btn-vh::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.35;flex:none;}
+.btn.btn-vh[aria-pressed="true"]{background:linear-gradient(135deg,#B3202E,#0C2461 70%)!important;color:#fff!important;}
+.btn.btn-vh[aria-pressed="true"]::before{background:#FF6B76;opacity:1;box-shadow:0 0 0 3px rgba(255,107,118,.3);}
+.vh-frame{--vh-sl:16px;--vh-poly:polygon(var(--vh-sl) 0,100% 0,calc(100% - var(--vh-sl)) 100%,0 100%);
+  position:relative;margin:4px 0 16px;padding:4px;clip-path:var(--vh-poly);
+  background:linear-gradient(112deg,#E23A48 0,#E23A48 14%,#0C2461 14%,#0C2461 86%,#2B7BD6 86%);
+  animation:vhIn .55s cubic-bezier(.16,1,.3,1) both;}
+.vh-ring{padding:3px;background:#0C2461;clip-path:var(--vh-poly);}
+.vh-in{background:var(--ds);clip-path:var(--vh-poly);}
+.vh-band{display:flex;align-items:center;gap:14px;padding:12px max(var(--vh-sl),16px) 12px;color:#fff;
+  background:linear-gradient(135deg,#0A1D52,#0C2461 60%,#12306F);}
+.vh-ico{flex:none;width:76px;height:56px;}
+.vh-txt{flex:1;min-width:0;}
+.vh-dots{border-top:3px dotted #E23A48;height:0;margin:0 0 7px;}
+.vh-dots.b{border-top-color:#4BA3DC;margin:7px 0 0;}
+.vh-h{display:block;margin:0;font-size:clamp(19px,4.6vw,28px);line-height:1.05;font-weight:900;letter-spacing:.07em!important;text-transform:uppercase;color:#FF4D5A;}
+.vh-s{display:block;margin-top:4px;font-size:clamp(13px,3.2vw,15px);line-height:1.35;font-weight:800;color:#8CC4F5;}
+.vh-rec{flex:none;align-self:stretch;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 18px;
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);background:linear-gradient(135deg,#1B6FC8,#2B7BD6);color:#fff;text-align:center;}
+.vh-rec small{font-size:9.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;opacity:.9;white-space:nowrap;}
+.vh-rec b{font-size:28px;line-height:1;font-weight:900;letter-spacing:.06em;}
+.vh-body{padding:14px var(--vh-sl) 18px;}
+.vh-body>.tw{margin-bottom:0;}
+@keyframes vhIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (max-width:560px){
+  .vh-frame{--vh-sl:11px;}
+  .vh-band{gap:10px;padding:10px max(var(--vh-sl),12px);flex-wrap:wrap;}
+  .vh-ico{width:56px;height:42px;}
+  .vh-txt{flex:1 1 calc(100% - 80px);}
+  .vh-rec{display:none;}
+  .vh-body{padding:10px 10px 12px 14px;}
+}
+@media (prefers-reduced-motion:reduce){.vh-frame{animation:none;}}
+@media print{.vh-frame{animation:none;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+.rx-vf{border:5px solid #D62839;padding:4px;background:#0C2461;margin-top:2px;}
+.rx-vb{display:flex;align-items:center;gap:18px;background:#0C2461;color:#fff;padding:12px 18px;}
+.rx-vb svg{flex:none;width:92px;height:68px;}
+.rx-vb .vh-h{font-size:34px;letter-spacing:.06em;}
+.rx-vb .vh-s{font-size:18px;}
+.rx-vb .vh-dots{margin:0 0 8px;}.rx-vb .vh-dots.b{margin:8px 0 0;}
+.rx-vb .vh-recx{flex:none;background:#2B7BD6;padding:8px 22px;text-align:center;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;}
+.rx-vb .vh-recx b{display:block;font-size:34px;letter-spacing:.06em;line-height:1.05;}
+.rx-vfi{background:#fff;padding:10px;}
+/* ivshape.css and ivtype.css are generated from every filled box, and would reshape these layers (one slant for all, a transparent
+   border, a lighter heading). The frame sets its own geometry, so these win by specificity. */
+html .vh-frame,html .vh-ring,html .vh-in{clip-path:var(--vh-poly);}
+html .vh-band{clip-path:none;}
+html .vh-rec{clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);}
+html .vh-h{font-weight:800!important;line-height:1.05!important;}
+html .rx .rx-vf{border-color:#D62839!important;clip-path:none;}
+html .rx .rx-vb,html .rx .rx-vfi{clip-path:none;}
 table.duty{min-width:560px;}
 table.duty td{padding:9px 14px;}
 tr.sec td{background:rgba(0,85,139,.14);font-size:12px;font-weight:900;letter-spacing:0.06em;color:var(--blue-lt);padding:7px 14px;}
@@ -2502,7 +2558,9 @@ function generateEventData(ev){
   }
   // preserve saved assignments for duty keys not in this event's duty list (legacy data / MPH toggled off)
   for(const key in (prev.assign||{})){ if(!assign[key]&&!duties.some(d=>d.key===key)&&people(prev.assign[key]).length) assign[key]=prev.assign[key]; }
-  return {assign:assign,manual:manual,gen_at:new Date().toISOString(),warn:warn};
+  const out={assign:assign,manual:manual,gen_at:new Date().toISOString(),warn:warn};
+  if(prev.huddle===true) out.huddle=true;      // the Volunteer Huddle flag survives a regenerate
+  return out;
 }
 /* ── SAVING A ROSTER ─────────────────────────────────────────────────
    This used to swallow every failure into a console warning. The
@@ -3966,6 +4024,7 @@ function renderEventView(ev){
   // action bar
   h+='<div class="ev-actions">';
   if(isSatada(ev)) h+=ownerChip(ev);
+  h+=huddleToggleHTML(ev,canEd);
   if(youthCapable(ev)&&canEd) h+='<button class="pill '+(ev.youth?'on':'')+'" onclick="toggleYouth()">Youth Congregation: '+(ev.youth?'ON':'OFF')+'</button>';
   else if(youthCapable(ev)) h+='<span class="pill '+(ev.youth?'on':'')+'" style="cursor:default">Youth Congregation: '+(ev.youth?'ON':'OFF')+'</span>';
   if(canEd){
@@ -4022,7 +4081,63 @@ function dutyTableHTML(ev){
   if(mph.length) h+='<tr class="sec"><td colspan="3">REC CONGREGATION</td></tr>';
   for(const d of mph) h+=renderDutyRow(ev,d,data,locked);
   h+='</tbody></table></div></div>';
-  return h;
+  return huddleWrap(ev,h);
+}
+/* ── VOLUNTEER HUDDLE ────────────────────────────────────────────────
+   A per-event flag kept inside the roster's own data (iv_roster.data.huddle),
+   so there is no schema change. generateEventData carries it across a
+   regenerate. When on, the roster is framed and tells the team on duty to
+   go to the REC after Nandi Kriya. Absent or false means off. */
+const HUDDLE_ICON='<svg class="vh-ico" viewBox="0 0 76 56" aria-hidden="true" focusable="false">'+
+  '<circle cx="17" cy="14" r="7" fill="#E23A48"/><path d="M6 54V37a11 11 0 0 1 22 0v17z" fill="#E23A48"/>'+
+  '<circle cx="38" cy="10" r="7.5" fill="#4BA3DC"/><path d="M26 54V33a12 12 0 0 1 24 0v21z" fill="#4BA3DC"/>'+
+  '<circle cx="59" cy="14" r="7" fill="#F59E0B"/><path d="M48 54V37a11 11 0 0 1 22 0v17z" fill="#F59E0B"/>'+
+  '<path d="M23 40q8-9 17-3M53 40q-8-9-17-3" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" opacity=".9"/></svg>';
+function huddleOn(ev){ const r=ev&&ROSTERS[ev.id]; return !!(r&&r.huddle===true); }
+function huddleMsg(ev){ return evTeamName(ev)+' volunteers on duty: report to the REC after Nandi Kriya'; }
+function huddleToggleHTML(ev,canEd){
+  if(!canEd||!IS_EDIT||!ev) return '';
+  const on=huddleOn(ev), built=!!(ROSTERS[ev.id]&&ROSTERS[ev.id].assign&&slotCounts(ev).generated);
+  return '<button class="btn btn-ol btn-vh" aria-pressed="'+(on?'true':'false')+'" onclick="toggleHuddle('+ev.id+')" title="'+
+    esc(built?'Frame this roster with a Volunteer Huddle notice: the team on duty goes to the REC after Nandi Kriya.'
+             :'Switch the Volunteer Huddle notice on or off. It shows around the roster once the roster is built.')+'">Volunteer Huddle: '+(on?'ON':'OFF')+'</button>';
+}
+function huddleWrap(ev,inner){
+  if(!huddleOn(ev)) return inner;
+  return '<div class="vh-frame" data-huddle="1"><div class="vh-ring"><div class="vh-in">'+
+    '<div class="vh-band" role="note" aria-label="Volunteer Huddle">'+HUDDLE_ICON+
+      '<div class="vh-txt"><div class="vh-dots"></div><b class="vh-h">Volunteer Huddle</b>'+
+      '<span class="vh-s">'+esc(huddleMsg(ev))+'</span><div class="vh-dots b"></div></div>'+
+      '<div class="vh-rec" aria-hidden="true"><small>Conducted in</small><b>REC</b></div></div>'+
+    '<div class="vh-body">'+inner+'</div></div></div></div>';
+}
+/* The exported image is drawn by html2canvas, which cannot clip, so the
+   frame there is the simplified, square version in the same colours. */
+function huddleExportOpen(ev){
+  if(!huddleOn(ev)) return '';
+  return '<div class="rx-vf" data-huddle="1"><div class="rx-vb">'+HUDDLE_ICON+
+    '<div class="vh-txt"><div class="vh-dots"></div><b class="vh-h">Volunteer Huddle</b>'+
+    '<span class="vh-s">'+esc(huddleMsg(ev))+'</span><div class="vh-dots b"></div></div>'+
+    '<div class="vh-recx">Conducted in<b>REC</b></div></div><div class="rx-vfi">';
+}
+function huddleExportClose(ev){ return huddleOn(ev)?'</div></div>':''; }
+async function toggleHuddle(id){
+  const ev=EVENTS.find(e=>e.id===id); if(!ev||!IS_EDIT||isHistoricEvent(ev)||satRO(ev)) return;
+  const existed=!!ROSTERS[ev.id], wasUnsaved=Object.prototype.hasOwnProperty.call(ROSTER_UNSAVED,ev.id);
+  const r=ensureRoster(ev), was=r.huddle===true, next=!was;
+  if(next) r.huddle=true; else delete r.huddle;
+  invalidatePlan();      // a staged build predates this change
+  if(!await saveRoster(ev.id)){
+    // Not stored: put the screen back so it does not claim a state the database does not have.
+    if(was) r.huddle=true; else delete r.huddle;
+    if(!existed) delete ROSTERS[ev.id];
+    if(!wasUnsaved) delete ROSTER_UNSAVED[ev.id];
+    renderSaveWarning(); renderRoster();
+    return;
+  }
+  auditLog('huddle','roster',ev.name+' '+ev.date+' › '+(next?'ON':'OFF'));
+  renderRoster();
+  toast(next?'Volunteer Huddle on - the roster now tells the team to go to the REC after Nandi Kriya.':'Volunteer Huddle off.');
 }
 function renderLegacyRow(label,a){
   const male=(a.m||[]).map(p=>esc(p.name||'?')),female=(a.f||[]).map(p=>esc(p.name||'?'));
@@ -6233,7 +6348,7 @@ async function exportPNG(){
     let h='<div class="rx" id="expCard">'+
       '<div class="rx-head"><img class="rx-logo" src="'+(window.IV_LOGO||'logo.png')+'" alt="">'+
       '<div class="rx-org">Ismaili Volunteers<b>Auckland Jamatkhana</b></div></div>'+
-      '<div class="rx-title">'+esc(rxTitle(ev))+'</div>'+
+      huddleExportOpen(ev)+'<div class="rx-title">'+esc(rxTitle(ev))+'</div>'+
       '<table class="rx-t"><thead><tr><th>Duty</th><th>Male</th><th>Female</th></tr></thead><tbody>'+
       core.map(row).join('');
     // REC (MPH) Congregation continues the same table under its own banner,
@@ -6241,7 +6356,7 @@ async function exportPNG(){
     if(rec.length){
       h+='<tr><td class="rx-sub" colspan="3">REC Congregation</td></tr>'+rec.map(row).join('');
     }
-    h+='</tbody></table>'+
+    h+='</tbody></table>'+huddleExportClose(ev)+
        '<div class="rx-ft"><span>'+esc(evTeamName(ev))+' \u00b7 '+(ev.confirmed?'Confirmed':'Draft')+'</span>'+
        '<span>IV Hub \u00b7 '+esc(fmtNice(nzTodayISO()))+'</span></div></div>';
     stage.innerHTML=h;
