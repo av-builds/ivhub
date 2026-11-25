@@ -444,15 +444,15 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .rp-role{font-size:13px!important}
 .rules{font-size:13px!important}
 .rules-line{font-size:13px!important}
-.rx-d{font-weight:700!important}
+.rx-d .rx-sh-t{font-weight:700!important}
 .rx-ft{font-size:14px!important;font-weight:600!important}
-.rx-n{font-weight:600!important}
 .rx-org{font-size:15px!important;font-weight:600!important}
 .rx-org b{font-weight:700!important}
-.rx-sub{font-weight:700!important}
-.rx-t thead th{font-size:15px!important;font-weight:700!important}
-.rx-title{font-weight:700!important}
-.rx-vb .vh-recx{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
+.rx-sec .rx-sh-t{font-weight:700!important}
+.rx-t td.rx-n{font-weight:600!important}
+.rx-t thead th .rx-sh-t{font-weight:700!important}
+.rx-title .rx-sh-t{font-weight:700!important}
+.rx-vb .vh-recx-t{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
 .sa-dd{font-weight:700!important;font-size:14px!important}
 .sa-dn{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
 .sa-hint{font-size:14px!important;font-weight:700!important}
@@ -539,12 +539,12 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .vc-ch{font-size:13px!important}
 .vc-nm{font-size:15px!important;font-weight:600!important}
 .vc-sb{font-size:12px!important}
-.vh-h{font-weight:700!important;line-height:1.4!important;letter-spacing:.06em!important}
+.vh-h{font-weight:600!important;line-height:1.4!important;letter-spacing:.06em!important}
 .vh-pill{font-size:13px!important;font-weight:700!important;line-height:1.4!important}
 .vh-pill b{font-weight:700!important}
-.vh-rec b{font-weight:700!important}
-.vh-rec small{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
-.vh-s{font-weight:700!important}
+.vh-rec b{font-weight:600!important}
+.vh-rec small{font-size:13px!important;font-weight:600!important;letter-spacing:.06em!important}
+.vh-s{font-weight:600!important}
 .vl-age{font-weight:700!important}
 .walkin-tag{font-size:11px!important;font-weight:700!important}
 .warn{font-size:14px!important}
@@ -568,7 +568,6 @@ body.tp .tn-menu .tn-b{font-size:15px!important;font-weight:600!important}
 body.tp .tn-menu .tn-b.tn-sub{font-size:14px!important}
 h1{font-weight:600!important}
 h2{font-weight:600!important}
-html .vh-h{font-weight:700!important}
 html[data-team] .dash-greet{font-weight:700!important;line-height:1.4!important}
 input[type=date]{font-weight:500!important;line-height:1.4!important}
 input[type=number]{font-weight:600!important;line-height:1.4!important}
@@ -629,3 +628,5 @@ html[data-theme="light"] [style*="color:#94A3B8"],html[data-theme="light"] [styl
 /* chips and tags stay on one line; a row of them wraps between chips, not inside one */
 .duty-chip,.chip,.bdg,.count-chip,.pchip,.lead-tag,.walkin-tag,.att-key{white-space:nowrap;}
 .att-duties,.cellwrap,.mem-tags,.pchips{display:flex;flex-wrap:wrap;gap:4px 6px;}
+/* the Volunteer Huddle band keeps the weights it was drawn with */
+.vh-h,.vh-s,.vh-rec b,.vh-rec small{font-weight:700!important;}

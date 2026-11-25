@@ -36,7 +36,8 @@ def rules(text):
 
 SIZE={10:12,11:12,12:13,13:14,14:15}
 WEIGHT={900:700,800:700,700:600,600:500}
-SKIP=re.compile(r'^\.(tn-|iv-banner|ivb-|hm-hero)|::|:before|:after|\.ivp|\.mdposter|\.mdp|^html$|^body$|^\*')
+# #body-roster and .ivp-pop[role=menu] are the roster design block (teama.html, #rosterDesign), written at its final sizes and weights.
+SKIP=re.compile(r'^\.(tn-|iv-banner|ivb-|hm-hero)|::|:before|:after|\.ivp|\.mdposter|\.mdp|^html$|^body$|^\*|^#body-roster|^\.ivp-pop\[role')
 sel_rules={}
 def put(sel,k,v):
     sel_rules.setdefault(sel,{})[k]=v

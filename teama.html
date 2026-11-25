@@ -688,26 +688,29 @@ table.sheet-t td.none{color:#3F627A;}
    built for light text on a dark ground, so the roles are inverted rather
    than reused directly: navy carries the weight that the pale blue carries
    on screen, and the light blues drop to tints and rules. */
-.rx,.rx *{letter-spacing:normal!important;font-stretch:normal!important;}
+.rx,.rx *{letter-spacing:normal!important;font-stretch:normal!important;clip-path:none!important;}
 .rx{width:1180px;background:#fff;color:#17263F;font-family:'Archivo',sans-serif;
   font-variant-numeric:tabular-nums;padding:26px 26px 20px;}
 .rx-head{display:flex;align-items:center;gap:13px;padding:0 2px 15px;}
 .rx-logo{width:46px;height:46px;border-radius:50%;background:#fff;object-fit:contain;}
 .rx-org{font-size:14px;font-weight:700;color:#5A7FA6;}
 .rx-org b{display:block;font-size:19px;font-weight:900;color:#0C2461;}
-.rx-title{background:#0C2461;color:#fff;border:2px solid #0C2461;border-bottom:none;
-  padding:13px 14px;text-align:center;font-size:23px;font-weight:900;}
-.rx-t{width:100%;border-collapse:collapse;table-layout:fixed;border:2px solid #0C2461;}
-.rx-t th,.rx-t td{border:1.5px solid rgba(12,36,97,.22);padding:9px 13px;vertical-align:middle;}
-.rx-t thead th{background:#EEF3FA;font-size:14px;font-weight:900;color:#0C2461;
-  text-align:center;padding:7px 13px;}
-.rx-t thead th:first-child{text-align:left;}
-.rx-d{font-size:19px;font-weight:900;color:#0C2461;width:31%;}
-.rx-n{font-size:16px;font-weight:700;color:#17263F;text-align:center;line-height:1.45;}
-.rx-n.none{color:#9DB4CC;}
-.rx-t tbody tr:nth-child(even) td{background:#F7FAFD;}
-.rx-sub{background:#00558B;color:#fff;padding:11px 14px;text-align:center;
-  font-size:19px;font-weight:900;}
+.rx-sh{display:flex;align-items:stretch;}
+.rx-sh>svg{flex:none;display:block;}
+.rx-sh>svg:first-child{margin-right:-1px;}.rx-sh>svg:last-child{margin-left:-1px;}
+.rx-sh-t{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;}
+.rx-title{margin:0 0 6px;}
+.rx-title .rx-sh-t{padding:14px 8px;text-align:center;font-size:23px;font-weight:800;color:#fff;line-height:1.25;}
+.rx-t{width:calc(100% + 12px);margin:0 -6px;border-collapse:separate;border-spacing:6px;table-layout:fixed;}
+.rx-t th,.rx-t td{border:0;padding:0;vertical-align:middle;background:none;}
+.rx-t thead th .rx-sh-t{padding:11px 8px;font-size:15px;font-weight:800;text-transform:uppercase;}
+.rx-t thead th:first-child .rx-sh-t{justify-content:flex-start;}
+.rx-d{width:31%;}
+.rx-d .rx-sh-t{justify-content:flex-start;padding:10px 6px;font-size:19px;font-weight:800;line-height:1.25;}
+.rx-t td.rx-n{padding:8px 13px!important;background:#F3F6FA;font-size:18px;font-weight:700;color:#17263F;text-align:center;line-height:1.45;}
+.rx-t td.rx-n.none{color:#8DA0B5;}
+.rx-sec{padding:0!important;}
+.rx-sec .rx-sh-t{padding:10px 8px;font-size:19px;font-weight:800;color:#fff;text-transform:uppercase;}
 .rx-ft{display:flex;justify-content:space-between;padding:13px 3px 0;
   font-size:13px;font-weight:700;color:#5A7FA6;}
 .exp-card{width:760px;background:#020B18;color:#E8F4FD;font-family:'Archivo',sans-serif;padding:34px 38px;border:1px solid rgba(75,163,220,.25);}
@@ -1319,6 +1322,269 @@ span.chip.blank{cursor:default;}
 <link rel="stylesheet" href="ivshape.css?v=20261119a">
 <link rel="stylesheet" href="ivtype.css?v=20261119a">
 <link rel="stylesheet" href="ivfix.css?v=20261119a">
+<style id="rosterDesign">
+/* ═══ ROSTER DESIGN: clean and calm ═══════════════════════════════════
+   The roster pages (cycles, a cycle, one night, the Satada group) and the exported image. Built on the site's slanted
+   parallelogram: bold slants on headers, section bars and duty names, light slants on chips and tags, plain rectangles for
+   the Male and Female name cells so names stay easy to read. Team colour (the page's own --iv-sec: mint on Team A, coral
+   on Team B) leads on headers and duty names; names stay neutral.
+   Shapes use clip-path, so an outline is a second, inset layer (see .chip.blank and the phone cards), never a border.
+   --s is each shape's slant in px. Written after ivshape.css and ivtype.css and sized to the type scale, so it needs no
+   generator pass. All motion is CSS and is switched off by prefers-reduced-motion. */
+:root{
+  --rs-ink:color-mix(in srgb,var(--iv-sec) 66%,#fff);
+  --rs-hd:color-mix(in srgb,var(--iv-sec) 20%,var(--ds));
+  --rs-dn:color-mix(in srgb,var(--iv-sec) 11%,var(--ds));
+  --rs-bar:color-mix(in srgb,var(--iv-sec) 84%,var(--ds));--rs-bart:#08121F;
+  --rs-cell:color-mix(in srgb,var(--dt) 4.5%,var(--ds));
+  --rs-chip:color-mix(in srgb,var(--dt) 11%,var(--ds));
+  --rs-chip2:color-mix(in srgb,var(--dt) 18%,var(--ds));
+  --rs-edge:color-mix(in srgb,var(--dt) 36%,transparent);
+  --rs-warn-bg:color-mix(in srgb,#F59E0B 20%,var(--ds));--rs-warn:#F8CD73;
+  --rs-bad-bg:color-mix(in srgb,#EF4444 22%,var(--ds));--rs-bad:#FDB4B4;
+  --rs-saved:color-mix(in srgb,#34D399 30%,var(--ds));--rs-man:#E8B94F;
+}
+html[data-theme="light"]{
+  --rs-ink:color-mix(in srgb,var(--iv-sec) 50%,#000);
+  --rs-hd:color-mix(in srgb,var(--iv-sec) 20%,#fff);
+  --rs-dn:color-mix(in srgb,var(--iv-sec) 9%,#fff);
+  --rs-bar:color-mix(in srgb,var(--iv-sec) 70%,#000);--rs-bart:#fff;
+  --rs-cell:color-mix(in srgb,var(--dt) 4%,#fff);
+  --rs-chip:color-mix(in srgb,var(--dt) 8%,#fff);
+  --rs-chip2:color-mix(in srgb,var(--dt) 14%,#fff);
+  --rs-edge:color-mix(in srgb,var(--dt) 40%,transparent);
+  --rs-warn-bg:#FBEBC8;--rs-warn:#6E4300;--rs-bad-bg:#FBE0DD;--rs-bad:#8F2220;
+  --rs-saved:color-mix(in srgb,#10B981 34%,#fff);--rs-man:#8A5A00;
+}
+
+/* ── the roster table: header, section bars and duty names lean hard; name cells stay square ── */
+#body-roster .tw{background:none!important;background-image:none!important;clip-path:none!important;box-shadow:none!important;padding:0!important;overflow:visible;border:0!important;}
+#body-roster .tw-scroll{overflow-x:auto;padding:2px;}
+#body-roster table.duty{background:none!important;clip-path:none!important;border:0!important;border-collapse:separate;border-spacing:6px;width:100%;min-width:600px;}
+#body-roster table.duty tr{clip-path:none!important;background:none!important;box-shadow:none!important;border:0!important;}
+#body-roster table.duty :is(th,td){border:0!important;}
+#body-roster table.duty thead th{--s:20px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);
+  background:var(--rs-hd);color:var(--rs-ink);box-shadow:inset 0 -3px 0 var(--iv-sec);
+  font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:12px calc(var(--s) + 12px)!important;}
+#body-roster table.duty tr.sec td{--s:20px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);
+  background:var(--rs-bar);color:var(--rs-bart);font-size:13px;font-weight:700;letter-spacing:.06em;
+  padding:10px calc(var(--s) + 14px)!important;}
+#body-roster table.duty td.dn2{--s:16px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);
+  background:var(--rs-dn);color:var(--rs-ink);font-size:15px;font-weight:700;width:236px;vertical-align:middle;
+  padding:12px calc(var(--s) + 12px)!important;}
+#body-roster table.duty td[data-col]{clip-path:none!important;background:var(--rs-cell);padding:8px 10px!important;vertical-align:middle;}
+#body-roster table.duty tbody tr:not(.sec):hover td[data-col]{background:color-mix(in srgb,var(--dt) 7%,var(--ds));}
+#body-roster .cellwrap{gap:6px;min-height:36px;}
+#body-roster td.dn2 .warns{margin-top:6px;gap:4px;}
+#body-roster .lock-badge,#body-roster .warn-chip{--s:5px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);border:0!important;
+  border-radius:0!important;background:var(--rs-warn-bg)!important;color:var(--rs-warn)!important;font-size:13px;font-weight:600;
+  padding:3px calc(var(--s) + 8px)!important;margin:6px 0 0;display:inline-flex;width:fit-content;max-width:100%;}
+#body-roster .lock-badge{background:color-mix(in srgb,var(--dt) 10%,transparent)!important;color:var(--dt)!important;}
+
+/* ── name chips and blank slots: compact slanted tags ── */
+#body-roster .chip{--s:7px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);position:relative;isolation:isolate;
+  border:0!important;border-radius:0!important;box-shadow:none!important;background-color:var(--rs-chip)!important;color:var(--dt);
+  font-size:14px;font-weight:600;line-height:1.25;min-height:36px;gap:6px;
+  padding:5px calc(var(--s) + 11px)!important;transition:transform .18s cubic-bezier(.16,1,.3,1),background-color .18s,color .18s;}
+@media(hover:none){#body-roster .chip{min-height:44px;}}
+@media(hover:hover){
+  #body-roster button.chip:hover{background-color:var(--rs-chip2)!important;transform:translateY(-2px);}
+}
+#body-roster button.chip:active{transform:translateY(0) scale(.97);}
+#body-roster .chip .chip-more{color:var(--dm);}
+#body-roster .chip .chip-note{--s:4px;font-size:13px;font-weight:600;border:0!important;background:transparent!important;color:inherit!important;
+  padding:0 0 0 6px!important;margin:0 0 0 2px;clip-path:none!important;text-transform:uppercase;letter-spacing:.04em;opacity:1;position:static;}
+/* hand-set: a quiet marker along the foot */
+#body-roster .chip.man{background-image:linear-gradient(0deg,var(--rs-man) 0 3px,transparent 3px);}
+/* conflicts: away and cannot-do each take a tint and say so in words */
+#body-roster .chip.away{opacity:1;text-decoration:none;background-color:var(--rs-warn-bg)!important;color:var(--rs-warn)!important;
+  background-image:linear-gradient(0deg,var(--rs-warn) 0 3px,transparent 3px);}
+#body-roster .chip.cannot{opacity:1;background-color:var(--rs-bad-bg)!important;color:var(--rs-bad)!important;
+  background-image:linear-gradient(0deg,var(--rs-bad) 0 3px,transparent 3px);}
+#body-roster .chip.away .chip-more,#body-roster .chip.cannot .chip-more{color:inherit;}
+/* blank slots and "+ Add": outline-only, drawn as two clipped layers so the edge follows the slant */
+#body-roster .chip.blank,#body-roster .chip.add{background-color:transparent!important;color:var(--dm);}
+#body-roster .chip.blank::before{content:"";position:absolute;inset:0;z-index:-2;background:var(--rs-edge);clip-path:inherit;}
+#body-roster .chip.blank::after{content:"";position:absolute;inset:1.5px;z-index:-1;background:var(--rs-cell);
+  clip-path:polygon(calc(var(--s) - .7px) 0,100% 0,calc(100% - var(--s) + .7px) 100%,0 100%);}
+#body-roster .chip.blank{font-weight:600;}
+@media(hover:hover){#body-roster button.chip.blank:hover,#body-roster button.chip.add:hover{background-color:color-mix(in srgb,var(--iv-sec) 14%,transparent)!important;color:var(--rs-ink);transform:translateY(-2px);}
+  #body-roster button.chip.blank:hover::before{background:var(--iv-sec);}}
+#body-roster span.chip.blank{opacity:1;}
+#body-roster .chip.add{font-weight:600;opacity:.9;}
+#body-roster .chip.flash{animation:rsChipSaved 1.3s cubic-bezier(.16,1,.3,1);}
+@keyframes rsChipSaved{0%{background-color:var(--rs-saved);transform:scale(1.07)}55%{transform:scale(1)}100%{transform:none}}
+/* a duty row that just stored glows once and settles */
+#body-roster table.duty tr.saved :is(td.dn2,td[data-col]){animation:rsRowSaved 1.7s ease-out both;animation-delay:calc(var(--rs-i,0) * 35ms);}
+@keyframes rsRowSaved{0%,20%{background-color:var(--rs-saved)}100%{}}
+
+/* swap / remove menu rows */
+.ivp-pop[role=menu]{--s:12px;gap:5px;padding:8px calc(var(--s) + 6px) 8px calc(var(--s) + 6px);background:var(--ds);clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);}
+.ivp-pop[role=menu] .ivp-opt{--s:9px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);background:var(--rs-chip)!important;color:var(--dt);
+  font-size:14px;font-weight:600;padding:9px calc(var(--s) + 14px)!important;border:0!important;}
+.ivp-pop[role=menu] .ivp-opt:hover,.ivp-pop[role=menu] .ivp-opt:focus-visible{background:var(--rs-hd)!important;color:var(--rs-ink);}
+.ivp-pop[role=menu] .ivp-opt.danger{background:var(--rs-bad-bg)!important;color:var(--rs-bad);}
+.ivp-pop[role=menu] .ivp-opt.danger:hover,.ivp-pop[role=menu] .ivp-opt.danger:focus-visible{filter:brightness(1.12);}
+
+/* ── event banner, notes, and the action bar ── */
+#body-roster .ev-banner{--s:26px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);background:var(--rs-hd);
+  box-shadow:inset 0 -4px 0 var(--iv-sec)!important;padding:16px calc(var(--s) + 16px)!important;margin-bottom:16px;}
+#body-roster .ev-banner .t{color:var(--rs-ink);font-size:20px;font-weight:700;letter-spacing:.04em;}
+#body-roster .ev-banner .d{color:var(--dt);font-size:14px;font-weight:500;margin-top:3px;}
+#body-roster .ev-banner .u{--s:10px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);background:var(--rs-bar);color:var(--rs-bart);
+  border:0;font-size:13px;font-weight:700;letter-spacing:.05em;padding:7px calc(var(--s) + 12px)!important;}
+#body-roster .ev-actions{gap:8px;margin-bottom:16px;}
+#body-roster .btn,#body-roster .pill{--s:9px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);border:0!important;box-shadow:none!important;
+  font-size:14px;font-weight:600;transition:transform .18s cubic-bezier(.16,1,.3,1),background-color .18s,color .18s;}
+@media(hover:hover){#body-roster .btn:hover,#body-roster .pill:hover{transform:translateY(-2px);}}
+#body-roster .btn:active,#body-roster .pill:active{transform:scale(.97);}
+#body-roster .btn-ol,#body-roster .pill{background:var(--rs-chip)!important;color:var(--dt)!important;}
+#body-roster .btn-ol:hover,#body-roster .pill:hover{background:var(--rs-chip2)!important;color:var(--dt)!important;}
+#body-roster .btn-bl{background:var(--rs-bar)!important;background-image:none!important;color:var(--rs-bart)!important;}
+#body-roster .btn-bl:hover{filter:brightness(1.07);}
+#body-roster .btn-da{background:var(--rs-bad-bg)!important;color:var(--rs-bad)!important;}
+#body-roster .btn-gd{background:var(--rs-bar)!important;color:var(--rs-bart)!important;}
+#body-roster .btn-gd.on{background:var(--rs-hd)!important;color:var(--rs-ink)!important;}
+/* on/off toggles: a small leaning marker, solid when on, hollow when off */
+#body-roster .pill::before,#body-roster .btn-gd::before{content:"";flex:none;width:9px;height:9px;background:currentColor;opacity:.4;
+  clip-path:polygon(35% 0,100% 0,65% 100%,0 100%);}
+#body-roster .pill.on,#body-roster .btn-gd.on{background:var(--rs-hd)!important;color:var(--rs-ink)!important;}
+#body-roster .pill.on::before,#body-roster .btn-gd.on::before{opacity:1;}
+#body-roster .btn-gd:not(.on)::before{display:none;}
+#body-roster .btn.btn-vh::before{border-radius:0;clip-path:polygon(35% 0,100% 0,65% 100%,0 100%);width:9px;opacity:.45;}
+#body-roster .btn.btn-vh[aria-pressed="true"]::before{box-shadow:none;}
+#body-roster .ro-note{--s:10px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);border:0;border-radius:0;background:var(--rs-dn);color:var(--dt);
+  font-size:14px;font-weight:600;padding:10px calc(var(--s) + 14px);}
+#body-roster .ib{--s:10px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%)!important;border:0;background:var(--rs-dn);color:var(--dt);
+  padding:11px calc(var(--s) + 14px);}
+#body-roster .ib.ib-warn{background:var(--rs-bad-bg);color:var(--rs-bad);}
+#body-roster .ib.ib-warn b{color:var(--rs-bad);}
+#body-roster .ro-crumbs .rc-here{color:var(--dm);font-weight:600;}
+
+/* ── tags: cycle status, day status, owner ── */
+#body-roster .cyc-tag,#body-roster .cv-pill{--s:6px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);border:0!important;
+  font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px calc(var(--s) + 8px)!important;
+  background:var(--rs-chip)!important;color:var(--dt)!important;opacity:1;}
+#body-roster .cyc-tag.historic{background:var(--rs-chip)!important;color:var(--dm)!important;}
+#body-roster .cyc-tag.upcoming{background:var(--rs-hd)!important;color:var(--rs-ink)!important;}
+#body-roster .cyc-tag.current{background:var(--rs-bar)!important;color:var(--rs-bart)!important;}
+#body-roster .cv-pill.lv{background:var(--rs-hd)!important;color:var(--rs-ink)!important;}
+#body-roster .cv-pill.hd{background:var(--rs-warn-bg)!important;color:var(--rs-warn)!important;}
+#body-roster .cv-pill.nb{background:var(--rs-chip)!important;color:var(--dm)!important;}
+#body-roster .cv-pill.own{background:var(--rs-hd)!important;color:var(--rs-ink)!important;margin-left:0;}
+#body-roster .cv-pill.own.theirs{background:var(--rs-chip)!important;color:var(--dm)!important;}
+#body-roster .st-lv{color:var(--rs-ink);}#body-roster .st-gp{color:var(--rs-warn);}#body-roster .st-hd,#body-roster .st-nb{color:var(--dm);}
+html[data-theme="light"] #body-roster .st-lv{color:var(--rs-ink);}
+
+/* ── cycle cards, Satada nights ── */
+#body-roster .cy-sec{--s:12px;display:inline-block;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);background:var(--rs-hd);
+  color:var(--rs-ink)!important;font-size:13px;font-weight:700;letter-spacing:.06em;padding:7px calc(var(--s) + 14px);margin:26px 0 12px;}
+#body-roster .cy-grid{gap:14px;}
+#body-roster .cy-card{--s:16px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);background:var(--rs-dn)!important;background-image:none!important;
+  border:0!important;box-shadow:none!important;padding:18px calc(var(--s) + 16px) 16px!important;gap:5px;opacity:1!important;
+  transition:transform .25s cubic-bezier(.16,1,.3,1),background-color .2s;}
+#body-roster .cy-card::before{height:4px;background:color-mix(in srgb,var(--iv-sec) 40%,transparent);opacity:1;}
+#body-roster .cy-card.st-current::before{background:var(--iv-sec);}
+@media(hover:hover){#body-roster .cy-card:hover{transform:translateY(-3px);background:var(--rs-hd)!important;}
+  #body-roster .cy-card.ro:hover{transform:none;background:var(--rs-cell)!important;}}
+#body-roster .cy-card.ro{background:var(--rs-cell)!important;cursor:default;}
+#body-roster .cy-card.ro .cy-name{color:var(--dm);}
+#body-roster .cy-grid.past .cy-card,#body-roster .cy-grid.sat .cy-card.st-historic{background:var(--rs-cell)!important;}
+#body-roster .cy-name{font-size:19px;font-weight:700;letter-spacing:0;}
+#body-roster .cy-prog{height:8px;gap:3px;margin:9px 0 3px;}
+#body-roster .cy-prog i{border:0!important;}
+#body-roster .cy-prog i.lv{background:var(--iv-sec);}
+#body-roster .cy-prog i.dr{background:color-mix(in srgb,var(--iv-sec) 42%,var(--ds));}
+#body-roster .cy-prog i.nb{background:var(--rs-chip);}
+#body-roster .cy-line b{color:var(--rs-warn);}
+#body-roster .cy-legend .cal-legend i{clip-path:polygon(35% 0,100% 0,65% 100%,0 100%);border-radius:0;border:0;width:12px;}
+#body-roster .cy-legend .cal-legend i.st-nb{background:var(--rs-chip2)!important;}#body-roster .cy-legend .cal-legend i.st-dr{background:color-mix(in srgb,var(--iv-sec) 42%,var(--ds))!important;}#body-roster .cy-legend .cal-legend i.st-lv{background:var(--iv-sec)!important;}
+
+/* the side column of one cycle */
+#body-roster .cv-card{--s:18px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);background:var(--rs-hd)!important;background-image:none!important;
+  border:0!important;box-shadow:inset 0 -4px 0 var(--iv-sec)!important;padding:18px calc(var(--s) + 14px) 20px!important;}
+#body-roster .cv-name{color:var(--rs-ink);font-size:22px;font-weight:700;}
+#body-roster .cv-dates,#body-roster .cv-stat{color:var(--dt);font-weight:500;}
+#body-roster .cv-stat b{color:var(--rs-ink);font-weight:700;}
+#body-roster .cv-card .btn-ol{background:var(--rs-chip)!important;color:var(--dt)!important;}
+#body-roster .cv-card .btn-ol:hover{background:var(--rs-chip2)!important;color:var(--dt)!important;}
+#body-roster .cv-evs{background:none!important;clip-path:none!important;border:0!important;padding:0!important;gap:6px;}
+#body-roster .cv-ev{--s:11px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);background:var(--rs-cell)!important;border:0!important;
+  padding:9px calc(var(--s) + 12px)!important;}
+@media(hover:hover){#body-roster .cv-ev:hover{background:var(--rs-chip)!important;}}
+#body-roster .cv-ev.on{background:var(--rs-hd)!important;box-shadow:inset 0 -3px 0 var(--iv-sec)!important;}
+#body-roster .cv-ev.on .nm{color:var(--rs-ink);}
+#body-roster .cv-d span,#body-roster .ce-date span{color:var(--rs-ink);}
+#body-roster .cv-t .nm{font-size:14px;font-weight:600;}
+#body-roster .cv-t .st{font-size:13px;font-weight:500;}
+
+/* the day cards */
+#body-roster .cv-days{gap:12px;}
+#body-roster .cv-day{--s:16px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);background:var(--ds)!important;border:0!important;box-shadow:none!important;}
+#body-roster .cv-day.open{box-shadow:inset 0 3px 0 var(--iv-sec)!important;}
+#body-roster .cv-dh{padding:14px calc(var(--s) + 14px)!important;}
+#body-roster .cv-db{border-top:0;padding:6px calc(var(--s) + 6px) 20px;}
+#body-roster .cv-sub{font-weight:500;}
+#body-roster .cv-sub b{color:var(--rs-warn);}
+#body-roster .cv-car{color:var(--dm);}
+#body-roster .cv-day.open .cv-car{color:var(--rs-ink);}
+#body-roster .cv-empty{--s:12px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);border:0!important;background:var(--rs-cell);padding:20px calc(var(--s) + 18px);}
+#body-roster .gen-cta{--s:16px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%);border:0!important;background:var(--rs-dn);padding:20px calc(var(--s) + 20px);}
+#body-roster .cy-evs-h h2{color:var(--rs-ink);font-size:13px;}
+
+/* ── reveal: rows and cards rise in, staggered 35ms and capped ── */
+@keyframes rsRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day,.cv-card,.ev-banner,.ev-actions>*),
+#body-roster.rs-enter .cv-day.open table.duty tbody tr,#body-roster.rs-enter .tw>.tw-scroll table.duty tbody tr,
+#body-roster.rs-enter table.duty thead th,
+#body-roster.rs-open .cv-day.open table.duty tbody tr{animation:rsRise .42s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--rs-d,0ms);}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(2),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(2){--rs-d:35ms;}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(3),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(3){--rs-d:70ms;}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(4),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(4){--rs-d:105ms;}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(5),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(5){--rs-d:140ms;}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(6),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(6){--rs-d:175ms;}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(7),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(7){--rs-d:210ms;}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(8),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(8){--rs-d:245ms;}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(9),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(9){--rs-d:280ms;}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(10),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(10){--rs-d:315ms;}
+#body-roster:is(.rs-enter,.rs-open) table.duty tbody tr:nth-child(n+11),#body-roster.rs-enter :is(.cy-card,.cv-ev,.cv-day):nth-child(n+11){--rs-d:350ms;}
+#body-roster.rs-enter table.duty thead th:nth-child(2){--rs-d:35ms;}#body-roster.rs-enter table.duty thead th:nth-child(3){--rs-d:70ms;}
+
+/* ── phone: one duty per card, the Male and Female names as two rows inside. Same table markup, reflowed by CSS. ── */
+@media(max-width:760px){
+  #body-roster .tw-scroll{overflow-x:visible;padding:0;}
+  #body-roster table.duty{display:block;min-width:0;border-spacing:0;}
+  #body-roster table.duty thead{display:none;}
+  #body-roster table.duty tbody{display:flex;flex-direction:column;gap:12px;}
+  #body-roster table.duty tr{display:block;position:relative;isolation:isolate;}
+  #body-roster table.duty tr[data-duty],#body-roster table.duty tbody tr:not(.sec){--s:12px;clip-path:polygon(var(--s) 0,100% 0,calc(100% - var(--s)) 100%,0 100%)!important;
+    background:var(--rs-edge)!important;padding:0 0 2px!important;margin:0;}
+  #body-roster table.duty tbody tr:not(.sec)::before{content:"";position:absolute;inset:1.5px;z-index:-1;background:var(--ds);
+    clip-path:polygon(calc(var(--s) - .7px) 0,100% 0,calc(100% - var(--s) + .7px) 100%,0 100%);}
+  #body-roster table.duty tbody tr:not(.sec)>td{position:relative;}
+  #body-roster table.duty tr.sec{margin:8px 0 0;}
+  #body-roster table.duty tr.sec td{display:block;}
+  #body-roster table.duty td.dn2{display:block;width:auto;margin:6px 8px 0 calc(var(--s) + 2px);--s:14px;padding:11px calc(var(--s) + 10px)!important;font-size:16px;}
+  #body-roster table.duty tr:not(.sec)>td[data-col]{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:6px 8px;
+    background:none!important;padding:6px 14px 0 calc(12px + 8px)!important;}
+  #body-roster table.duty td[data-col]::before{content:attr(data-col);display:block;margin:0;font-size:13px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--dm);}
+  #body-roster table.duty td[data-col="Female"]{border-top:0;}
+  #body-roster .cellwrap{gap:6px;min-height:44px;}
+  #body-roster table.duty tbody tr:not(.sec):hover td[data-col]{background:none;}
+  #body-roster .cv-dh{padding:12px calc(var(--s) + 6px)!important;}
+  #body-roster .cv-db{padding:4px 10px 16px calc(var(--s) + 2px);}
+  #body-roster .ev-banner{--s:18px;padding:14px calc(var(--s) + 10px)!important;flex-wrap:wrap;gap:8px 12px;}
+  #body-roster .ev-banner .u{margin-left:0;}
+  #body-roster .ev-banner .d{white-space:nowrap;}
+}
+
+/* ── motion off ── */
+@media (prefers-reduced-motion:reduce){
+  #body-roster *,#body-roster *::before,#body-roster *::after,.ivp-pop[role=menu] *{animation:none!important;transition:none!important;}
+  #body-roster .chip:hover,#body-roster .btn:hover,#body-roster .pill:hover,#body-roster .cy-card:hover{transform:none!important;}
+}
+</style>
 <script src="ivtheme.js?v=20261114a"></script>
 <script src="ivmenu.js?v=20261114a"></script>
 </head>
@@ -3543,7 +3809,7 @@ async function applyPlanNow(plan,opts){
     plan.label+' - '+n+' event'+(n===1?'':'s')+', '+stored+' saved, '+live+' on the calendar'+
     (plan.skippedCount?', '+plan.skippedCount+' left as '+(plan.skippedCount===1?'it was':'they were')+' (on the calendar)':''));
   plan.applied=true; plan.at=new Date(); plan.stored=stored; plan.live=live;
-  renderRoster(); refreshBadges();
+  renderRoster(); refreshBadges(); if(stored) flashSaved(null);
   if(pubNew&&stored===n){
     const blanks=build.reduce((t,r)=>t+(r.missing||0),0);
     toast((n===1?'Built '+build[0].name:'Generated '+n+' days')+' - '+live+' on the calendar'+
@@ -4086,6 +4352,30 @@ function renderRoster(){
   if(v==='cycle'&&(ROSTER_K==null||!CYCLES.some(c=>c.k===ROSTER_K))) v='cycles';
   ROSTER_VIEW=v;
   el.innerHTML=v==='cycles'?renderCyclePicker():v==='cycle'?renderCycleView(ROSTER_K):renderEventPage(selEvent());
+  rsMarkEnter(el);
+}
+/* Reveal: the first render of a screen (roster opened, cycle opened, event opened) rises in with a short stagger; opening a
+   day inside a cycle animates only that day. Every later render of the same screen (after a save, a toggle) draws still, so a
+   flash on the row that just saved is never competing with a reveal. CSS animations only: nothing here can delay a click. */
+let _rsView='', _rsOpen='', _rsTimer=0;
+function rsMarkEnter(el){
+  const view=ROSTER_VIEW+'|'+ROSTER_K+'|'+(ROSTER_VIEW==='event'?selEventId:'');
+  const open=String(ROSTER_OPEN);
+  const cls=view!==_rsView?'rs-enter':(open!==_rsOpen?'rs-open':'');
+  _rsView=view; _rsOpen=open;
+  if(!cls) return;
+  el.classList.remove('rs-enter','rs-open'); void el.offsetWidth; el.classList.add(cls);
+  clearTimeout(_rsTimer); _rsTimer=setTimeout(()=>el.classList.remove('rs-enter','rs-open'),1500);
+}
+/* Saved flash: the duty rows that just stored (one duty after a hand edit, every row shown after a generate) glow once and settle.
+   keys null means every row on screen. */
+function flashSaved(keys){
+  setTimeout(()=>{
+    const root=document.getElementById('body-roster'); if(!root) return;
+    let rows=[].slice.call(root.querySelectorAll('table.duty tr[data-duty]'));
+    if(keys) rows=rows.filter(r=>keys.indexOf(r.getAttribute('data-duty'))>=0);
+    rows.forEach((r,i)=>{ r.style.setProperty('--rs-i',Math.min(i,12)); r.classList.add('saved'); setTimeout(()=>r.classList.remove('saved'),2000); });
+  },30);
 }
 /* 'Owned by Team X': shown wherever a satada night owned by the other team is opened. */
 function satOwnerNote(ev){
@@ -4239,10 +4529,14 @@ function chipHTML(ev,dutyKey,arrName,idx,p,locked){
   /* "away" was carried by a strikethrough plus a title= - a styling a
      colour-blind user may not register and a tooltip a touch user cannot
      reach. It is a word now. */
-  const note=away?'<span class="chip-note">away</span>':'';
+  /* A person set on a duty they have said they cannot do is a conflict too, and says so in words. */
+  const cannot=!!(mem&&mem.prefs&&Array.isArray(mem.prefs.cannot)&&mem.prefs.cannot.indexOf(dutyKey)>=0);
+  const rr=ROSTERS[ev.id], man=!!(rr&&rr.manual&&rr.manual[dutyKey]);
+  const note=(away?'<span class="chip-note">away</span>':'')+(cannot?'<span class="chip-note">cannot do</span>':'');
   const nm=esc(p.name||'?');
-  if(locked) return '<span class="chip'+(away?' away':'')+'">'+nm+note+'</span>';
-  return '<button class="chip'+(away?' away':'')+'" aria-haspopup="menu" aria-label="'+nm+' - change or remove" '+
+  const cls='chip'+(away?' away':'')+(cannot?' cannot':'')+(man?' man':'');
+  if(locked) return '<span class="'+cls+'">'+nm+note+'</span>';
+  return '<button class="'+cls+'" aria-haspopup="menu" aria-label="'+nm+' - change or remove" '+
     'onclick="openChipPop(this,\''+escJs(dutyKey)+'\',\''+escJs(arrName)+'\','+idx+')">'+
     nm+note+'<span class="chip-more" aria-hidden="true">⋯</span></button>';
 }
@@ -4327,7 +4621,7 @@ function renderDutyRow(ev,d,data,locked){
   if(!locked&&!hasBlank(maleChips)) maleChips.push('<button class="chip add" onclick="addToSlot(\''+escJs(d.key)+'\',\'m\')">+ Add</button>');
   if(!locked&&!hasBlank(femaleChips)) femaleChips.push('<button class="chip add" onclick="addToSlot(\''+escJs(d.key)+'\',\'f\')">+ Add</button>');
   const warnHtml=warns.length?'<div class="warns">'+warns.map(w=>'<span class="warn-chip">⚠ '+esc(w)+'</span>').join('')+'</div>':'';
-  return '<tr><td class="dn2">'+esc(d.name)+(manual?'<span class="lock-badge">🔒 Set by hand</span>':'')+warnHtml+'</td>'+
+  return '<tr data-duty="'+esc(d.key)+'"><td class="dn2">'+esc(d.name)+(manual?'<span class="lock-badge">🔒 Set by hand</span>':'')+warnHtml+'</td>'+
     '<td data-col="Male"><div class="cellwrap">'+maleChips.join('')+'</div></td>'+
     '<td data-col="Female"><div class="cellwrap">'+femaleChips.join('')+'</div></td></tr>';
 }
@@ -4404,7 +4698,7 @@ async function applyPick(memberId){
   // Capture the duty and anyone displaced before the arrays change - the
   // log's job here is to answer "who took me off this duty", which needs
   // the duty name and the person replaced, not just the new name.
-  const _duty=legacyLabel(PICKER_CTX.dutyKey);
+  const _duty=legacyLabel(PICKER_CTX.dutyKey), _key=PICKER_CTX.dutyKey;
   const _replaced=(PICKER_CTX.idx==null)?null:(arr[PICKER_CTX.idx]&&arr[PICKER_CTX.idx].name);
   if(PICKER_CTX.idx==null) arr.push(entry); else arr[PICKER_CTX.idx]=entry;
   r.manual[PICKER_CTX.dutyKey]=true;
@@ -4417,7 +4711,7 @@ async function applyPick(memberId){
   auditLog('manual-assign','roster',ev.name+' '+ev.date+' - '+_duty+': '+
     (_replaced ? _replaced+' \u2192 '+m.name : 'added '+m.name));
   renderRoster(); refreshBadges();
-  flashChip(m.name);
+  flashChip(m.name); flashSaved([_key]);
   toast(m.name+' assigned');
 }
 async function removeSlot(dutyKey,arrName,idx){
@@ -4428,7 +4722,7 @@ async function removeSlot(dutyKey,arrName,idx){
   await saveRoster(ev.id);
   auditLog('manual-remove','roster',ev.name+' '+ev.date+' - '+legacyLabel(dutyKey)+
     ': removed '+(rm&&rm.name||'?'));
-  renderRoster(); refreshBadges();
+  renderRoster(); refreshBadges(); flashSaved([dutyKey]);
   /* A live roster stays live even when a gap opens in it. Pulling it back
      off the calendar would take the duty off three hundred phones because
      one person was moved, which is worse than the gap - so the lead is
@@ -6430,6 +6724,24 @@ function rxTitle(ev){
          d.toLocaleDateString('en-NZ',{month:'long'})+' '+d.getFullYear()+
          ' ('+(ev.uniform||'Casual')+' Uniform)';
 }
+/* The exported image is always on white, so these are the light-theme team colours: hd (header), dn (duty name), bar (title and
+   section bars), ink (text on hd and dn). Mint is Team A, coral Team B, as on screen. */
+const RX_PAL={A:{hd:'#D3E9DC',dn:'#E9F4EE',bar:'#196537',ink:'#124928'},B:{hd:'#F6DDD9',dn:'#FBEEEC',bar:'#943A2C',ink:'#6A2A20'}};
+/* html2canvas draws a stretched SVG at the wrong height, so once the card is laid out each shape's end caps get its measured pixel
+   height and real polygon coordinates. The slant stays a fixed number of pixels, exactly like the clip-path on screen. */
+function rxFitCaps(root){
+  [].forEach.call(root.querySelectorAll('.rx-sh'),sh=>{
+    const sl=+sh.getAttribute('data-slant'), h=sh.getBoundingClientRect().height; if(!h||!sl) return;
+    [].forEach.call(sh.children,svg=>{
+      if(svg.tagName.toLowerCase()!=='svg') return;
+      const left=svg===sh.firstElementChild;
+      /* Each cap is one pixel wider than the slant and tucks under the block, so no hairline shows between them and the block's
+         own corner never pokes past the slanted edge. */
+      svg.setAttribute('viewBox','0 0 '+(sl+1)+' '+h); svg.setAttribute('height',h); svg.style.height=h+'px'; svg.style.width=(sl+1)+'px';
+      svg.querySelector('polygon').setAttribute('points',left?sl+',0 '+(sl+1)+',0 '+(sl+1)+','+h+' 0,'+h:'0,0 '+(sl+1)+',0 1,'+h+' 0,'+h);
+    });
+  });
+}
 async function exportPNG(){
   const ev=selEvent(); if(!ev) return; toast('Rendering image\u2026');
   try{
@@ -6439,28 +6751,38 @@ async function exportPNG(){
     const core=lines.filter(l=>l.sec!=='mph'), rec=lines.filter(l=>l.sec==='mph');
     // Names read as "A / B / C", and an unfilled slot as a dash, exactly as
     // the printed roster does.
+    /* html2canvas cannot clip-path, so every slanted shape is a flat block between two inline SVG end caps (fixed slant in px, stretched
+       to the shape's height, the technique the huddle's REC chip uses). The text sits in the flat block, so it never touches a slant.
+       Colours are the page's team colours in their light-theme form: mint on Team A, coral on Team B. */
+    const P=RX_PAL[PAGE_TEAM]||RX_PAL.A;
+    const shape=(cls,txt,sl,fill,ink)=>'<div class="rx-sh '+cls+'" data-slant="'+sl+'">'+
+      '<svg viewBox="0 0 '+sl+' 100" preserveAspectRatio="none" style="width:'+sl+'px;height:1px" aria-hidden="true"><polygon points="'+sl+',0 '+sl+',100 0,100" fill="'+fill+'"/></svg>'+
+      '<div class="rx-sh-t" style="background:'+fill+';color:'+ink+'">'+txt+'</div>'+
+      '<svg viewBox="0 0 '+sl+' 100" preserveAspectRatio="none" style="width:'+sl+'px;height:1px" aria-hidden="true"><polygon points="0,0 '+sl+',0 0,100" fill="'+fill+'"/></svg></div>';
+    const bar=t=>'<tr><td class="rx-sec rx-sub" colspan="3">'+shape('rx-bar',esc(t),22,P.bar,'#fff')+'</td></tr>';
     const row=l=>{
       const m=l.male.join(' / '), f=l.female.join(' / ');
-      return '<tr><td class="rx-d">'+esc(recName(l.name))+'</td>'+
+      return '<tr><td class="rx-d">'+shape('rx-dn',esc(recName(l.name)),16,P.dn,P.ink)+'</td>'+
              '<td class="rx-n'+(m?'':' none')+'">'+(m?esc(m):'-')+'</td>'+
              '<td class="rx-n'+(f?'':' none')+'">'+(f?esc(f):'-')+'</td></tr>';
     };
     let h='<div class="rx" id="expCard">'+
       '<div class="rx-head"><img class="rx-logo" src="'+(window.IV_LOGO||'logo.png')+'" alt="">'+
       '<div class="rx-org">Ismaili Volunteers<b>Auckland Jamatkhana</b></div></div>'+
-      huddleExportOpen(ev)+'<div class="rx-title">'+esc(rxTitle(ev))+'</div>'+
-      '<table class="rx-t"><thead><tr><th>Duty</th><th>Male</th><th>Female</th></tr></thead><tbody>'+
-      core.map(row).join('');
+      huddleExportOpen(ev)+'<div class="rx-title">'+shape('rx-bar',esc(rxTitle(ev)),28,P.bar,'#fff')+'</div>'+
+      '<table class="rx-t"><thead><tr>'+['Duty','Male','Female'].map(t=>'<th>'+shape('rx-hd',t,20,P.hd,P.ink)+'</th>').join('')+'</tr></thead><tbody>'+
+      bar('Adults & Youth')+core.map(row).join('');
     // REC (MPH) Congregation continues the same table under its own banner,
     // so the two never drift apart in width the way separate tables would.
     if(rec.length){
-      h+='<tr><td class="rx-sub" colspan="3">REC Congregation</td></tr>'+rec.map(row).join('');
+      h+=bar('REC Congregation')+rec.map(row).join('');
     }
     h+='</tbody></table>'+huddleExportClose(ev)+
        '<div class="rx-ft"><span>'+esc(evTeamName(ev))+' \u00b7 '+(ev.confirmed?'Confirmed':'Draft')+'</span>'+
        '<span>IV Hub \u00b7 '+esc(fmtNice(nzTodayISO()))+'</span></div></div>';
     stage.innerHTML=h;
     const card=document.getElementById('expCard');
+    rxFitCaps(card);
     await fontsSettled();
     const canvas=await window.html2canvas(card,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false});
     const a=document.createElement('a');
