@@ -115,13 +115,13 @@ const open=async(file,vp,touch)=>{
     openDay(11);
     o.inPlace=ROSTER_VIEW==='cycle'&&!!q('#day-11.open .duty')&&selEventId===11;
     o.blankSlots=!!q('#day-11 .chip.blank')&&!q('.chip.un');
-    /* Generate: new days go up, gaps and all; built days keep their state. */
+    /* Generate: every built day goes up the moment it is saved, gaps and all. */
     const r12=JSON.stringify(ROSTERS[12]);
     pubs=[]; await runGenerate(k,false);
     o.pubs=pubs.join();
     // Only this test's days: the seeded Friday two days out lands in the same cycle on some dates.
-    o.newDayUp=pubs.filter(x=>+x.slice(1)>=11).join()==='+13'&&EVENTS.find(e=>e.id===13).confirmed===true;
-    o.hiddenStayHidden=!EVENTS.find(e=>e.id===11).confirmed&&!EVENTS.find(e=>e.id===14).confirmed;
+    o.newDayUp=pubs.filter(x=>+x.slice(1)>=11).join()==='+11,+13,+14'&&EVENTS.find(e=>e.id===13).confirmed===true;
+    o.hiddenStayHidden=EVENTS.find(e=>e.id===11).confirmed===true&&EVENTS.find(e=>e.id===14).confirmed===true;
     o.liveUntouched=JSON.stringify(ROSTERS[12])===r12;
     o.summary=!!q('.cv-sum .gp.receipt')&&/Cycle summary/.test(q('.cv-sum').textContent);
     /* Mid-cycle: one new day built on its own, straight onto the calendar. */
@@ -135,6 +135,7 @@ const open=async(file,vp,touch)=>{
     /* Hiding is the manual act. */
     pubs=[]; await toggleDayCalendar(12); o.hide=pubs.join()==='-12';
     /* Manual edit: any slot opens the name search; a filled one can be left blank. */
+    await toggleDayCalendar(11);   // a lead takes day 11 off the calendar before editing it
     openDay(11,true);
     const filled=q('#day-11 .cellwrap button.chip:not(.blank):not(.add)'); filled.click();
     // A person on the roster opens a small stack first: Swap, or Remove.
@@ -146,7 +147,7 @@ const open=async(file,vp,touch)=>{
     o.pickBlank=!!document.querySelector('#dcard #pickSearch')&&!/Leave blank/.test(document.getElementById('dcard').textContent)&&
       document.querySelectorAll('#dcard .pick-row').length>0;
     pubs=[]; document.querySelector('#dcard .pick-row').click(); await new Promise(res=>setTimeout(res,50));
-    o.editNoPublish=pubs.length===0&&!EVENTS.find(e=>e.id===11).confirmed;
+    o.editNoPublish=pubs.length===0&&!EVENTS.find(e=>e.id===11).confirmed;   // pubs was reset just before the edit
     setOnCalendar=realSet; saveRoster=realSave;
     /* Links that name an event open its cycle with that day expanded. */
     nav('calendar'); selectEvent(12); o.jump=curPage==='roster'&&ROSTER_VIEW==='cycle'&&ROSTER_OPEN===12;
@@ -160,7 +161,7 @@ const open=async(file,vp,touch)=>{
   chk(r.inPlace,'cycle   clicking a day opens its roster in place');
   chk(r.blankSlots,'cycle   unfilled slots show blank, not UNASSIGNED');
   chk(r.newDayUp,'generate new days go on the calendar, gaps and all',r.pubs);
-  chk(r.hiddenStayHidden,'generate a day a lead hid stays hidden');
+  chk(r.hiddenStayHidden,'generate a built day that was not on the calendar goes up too');
   chk(r.liveUntouched,'generate days on the calendar are not re-rolled unless asked');
   chk(r.summary,'generate the Cycle summary appears after a generate');
   chk(r.midOnlyNew&&r.midOthersSame,'midcycle only the new day is built; nothing else changes');

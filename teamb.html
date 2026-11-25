@@ -3514,10 +3514,10 @@ async function applyPlanNow(plan,opts){
   /* publish:false stores the rosters as drafts for the publish bar. The
      default is unchanged: complete rosters go on the calendar as they save. */
   const publish=!(opts&&opts.publish===false);
-  /* 'new' is how generating works now: a day that had no roster goes on
-     the calendar, unfilled slots and all (they show blank). A day that was
-     already built keeps whatever the lead last chose, so a regenerate never
-     puts back a day somebody hid on purpose. */
+  /* 'new' is how generating works now: every day that is built goes on
+     the calendar the moment it is saved, unfilled slots and all (they show
+     blank), including a day that was built earlier and not yet published.
+     A day that is already on the calendar simply stays there. */
   const pubNew=!!(opts&&opts.publish==='new');
   /* Rows the plan deliberately left alone are not written, are not
      counted, and are not mentioned in the audit line - otherwise the
@@ -3531,8 +3531,8 @@ async function applyPlanNow(plan,opts){
     ROSTERS[e.id]=plan.staged[e.id];
     if(await saveRoster(e.id,{quiet:true})){
       stored++;
-      if(pubNew){ if(e.confirmed||(!row.wasBuilt&&await publishIfComplete(e,{force:true,quiet:true}))) live++; }
-      else if(publish ? await publishIfComplete(e,{quiet:true}) : e.confirmed) live++;
+      if(pubNew){ if(e.confirmed||(await publishIfComplete(e,{force:true,quiet:true}))) live++; }
+      else if(publish ? await publishIfComplete(e,{force:true,quiet:true}) : e.confirmed) live++;
     }
   }
   const n=build.length;
@@ -4035,8 +4035,7 @@ function askRegenerateDay(id){
 }
 /* One day, built on its own against everyone's duties in the rest of the
    cycle (computeCounts reads every other roster). Nothing else is touched.
-   A day that had no roster goes on the calendar; one that had a roster
-   keeps whatever visibility the lead gave it. */
+   The day goes on the calendar as soon as it is saved. */
 async function generateDay(id,opts){
   if(!IS_EDIT) return;
   const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
