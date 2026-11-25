@@ -1532,6 +1532,20 @@ for(const [tn,vw] of [['A',1300],['B',390]]){ for(const th of ['dark','light']){
   chk(r.list&&r.bg==='rgb(12, 36, 97)','huddle  My Duties shows one navy Volunteer Huddle pill',JSON.stringify(r));
   chk(p.errs.length===0,'huddle  Hub no page errors',p.errs.join(';')); await p.context().close(); }
 
+// Huddle export: the REC chip is a parallelogram (two SVG polygon end caps; html2canvas cannot clip-path) with the text clear of the slants
+{ const p=await open('teama.html',{width:1300,height:950});
+  await p.evaluate(`(${SEED})(['tl_a'])`);
+  const r=await p.evaluate(async()=>{ const o={};
+    ensureH2C=async()=>{}; window.html2canvas=async el=>{ const c=el.querySelector('.vh-recx'), t=c&&c.querySelector('.vh-recx-t'), sv=c?[...c.querySelectorAll('svg')]:[];
+      if(c){ const rg=document.createRange(); rg.selectNodeContents(t); const tr=rg.getBoundingClientRect(), br=t.getBoundingClientRect(), cr=c.getBoundingClientRect(), sl=sv.length?sv[0].getBoundingClientRect().width:0;
+        o.caps=sv.length===2&&sv.every(s=>s.querySelector('polygon'))&&sl>=12;
+        o.clear=tr.left-br.left>=10&&br.right-tr.right>=10&&t.scrollWidth<=t.clientWidth&&tr.height<=br.height;
+        o.inside=tr.left>=cr.left+sl&&tr.right<=cr.right-sl&&Math.abs((tr.left+tr.right)/2-(cr.left+cr.right)/2)<=2; o.noClip=getComputedStyle(c).clipPath==='none'; }
+      return {toDataURL:()=>'data:image/png;base64,AAAA'}; };
+    sb=null; selEventId=1; ROSTERS[1].huddle=true; await exportPNG(); return o; });
+  chk(r.caps&&r.clear&&r.inside&&r.noClip,'huddle  export REC chip is a parallelogram (SVG caps) with the text centred and clear of the slanted edges',JSON.stringify(r));
+  chk(p.errs.length===0,'huddle  export parallelogram no page errors',p.errs.join(';')); await p.context().close(); }
+
 await b.close(); srv.close();
 console.log('\n'+'='.repeat(64)); pass.forEach(x=>console.log('  PASS  '+x)); fail.forEach(x=>console.log('  FAIL  '+x));
 console.log('='.repeat(64)); console.log(pass.length+' passed, '+fail.length+' failed'); process.exit(fail.length?1:0);

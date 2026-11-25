@@ -397,7 +397,7 @@ tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(75,163,22
 .vh-dots.b{border-top-color:#4BA3DC;margin:7px 0 0;}
 .vh-h{display:block;margin:0;font-size:clamp(19px,4.6vw,28px);line-height:1.05;font-weight:700;letter-spacing:.07em!important;text-transform:uppercase;color:#FF4D5A;}
 .vh-s{display:block;margin-top:4px;font-size:clamp(13px,3.2vw,15px);line-height:1.35;font-weight:700;color:#8CC4F5;}
-.vh-rec{flex:none;align-self:stretch;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 18px;
+.vh-rec{flex:none;align-self:stretch;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 26px;text-indent:.1em;
   clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);background:linear-gradient(135deg,#175FB0,#1B6FC8);color:#fff;text-align:center;}
 .vh-rec small{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:1;white-space:nowrap;}
 .vh-rec b{font-size:28px;line-height:1;font-weight:700;letter-spacing:.06em;}
@@ -420,8 +420,11 @@ tbody tr{transition:background .12s;}tbody tr:hover td{background:rgba(75,163,22
 .rx-vb .vh-h{font-size:34px;letter-spacing:.06em;}
 .rx-vb .vh-s{font-size:18px;}
 .rx-vb .vh-dots{margin:0 0 8px;}.rx-vb .vh-dots.b{margin:8px 0 0;}
-.rx-vb .vh-recx{flex:none;background:#2B7BD6;padding:8px 22px;text-align:center;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;}
-.rx-vb .vh-recx b{display:block;font-size:34px;letter-spacing:.06em;line-height:1.05;}
+.rx-vb .vh-recx{flex:none;display:flex;align-items:stretch;}
+.rx-vb .vh-recx svg{flex:none;width:18px;height:auto;display:block;}
+.rx-vb .vh-recx svg:first-child{margin-right:-1px;}.rx-vb .vh-recx svg:last-child{margin-left:-1px;}
+.rx-vb .vh-recx-t{background:#2B7BD6;display:flex;flex-direction:column;justify-content:center;padding:10px 16px;text-align:center;white-space:nowrap;font-size:12px;font-weight:900;letter-spacing:.12em;text-indent:.12em;text-transform:uppercase;color:#fff;}
+.rx-vb .vh-recx-t b{display:block;font-size:34px;letter-spacing:.06em;text-indent:.06em;line-height:1.05;}
 .rx-vfi{background:#fff;padding:10px;}
 /* ivshape.css and ivtype.css are generated from every filled box, and would reshape these layers (one slant for all, a transparent
    border, a lighter heading). The frame sets its own geometry, so these win by specificity. */
@@ -4192,7 +4195,11 @@ function huddleExportOpen(ev){
   return '<div class="rx-vf" data-huddle="1"><div class="rx-vb">'+HUDDLE_ICON+
     '<div class="vh-txt"><div class="vh-dots"></div><b class="vh-h">Volunteer Huddle</b>'+
     '<span class="vh-s">'+esc(huddleMsg(ev))+'</span><div class="vh-dots b"></div></div>'+
-    '<div class="vh-recx">Conducted in<b>REC</b></div></div><div class="rx-vfi">';
+    /* html2canvas cannot clip-path, so the chip is a parallelogram built from two inline SVG end caps (fixed 18px slant, stretched to the
+       chip height) either side of a plain block that holds the text: the text never sits under a slanted edge. */
+    '<div class="vh-recx"><svg viewBox="0 0 18 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="18,0 18,100 0,100" fill="#2B7BD6"/></svg>'+
+    '<div class="vh-recx-t">Conducted in<b>REC</b></div>'+
+    '<svg viewBox="0 0 18 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,0 18,0 0,100" fill="#2B7BD6"/></svg></div></div><div class="rx-vfi">';
 }
 function huddleExportClose(ev){ return huddleOn(ev)?'</div></div>':''; }
 let _huddleBusy=false;
