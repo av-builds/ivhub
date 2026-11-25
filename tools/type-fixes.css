@@ -33,3 +33,5 @@ html[data-theme="light"] [style*="color:#94A3B8"],html[data-theme="light"] [styl
 /* chips and tags stay on one line; a row of them wraps between chips, not inside one */
 .duty-chip,.chip,.bdg,.count-chip,.pchip,.lead-tag,.walkin-tag,.att-key{white-space:nowrap;}
 .att-duties,.cellwrap,.mem-tags,.pchips{display:flex;flex-wrap:wrap;gap:4px 6px;}
+/* the Volunteer Huddle band keeps the weights it was drawn with */
+.vh-h,.vh-s,.vh-rec b,.vh-rec small{font-weight:700!important;}

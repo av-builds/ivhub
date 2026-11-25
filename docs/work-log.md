@@ -260,3 +260,9 @@ Rosters now follow their event, AV leads can read the AV change log, weekday lea
 - **Look.** The team Dashboard clock is no longer clipped, the huddle frame's small text is legible, small touch buttons are at least 44px wide, and the full screen and huddle buttons have fixed names.
 - **Checks.** The automatic checks get read-only permissions and fail if the generated style files drift. The new tests run with the others.
 - **Database changes waiting on approval:** a fresh timestamp on every roster update, a limit of 60 log entries a minute per person, weekday attendance tied to real members, and bounded weekday shift lists.
+
+## Update: rosters go on the calendar as soon as they are generated
+Generating a roster (a whole cycle, one day, or "Build all my nights") now saves it and puts every built day on the calendar straight away, unfilled slots and all. This includes a day that was built earlier but not yet published. A day already on the calendar stays there, and a lead can still take a day off the calendar by hand.
+
+## Update: new roster design
+The Team A and B roster pages have a calm, polished slanted design in the team colours (mint for Team A, coral for Team B). Headers, section bars and duty names are boldly slanted while the name cells stay plain for easy reading. Name chips are compact slanted tags with clear states (filled, blank, set by hand, away, cannot do). Cycle cards, Satada cards, the banner, status pills and the action bar share the same look. On a phone each duty becomes its own card with male and female rows. Rows rise in with a staggered reveal and flash when saved, and all motion switches off for reduced motion. The roster image export matches the on-screen shapes.
