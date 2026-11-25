@@ -1,5 +1,5 @@
 /* Weekday Team Lead, team-page part: 'cannot' duty chips, Extra Duty report.
-   Standalone: node tests/wd-team.cjs  (NODE_PATH=$(npm root -g)). Port 8136. */
+   Standalone: node tests/wd-team.cjs  (NODE_PATH=$(npm root -g)). Port: PORT env or a free one. */
 const {chromium}=require('playwright');
 const http=require('http'),fs=require('fs'),path=require('path');
 const ROOT=path.resolve(__dirname,'..');
@@ -12,7 +12,7 @@ function serve(){return new Promise((res,rej)=>{
     fs.readFile(f,(e,b)=>{ if(e){r.writeHead(404);return r.end();}
       r.writeHead(200,{'Content-Type':path.extname(f)==='.html'?'text/html; charset=utf-8':'application/octet-stream'}); r.end(b); });
   });
-  s.on('error',rej); s.listen(process.env.PORT!==undefined?Number(process.env.PORT):8136,'127.0.0.1',()=>res(s)); });}
+  s.on('error',rej); s.listen(Number(process.env.PORT)||0,'127.0.0.1',()=>res(s)); });}
 let bad=0; const chk=(c,l,x)=>{ if(!c)bad++; console.log((c?'PASS ':'FAIL ')+l+(!c&&x?'  ['+x+']':'')); };
 (async()=>{
 const srv=await serve(); const BASE='http://127.0.0.1:'+srv.address().port; const b=await chromium.launch({args:['--no-sandbox']});

@@ -67,7 +67,7 @@
     var b=document.getElementById('ivFsBtn'); if(!b) return;
     var on=!!fsEl();
     b.setAttribute('aria-pressed',on?'true':'false');
-    b.setAttribute('aria-label',on?'Leave full screen':'Full screen');
+    b.setAttribute('aria-label','Full screen');
     b.setAttribute('title',on?'Leave full screen':'Full screen');
     b.innerHTML=on?FS_OFF:FS_ON;
   }

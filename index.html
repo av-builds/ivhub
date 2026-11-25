@@ -56,6 +56,7 @@ html{scroll-behavior:smooth;}
              radial-gradient(ellipse 30% 24% at 60% 18%,rgba(75,163,220,.12),transparent 60%);
   animation:aurora 16s ease-in-out infinite;pointer-events:none;}
 #loginScreen .lbox{position:relative;z-index:1;}
+#loginScreen.booting .lbox{visibility:hidden;}
 .lbox{background:var(--ds);border:1px solid var(--db);border-radius:16px;padding:44px 40px;width:400px;max-width:92vw;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:fadeUp .5s ease;}
 .llogo{text-align:center;margin-bottom:28px;}
 .llogo-wrap{position:relative;width:86px;height:86px;margin:0 auto 14px;border-radius:50%;animation:pulseRing 3.2s ease-out infinite;}
@@ -243,6 +244,10 @@ html[data-theme="light"] .sa-pick.t-b.on,html[data-theme="light"] .sa-own.t-b{co
 .badge-b{background:var(--pur-bg);color:#C4A5F5;border:1px solid var(--pur-bd);}
 .badge-av{background:var(--gold-bg);color:var(--gold-lt);border:1px solid var(--gold-bd);}
 .chip-warn{font-size:11px;font-weight:900;padding:3px 9px;border-radius:20px;background:var(--gold-bg);color:var(--gold-lt);border:1px solid var(--gold-bd);white-space:nowrap;letter-spacing:0.03em;}
+.vh-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px 4px 10px;background:#0C2461;color:#8CC4F5;font-size:11.5px;font-weight:800;line-height:1.25;flex-wrap:wrap;column-gap:5px;
+  clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);box-shadow:inset 3px 0 0 #E23A48;max-width:100%;}
+.vh-pill b{color:#FF6B76;font-weight:900;letter-spacing:.04em;text-transform:uppercase;}
+.vh-pill.blk{display:flex;width:fit-content;margin-top:8px;}
 .chip-uni{font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(122,174,203,.1);color:var(--dm);border:1px solid var(--db);white-space:nowrap;}
 .md-empty{text-align:center;padding:30px 16px;color:var(--dm);font-size:14px;line-height:1.7;}
 .md-empty .big{font-size:30px;margin-bottom:8px;}
@@ -935,7 +940,7 @@ input,select,textarea,button,optgroup{font-family:inherit;font-weight:inherit;fo
 
 
 <!-- ═══ LOGIN ═══ -->
-<div id="loginScreen">
+<div id="loginScreen" class="booting">
   <div class="lbox">
     <div class="llogo">
       <div class="llogo-wrap">
@@ -2855,7 +2860,7 @@ async function loadHubVolunteerCards(){
 
   el.innerHTML =
       hubCard('My next duty', nextDuty ? esc(fmtLong(nextDuty.date)) : '-',
-              nextDuty ? esc(nextDuty.duty || 'IV duty') : (IS_PURE_WD() ? 'team rosters are not shown to a Weekday-only login' : MY_MEMBER ? 'nothing rostered yet' : 'your account is not linked to your name'),
+              nextDuty ? esc(nextDuty.duty || 'IV duty') + huddlePill(nextDuty, true) : (IS_PURE_WD() ? 'team rosters are not shown to a Weekday-only login' : MY_MEMBER ? 'nothing rostered yet' : 'your account is not linked to your name'),
               nextDuty ? 'a' : '', "nav('myduties')")
     + hubCard('My away dates', away.length,
               away.length ? 'next: ' + esc(fmtLong(away[0])) : 'available for every event', '')
@@ -2900,6 +2905,10 @@ function namesOf(v){
   if(Array.isArray(v)) return v.filter(x=>typeof x==='string' && x.trim());
   if(typeof v === 'string' && v.trim()) return [v];
   return [];
+}
+/* Volunteer Huddle: the lead switched it on for that event's roster (iv_roster.data.huddle). */
+function huddlePill(e, blk){
+  return e && e.huddle ? '<span class="vh-pill' + (blk ? ' blk' : '') + '" title="Volunteer Huddle"><b>Volunteer Huddle</b> REC after Nandi Kriya</span>' : '';
 }
 async function fetchDutyData(){
   if(dutyCache) return dutyCache;
@@ -2955,7 +2964,8 @@ async function fetchDutyData(){
                   duty: `Team ${ev.team}: ${dutyDisplayName(dutyKey)}`,
                   event: ev.name || 'IV Event',
                   source: 'IV-' + ev.team + '-' + ev.id,
-                  team: ev.team, uniform: ev.uniform || 'Casual'
+                  team: ev.team, uniform: ev.uniform || 'Casual',
+                  huddle: !!(byId[ev.id] && byId[ev.id].huddle === true)
                 });
               });
             });
@@ -2998,6 +3008,7 @@ function dutyCardHTML(e, overlap, idx){
     <div class="dcard-main">
       <div class="dcard-duty">${esc(e.duty)}</div>
       <div class="dcard-ev">${esc(e.event)}</div>
+      ${huddlePill(e, true)}
     </div>
     <div class="dcard-badges"><span class="badge ${badgeCls}">${badgeTxt}</span>${uni}${warn}</div>
   </div>`;
@@ -4074,7 +4085,12 @@ async function deleteMember(row){
   try{
     if(sb){ const c = await sb.from('iv_wd_attendance').select('id', {count:'exact', head:true}).eq('member_id', row.id); if(!c.error) nExtra = c.count || 0; }
   }catch(e){}
+  let nAtt = 0;
+  try{
+    if(sb){ const c = await sb.from('iv_attendance').select('id', {count:'exact', head:true}).eq('member_id', row.id); if(!c.error) nAtt = c.count || 0; }
+  }catch(e){}
   if(!confirm(`Delete member "${row.name}" (${memberTeamLabel(row)})? This cannot be undone.` +
+    (nAtt ? `\n\nTheir ${nAtt} attendance mark${nAtt === 1 ? '' : 's'} will be permanently deleted too. To keep their history, use "They have left - revoke access" or set them inactive instead.` : '') +
     (nExtra ? `\n\nTheir ${nExtra} weekday Extra Duty record${nExtra === 1 ? '' : 's'} stay in the weekday attendance history under their name, no longer linked to a member.` : '') +
     (hasLogin ? `\n\nThey have a login. Deleting the member does not remove it - to take away their access use "They have left - revoke access" first.` : ''))) return;
   if(!sb){ toast('No database connection - cannot delete.', 'err'); return; }
@@ -4457,9 +4473,24 @@ async function saReload(){
   if(ev.error){ SA.err = 'Could not read the satadas - ' + (ev.error.message || ev.error); saRender(); return false; }
   const rows = (ev.data || []).filter(saIsNight), ids = rows.map(e=>e.id), rost = {}, rrow = {}, att = {};
   if(ids.length){
+    /* The API returns at most 1000 rows a request, and a few satada weeks of
+       attendance pass that, so read in pages until a short one. */
+    const readAtt = async ()=>{
+      const out = [];
+      for(let i = 0; i < ids.length; i += 200){
+        const chunk = ids.slice(i, i + 200);
+        for(let from = 0; ; from += 1000){
+          const r = await sb.from('iv_attendance').select('event_id,status').in('event_id', chunk).order('event_id').order('member_id').range(from, from + 999);
+          if(r.error) return {error:r.error};
+          out.push(...(r.data || []));
+          if((r.data || []).length < 1000) break;
+        }
+      }
+      return {data:out};
+    };
     const [ro, at] = await Promise.all([
       sb.from('iv_roster').select('event_id,data').in('event_id', ids),
-      sb.from('iv_attendance').select('event_id,status').in('event_id', ids)]);
+      readAtt()]);
     const bad = ro.error || at.error;
     if(bad){ SA.err = 'Could not check the rosters - ' + (bad.message || bad); saRender(); return false; }
     (ro.data||[]).forEach(r=>{ const n = saPeople(r.data); if(n) rost[r.event_id] = n; rrow[r.event_id] = true; });
@@ -6110,13 +6141,17 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   bindUI();
   const ok = await waitForSupabase(3000);
   if(!ok) console.warn('Supabase library did not load - running offline with built-in credentials.');
-  await loadUsersEarly();
+  /* Not awaited: app_users is unreadable for non-managers and the request can
+     stall, which must not hold up sign-in. The login box stays hidden (class
+     booting) until authBootstrap has answered. */
+  loadUsersEarly().catch(()=>{});
   if(AUTH_LINK && sb){
     // supabase-js has already turned the token into a session
     const {data} = await sb.auth.getSession();
-    if(data && data.session){ showSetPassword(AUTH_LINK); return; }
+    if(data && data.session){ $('loginScreen').classList.remove('booting'); showSetPassword(AUTH_LINK); return; }
   }
   const authed = await authBootstrap();
+  $('loginScreen').classList.remove('booting');
   if(authed) showApp();
   else if(ALLOW_LEGACY_LOGIN && loadSession()) showApp();
   else {
@@ -6754,7 +6789,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     var n = Math.max(0, dd(todayNZ(), e.date));
     return '<div class="hm-duty hm-c-'+team+(e.kind==='training'?' training':'')+'" style="animation-delay:'+Math.min(i*0.05,0.4)+'s"><span class="hm-dot"></span>'+
       '<div class="hm-dd"><b>'+mon(e.date)+'</b><span>'+dnum(e.date)+'</span><em>'+fmtDW(e.date)+'</em></div>'+
-      '<div class="hm-dm"><div class="hm-t">'+esc(e.event||e.duty)+'</div><div class="hm-s">'+esc(e.duty)+(e.uniform?' · '+esc(e.uniform)+' uniform':'')+'</div></div>'+
+      '<div class="hm-dm"><div class="hm-t">'+esc(e.event||e.duty)+'</div><div class="hm-s">'+esc(e.duty)+(e.uniform?' · '+esc(e.uniform)+' uniform':'')+'</div>'+huddlePill(e,true)+'</div>'+
       '<span class="hm-tag">'+(e.kind==='training'?'Training':(e.team==='AV'?'AV':'Team '+esc(e.team)))+'</span></div>';
   }
   async function dutiesHTML(lead){
@@ -6779,7 +6814,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     var first = mine[0], n = Math.max(0, dd(todayNZ(), first.date)), pct = Math.max(0.06, 1-Math.min(7,n)/7);
     return '<section class="hm-sec"><h3 class="hm-h">Your upcoming duties</h3><div class="hm-duties">'+
       '<div class="hm-next hm-c-'+(first.team==='AV'?'av':first.team==='B'?'b':'a')+'"><div class="hm-k"><i></i>Next up</div>'+
-        '<div class="hm-nrow">'+ring(pct, n<=0?'0':String(n), n===1?'DAY':'DAYS')+'<div><div class="hm-big">'+esc(first.event||first.duty)+'</div><div class="hm-t">'+esc(first.duty)+'</div><div class="hm-s">'+esc(longDate(first.date))+(first.uniform?' · '+esc(first.uniform)+' uniform':'')+'</div></div></div>'+
+        '<div class="hm-nrow">'+ring(pct, n<=0?'0':String(n), n===1?'DAY':'DAYS')+'<div><div class="hm-big">'+esc(first.event||first.duty)+'</div><div class="hm-t">'+esc(first.duty)+'</div><div class="hm-s">'+esc(longDate(first.date))+(first.uniform?' · '+esc(first.uniform)+' uniform':'')+'</div>'+huddlePill(first,true)+'</div></div>'+
         '<div class="hm-row"><button type="button" class="hm-cta" onclick="nav(\'myduties\')">Open My Duties</button></div></div>'+
       '<div class="hm-line">'+mine.slice(0,6).map(dutyItem).join('')+'</div></div></section>';
   }

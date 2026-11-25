@@ -452,6 +452,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .rx-sub{font-weight:700!important}
 .rx-t thead th{font-size:15px!important;font-weight:700!important}
 .rx-title{font-weight:700!important}
+.rx-vb .vh-recx{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
 .sa-dd{font-weight:700!important;font-size:14px!important}
 .sa-dn{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
 .sa-hint{font-size:14px!important;font-weight:700!important}
@@ -460,6 +461,7 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .sa-pick{font-weight:700!important}
 .sa-st{font-size:13px!important;font-weight:700!important;line-height:1.4!important}
 .sa-sum{font-size:15px!important;font-weight:700!important}
+.sat-none{font-size:14px!important}
 .sb-empty{font-size:15px!important}
 .sb-inc{font-size:13px!important;font-weight:700!important}
 .sb-iv{font-size:15px!important;font-weight:700!important}
@@ -537,6 +539,12 @@ h1,h2,h3,h4{line-height:1.15;letter-spacing:-.01em;font-weight:700;}
 .vc-ch{font-size:13px!important}
 .vc-nm{font-size:15px!important;font-weight:600!important}
 .vc-sb{font-size:12px!important}
+.vh-h{font-weight:700!important;line-height:1.4!important;letter-spacing:.06em!important}
+.vh-pill{font-size:13px!important;font-weight:700!important;line-height:1.4!important}
+.vh-pill b{font-weight:700!important}
+.vh-rec b{font-weight:700!important}
+.vh-rec small{font-size:13px!important;font-weight:700!important;letter-spacing:.06em!important}
+.vh-s{font-weight:700!important}
 .vl-age{font-weight:700!important}
 .walkin-tag{font-size:11px!important;font-weight:700!important}
 .warn{font-size:14px!important}
@@ -560,6 +568,7 @@ body.tp .tn-menu .tn-b{font-size:15px!important;font-weight:600!important}
 body.tp .tn-menu .tn-b.tn-sub{font-size:14px!important}
 h1{font-weight:600!important}
 h2{font-weight:600!important}
+html .vh-h{font-weight:700!important}
 html[data-team] .dash-greet{font-weight:700!important;line-height:1.4!important}
 input[type=date]{font-weight:500!important;line-height:1.4!important}
 input[type=number]{font-weight:600!important;line-height:1.4!important}
